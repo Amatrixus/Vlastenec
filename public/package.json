@@ -1,0 +1,13 @@
+{
+  "name": "vlastenec",
+  "version": "1.0.0",
+  "main": "server_rooms.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server_rooms.js"
+  },
+  "dependencies": {
+    "express": "^4.19.0",
+    "socket.io": "^4.7.0"
+  }
+}

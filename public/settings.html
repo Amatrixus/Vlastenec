@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VLASTENEC</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="home.css">
+</head>
+<body>
+  <div id="background-layer"></div>
+  <div id="cover"></div>
+  <div class="glow-behind"></div>
+
+ 
+  
+
+
+    <div id="game-modes-layout">
+        
+  <!-- Levá část: 3 módy -->
+  <div class="mode-list">
+    
+
+    <div  id="rooms">
+        <div class="nadpis">   
+        Místnosti
+            </div>
+
+
+        Žádné aktivní místnosti.
+            
+            
+    </div>
+    
+
+    <div id="rungame">
+        <div class="nadpis">    
+        Spustit hru
+        </div>
+
+
+        <div id="accountinfo">
+
+            <img src="avatar.png" id="avatar">
+
+
+            <div id="accounttext">
+
+            Anonymní uživatel
+
+            <br>
+
+            <a href="signin.php"><font color="orange">Přihlásit se</font></a>
+
+            </div>
+
+
+             
+
+
+        </div>
+
+        <div class="nadpis">    
+        
+             Herní mód
+
+
+        </div>
+
+
+        <div id="modecontent">
+
+              <img src="randomsquare.png" id="modepic">
+
+              <div id="modename">
+                Náhodní hráči
+
+              </div>
+
+              
+            
+        </div>
+
+        
+        <div id="runbox">
+
+            <button class="runbutton">Spustit hru</button>
+            <button onclick="window.location.href='modeselection2.html'" class="runbutton">Zpět na výběr módu</button>
+
+          </div>
+
+    </div>
+
+    <div id="categories">
+            <div class="nadpis">
+            Základní kategorie
+            </div>
+
+            
+              <label class="tile">
+                <input type="checkbox" name="cat1" checked>
+                <img src="tiles/tile1.png" alt="Tile 1">
+                <span class="checkmark"></span>
+                <span class="tooltip">Přírodní vědy</span>
+            </label><label class="tile">
+                <input type="checkbox" name="cat2" checked>
+                <img src="tiles/tile2.png" alt="Tile 2">
+                <span class="checkmark"></span>
+                <span class="tooltip">Jazyk a literatura</span>
+            </label><label class="tile">
+                <input type="checkbox" name="cat3" checked>
+                <img src="tiles/tile3.png" alt="Tile 1">
+                <span class="checkmark"></span>
+                <span class="tooltip">Technologie</span>
+            </label><label class="tile">
+                <input type="checkbox" name="cat4" checked>
+                <img src="tiles/tile4.png" alt="Tile 2">
+                <span class="checkmark"></span>
+                <span class="tooltip">Geografie</span>
+            </label><label class="tile">
+                <input type="checkbox" name="cat5" checked>
+                <img src="tiles/tile5.png" alt="Tile 1">
+                <span class="checkmark"></span>
+                <span class="tooltip">Historie</span>
+            </label><label class="tile">
+                <input type="checkbox" name="cat6" checked>
+                <img src="tiles/tile6.png" alt="Tile 2">
+                <span class="checkmark"></span>
+                <span class="tooltip">Kultura a umění</span>
+            </label><label class="tile">
+                <input type="checkbox" name="cat7" checked>
+                <img src="tiles/tile7.png" alt="Tile 1">
+                <span class="checkmark"></span>
+                <span class="tooltip">Sport</span>
+            </label><label class="tile">
+                <input type="checkbox" name="cat8" checked>
+                <img src="tiles/tile8.png" alt="Tile 2">
+                <span class="checkmark"></span>
+                <span class="tooltip">Osobnosti</span>
+            </label>
+
+
+
+             
+
+
+
+
+            <div class="nadpis">
+            Tematické balíčky
+            </div>
+
+
+            <div id="topicscontent">
+            Zatím nejsou k dispozici žádné tematické balíčky.
+            </div>
+
+
+
+
+    </div>
+  </div>
+
+  
+
+
+</div>
+
+
+
+
+
+
+
+
+
+
+  </div>
+</body>
+</html>

@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="150.96678mm"
+   height="16.470304mm"
+   viewBox="0 0 150.96678 16.470304"
+   version="1.1"
+   id="svg1182"
+   inkscape:version="1.2.2 (732a01da63, 2022-12-09)"
+   sodipodi:docname="logo.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview1184"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="mm"
+     showgrid="false"
+     inkscape:zoom="2.0510461"
+     inkscape:cx="284.73274"
+     inkscape:cy="48.999385"
+     inkscape:window-width="1920"
+     inkscape:window-height="1001"
+     inkscape:window-x="-9"
+     inkscape:window-y="-9"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs1179">
+    <rect
+       x="132.3856"
+       y="213.7476"
+       width="602.89563"
+       height="120.90898"
+       id="rect1240" />
+  </defs>
+  <g
+     inkscape:label="Vrstva 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(-35.103972,-65.740844)">
+    <text
+       xml:space="preserve"
+       transform="scale(0.26458333)"
+       id="text1238"
+       style="font-size:85.3333px;white-space:pre;shape-inside:url(#rect1240);display:inline;fill:#ffff68;fill-opacity:1"><tspan
+         x="132.38477"
+         y="308.05264"
+         id="tspan2314"><tspan
+           style="font-family:'Copperplate Gothic Light';-inkscape-font-specification:'Copperplate Gothic Light, '"
+           id="tspan2312">VLASTENEC</tspan></tspan></text>
+  </g>
+</svg>

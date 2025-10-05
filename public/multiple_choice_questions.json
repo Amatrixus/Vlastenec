@@ -1,0 +1,1028 @@
+[
+    {
+        "id": 0,
+        "question": "Které město je hlavním městem Francie?",
+        "options": ["Londýn", "Madrid", "Paříž", "Berlín"],
+        "correct_answer": "Paříž"
+    },
+    {
+        "id": 1,
+        "question": "Kolik kontinentů existuje na Zemi?",
+        "options": ["5", "6", "7", "8"],
+        "correct_answer": "7"
+    },
+    {
+        "id": 2,
+        "question": "Který prvek má chemickou značku 'O'?",
+        "options": ["Zlato", "Kyslík", "Uran", "Vodík"],
+        "correct_answer": "Kyslík"
+    },
+    {
+        "id": 3,
+        "question": "Kdo napsal 'Romeo a Julie'?",
+        "options": ["Charles Dickens", "William Shakespeare", "Leo Tolstoj", "Franz Kafka"],
+        "correct_answer": "William Shakespeare"
+    },
+    {
+        "id": 4,
+        "question": "Která planeta je největší v naší sluneční soustavě?",
+        "options": ["Mars", "Země", "Jupiter", "Venuše"],
+        "correct_answer": "Jupiter"
+    },
+    {
+        "id": 5,
+        "question": "Kolik stran má trojúhelník?",
+        "options": ["2", "3", "4", "5"],
+        "correct_answer": "3"
+    },
+    {
+        "id": 6,
+        "question": "Které zvíře je známé svou schopností změnit barvu?",
+        "options": ["Chameleon", "Slon", "Gepard", "Delfín"],
+        "correct_answer": "Chameleon"
+    },
+    {
+        "id": 7,
+        "question": "Který sport se hraje s raketou a míčkem přes síť?",
+        "options": ["Fotbal", "Basketbal", "Tenis", "Golf"],
+        "correct_answer": "Tenis"
+    },
+    {
+        "id": 8,
+        "question": "Který oceán je největší na světě?",
+        "options": ["Atlantský oceán", "Indický oceán", "Tichý oceán", "Severní ledový oceán"],
+        "correct_answer": "Tichý oceán"
+    },
+    {
+        "id": 9,
+        "question": "Kolik má hodina minut?",
+        "options": ["30", "45", "60", "90"],
+        "correct_answer": "60"
+    },
+    {
+        "id": 10,
+        "question": "Jak se jmenuje hlavní hrdina filmové série 'Indiana Jones'?",
+        "options": ["Harrison Ford", "Indiana Smith", "Rick O'Connell", "Indiana Jones"],
+        "correct_answer": "Indiana Jones"
+    },
+    {
+        "id": 11,
+        "question": "Který seriál sleduje dobrodružství Ricka a Mortyho?",
+        "options": ["Futurama", "Rick and Morty", "South Park", "Family Guy"],
+        "correct_answer": "Rick and Morty"
+    },
+    {
+        "id": 12,
+        "question": "Která postava z Hvězdných válek pronesla větu 'I am your father'?",
+        "options": ["Luke Skywalker", "Obi-Wan Kenobi", "Darth Vader", "Yoda"],
+        "correct_answer": "Darth Vader"
+    },
+    {
+        "id": 13,
+        "question": "Která hra od studia CD Projekt Red je známá svým otevřeným světem a zaklínačskými schopnostmi?",
+        "options": ["Cyberpunk 2077", "Skyrim", "The Witcher 3", "Dark Souls"],
+        "correct_answer": "The Witcher 3"
+    },
+    {
+        "id": 14,
+        "question": "Jak se jmenuje hlavní postava hry 'The Legend of Zelda'?",
+        "options": ["Link", "Zelda", "Ganon", "Epona"],
+        "correct_answer": "Link"
+    },
+    {
+        "id": 15,
+        "question": "Který filmový režisér je známý filmy jako 'Pulp Fiction' a 'Kill Bill'?",
+        "options": ["Steven Spielberg", "Martin Scorsese", "Quentin Tarantino", "Christopher Nolan"],
+        "correct_answer": "Quentin Tarantino"
+    },
+    {
+        "id": 16,
+        "question": "Jak se jmenuje kouzelnická škola v sérii Harry Potter?",
+        "options": ["Durmstrang", "Ilvermorny", "Hogwarts", "Beauxbatons"],
+        "correct_answer": "Hogwarts"
+    },
+    {
+        "id": 17,
+        "question": "Jak se jmenuje hlavní postava seriálu 'Breaking Bad'?",
+        "options": ["Jesse Pinkman", "Saul Goodman", "Walter White", "Hank Schrader"],
+        "correct_answer": "Walter White"
+    },
+    {
+        "id": 18,
+        "question": "Ve kterém roce vyšla hra 'Minecraft'?",
+        "options": ["2009", "2011", "2013", "2015"],
+        "correct_answer": "2011"
+    },
+    {
+        "id": 19,
+        "question": "Který superhrdina nosí červený plášť a symbol 'S' na hrudi?",
+        "options": ["Spider-Man", "Superman", "Iron Man", "Batman"],
+        "correct_answer": "Superman"
+    },
+    {
+        "id": 20,
+        "question": "Který chemický prvek má nejvyšší elektronegativitu?",
+        "options": ["Kyslík", "Fluor", "Chlor", "Dusík"],
+        "correct_answer": "Fluor"
+    },
+    {
+        "id": 21,
+        "question": "Kdo je autorem teorie relativity?",
+        "options": ["Isaac Newton", "Nikola Tesla", "Albert Einstein", "Galileo Galilei"],
+        "correct_answer": "Albert Einstein"
+    },
+    {
+        "id": 22,
+        "question": "Jak se jmenuje první programovací jazyk?",
+        "options": ["Python", "Fortran", "COBOL", "Assembly"],
+        "correct_answer": "Fortran"
+    },
+    {
+        "id": 23,
+        "question": "Jaký je nejhlubší oceánský příkop na světě?",
+        "options": ["Tonga", "Kuril-Kamčatský", "Mariánský", "Filipínský"],
+        "correct_answer": "Mariánský"
+    },
+    {
+        "id": 24,
+        "question": "Jak se jmenuje nejsilnější sval v lidském těle (podle síly k hmotnosti)?",
+        "options": ["Srdce", "Jazyk", "Žvýkací sval", "Lýtkový sval"],
+        "correct_answer": "Žvýkací sval"
+    },
+    {
+        "id": 25,
+        "question": "Které město bylo hlavním městem Byzantské říše?",
+        "options": ["Řím", "Atény", "Konstantinopol", "Alexandrie"],
+        "correct_answer": "Konstantinopol"
+    },
+    {
+        "id": 26,
+        "question": "Jaká část mozku je zodpovědná za regulaci emocí?",
+        "options": ["Mozková kůra", "Hippokampus", "Amygdala", "Hypotalamus"],
+        "correct_answer": "Amygdala"
+    },
+    {
+        "id": 27,
+        "question": "Který prvek je nejvíce zastoupen v zemské kůře?",
+        "options": ["Hliník", "Železo", "Křemík", "Kyslík"],
+        "correct_answer": "Kyslík"
+    },
+    {
+        "id": 28,
+        "question": "Která planeta má nejvíce měsíců?",
+        "options": ["Saturn", "Jupiter", "Neptun", "Uran"],
+        "correct_answer": "Saturn"
+    },
+    {
+        "id": 29,
+        "question": "Jaký druh záření má nejvyšší energii?",
+        "options": ["Ultrafialové", "Rentgenové", "Infračervené", "Gama záření"],
+        "correct_answer": "Gama záření"
+    },
+       {
+        "id": 30,
+        "question": "Který fyzikální zákon říká, že síla působící na těleso je přímo úměrná jeho zrychlení?",
+        "options": [
+            "Newtonův první zákon",
+            "Newtonův druhý zákon",
+            "Newtonův třetí zákon",
+            "Zákon setrvačnosti"
+        ],
+        "correct_answer": "Newtonův druhý zákon"
+    },
+    {
+        "id": 31,
+        "question": "Který chemický prvek má nejvyšší elektronegativitu?",
+        "options": [
+            "Fluor",
+            "Kyslík",
+            "Dusík",
+            "Chlor"
+        ],
+        "correct_answer": "Fluor"
+    },
+    {
+        "id": 32,
+        "question": "Jaké číslo představuje páté prvočíslo v řadě?",
+        "options": [
+            "5",
+            "7",
+            "11",
+            "13"
+        ],
+        "correct_answer": "11"
+    },
+    {
+        "id": 33,
+        "question": "Kdo napsal knihu '1984'?",
+        "options": [
+            "George Orwell",
+            "Aldous Huxley",
+            "Ray Bradbury",
+            "Franz Kafka"
+        ],
+        "correct_answer": "George Orwell"
+    },
+    {
+        "id": 34,
+        "question": "Jaké je hlavní město Kazachstánu?",
+        "options": [
+            "Astana",
+            "Almaty",
+            "Taškent",
+            "Baku"
+        ],
+        "correct_answer": "Astana"
+    },
+    {
+        "id": 35,
+        "question": "Kolik elektronů má uhlík ve své valenční vrstvě?",
+        "options": [
+            "2",
+            "4",
+            "6",
+            "8"
+        ],
+        "correct_answer": "4"
+    },
+    {
+        "id": 36,
+        "question": "Kdo vynalezl diferenciální a integrální počet současně s Newtonem?",
+        "options": [
+            "Leibniz",
+            "Euler",
+            "Descartes",
+            "Gauss"
+        ],
+        "correct_answer": "Leibniz"
+    },
+    {
+        "id": 37,
+        "question": "Který slavný řecký filozof byl žákem Platóna a učitelem Alexandra Velikého?",
+        "options": [
+            "Sokrates",
+            "Aristoteles",
+            "Epikuros",
+            "Demokritos"
+        ],
+        "correct_answer": "Aristoteles"
+    },
+    {
+        "id": 38,
+        "question": "Jaká je chemická značka pro zlato?",
+        "options": [
+            "Au",
+            "Ag",
+            "Pb",
+            "Fe"
+        ],
+        "correct_answer": "Au"
+    },
+    {
+        "id": 39,
+        "question": "Jaká je přibližná hodnota čísla pi na čtyři desetinná místa?",
+        "options": [
+            "3.1415",
+            "3.1416",
+            "3.1421",
+            "3.1409"
+        ],
+        "correct_answer": "3.1416"
+    },
+
+    {
+        "id": 40,
+        "question": "Kdo napsal román *Sto roků samoty*?",
+        "options": [
+            "Gabriel García Márquez",
+            "Mario Vargas Llosa",
+            "Jorge Luis Borges",
+            "Pablo Neruda"
+        ],
+        "correct_answer": "Gabriel García Márquez"
+    },
+    {
+        "id": 41,
+        "question": "Který román napsal George Orwell jako alegorii totalitního režimu?",
+        "options": [
+            "1984",
+            "Animal Farm",
+            "Brave New World",
+            "Lord of the Flies"
+        ],
+        "correct_answer": "Animal Farm"
+    },
+    {
+        "id": 42,
+        "question": "Kdo je autorem tragédie *Hamlet*?",
+        "options": [
+            "William Shakespeare",
+            "Christopher Marlowe",
+            "John Milton",
+            "Thomas More"
+        ],
+        "correct_answer": "William Shakespeare"
+    },
+    {
+        "id": 43,
+        "question": "Jak se jmenuje hlavní postava románu *Zločin a trest* od Dostojevského?",
+        "options": [
+            "Raskolnikov",
+            "Ivan Karamazov",
+            "Aleksej Ivanovič",
+            "Oblomov"
+        ],
+        "correct_answer": "Raskolnikov"
+    },
+    {
+        "id": 44,
+        "question": "Který autor napsal trilogii *Pán prstenů*?",
+        "options": [
+            "J.R.R. Tolkien",
+            "C.S. Lewis",
+            "Philip Pullman",
+            "George R.R. Martin"
+        ],
+        "correct_answer": "J.R.R. Tolkien"
+    },
+
+
+    
+        {
+            "id": 45,
+            "question": "Který autor je považován za zakladatele magického realismu?",
+            "options": [
+                "Gabriel García Márquez",
+                "Franz Kafka",
+                "Miguel Ángel Asturias",
+                "Jorge Luis Borges"
+            ],
+            "correct_answer": "Miguel Ángel Asturias"
+        },
+        {
+            "id": 46,
+            "question": "Které dílo napsal Thomas Mann a je považováno za moderní parafrázi mýtu o Faustovi?",
+            "options": [
+                "Kouzelný vrch",
+                "Smrt v Benátkách",
+                "Doktor Faustus",
+                "Buddenbrookovi"
+            ],
+            "correct_answer": "Doktor Faustus"
+        },
+        {
+            "id": 47,
+            "question": "Ve kterém jazyce původně vyšla *Píseň o Rolandovi*?",
+            "options": [
+                "Starofrancouzština",
+                "Staroitalština",
+                "Staroangličtina",
+                "Latinčina"
+            ],
+            "correct_answer": "Starofrancouzština"
+        },
+        {
+            "id": 48,
+            "question": "Kdo napsal absurdní drama *Čekání na Godota*?",
+            "options": [
+                "Eugène Ionesco",
+                "Jean-Paul Sartre",
+                "Samuel Beckett",
+                "Harold Pinter"
+            ],
+            "correct_answer": "Samuel Beckett"
+        },
+        {
+            "id": 49,
+            "question": "Který americký autor napsal *Kvílení* (Howl), manifest beatnické generace?",
+            "options": [
+                "Jack Kerouac",
+                "Allen Ginsberg",
+                "William S. Burroughs",
+                "Lawrence Ferlinghetti"
+            ],
+            "correct_answer": "Allen Ginsberg"
+        },
+        {
+            "id": 50,
+            "question": "Jaký je původní jazyk románu *Jméno růže* od Umberta Eca?",
+            "options": [
+                "Italština",
+                "Francouzština",
+                "Angličtina",
+                "Latinčina"
+            ],
+            "correct_answer": "Italština"
+        },
+        {
+            "id": 51,
+            "question": "Které z těchto děl NEnapsal Fjodor Michajlovič Dostojevskij?",
+            "options": [
+                "Bratři Karamazovi",
+                "Idiot",
+                "Běsi",
+                "Revizor"
+            ],
+            "correct_answer": "Revizor"
+        },
+        {
+            "id": 52,
+            "question": "Jaké je hlavní téma románu *Mechanický pomeranč* od Anthonyho Burgesse?",
+            "options": [
+                "Náboženská víra",
+                "Etika volby a násilí",
+                "Technologický pokrok",
+                "Totalitarismus"
+            ],
+            "correct_answer": "Etika volby a násilí"
+        },
+        {
+            "id": 53,
+            "question": "Který autor napsal postmoderní román *Bělost* (White Noise)?",
+            "options": [
+                "Thomas Pynchon",
+                "Don DeLillo",
+                "David Foster Wallace",
+                "John Barth"
+            ],
+            "correct_answer": "Don DeLillo"
+        },
+        {
+            "id": 54,
+            "question": "Kdo je autorem románu *Pán much* (Lord of the Flies)?",
+            "options": [
+                "William Golding",
+                "George Orwell",
+                "Aldous Huxley",
+                "Anthony Burgess"
+            ],
+            "correct_answer": "William Golding"
+        },
+        {
+            "id": 55,
+            "question": "Který filozofický směr silně ovlivnil tvorbu Alberta Camuse?",
+            "options": [
+                "Existencialismus",
+                "Absurdismus",
+                "Stoicismus",
+                "Poststrukturalismus"
+            ],
+            "correct_answer": "Absurdismus"
+        },
+        {
+            "id": 56,
+            "question": "Jak se jmenuje román Kafky, v němž se hlavní postava promění v hmyz?",
+            "options": [
+                "Proces",
+                "Zámek",
+                "Proměna",
+                "Odsouzení"
+            ],
+            "correct_answer": "Proměna"
+        },
+        {
+            "id": 57,
+            "question": "Který z těchto románů napsal italský spisovatel Italo Calvino?",
+            "options": [
+                "Neviditelná města",
+                "Lolita",
+                "Pod skleněným zvonem",
+                "Lístek na přepážku"
+            ],
+            "correct_answer": "Neviditelná města"
+        },
+        {
+            "id": 58,
+            "question": "Jak se jmenuje autor eposu *Božská komedie*?",
+            "options": [
+                "Dante Alighieri",
+                "Giovanni Boccaccio",
+                "Petrarca",
+                "Tasso"
+            ],
+            "correct_answer": "Dante Alighieri"
+        },
+        {
+            "id": 59,
+            "question": "Co je hlavním motivem románu *Na větrné hůrce* od Emily Brontëové?",
+            "options": [
+                "Pomsta a vášeň",
+                "Sociální nespravedlnost",
+                "Válka a mír",
+                "Cesta za poznáním"
+            ],
+            "correct_answer": "Pomsta a vášeň"
+        },
+        {
+            "id": 60,
+            "question": "Kdo napsal román *Tisíc bílých žen* zasazený do alternativní historie USA?",
+            "options": [
+                "Jim Fergus",
+                "Cormac McCarthy",
+                "Louise Erdrich",
+                "Sherman Alexie"
+            ],
+            "correct_answer": "Jim Fergus"
+        },
+        {
+            "id": 61,
+            "question": "Který francouzský spisovatel je autorem cyklu *Hledání ztraceného času*?",
+            "options": [
+                "Marcel Proust",
+                "Gustave Flaubert",
+                "Honoré de Balzac",
+                "Émile Zola"
+            ],
+            "correct_answer": "Marcel Proust"
+        },
+        {
+            "id": 62,
+            "question": "Který román Vladimira Nabokova je známý svým kontroverzním námětem?",
+            "options": [
+                "Lolita",
+                "Pnin",
+                "Bledý oheň",
+                "Pozvání na popravu"
+            ],
+            "correct_answer": "Lolita"
+        },
+        {
+            "id": 63,
+            "question": "Kdo napsal román *Slepota*, alegorii o společnosti sužované neznámou epidemií?",
+            "options": [
+                "José Saramago",
+                "Gabriel García Márquez",
+                "Mario Vargas Llosa",
+                "J.M. Coetzee"
+            ],
+            "correct_answer": "José Saramago"
+        },
+        {
+            "id": 64,
+            "question": "Jaký literární směr reprezentuje James Joyce svým dílem *Odysseus*?",
+            "options": [
+                "Modernismus",
+                "Romantismus",
+                "Naturalismus",
+                "Postmodernismus"
+            ],
+            "correct_answer": "Modernismus"
+        },
+
+
+
+
+
+
+
+
+        
+            {
+                "id": 65,
+                "question": "Kdo je autorem románu *Cizinec*, který je často spojován s filozofií absurdismu?",
+                "options": [
+                    "Albert Camus",
+                    "Jean-Paul Sartre",
+                    "Franz Kafka",
+                    "Simone de Beauvoir"
+                ],
+                "correct_answer": "Albert Camus"
+            },
+            {
+                "id": 66,
+                "question": "Který ruský autor napsal satirický román *Mistr a Markétka*?",
+                "options": [
+                    "Michail Bulgakov",
+                    "Nikolaj Gogol",
+                    "Boris Pasternak",
+                    "Vladimir Nabokov"
+                ],
+                "correct_answer": "Michail Bulgakov"
+            },
+            {
+                "id": 67,
+                "question": "Jaké je hlavní téma románu *Ticho* od Šúsaku Endó?",
+                "options": [
+                    "Západní kolonialismus",
+                    "Křesťanství v Japonsku",
+                    "Buddhistická etika",
+                    "Očista a pokání"
+                ],
+                "correct_answer": "Křesťanství v Japonsku"
+            },
+            {
+                "id": 68,
+                "question": "Který z těchto autorů je představitelem latinskoamerického boomu?",
+                "options": [
+                    "Julio Cortázar",
+                    "Carlos Fuentes",
+                    "Gabriel García Márquez",
+                    "Všichni výše uvedení"
+                ],
+                "correct_answer": "Všichni výše uvedení"
+            },
+            {
+                "id": 69,
+                "question": "Jak se jmenuje hlavní postava románu *Jméno růže* od Umberta Eca?",
+                "options": [
+                    "Vilém z Baskervillu",
+                    "Roger Bacon",
+                    "Ubertino da Casale",
+                    "Remigio z Varagine"
+                ],
+                "correct_answer": "Vilém z Baskervillu"
+            },
+            {
+                "id": 70,
+                "question": "Který francouzský spisovatel je autorem cyklu *Lidská komedie*?",
+                "options": [
+                    "Honoré de Balzac",
+                    "Émile Zola",
+                    "Victor Hugo",
+                    "Stendhal"
+                ],
+                "correct_answer": "Honoré de Balzac"
+            },
+            {
+                "id": 71,
+                "question": "Které z těchto děl není dílem Franze Kafky?",
+                "options": [
+                    "Zámek",
+                    "Amerika",
+                    "Proces",
+                    "Cizinec"
+                ],
+                "correct_answer": "Cizinec"
+            },
+            {
+                "id": 72,
+                "question": "Kdo napsal román *Neúnosná lehkost bytí*?",
+                "options": [
+                    "Milan Kundera",
+                    "Bohumil Hrabal",
+                    "Josef Škvorecký",
+                    "Ivan Klíma"
+                ],
+                "correct_answer": "Milan Kundera"
+            },
+            {
+                "id": 73,
+                "question": "Který norský dramatik je považován za otce moderního dramatu?",
+                "options": [
+                    "Henrik Ibsen",
+                    "Knut Hamsun",
+                    "August Strindberg",
+                    "Ludvig Holberg"
+                ],
+                "correct_answer": "Henrik Ibsen"
+            },
+            {
+                "id": 74,
+                "question": "Ve kterém díle hraje hlavní roli postava jménem Meursault?",
+                "options": [
+                    "Cizinec",
+                    "Proces",
+                    "Zločin a trest",
+                    "Běsi"
+                ],
+                "correct_answer": "Cizinec"
+            },
+            {
+                "id": 75,
+                "question": "Který autor napsal alegorické dílo *Gulliverovy cesty*?",
+                "options": [
+                    "Jonathan Swift",
+                    "Daniel Defoe",
+                    "Laurence Sterne",
+                    "John Bunyan"
+                ],
+                "correct_answer": "Jonathan Swift"
+            },
+            {
+                "id": 76,
+                "question": "Kdo je autorem experimentálního románu *If on a winter's night a traveler*?",
+                "options": [
+                    "Italo Calvino",
+                    "Umberto Eco",
+                    "Jorge Luis Borges",
+                    "Paul Auster"
+                ],
+                "correct_answer": "Italo Calvino"
+            },
+            {
+                "id": 77,
+                "question": "Který z těchto autorů napsal román *Půlnoční děti*?",
+                "options": [
+                    "Salman Rushdie",
+                    "Arundhati Roy",
+                    "Jhumpa Lahiri",
+                    "Vikram Seth"
+                ],
+                "correct_answer": "Salman Rushdie"
+            },
+            {
+                "id": 78,
+                "question": "Který spisovatel je autorem absurdního dramatu *Nos*?",
+                "options": [
+                    "Nikolaj Gogol",
+                    "Anton Čechov",
+                    "Ivan Turgenev",
+                    "Alexander Puškin"
+                ],
+                "correct_answer": "Nikolaj Gogol"
+            },
+            {
+                "id": 79,
+                "question": "Který autor sepsal utopický román *Nová Atlantida*?",
+                "options": [
+                    "Francis Bacon",
+                    "Thomas More",
+                    "Tommaso Campanella",
+                    "John Locke"
+                ],
+                "correct_answer": "Francis Bacon"
+            },
+            {
+                "id": 80,
+                "question": "Jak se jmenuje fiktivní jazyk z románu *1984* od George Orwella?",
+                "options": [
+                    "Newspeak",
+                    "Doublethink",
+                    "Oldspeak",
+                    "Duckspeak"
+                ],
+                "correct_answer": "Newspeak"
+            },
+            {
+                "id": 81,
+                "question": "Který japonský autor napsal román *Kronika ptáčka na klíček*?",
+                "options": [
+                    "Haruki Murakami",
+                    "Yukio Mishima",
+                    "Kenzaburó Óe",
+                    "Ryū Murakami"
+                ],
+                "correct_answer": "Haruki Murakami"
+            },
+            {
+                "id": 82,
+                "question": "Který americký spisovatel je autorem rozsáhlého díla *Nekonečný žert*?",
+                "options": [
+                    "David Foster Wallace",
+                    "Thomas Pynchon",
+                    "Don DeLillo",
+                    "Jonathan Franzen"
+                ],
+                "correct_answer": "David Foster Wallace"
+            },
+            {
+                "id": 83,
+                "question": "Kdo napsal alegorický román *Zvířecí farma* (Animal Farm)?",
+                "options": [
+                    "George Orwell",
+                    "Aldous Huxley",
+                    "Ray Bradbury",
+                    "Anthony Burgess"
+                ],
+                "correct_answer": "George Orwell"
+            },
+            {
+                "id": 84,
+                "question": "Který z následujících autorů je známý díky použití proudu vědomí (stream of consciousness)?",
+                "options": [
+                    "Virginia Woolf",
+                    "Jane Austen",
+                    "Charles Dickens",
+                    "Mark Twain"
+                ],
+                "correct_answer": "Virginia Woolf"
+            },
+
+            
+                {
+                    "id": 85,
+                    "question": "Kdo napsal román *Běsnící býk* (*Raging Bull*), který inspiroval slavný film Martina Scorseseho?",
+                    "options": [
+                        "Jake LaMotta",
+                        "Norman Mailer",
+                        "Raymond Carver",
+                        "Truman Capote"
+                    ],
+                    "correct_answer": "Jake LaMotta"
+                },
+                {
+                    "id": 86,
+                    "question": "Které dílo od Gustava Flauberta je považováno za jeden z prvních realistických románů?",
+                    "options": [
+                        "Paní Bovaryová",
+                        "Salambo",
+                        "Srdce prosté",
+                        "Výchova citů"
+                    ],
+                    "correct_answer": "Paní Bovaryová"
+                },
+                {
+                    "id": 87,
+                    "question": "Který román napsal Jorge Luis Borges?",
+                    "options": [
+                        "Fikce",
+                        "Labyrint světa",
+                        "Kniha smíchu a zapomnění",
+                        "Neviditelná města"
+                    ],
+                    "correct_answer": "Fikce"
+                },
+                {
+                    "id": 88,
+                    "question": "Kdo je autorem filozofického románu *Sophiina volba*?",
+                    "options": [
+                        "William Styron",
+                        "Philip Roth",
+                        "John Updike",
+                        "Saul Bellow"
+                    ],
+                    "correct_answer": "William Styron"
+                },
+                {
+                    "id": 89,
+                    "question": "Jak se jmenuje slavné autobiografické dílo Jean-Jacquesa Rousseaua?",
+                    "options": [
+                        "Vyznání",
+                        "Smlouva společenská",
+                        "Emil čili o výchově",
+                        "Rozprava o původu nerovnosti"
+                    ],
+                    "correct_answer": "Vyznání"
+                },
+                {
+                    "id": 90,
+                    "question": "Který ruský básník a dramatik spáchal sebevraždu v roce 1930?",
+                    "options": [
+                        "Vladimir Majakovskij",
+                        "Sergej Jesenin",
+                        "Boris Pasternak",
+                        "Osip Mandelštam"
+                    ],
+                    "correct_answer": "Vladimir Majakovskij"
+                },
+                {
+                    "id": 91,
+                    "question": "Kdo napsal *Stroj času*, jedno z prvních děl sci-fi žánru?",
+                    "options": [
+                        "H.G. Wells",
+                        "Jules Verne",
+                        "Aldous Huxley",
+                        "Isaac Asimov"
+                    ],
+                    "correct_answer": "H.G. Wells"
+                },
+                {
+                    "id": 92,
+                    "question": "Ve kterém románu se objevuje postava Clarissy Dallowayové?",
+                    "options": [
+                        "Paní Dallowayová",
+                        "K majáku",
+                        "Orlando",
+                        "Vlny"
+                    ],
+                    "correct_answer": "Paní Dallowayová"
+                },
+                {
+                    "id": 93,
+                    "question": "Jaký pseudonym používala Mary Ann Evans?",
+                    "options": [
+                        "George Eliot",
+                        "Emily Brontë",
+                        "George Sand",
+                        "Louisa May Alcott"
+                    ],
+                    "correct_answer": "George Eliot"
+                },
+                {
+                    "id": 94,
+                    "question": "Který americký autor napsal *Krvavý poledník*, považovaný za temný western?",
+                    "options": [
+                        "Cormac McCarthy",
+                        "Ernest Hemingway",
+                        "William Faulkner",
+                        "John Steinbeck"
+                    ],
+                    "correct_answer": "Cormac McCarthy"
+                },
+                {
+                    "id": 95,
+                    "question": "Jaký druh vyprávění charakterizuje díla Itala Calvina, jako např. *Neviditelná města*?",
+                    "options": [
+                        "Metafikce",
+                        "Detektivka",
+                        "Historický román",
+                        "Romantismus"
+                    ],
+                    "correct_answer": "Metafikce"
+                },
+                {
+                    "id": 96,
+                    "question": "Jaký je původní jazyk románu *Piknik u cesty*, který inspiroval film *Stalker*?",
+                    "options": [
+                        "Ruština",
+                        "Angličtina",
+                        "Polština",
+                        "Ukrajinština"
+                    ],
+                    "correct_answer": "Ruština"
+                },
+                {
+                    "id": 97,
+                    "question": "Který autor napsal existencialistický román *Nevolnost*?",
+                    "options": [
+                        "Jean-Paul Sartre",
+                        "Albert Camus",
+                        "Simone de Beauvoir",
+                        "Maurice Merleau-Ponty"
+                    ],
+                    "correct_answer": "Jean-Paul Sartre"
+                },
+                {
+                    "id": 98,
+                    "question": "Který román Patricka Süskinda pojednává o posedlosti vůní?",
+                    "options": [
+                        "Parfém",
+                        "Kontrabas",
+                        "Holub",
+                        "Příběh pana Sommera"
+                    ],
+                    "correct_answer": "Parfém"
+                },
+                {
+                    "id": 99,
+                    "question": "Jaké jméno nese postava v románu *Lolita*, kterou vypravěč posedle miluje?",
+                    "options": [
+                        "Dolores Haze",
+                        "Lola Montez",
+                        "Charlotte Quilty",
+                        "Annabel Leigh"
+                    ],
+                    "correct_answer": "Dolores Haze"
+                },
+                {
+                    "id": 100,
+                    "question": "Který autor napsal dystopický román *My*, který ovlivnil Orwella i Huxleyho?",
+                    "options": [
+                        "Jevgenij Zamjatin",
+                        "Isaac Asimov",
+                        "Stanislav Lem",
+                        "Ray Bradbury"
+                    ],
+                    "correct_answer": "Jevgenij Zamjatin"
+                },
+                {
+                    "id": 101,
+                    "question": "Ve kterém díle Gustava Meyrinka se objevuje tajemná postava Golema?",
+                    "options": [
+                        "Golem",
+                        "Zelený tvář",
+                        "Valpuržina noc",
+                        "Anděl západního okna"
+                    ],
+                    "correct_answer": "Golem"
+                },
+                {
+                    "id": 102,
+                    "question": "Který literární směr se nejčastěji spojuje s Ezra Poundem a T.S. Eliotem?",
+                    "options": [
+                        "Modernismus",
+                        "Symbolismus",
+                        "Romantismus",
+                        "Postmodernismus"
+                    ],
+                    "correct_answer": "Modernismus"
+                },
+                {
+                    "id": 103,
+                    "question": "Jaký je původní jazyk románu *Sto roků samoty*?",
+                    "options": [
+                        "Španělština",
+                        "Portugalština",
+                        "Francouzština",
+                        "Angličtina"
+                    ],
+                    "correct_answer": "Španělština"
+                },
+                {
+                    "id": 104,
+                    "question": "Který švédský spisovatel obdržel Nobelovu cenu za literaturu v roce 2011?",
+                    "options": [
+                        "Tomas Tranströmer",
+                        "Per Olov Enquist",
+                        "Lars Norén",
+                        "Henning Mankell"
+                    ],
+                    "correct_answer": "Tomas Tranströmer"
+                }
+            
+            
+        
+        
+    
+    
+]
