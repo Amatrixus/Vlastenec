@@ -1,15 +1,26 @@
 const express = require('express');
 const http = require('http');
-const { title } = require('process');
 const { Server } = require('socket.io');
+const path = require('path');
+
+
 
 const app = express();
-const server = http.createServer(app);
-const io = new Server(server, {
-  cors: { origin: "*" }
-});
+app.use(express.static('public')); // servíruje index.html a další soubory
 
-const PORT = 3000;
+const server = http.createServer(app);
+const io = new Server(server, { cors: { origin: "*" } }); // (později si omezíš)
+
+
+
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, '0.0.0.0', () => console.log('Server běží na', PORT));
+
+
+
+
+
+
 const MAX_PLAYERS_PER_ROOM = 3;
 const rooms = {}; // roomId -> { players, scores, bases, regions, regionValues, defenseBonuses }
 
@@ -1451,15 +1462,3 @@ socket.on("playerNumericAnswer", ({ room: roomId, player, answer }) => {
 
 
 
-const express = require('express');
-const http = require('http');
-const { Server } = require('socket.io');
-
-const app = express();
-app.use(express.static('public')); // sem dáš .html, .css, obrázky…
-
-const server = http.createServer(app);
-const io = new Server(server); // tvůj existující kód s io(...) necháš běžet dál
-
-const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => console.log(`Listening on ${PORT}`));
