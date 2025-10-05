@@ -385,7 +385,7 @@ function runNumericQuestionForThree(roomId) {
 
 
 
-
+/* JEN BITVY
 
 
 async function runGameScenario(roomId) {
@@ -455,10 +455,10 @@ async function runGameScenario(roomId) {
 }
 
 
+*/
 
 
-
-/* CELÁ HRA
+/* CELÁ HRA  */
 
 // Scénář po startGame
 async function runGameScenario(roomId) {
@@ -498,7 +498,7 @@ async function runGameScenario(roomId) {
 
 
 
-*/
+
 
 
 
