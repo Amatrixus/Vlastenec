@@ -1417,32 +1417,43 @@ io.on('connection', socket => {
 
 
  socket.on("chat:send", ({ roomId, text }) => {
-    const room = rooms[roomId];
-    if (!room) return;
+  console.log("📩 Přijatý chat: ", { roomId, text, from: socket.id });
 
-    if (typeof text !== "string") return;
-    const clean = text.trim();
-    if (!clean) return;
+  const room = rooms[roomId];
+  if (!room) {
+    console.log("❌ Místnost nenalezena:", roomId);
+    return;
+  }
 
-    // zjisti jméno odesílatele podle socket.id
-    const ix = room.players.findIndex(p => p.id === socket.id);
-    const name = ix !== -1 ? room.players[ix].name : "Neznámý hráč";
+  if (typeof text !== "string") {
+    console.log("❌ Text není string:", text);
+    return;
+  }
 
-    // připrav zprávu a lehký limit
-    const msg = {
-      id: `${Date.now()}_${Math.random().toString(16).slice(2)}`,
-      name,
-      text: clean.slice(0, 500), // ochrana proti románům :)
-      ts: Date.now()             // čas řeš serverem
-    };
+  const clean = text.trim();
+  if (!clean) {
+    console.log("❌ Prázdný text, ignoruji.");
+    return;
+  }
 
-    // ulož jen v RAM místnosti + cap
-    room.chat.push(msg);
-    if (room.chat.length > 200) room.chat.shift();
+  const ix = room.players.findIndex(p => p.id === socket.id);
+  const name = ix !== -1 ? room.players[ix].name : "Neznámý hráč";
 
-    // pošli všem v místnosti
-    io.to(roomId).emit("chat:new", msg);
-  });
+  const msg = {
+    id: `${Date.now()}_${Math.random().toString(16).slice(2)}`,
+    name,
+    text: clean.slice(0, 500),
+    ts: Date.now()
+  };
+
+  room.chat.push(msg);
+  if (room.chat.length > 200) room.chat.shift();
+
+  console.log(`💬 Ukládám zprávu v room ${roomId}: ${name}: ${clean}`);
+
+  io.to(roomId).emit("chat:new", msg);
+});
+
 
 
 
