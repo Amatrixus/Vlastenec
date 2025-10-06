@@ -315,7 +315,7 @@ html, body {
 }
 
 .mode-list {
-  flex: 3;
+  flex: 4;
   display: flex;
   flex-direction: row;
   gap: 0.2rem;
@@ -354,7 +354,7 @@ html, body {
 
 .mode-card1 {
 
-  width: 40%;
+  width: 25%;
   float: left;
 }
 
@@ -475,6 +475,17 @@ html, body {
 
 
 }
+
+
+
+
+
+
+
+
+
+
+
 
 
 
