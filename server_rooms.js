@@ -134,7 +134,7 @@ function delay(ms) {
 
 import fs from "fs";
 
-const questions = JSON.parse(fs.readFileSync("questions.json", "utf8"));
+const questions = JSON.parse(fs.readFileSync("multiple_choice_questions.json", "utf8"));
 
 
 
