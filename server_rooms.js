@@ -132,20 +132,15 @@ function delay(ms) {
 
 
 
-// ✅ SEZNAM OTÁZEK (můžeš později načítat z JSONu)
-const questions = [
-  {
-    question: "Kdo je autorem teorie relativity?",
-    options: ["Newton", "Einstein", "Tesla", "Bohr"],
-    correct: 1 // index správné odpovědi
-  },
-  {
-    question: "Hlavní město Kanady?",
-    options: ["Toronto", "Ottawa", "Vancouver", "Montreal"],
-    correct: 1
-  }
-];
 
+// OTÁZKY
+const fs = require('fs');
+const path = require('path');
+
+const questionsPath = path.join(__dirname, 'multiple_choice_questions.json');
+const questions = JSON.parse(fs.readFileSync(questionsPath, 'utf8'));
+
+module.exports = { questions }; // pokud exportuješ dál
 
 
 
