@@ -1296,7 +1296,11 @@ io.on('connection', socket => {
           Player1: 3,
           Player2: 3,
           Player3: 3
-        }
+        },
+
+
+        chat: []
+
       };
     }
 
@@ -1352,6 +1356,14 @@ io.on('connection', socket => {
 
     console.log(`🎮 ${name} joined ${roomId}`);
     console.table(allNames);
+
+
+
+    socket.emit("chat:history", rooms[roomId].chat ?? []);
+
+
+
+
   });
 
   socket.on("disconnect", () => {
@@ -1397,7 +1409,41 @@ io.on('connection', socket => {
       break;
     }
   }
+
+
 });
+
+
+
+
+ socket.on("chat:send", ({ roomId, text }) => {
+    const room = rooms[roomId];
+    if (!room) return;
+
+    if (typeof text !== "string") return;
+    const clean = text.trim();
+    if (!clean) return;
+
+    // zjisti jméno odesílatele podle socket.id
+    const ix = room.players.findIndex(p => p.id === socket.id);
+    const name = ix !== -1 ? room.players[ix].name : "Neznámý hráč";
+
+    // připrav zprávu a lehký limit
+    const msg = {
+      id: `${Date.now()}_${Math.random().toString(16).slice(2)}`,
+      name,
+      text: clean.slice(0, 500), // ochrana proti románům :)
+      ts: Date.now()             // čas řeš serverem
+    };
+
+    // ulož jen v RAM místnosti + cap
+    room.chat.push(msg);
+    if (room.chat.length > 200) room.chat.shift();
+
+    // pošli všem v místnosti
+    io.to(roomId).emit("chat:new", msg);
+  });
+
 
 
 
