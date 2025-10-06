@@ -2,6 +2,8 @@ const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const path = require('path');
+const fs = require('fs');
+
 
 
 
@@ -134,8 +136,7 @@ function delay(ms) {
 
 
 // OTÁZKY
-const fs = require('fs');
-const path = require('path');
+
 
 const questionsPath = path.join(__dirname, 'multiple_choice_questions.json');
 const questions = JSON.parse(fs.readFileSync(questionsPath, 'utf8'));
