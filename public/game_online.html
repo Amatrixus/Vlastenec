@@ -1721,82 +1721,107 @@
 
 
       <div id="chat">
+            <input type="text" id="chatinput" placeholder="Napiš zprávu…">
+            <input type="button" id="chatbutton" value="Odeslat">
 
+            <div id="chatcontent"></div>
+            </div>
 
-          <input type="text" id="chatinput">
-          <input type="button" id="chatbutton" value="Odeslat">
-          
-          <div id="chatcontent">
+            <!-- 1) Ujisti se, že tahle knihovna je načtená -->
+            <script src="/socket.io/socket.io.js"></script>
 
-              
-            
+            <!-- 2) Tvůj klientský chat -->
+            <script>
+            // ====== Pomocné funkce ======
+            function escapeHtml(s) {
+                return String(s).replace(/[&<>"']/g, m => (
+                {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]
+                ));
+            }
+            function fmtTime(ts) {
+                try { return new Date(ts).toLocaleTimeString('cs-CZ', {hour:'2-digit', minute:'2-digit'}); }
+                catch { return ''; }
+            }
+            function appendMsg({ name, text, ts }) {
+                const line = document.createElement('div');
+                line.className = 'chat-line';
+                line.innerHTML =
+                `<span class="chat-time">[${fmtTime(ts)}]</span> ` +
+                `<span class="chat-name"><strong>${escapeHtml(name)}:</strong></span> ` +
+                `<span class="chat-text">${escapeHtml(text)}</span>`;
+                chatBox.appendChild(line);
+                chatBox.scrollTop = chatBox.scrollHeight;
+            }
 
-                        <script>
-                        // Pomocné: jednoduchý escape, ať chat neprožere HTML
-                        function escapeHtml(s) {
-                            return s.replace(/[&<>"']/g, m =>
-                            ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])
-                            );
-                        }
+            // ====== Elementy ======
+            const chatInput = document.getElementById('chatinput');
+            const chatBtn   = document.getElementById('chatbutton');
+            const chatBox   = document.getElementById('chatcontent');
 
-                        const chatInput = document.getElementById('chatinput');
-                        const chatBtn   = document.getElementById('chatbutton');
-                        const chatBox   = document.getElementById('chatcontent');
+            // ====== Socket ======
+            window.socket ??= io(); // případně io("http://localhost:3000")
+            let roomId = null;
 
-                        function fmtTime(ts) {
-                            try {
-                            return new Date(ts).toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' });
-                            } catch {
-                            return '';
-                            }
-                        }
+            socket.on("connect", () => {
+                console.log("🔌 connected:", socket.id);
+            });
+            socket.on("connect_error", (err) => {
+                console.log("❌ connect_error:", err?.message || err);
+            });
 
-                        function appendMsg({ name, text, ts }) {
-                            const line = document.createElement('div');
-                            line.className = 'chat-line';
-                            line.innerHTML = `<span class="chat-time">[${fmtTime(ts)}]</span> <span class="chat-name">${escapeHtml(name)}:</span> <span class="chat-text">${escapeHtml(text)}</span>`;
-                            chatBox.appendChild(line);
-                            chatBox.scrollTop = chatBox.scrollHeight; // auto-scroll dolů
-                        }
+            // Server přiřadí číslo hráče + roomId
+            socket.on("assignPlayerNumber", (data) => {
+                roomId = data?.roomId || roomId;
+                console.log("✅ assignPlayerNumber:", data);
+            });
 
-                        // Pošli zprávu
-                        function sendChat() {
-                            const text = chatInput.value.trim();
-                            if (!text) return;
-                            socket.emit('chat:send', { roomId, text });
-                            chatInput.value = '';
-                            chatInput.focus();
-                        }
+            // ====== Odeslání zprávy ======
+            function sendChat() {
+                const text = (chatInput?.value || "").trim();
+                console.log("🖊️ sendChat()", { text, roomId, socketId: socket.id });
 
-                        chatBtn?.addEventListener('click', sendChat);
-                        chatInput?.addEventListener('keydown', (e) => {
-                            if (e.key === 'Enter') sendChat();
-                        });
+                if (!text) return;
+                if (!roomId) {
+                console.warn("⚠️ roomId není k dispozici. Neposílám.");
+                return;
+                }
+                socket.emit("chat:send", { roomId, text });
+                console.log("➡️ emitted chat:send");
 
-                        // Dostanu celou historii po připojení
-                        socket.on('chat:history', (msgs) => {
-                            chatBox.innerHTML = ''; // smaž placeholder "Ahoj"
-                            (msgs || []).forEach(appendMsg);
-                        });
+                chatInput.value = "";
+                chatInput.focus();
+            }
 
-                        // Nová zpráva od kohokoli v místnosti
-                        socket.on('chat:new', (msg) => {
-                            appendMsg(msg);
-                        });
-                        </script>
+            chatBtn?.addEventListener('click', sendChat);
+            chatInput?.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') sendChat();
+            });
 
+            // ====== Příjem historie a nových zpráv ======
+            socket.on("chat:history", (msgs) => {
+                console.log("📜 chat:history", msgs);
+                chatBox.innerHTML = "";
+                (msgs || []).forEach(appendMsg);
+            });
 
+            socket.on("chat:new", (msg) => {
+                console.log("⬅️ chat:new", msg);
+                appendMsg(msg);
+            });
+            </script>
 
+            <!-- Volitelně jednoduché styly -->
+            <style>
+            #chat { max-width: 420px; }
+            #chatcontent {
+                height: 180px; overflow-y: auto;
+                border: 1px solid #ccc; padding: .5rem; background: #fff;
+            }
+            .chat-line { margin: .25rem 0; line-height: 1.2; }
+            .chat-time { opacity: .6; margin-right: .25rem; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+            .chat-name { margin-right: .25rem; }
+            </style>
 
-
-
-
-
-
-
-          </div>
-
-      </div>
     
 
 
