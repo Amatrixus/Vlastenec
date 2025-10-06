@@ -1,0 +1,142 @@
+[
+  {
+    "id": "lit001",
+    "category": "kultura",
+    "question": "Kdo napsal román „Na větrné hůrce“?",
+    "options": ["Charlotte Brontëová", "Emily Brontëová", "Jane Austenová", "Mary Shelleyová"],
+    "correct": 1
+  },
+  {
+    "id": "lit002",
+    "category": "kultura",
+    "question": "Jak se jmenuje hlavní hrdina románu „1984“ od George Orwella?",
+    "options": ["Winston Smith", "Big Brother", "John Proctor", "Guy Montag"],
+    "correct": 0
+  },
+  {
+    "id": "lit003",
+    "category": "kultura",
+    "question": "Kdo je autorem eposu „Božská komedie“?",
+    "options": ["Giovanni Boccaccio", "Dante Alighieri", "Francesco Petrarca", "Torquato Tasso"],
+    "correct": 1
+  },
+  {
+    "id": "lit004",
+    "category": "kultura",
+    "question": "Jak se jmenuje autor románu „Sto roků samoty“?",
+    "options": ["Mario Vargas Llosa", "Gabriel García Márquez", "Julio Cortázar", "Jorge Luis Borges"],
+    "correct": 1
+  },
+  {
+    "id": "lit005",
+    "category": "kultura",
+    "question": "Kdo napsal tragédii „Hamlet“?",
+    "options": ["Christopher Marlowe", "William Shakespeare", "Ben Jonson", "Thomas Kyd"],
+    "correct": 1
+  },
+  {
+    "id": "lit006",
+    "category": "kultura",
+    "question": "Jaký francouzský spisovatel je autorem románu „Hrbáč z Notre-Dame“?",
+    "options": ["Émile Zola", "Victor Hugo", "Gustave Flaubert", "Alexandre Dumas"],
+    "correct": 1
+  },
+  {
+    "id": "lit007",
+    "category": "kultura",
+    "question": "Který český spisovatel napsal „Osudy dobrého vojáka Švejka“?",
+    "options": ["Karel Čapek", "Jaroslav Hašek", "Bohumil Hrabal", "Vladislav Vančura"],
+    "correct": 1
+  },
+  {
+    "id": "lit008",
+    "category": "kultura",
+    "question": "Jak se jmenuje autor knihy „Malý princ“?",
+    "options": ["Jean-Paul Sartre", "Antoine de Saint-Exupéry", "Albert Camus", "Marcel Proust"],
+    "correct": 1
+  },
+  {
+    "id": "lit009",
+    "category": "kultura",
+    "question": "Kdo napsal román „Pýcha a předsudek“?",
+    "options": ["Jane Austenová", "George Eliotová", "Virginia Woolfová", "Emily Brontëová"],
+    "correct": 0
+  },
+  {
+    "id": "lit010",
+    "category": "kultura",
+    "question": "Který ruský autor napsal „Zločin a trest“?",
+    "options": ["Lev Tolstoj", "Anton Pavlovič Čechov", "Fjodor Michajlovič Dostojevskij", "Nikolaj Gogol"],
+    "correct": 2
+  },
+  {
+    "id": "lit011",
+    "category": "kultura",
+    "question": "Kdo je autorem románu „Babička“?",
+    "options": ["Božena Němcová", "Karolina Světlá", "Teréza Nováková", "Eliška Krásnohorská"],
+    "correct": 0
+  },
+  {
+    "id": "lit012",
+    "category": "kultura",
+    "question": "Který český spisovatel napsal „Kytici“?",
+    "options": ["Jan Neruda", "Karel Hynek Mácha", "Karel Jaromír Erben", "Vítězslav Hálek"],
+    "correct": 2
+  },
+  {
+    "id": "lit013",
+    "category": "kultura",
+    "question": "Jak se jmenuje hlavní hrdina Máchova díla „Máj“?",
+    "options": ["Vilém", "Hynek", "Jarmil", "Marek"],
+    "correct": 0
+  },
+  {
+    "id": "lit014",
+    "category": "kultura",
+    "question": "Kdo napsal drama „R.U.R.“?",
+    "options": ["František Langer", "Karel Čapek", "Josef Čapek", "Jaroslav Vrchlický"],
+    "correct": 1
+  },
+  {
+    "id": "lit015",
+    "category": "kultura",
+    "question": "Který autor napsal román „Obsluhoval jsem anglického krále“?",
+    "options": ["Ladislav Fuks", "Bohumil Hrabal", "Milan Kundera", "Josef Škvorecký"],
+    "correct": 1
+  },
+  {
+    "id": "lit016",
+    "category": "kultura",
+    "question": "Kdo je autorem povídky „Romance pro křídlovku“?",
+    "options": ["Vladimír Páral", "Jaroslav Seifert", "František Hrubín", "Jan Skácel"],
+    "correct": 2
+  },
+  {
+    "id": "lit017",
+    "category": "kultura",
+    "question": "Jak se jmenuje autor novely „Spalovač mrtvol“?",
+    "options": ["Ladislav Fuks", "Arnošt Lustig", "Jiří Weil", "Ota Pavel"],
+    "correct": 0
+  },
+  {
+    "id": "lit018",
+    "category": "kultura",
+    "question": "Kdo napsal dílo „Povídky malostranské“?",
+    "options": ["Jan Neruda", "Jakub Arbes", "Svatopluk Čech", "Vítězslav Hálek"],
+    "correct": 0
+  },
+  {
+    "id": "lit019",
+    "category": "kultura",
+    "question": "Který spisovatel je autorem románu „Žert“?",
+    "options": ["Milan Kundera", "Josef Škvorecký", "Bohumil Hrabal", "Arnošt Lustig"],
+    "correct": 0
+  },
+  {
+    "id": "lit020",
+    "category": "kultura",
+    "question": "Kdo napsal básnickou sbírku „Maminka“?",
+    "options": ["Jaroslav Seifert", "František Hrubín", "Vítězslav Nezval", "Jan Skácel"],
+    "correct": 0
+  }
+]
