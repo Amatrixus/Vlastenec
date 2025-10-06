@@ -132,9 +132,20 @@ function delay(ms) {
 
 
 
-import fs from "fs";
+// ✅ SEZNAM OTÁZEK (můžeš později načítat z JSONu)
+const questions = [
+  {
+    question: "Kdo je autorem teorie relativity?",
+    options: ["Newton", "Einstein", "Tesla", "Bohr"],
+    correct: 1 // index správné odpovědi
+  },
+  {
+    question: "Hlavní město Kanady?",
+    options: ["Toronto", "Ottawa", "Vancouver", "Montreal"],
+    correct: 1
+  }
+];
 
-const questions = JSON.parse(fs.readFileSync("multiple_choice_questions.json", "utf8"));
 
 
 
