@@ -138,5 +138,285 @@
     "question": "Kdo napsal básnickou sbírku „Maminka“?",
     "options": ["Jaroslav Seifert", "František Hrubín", "Vítězslav Nezval", "Jan Skácel"],
     "correct": 0
+  },
+  {
+    "id": "lit021",
+    "category": "kultura",
+    "question": "Kdo napsal román „Cizinec“?",
+    "options": ["Jean-Paul Sartre", "Albert Camus", "Franz Kafka", "Simone de Beauvoir"],
+    "correct": 1
+  },
+  {
+    "id": "lit022",
+    "category": "kultura",
+    "question": "Který spisovatel je autorem díla „Proces“?",
+    "options": ["Thomas Mann", "Franz Kafka", "Stefan Zweig", "Robert Musil"],
+    "correct": 1
+  },
+  {
+    "id": "lit023",
+    "category": "kultura",
+    "question": "Kdo napsal román „Jméno růže“?",
+    "options": ["Italo Calvino", "Umberto Eco", "Alberto Moravia", "Primo Levi"],
+    "correct": 1
+  },
+  {
+    "id": "lit024",
+    "category": "kultura",
+    "question": "Jaký ruský autor napsal „Mistr a Markétka“?",
+    "options": ["Michail Bulgakov", "Ivan Bunin", "Alexandr Solženicyn", "Boris Pasternak"],
+    "correct": 0
+  },
+  {
+    "id": "lit025",
+    "category": "kultura",
+    "question": "Kdo je autorem díla „Pán much“?",
+    "options": ["William Golding", "George Orwell", "John Steinbeck", "Aldous Huxley"],
+    "correct": 0
+  },
+  {
+    "id": "lit026",
+    "category": "kultura",
+    "question": "Jaké dílo napsal Miguel de Cervantes?",
+    "options": ["Don Quijote", "Lazarillo de Tormes", "La Celestina", "El Cid"],
+    "correct": 0
+  },
+  {
+    "id": "lit027",
+    "category": "kultura",
+    "question": "Kdo je autorem tragédie „Faust“?",
+    "options": ["Johann Wolfgang von Goethe", "Friedrich Schiller", "Gotthold Ephraim Lessing", "Heinrich Heine"],
+    "correct": 0
+  },
+  {
+    "id": "lit028",
+    "category": "kultura",
+    "question": "Jak se jmenuje autor románu „Na západní frontě klid“?",
+    "options": ["Erich Maria Remarque", "Thomas Mann", "Günter Grass", "Hermann Hesse"],
+    "correct": 0
+  },
+  {
+    "id": "lit029",
+    "category": "kultura",
+    "question": "Kdo napsal román „Stoletý stařík, který vylezl z okna a zmizel“?",
+    "options": ["Jonas Jonasson", "Henning Mankell", "Stieg Larsson", "Jo Nesbø"],
+    "correct": 0
+  },
+  {
+    "id": "lit030",
+    "category": "kultura",
+    "question": "Který americký spisovatel napsal „Hlava XXII“?",
+    "options": ["Joseph Heller", "Kurt Vonnegut", "J.D. Salinger", "Truman Capote"],
+    "correct": 0
+  },
+  {
+    "id": "lit031",
+    "category": "kultura",
+    "question": "Jaké je hlavní téma románu „1984“ od George Orwella?",
+    "options": ["Láska", "Totalita a sledování", "Cestování v čase", "Kolonialismus"],
+    "correct": 1
+  },
+  {
+    "id": "lit032",
+    "category": "kultura",
+    "question": "Kdo napsal „Mechanický pomeranč“?",
+    "options": ["Anthony Burgess", "George Orwell", "Philip K. Dick", "Aldous Huxley"],
+    "correct": 0
+  },
+  {
+    "id": "lit033",
+    "category": "kultura",
+    "question": "Kdo je autorem románu „Na cestě“ (On the Road)?",
+    "options": ["Allen Ginsberg", "Jack Kerouac", "William S. Burroughs", "Ken Kesey"],
+    "correct": 1
+  },
+  {
+    "id": "lit034",
+    "category": "kultura",
+    "question": "Který autor napsal román „Hlava XXII“?",
+    "options": ["Kurt Vonnegut", "Joseph Heller", "Truman Capote", "Ray Bradbury"],
+    "correct": 1
+  },
+  {
+    "id": "lit035",
+    "category": "kultura",
+    "question": "Jak se jmenuje autor románu „Lolita“?",
+    "options": ["Vladimir Nabokov", "Isaac Bashevis Singer", "Ernest Hemingway", "John Updike"],
+    "correct": 0
+  },
+  {
+    "id": "lit036",
+    "category": "kultura",
+    "question": "Kdo napsal „Pán prstenů“?",
+    "options": ["J.R.R. Tolkien", "C.S. Lewis", "George R.R. Martin", "Terry Pratchett"],
+    "correct": 0
+  },
+  {
+    "id": "lit037",
+    "category": "kultura",
+    "question": "Kdo je autorem románu „Zločin a trest“?",
+    "options": ["Fjodor Michajlovič Dostojevskij", "Lev Tolstoj", "Nikolaj Gogol", "Anton Čechov"],
+    "correct": 0
+  },
+  {
+    "id": "lit038",
+    "category": "kultura",
+    "question": "Jak se jmenuje autor románu „Horalka“ (La ciociara)?",
+    "options": ["Giovanni Verga", "Alberto Moravia", "Luigi Pirandello", "Cesare Pavese"],
+    "correct": 1
+  },
+  {
+    "id": "lit039",
+    "category": "kultura",
+    "question": "Kdo napsal román „Kdo chytá v žitě“?",
+    "options": ["Truman Capote", "John Steinbeck", "J.D. Salinger", "William Faulkner"],
+    "correct": 2
+  },
+  {
+    "id": "lit040",
+    "category": "kultura",
+    "question": "Jaký spisovatel získal Nobelovu cenu za literaturu v roce 1954?",
+    "options": ["Albert Camus", "William Faulkner", "Ernest Hemingway", "Thomas Mann"],
+    "correct": 2
+  },
+  {
+    "id": "lit041",
+    "category": "kultura",
+    "question": "Který literární směr je spojen s dílem Charlese Baudelaira „Květy zla“?",
+    "options": ["Realismus", "Romantismus", "Symbolismus", "Naturalismus"],
+    "correct": 2
+  },
+  {
+    "id": "lit042",
+    "category": "kultura",
+    "question": "Jaký směr je typický důrazem na popis skutečnosti bez idealizace, jak ji vidíme u Émila Zoly?",
+    "options": ["Naturalismus", "Realismus", "Impresionismus", "Dekadence"],
+    "correct": 0
+  },
+  {
+    "id": "lit043",
+    "category": "kultura",
+    "question": "Který literární směr je spojen s postavou 'básníka-prokletce'?",
+    "options": ["Romantismus", "Symbolismus", "Dekadence", "Modernismus"],
+    "correct": 2
+  },
+  {
+    "id": "lit044",
+    "category": "kultura",
+    "question": "Který literární směr vznikl jako reakce na osvícenství a klade důraz na cit a přírodu?",
+    "options": ["Realismus", "Romantismus", "Klasismus", "Surrealismus"],
+    "correct": 1
+  },
+  {
+    "id": "lit045",
+    "category": "kultura",
+    "question": "Jak se nazývá literární hnutí, které čerpalo inspiraci ze snů a podvědomí?",
+    "options": ["Existencialismus", "Surrealismus", "Expresionismus", "Impresionismus"],
+    "correct": 1
+  },
+  {
+    "id": "lit046",
+    "category": "kultura",
+    "question": "Který francouzský spisovatel byl představitelem existencialismu?",
+    "options": ["Albert Camus", "Victor Hugo", "Marcel Proust", "Paul Verlaine"],
+    "correct": 0
+  },
+  {
+    "id": "lit047",
+    "category": "kultura",
+    "question": "Jaký směr literatury reprezentují díla Beat generation, např. Jack Kerouac nebo Allen Ginsberg?",
+    "options": ["Realismus", "Existencialismus", "Avantgarda", "Beatnická literatura"],
+    "correct": 3
+  },
+  {
+    "id": "lit048",
+    "category": "kultura",
+    "question": "Který směr usiloval o návrat k antickým ideálům harmonie a rozumu?",
+    "options": ["Romantismus", "Klasismus", "Renesance", "Realismus"],
+    "correct": 1
+  },
+  {
+    "id": "lit049",
+    "category": "kultura",
+    "question": "Jaký literární směr je spojen s Jamesem Joycem a technikou proudu vědomí?",
+    "options": ["Modernismus", "Realismus", "Existencialismus", "Postmodernismus"],
+    "correct": 0
+  },
+  {
+    "id": "lit050",
+    "category": "kultura",
+    "question": "Jak se nazývá literární směr, který v první polovině 20. století reagoval na hrůzy války absurditou a ironií?",
+    "options": ["Dadaismus", "Futurismus", "Surrealismus", "Expresionismus"],
+    "correct": 0
+  },
+  {
+    "id": "lit051",
+    "category": "kultura",
+    "question": "Jaký literární směr je typický pro Franze Kafku?",
+    "options": ["Absurdní literatura", "Naturalismus", "Realismus", "Symbolismus"],
+    "correct": 0
+  },
+  {
+    "id": "lit052",
+    "category": "kultura",
+    "question": "Jaký literární směr je spojen s Hemingwayovým stylem 'ledovce' – jednoduchým jazykem s hlubším podtextem?",
+    "options": ["Modernismus", "Realismus", "Minimalismus", "Postmodernismus"],
+    "correct": 2
+  },
+  {
+    "id": "lit053",
+    "category": "kultura",
+    "question": "Který směr je spojen s bojem proti dogmatům a náboženské autoritě a rozvíjel se v 18. století?",
+    "options": ["Romantismus", "Osvícenství", "Humanismus", "Empirismus"],
+    "correct": 1
+  },
+  {
+    "id": "lit054",
+    "category": "kultura",
+    "question": "Jaký směr vznikl po druhé světové válce a typicky používá ironii a intertextualitu?",
+    "options": ["Postmodernismus", "Realismus", "Naturalismus", "Impresionismus"],
+    "correct": 0
+  },
+  {
+    "id": "lit055",
+    "category": "kultura",
+    "question": "Který směr klade důraz na intenzivní vyjádření emocí a vnitřního napětí postav, často až deformací reality?",
+    "options": ["Expresionismus", "Surrealismus", "Symbolismus", "Romantismus"],
+    "correct": 0
+  },
+  {
+    "id": "lit056",
+    "category": "kultura",
+    "question": "Jaký směr je spojen s renesancí a objevováním lidské individuality?",
+    "options": ["Humanismus", "Klasismus", "Realismus", "Romantismus"],
+    "correct": 0
+  },
+  {
+    "id": "lit057",
+    "category": "kultura",
+    "question": "Který literární směr reagoval na průmyslovou revoluci a zobrazoval sociální problémy 19. století?",
+    "options": ["Naturalismus", "Realismus", "Romantismus", "Existencialismus"],
+    "correct": 1
+  },
+  {
+    "id": "lit058",
+    "category": "kultura",
+    "question": "Který avantgardní směr vyzdvihoval rychlost, techniku a válku jako formu krásy?",
+    "options": ["Futurismus", "Dadaismus", "Kubismus", "Expresionismus"],
+    "correct": 0
+  },
+  {
+    "id": "lit059",
+    "category": "kultura",
+    "question": "Jaký směr se vyznačuje absurdním humorem a motivem ztráty smyslu života, typickým pro Becketta?",
+    "options": ["Existencialismus", "Absurdní drama", "Postmodernismus", "Dekadence"],
+    "correct": 1
+  },
+  {
+    "id": "lit060",
+    "category": "kultura",
+    "question": "Jaký směr 20. století kombinuje realitu s prvky fantazie, jak to vidíme u Márqueze nebo Borgese?",
+    "options": ["Magický realismus", "Surrealismus", "Postmodernismus", "Symbolismus"],
+    "correct": 0
   }
 ]
