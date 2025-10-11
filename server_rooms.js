@@ -141,6 +141,12 @@ function delay(ms) {
 const questionsPath = path.join(__dirname, 'multiple_choice_questions.json');
 const questions = JSON.parse(fs.readFileSync(questionsPath, 'utf8'));
 
+
+// --- Numeric Qs (CJS) ---
+const numericQuestionsPath = path.join(__dirname, 'numeric_questions.json');
+const numericQuestions = JSON.parse(fs.readFileSync(numericQuestionsPath, 'utf8'));
+
+
 module.exports = { questions }; // pokud exportuješ dál
 
 
@@ -220,25 +226,17 @@ function runNumericQuestionForTwo(roomId, [player1, player2]) {
     const room = rooms[roomId];
     if (!room) return resolve(null);
 
-    room.numericStartTime = Date.now(); // ✅ měření času začíná hned při položení otázky
-    room.numericAnswers = {};
+    // Vyber náhodnou otázku z JSONu
+    const nq = numericQuestions[Math.floor(Math.random() * numericQuestions.length)];
+    const correctAnswer = Number.isInteger(nq.answer) ? nq.answer : parseInt(nq.answer, 10);
 
-
-
-
-    // ✅ Vygeneruj jednoduchou otázku
-    const a = Math.floor(Math.random() * 50);
-    const b = Math.floor(Math.random() * 50);
-    const correctAnswer = a + b;
-
-    console.log(`❓ Numerická otázka pro ${player1} a ${player2}: ${a} + ${b} = ?`);
+    console.log(`❓ Numerická (duel) ${player1} vs ${player2}: ${nq.question} → správně: ${correctAnswer}`);
 
     room.numericAnswers = {};
-    const startTime = Date.now();
+    room.numericStartTime = Date.now();
 
-    // Přidáme jména hráčů do eventu
     io.to(roomId).emit("numericQuestionForTwo", {
-      question: `${a} + ${b}`,
+      question: nq.question,  // <— posíláme text otázky
       time: 15,
       attacker: player1,
       defender: player2,
@@ -250,48 +248,44 @@ function runNumericQuestionForTwo(roomId, [player1, player2]) {
       if (rId !== roomId) return;
       if (![player1, player2].includes(player)) return;
 
+      // zkonvertuj vstup na celé číslo
+      const num = parseInt(answer, 10);
+      if (Number.isNaN(num)) return;
+
       if (!room.numericAnswers[player]) {
         room.numericAnswers[player] = {
-          num: answer,
-          time: Date.now() - room.numericStartTime // ✅ správný čas od začátku
+          num,
+          time: Date.now() - room.numericStartTime
         };
-        console.log(`✏️ Hráč ${player} odpověděl: ${answer} (${room.numericAnswers[player].time}ms)`);
+        console.log(`✏️ Hráč ${player} odpověděl: ${num} (${room.numericAnswers[player].time}ms)`);
       }
     };
 
-  
-
     io.on("playerNumericAnswer", handler);
 
-    // ✅ Vyhodnocení po 15 s
     setTimeout(() => {
       io.off("playerNumericAnswer", handler);
 
-      // ✅ Doplníme odpovědi pro ty, kteří neodpověděli
-      [player1, player2].forEach(player => {
-        if (!room.numericAnswers[player]) {
-          room.numericAnswers[player] = {
-            num: 0,
-            time: 15000 // maximální limit
-          };
-          console.log(`⏳ Hráč ${player} nestihl → nastavena odpověď 0 (15 s)`);
+      // doplň chybějící odpovědi
+      [player1, player2].forEach(p => {
+        if (!room.numericAnswers[p]) {
+          room.numericAnswers[p] = { num: 0, time: 15000 };
+          console.log(`⏳ Hráč ${p} nestihl → nastavena odpověď 0 (15 s)`);
         }
       });
 
       const sorted = Object.entries(room.numericAnswers)
         .map(([player, data]) => ({
           player: Number(player),
-          num: data.num, // ✅ přidáme samotnou odpověď!
+          num: data.num,
           diff: Math.abs(data.num - correctAnswer),
           time: data.time
         }))
-        .sort((a, b) =>
-          a.diff !== b.diff ? a.diff - b.diff : a.time - b.time
-        );
+        .sort((a, b) => (a.diff !== b.diff ? a.diff - b.diff : a.time - b.time));
 
       const winner = sorted[0].player;
 
-      console.log(`🏆 Vítěz numerické otázky: Hráč ${winner}`);
+      console.log(`🏆 Vítěz (duel): Hráč ${winner}`);
 
       io.to(roomId).emit("numericQuestionResultsForTwo", {
         correctAnswer,
@@ -299,20 +293,16 @@ function runNumericQuestionForTwo(roomId, [player1, player2]) {
         defender: player2,
         answers: sorted.map(a => ({
           player: a.player,
-          num: a.num,        // ✅ už je součástí dat!
+          num: a.num,
           time: a.time,
           name: room.players[a.player - 1].name
         }))
       });
 
-
       resolve(winner);
     }, 15000);
   });
 }
-
-
-
 
 
 
@@ -322,49 +312,58 @@ function runNumericQuestionForThree(roomId) {
     const room = rooms[roomId];
     if (!room) return resolve(null);
 
-    const a = Math.floor(Math.random() * 50);
-    const b = Math.floor(Math.random() * 50);
-    const correctAnswer = a + b;
+    const nq = numericQuestions[Math.floor(Math.random() * numericQuestions.length)];
+    const correctAnswer = Number.isInteger(nq.answer) ? nq.answer : parseInt(nq.answer, 10);
 
-    console.log(`❓ Numerická otázka: ${a} + ${b} = ?`);
+    console.log(`❓ Numerická (3 hráči): ${nq.question} → správně: ${correctAnswer}`);
 
-    room.numericAnswers = {}; // reset
+    room.numericAnswers = {};
     room.numericStartTime = Date.now();
 
     io.to(roomId).emit("numericQuestion", {
-      question: `${a} + ${b}`,
+      question: nq.question, // <— text otázky
       time: 15
     });
 
-   setTimeout(() => {
-      const answers = { ...room.numericAnswers }; // ✅ vytvoří kopii
-      room.numericAnswers = {}; // reset až poté
+    const handler = ({ room: rId, player, answer }) => {
+      if (rId !== roomId) return;
+      const num = parseInt(answer, 10);
+      if (Number.isNaN(num)) return;
 
-      // Nyní použij `answers` místo `room.numericAnswers`
+      if (!room.numericAnswers[player]) {
+        room.numericAnswers[player] = {
+          num,
+          time: Date.now() - room.numericStartTime
+        };
+        console.log(`✏️ Hráč ${player} odpověděl: ${num} (${room.numericAnswers[player].time}ms)`);
+      }
+    };
+
+    io.on("playerNumericAnswer", handler);
+
+    setTimeout(() => {
+      io.off("playerNumericAnswer", handler);
+
+      // doplň neodpověděné
       [1, 2, 3].forEach(player => {
-        if (!answers[player]) {
-          answers[player] = {
-            num: 0,
-            time: 15000
-          };
-          console.log(`⏳ Hráč ${player} nestihl → nastavena odpověď 0 (15 s)`);
+        if (!room.numericAnswers[player]) {
+          room.numericAnswers[player] = { num: 0, time: 15000 };
+          console.log(`⏳ Hráč ${player} nestihl → 0 (15 s)`);
         }
       });
 
-      const sorted = Object.entries(answers)
+      const sorted = Object.entries(room.numericAnswers)
         .map(([player, data]) => ({
           player: Number(player),
           num: data.num,
           diff: Math.abs(data.num - correctAnswer),
           time: data.time
         }))
-        .sort((a, b) =>
-          a.diff !== b.diff ? a.diff - b.diff : a.time - b.time
-        );
+        .sort((a, b) => (a.diff !== b.diff ? a.diff - b.diff : a.time - b.time));
 
       const winner = sorted[0].player;
 
-      console.log(`🏆 Vítěz numerické otázky: Hráč ${winner}`);
+      console.log(`🏆 Vítěz (3 hráči): Hráč ${winner}`);
 
       io.to(roomId).emit("numericQuestionResults", {
         correctAnswer,
@@ -373,9 +372,10 @@ function runNumericQuestionForThree(roomId) {
 
       resolve(winner);
     }, 15000);
-
   });
 }
+
+
 
 
 
