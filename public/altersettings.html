@@ -170,7 +170,6 @@
 </body>
 </html>
 
-
 <script>
 (() => {
   // --- DOM refs ---
@@ -180,6 +179,10 @@
   const nameEl  = document.getElementById('playerName');
   const startEl = document.getElementById('startBtn');
   const radios  = document.querySelectorAll('#selectmode input[type="radio"][name="gameMode"]');
+  const roomInput = document.getElementById('roomLink');
+  const copyBtn   = document.getElementById('copyLinkBtn');
+
+  const GAME_URL_BASE = `${window.location.origin}/game_online.html`;
 
   // --- texty módů ---
   const MODES = {
@@ -188,6 +191,9 @@
     bots:    { title: 'Hra proti botům',  desc: 'Trénuj proti chytrým botům a zlepšuj se bez stresu.', share: false },
     liga:    { title: 'Liga',             desc: 'Sbírej body do ligy a vyšplhej se v žebříčku.', share: false }
   };
+
+  // --- stav ---
+  let currentRoomCode = null; // držíme si kód místnosti, když ho vygenerujeme
 
   // --- pomocné ---
   function currentModeKey() {
@@ -205,50 +211,49 @@
       shareEl.classList.remove('hidden');
     } else {
       shareEl.classList.add('hidden');
+      // při přepnutí pryč od friends vizuálně vyčisti share pole
+      currentRoomCode = null;
+      if (roomInput) roomInput.value = '';
     }
   }
 
   // Vygeneruj krátký kód místnosti
   function genRoomCode(len = 6) {
-    // kryptograficky lepší generátor, fallback na Math.random
-    if (window.crypto && crypto.getRandomValues) {
+    if (window.crypto?.getRandomValues) {
       const arr = new Uint8Array(len);
       crypto.getRandomValues(arr);
-      return Array.from(arr, n => 'abcdefghijklmnopqrstuvwxyz0123456789'[n % 36]).join('');
+      const alphabet = 'abcdefghijklmnopqrstuvwxyz0123456789';
+      return Array.from(arr, n => alphabet[n % alphabet.length]).join('');
     }
     return Math.random().toString(36).slice(2, 2 + len);
   }
 
-  // Vygeneruj (a zkopíruj) share link u "Přátel"
-  const roomInput = document.getElementById('roomLink');
-  const copyBtn   = document.getElementById('copyLinkBtn');
+  // Klik na "Generovat odkaz" → vytvoř share link pro hosty (jen ?room=CODE)
   copyBtn?.addEventListener('click', async () => {
-    // vytvoř URL pro přátele – můžeš si změnit cestu /room/
-    const code = genRoomCode();
-    const link = `${window.location.origin}/room/${code}`;
+    currentRoomCode = genRoomCode();
+    const link = `${GAME_URL_BASE}?room=${currentRoomCode}`;
     roomInput.value = link;
 
     try {
       await navigator.clipboard.writeText(link);
       copyBtn.textContent = 'Zkopírováno ✓';
-      setTimeout(() => copyBtn.textContent = 'Generovat odkaz', 1500);
+      setTimeout(() => (copyBtn.textContent = 'Generovat odkaz'), 1500);
     } catch {
       copyBtn.textContent = 'Zkopíruj ručně';
-      setTimeout(() => copyBtn.textContent = 'Generovat odkaz', 1500);
+      setTimeout(() => (copyBtn.textContent = 'Generovat odkaz'), 1500);
     }
   });
 
   // Přepínání módů (barva/šedá řeší CSS přes :checked)
   radios.forEach(r => r.addEventListener('change', () => applyMode(r.value)));
 
-  // Výchozí stav – klidně si změň na 'friends' pokud chceš
+  // Výchozí stav (klidně si změň na 'friends')
   const defaultMode = 'random';
   const def = [...radios].find(r => r.value === defaultMode) || radios[0];
   if (def) { def.checked = true; applyMode(def.value); }
 
   // --- sběr kategorií ---
   function getSelectedCategories() {
-    // Struktura: label.tile > input[type=checkbox], img, .checkmark, .tooltip
     const labels = document.querySelectorAll('#cattiles label.tile');
     const picked = [];
     labels.forEach((lab, idx) => {
@@ -256,7 +261,6 @@
       if (cb && cb.checked) {
         const tooltip = lab.querySelector('.tooltip');
         const label   = tooltip ? tooltip.textContent.trim() : `cat${idx+1}`;
-        // Pošleme kompaktně indexy i názvy (příjemce si může vybrat)
         picked.push({ id: (idx+1), name: label });
       }
     });
@@ -269,29 +273,28 @@
     const mode = currentModeKey();
     const cats = getSelectedCategories();
 
-    // základní validace
+    // Validace
     if (!name) { alert('Zadej prosím jméno hráče.'); nameEl.focus(); return; }
     if (!mode) { alert('Vyber prosím herní režim.'); return; }
     if (cats.length === 0) { alert('Vyber aspoň jednu kategorii.'); return; }
 
-    // zabalíme do query parametrů (kompaktní i čitelné)
     const params = new URLSearchParams();
     params.set('name', name);
     params.set('mode', mode);
-    // CSV idček (např. "1,2,5")
     params.set('cats', cats.map(c => c.id).join(','));
-    // volitelně i názvy (URL-encoded JSON) – pokud chceš číst názvy rovnou
+    // držíme dosavadní způsob kódování (na čtení máš decodeURIComponent + JSON.parse)
     params.set('catnames', encodeURIComponent(JSON.stringify(cats.map(c => c.name))));
 
-    // pokud je to "friends" a máš vygenerovaný link, můžeš přidat roomCode
-    if (mode === 'friends' && roomInput.value) {
-      // vytáhneme kód z /room/XXXXXX
-      const m = roomInput.value.match(/\/room\/([a-z0-9]{4,})$/i);
-      if (m) params.set('room', m[1]);
+    if (mode === 'friends') {
+      // pokud uživatel neklikl na "Generovat odkaz", vygeneruj kód teď
+      if (!currentRoomCode) {
+        currentRoomCode = genRoomCode();
+        if (roomInput) roomInput.value = `${GAME_URL_BASE}?room=${currentRoomCode}`;
+      }
+      params.set('room', currentRoomCode);
     }
 
-    // přesměrování
-    window.location.href = `game_online.html?${params.toString()}`;
+    window.location.href = `${GAME_URL_BASE}?${params.toString()}`;
   });
 
   // Enter v poli Jméno spustí hru
