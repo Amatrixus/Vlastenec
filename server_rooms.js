@@ -26,6 +26,111 @@ server.listen(PORT, '0.0.0.0', () => console.log('Server běží na', PORT));
 const MAX_PLAYERS_PER_ROOM = 3;
 const rooms = {}; // roomId -> { players, scores, bases, regions, regionValues, defenseBonuses }
 
+
+
+
+
+
+
+
+
+
+
+
+
+function makeEmptyRoom(roomId) {
+  rooms[roomId] = {
+    players: [],
+    scores: { 1: 0, 2: 0, 3: 0 },
+    bases: {},
+    regions: {
+      Player1regions: [],
+      Player2regions: [],
+      Player3regions: []
+    },
+    regionValues: { ...defaultRegionValues },
+    defenseBonuses: { Player1: 0, Player2: 0, Player3: 0 },
+    playerLives: { Player1: 3, Player2: 3, Player3: 3 },
+    chat: []
+  };
+  return rooms[roomId];
+}
+
+function roomAddPlayerAndBroadcast(roomId, socket, name) {
+  const room = rooms[roomId];
+  const myNumber = room.players.length + 1;
+
+  socket.join(roomId);
+  room.players.push({ id: socket.id, name });
+
+  const allNames = {};
+  room.players.forEach((p, index) => { allNames[index + 1] = p.name; });
+
+  socket.emit("assignPlayerNumber", {
+    number: myNumber,
+    allNames,
+    scores: room.scores,
+    roomId
+  });
+
+  io.to(roomId).emit("updatePlayers", { allNames });
+  io.to(roomId).emit("updateScores", { scores: room.scores });
+
+  // Pokud je plno (3 hráči), nastartuj hru stejně jako u submitName
+  if (room.players.length === MAX_PLAYERS_PER_ROOM) {
+    const possibleBases = ['Rho', 'Omega', 'Theta'];
+    const shuffled = possibleBases.sort(() => Math.random() - 0.5);
+
+    room.bases[1] = shuffled[0];
+    room.bases[2] = shuffled[1];
+    room.bases[3] = shuffled[2];
+
+    room.regions.Player1regions = [room.bases[1]];
+    room.regions.Player2regions = [room.bases[2]];
+    room.regions.Player3regions = [room.bases[3]];
+
+    room.scores = calculateScores(room.regions, room.regionValues, room.defenseBonuses);
+
+    io.to(roomId).emit("startGame", {
+      bases: room.bases,
+      regions: room.regions,
+      regionValues: room.regionValues
+    });
+
+    io.to(roomId).emit("updateScores", { scores: room.scores });
+    runGameScenario(roomId);
+  }
+}
+
+// krátký čitelný kod místnosti pro „friends“
+function genRoomCode(len = 6) {
+  const alphabet = "abcdefghijklmnopqrstuvwxyz0123456789";
+  let s = "";
+  for (let i = 0; i < len; i++) s += alphabet[Math.floor(Math.random() * alphabet.length)];
+  return s;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 const defaultRegionValues = {
   Alpha: 0,
   Delta: 0,
@@ -1265,6 +1370,60 @@ io.on('connection', socket => {
       console.log("🎯 Hodnoty regionů:", room.regionValues);
     }
   });
+
+
+
+
+  // FRIENDS: host vytvoří místnost a rovnou se do ní přidá
+socket.on("createRoom", ({ settings }) => {
+  const name = (settings?.name || "").toString().trim() || "Host";
+  const roomId = `room_${genRoomCode(6)}`;
+
+  const room = makeEmptyRoom(roomId);
+  // volitelně si můžeš uložit i settings (mode, cats, catNames) do room
+  room.settings = settings || {};
+
+  // potvrď hostovi room kód
+  socket.emit("roomReady", { room: roomId });
+
+  // přidej hráče do místnosti (stejně jako v submitName)
+  roomAddPlayerAndBroadcast(roomId, socket, name);
+
+  console.log(`🏠 createRoom → ${roomId} by ${name}`);
+});
+
+// FRIENDS: hosté (nebo host, pokud už má kód) se připojují do existující room
+socket.on("joinRoom", ({ room, settings }) => {
+  const name = (settings?.name || "").toString().trim() || "Host";
+  const roomId = (room || "").toString().trim();
+
+  if (!roomId) {
+    socket.emit("roomError", { message: "Missing room id" });
+    return;
+  }
+
+  // pokud místnost neexistuje, můžeš ji buď založit, nebo odmítnout
+  if (!rooms[roomId]) {
+    // varianta A (přátelštější): založit prázdnou, aby se hosté mohli připojit i když host ještě „neběží“
+    makeEmptyRoom(roomId);
+    rooms[roomId].settings = settings || {};
+  }
+
+  const current = rooms[roomId];
+  if (current.players.length >= MAX_PLAYERS_PER_ROOM) {
+    socket.emit("roomError", { message: "Room is full" });
+    return;
+  }
+
+  roomAddPlayerAndBroadcast(roomId, socket, name);
+  console.log(`👥 joinRoom → ${roomId} by ${name}`);
+});
+
+
+
+
+
+
 
 
 
