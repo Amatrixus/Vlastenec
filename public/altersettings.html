@@ -187,13 +187,13 @@
   // --- texty módů ---
   const MODES = {
     random:  { title: 'Náhodný soupeř',  desc: 'Najdi protivníka z celé republiky a poměřte znalosti!', share: false },
-    friends: { title: 'Hra s přáteli',    desc: 'Vytvoř místnost a sdílej odkaz s přáteli. Hrajte spolu, kdo zná víc!', share: true },
-    bots:    { title: 'Hra proti botům',  desc: 'Trénuj proti chytrým botům a zlepšuj se bez stresu.', share: false },
-    liga:    { title: 'Liga',             desc: 'Sbírej body do ligy a vyšplhej se v žebříčku.', share: false }
+    friends:{ title: 'Hra s přáteli',    desc: 'Vytvoř místnost a sdílej odkaz s přáteli. Hrajte spolu, kdo zná víc!', share: true },
+    bots:   { title: 'Hra proti botům',  desc: 'Trénuj proti chytrým botům a zlepšuj se bez stresu.',   share: false },
+    liga:   { title: 'Liga',             desc: 'Sbírej body do ligy a vyšplhej se v žebříčku.',         share: false }
   };
 
   // --- stav ---
-  let currentRoomCode = null; // držíme si kód místnosti, když ho vygenerujeme
+  let currentRoomCode = null;
 
   // --- pomocné ---
   function currentModeKey() {
@@ -211,13 +211,11 @@
       shareEl.classList.remove('hidden');
     } else {
       shareEl.classList.add('hidden');
-      // při přepnutí pryč od friends vizuálně vyčisti share pole
       currentRoomCode = null;
       if (roomInput) roomInput.value = '';
     }
   }
 
-  // Vygeneruj krátký kód místnosti
   function genRoomCode(len = 6) {
     if (window.crypto?.getRandomValues) {
       const arr = new Uint8Array(len);
@@ -228,7 +226,7 @@
     return Math.random().toString(36).slice(2, 2 + len);
   }
 
-  // Klik na "Generovat odkaz" → vytvoř share link pro hosty (jen ?room=CODE)
+  // --- share link pro přátele (jen ?mode=friends&room=CODE) ---
   copyBtn?.addEventListener('click', async () => {
     currentRoomCode = genRoomCode();
     const link = `${GAME_URL_BASE}?mode=friends&room=${currentRoomCode}`;
@@ -247,10 +245,15 @@
   // Přepínání módů (barva/šedá řeší CSS přes :checked)
   radios.forEach(r => r.addEventListener('change', () => applyMode(r.value)));
 
-  // Výchozí stav (klidně si změň na 'friends')
+  // --- počáteční mód z URL (fallback na 'random') ---
   const defaultMode = 'random';
-  const def = [...radios].find(r => r.value === defaultMode) || radios[0];
-  if (def) { def.checked = true; applyMode(def.value); }
+  const qp = new URLSearchParams(location.search);
+  const urlMode = (qp.get('mode') || '').toLowerCase();
+  const allowedModes = new Set(['random','friends','bots','liga']);
+  const initialMode = allowedModes.has(urlMode) ? urlMode : defaultMode;
+
+  const initialRadio = [...radios].find(r => r.value === initialMode) || radios[0];
+  if (initialRadio) { initialRadio.checked = true; applyMode(initialRadio.value); }
 
   // --- sběr kategorií ---
   function getSelectedCategories() {
@@ -273,7 +276,6 @@
     const mode = currentModeKey();
     const cats = getSelectedCategories();
 
-    // Validace
     if (!name) { alert('Zadej prosím jméno hráče.'); nameEl.focus(); return; }
     if (!mode) { alert('Vyber prosím herní režim.'); return; }
     if (cats.length === 0) { alert('Vyber aspoň jednu kategorii.'); return; }
@@ -282,14 +284,12 @@
     params.set('name', name);
     params.set('mode', mode);
     params.set('cats', cats.map(c => c.id).join(','));
-    // držíme dosavadní způsob kódování (na čtení máš decodeURIComponent + JSON.parse)
     params.set('catnames', encodeURIComponent(JSON.stringify(cats.map(c => c.name))));
 
     if (mode === 'friends') {
-      // pokud uživatel neklikl na "Generovat odkaz", vygeneruj kód teď
       if (!currentRoomCode) {
         currentRoomCode = genRoomCode();
-        if (roomInput) roomInput.value = `${GAME_URL_BASE}?room=${currentRoomCode}`;
+        if (roomInput) roomInput.value = `${GAME_URL_BASE}?mode=friends&room=${currentRoomCode}`;
       }
       params.set('room', currentRoomCode);
     }
