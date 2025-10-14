@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VLASTENEC</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="home.css">
+</head>
+<body>
+  <div id="background-layer"></div>
+  <div id="cover"></div>
+  <div class="glow-behind"></div>
+
+  <div id="wrapper">
+    <main id="main-layout">
+
+
+         <div id="logintile">
+            <img id="loginavatar" src="avatar.png">
+            <div id="logintext">Přihlásit se</div>
+        
+
+      </div>
+      
+
+
+
+      <div class="left-column">
+        <h1>VLASTENEC</h1>
+        <p class="tagline">Vyber si témata a nastav hru.</p><br>
+        
+
+
+            <div id="lobbychat">
+                
+                <div id="lobbyheadline">Lobby chat</div>
+                <div id="lobbybody"></div>
+                
+
+
+            </div>
+
+
+
+            <div id="settings">
+
+
+                    <div class="player-info">
+                            <div id="playerheadline">Jméno</div>
+                            <input type="text" id="playerName" placeholder="Zadejte jméno">
+
+                            <div>
+                            <small>
+                                Chceš si ukládat výhry? <a href="#" id="loginPrompt">Přihlas se</a>.
+                            </small>
+                            </div>
+                    </div>
+
+                    <div class="mode-settings">
+                            
+                        <div id="selectmode">
+                        <label class="mode-option">
+                            <input type="radio" name="gameMode" value="random" />
+                            <img src="randomfull.png" id="randomselect" class="selectmodepic" alt="Náhodně" />
+                        </label>
+                        <label class="mode-option">
+                            <input type="radio" name="gameMode" value="friends" />
+                            <img src="friendsfull.png" class="selectmodepic" alt="Přátelé" />
+                        </label>
+                        <label class="mode-option">
+                            <input type="radio" name="gameMode" value="bots" />
+                            <img src="botsfull.png" class="selectmodepic" alt="Boti" />
+                        </label>
+                        <label class="mode-option">
+                            <input type="radio" name="gameMode" value="liga" />
+                            <img src="ligafull.png" id="ligaselect" class="selectmodepic" alt="Liga" />
+                        </label>
+                        </div>
+<div id="modeTitle">Hra s přáteli</div>
+                            <p id="modeDescription">
+                                Vytvoř místnost a sdílej odkaz s přáteli. Hrajte spolu, kdo zná víc!
+                            </p>
+
+                        
+                            <div id="shareLink" class="hidden">
+                             
+                                <input type="text" readonly id="roomLink">
+                                
+                                <button id="copyLinkBtn">Generovat odkaz</button>
+                            </div>
+                    </div>
+
+                    <div class="actions">
+                    <button id="startBtn">Spustit hru</button>
+                    
+                    </div>
+
+                    
+            </div>
+
+            <div id="catsblock">
+
+                    <div id="catsheadline">Kategorie</div>
+                    <div id="cattiles">
+                                        <label class="tile">
+                                    <input type="checkbox" name="cat1" checked>
+                                    <img src="tiles/tile1.png" alt="Tile 1">
+                                    <span class="checkmark"></span>
+                                    <span class="tooltip">Přírodní vědy</span>
+                                </label><label class="tile">
+                                    <input type="checkbox" name="cat2" checked>
+                                    <img src="tiles/tile2.png" alt="Tile 2">
+                                    <span class="checkmark"></span>
+                                    <span class="tooltip">Jazyk a literatura</span>
+                                </label><label class="tile">
+                                    <input type="checkbox" name="cat3" checked>
+                                    <img src="tiles/tile3.png" alt="Tile 1">
+                                    <span class="checkmark"></span>
+                                    <span class="tooltip">Technologie</span>
+                                </label><label class="tile">
+                                    <input type="checkbox" name="cat4" checked>
+                                    <img src="tiles/tile4.png" alt="Tile 2">
+                                    <span class="checkmark"></span>
+                                    <span class="tooltip">Geografie</span>
+                                </label><label class="tile">
+                                    <input type="checkbox" name="cat5" checked>
+                                    <img src="tiles/tile5.png" alt="Tile 1">
+                                    <span class="checkmark"></span>
+                                    <span class="tooltip">Historie</span>
+                                </label><label class="tile">
+                                    <input type="checkbox" name="cat6" checked>
+                                    <img src="tiles/tile6.png" alt="Tile 2">
+                                    <span class="checkmark"></span>
+                                    <span class="tooltip">Kultura a umění</span>
+                                </label><label class="tile">
+                                    <input type="checkbox" name="cat7" checked>
+                                    <img src="tiles/tile7.png" alt="Tile 1">
+                                    <span class="checkmark"></span>
+                                    <span class="tooltip">Sport</span>
+                                </label><label class="tile">
+                                    <input type="checkbox" name="cat8" checked>
+                                    <img src="tiles/tile8.png" alt="Tile 2">
+                                    <span class="checkmark"></span>
+                                    <span class="tooltip">Osobnosti</span>
+                                </label><label class="tile">
+                                    <input type="checkbox" name="cat9" checked>
+                                    <img src="tiles/tile9.png" alt="Tile 9">
+                                    <span class="checkmark"></span>
+                                    <span class="tooltip">Politika</span>
+                                </label>
+
+                        </div>
+                        
+
+            </div>
+
+        
+      </div>
+
+      
+      
+    </main>
+
+   
+
+
+    
+  </div>
+</body>
+</html>
+
+
+<script>
+(() => {
+  // --- DOM refs ---
+  const titleEl = document.getElementById('modeTitle');
+  const descEl  = document.getElementById('modeDescription');
+  const shareEl = document.getElementById('shareLink');
+  const nameEl  = document.getElementById('playerName');
+  const startEl = document.getElementById('startBtn');
+  const radios  = document.querySelectorAll('#selectmode input[type="radio"][name="gameMode"]');
+
+  // --- texty módů ---
+  const MODES = {
+    random:  { title: 'Náhodný soupeř',  desc: 'Najdi protivníka z celé republiky a poměřte znalosti!', share: false },
+    friends: { title: 'Hra s přáteli',    desc: 'Vytvoř místnost a sdílej odkaz s přáteli. Hrajte spolu, kdo zná víc!', share: true },
+    bots:    { title: 'Hra proti botům',  desc: 'Trénuj proti chytrým botům a zlepšuj se bez stresu.', share: false },
+    liga:    { title: 'Liga',             desc: 'Sbírej body do ligy a vyšplhej se v žebříčku.', share: false }
+  };
+
+  // --- pomocné ---
+  function currentModeKey() {
+    const r = [...radios].find(x => x.checked);
+    return r ? r.value : null;
+  }
+
+  function applyMode(modeKey) {
+    const m = MODES[modeKey];
+    if (!m) return;
+    titleEl.textContent = m.title;
+    descEl.textContent  = m.desc;
+
+    if (m.share) {
+      shareEl.classList.remove('hidden');
+    } else {
+      shareEl.classList.add('hidden');
+    }
+  }
+
+  // Vygeneruj krátký kód místnosti
+  function genRoomCode(len = 6) {
+    // kryptograficky lepší generátor, fallback na Math.random
+    if (window.crypto && crypto.getRandomValues) {
+      const arr = new Uint8Array(len);
+      crypto.getRandomValues(arr);
+      return Array.from(arr, n => 'abcdefghijklmnopqrstuvwxyz0123456789'[n % 36]).join('');
+    }
+    return Math.random().toString(36).slice(2, 2 + len);
+  }
+
+  // Vygeneruj (a zkopíruj) share link u "Přátel"
+  const roomInput = document.getElementById('roomLink');
+  const copyBtn   = document.getElementById('copyLinkBtn');
+  copyBtn?.addEventListener('click', async () => {
+    // vytvoř URL pro přátele – můžeš si změnit cestu /room/
+    const code = genRoomCode();
+    const link = `${window.location.origin}/room/${code}`;
+    roomInput.value = link;
+
+    try {
+      await navigator.clipboard.writeText(link);
+      copyBtn.textContent = 'Zkopírováno ✓';
+      setTimeout(() => copyBtn.textContent = 'Generovat odkaz', 1500);
+    } catch {
+      copyBtn.textContent = 'Zkopíruj ručně';
+      setTimeout(() => copyBtn.textContent = 'Generovat odkaz', 1500);
+    }
+  });
+
+  // Přepínání módů (barva/šedá řeší CSS přes :checked)
+  radios.forEach(r => r.addEventListener('change', () => applyMode(r.value)));
+
+  // Výchozí stav – klidně si změň na 'friends' pokud chceš
+  const defaultMode = 'random';
+  const def = [...radios].find(r => r.value === defaultMode) || radios[0];
+  if (def) { def.checked = true; applyMode(def.value); }
+
+  // --- sběr kategorií ---
+  function getSelectedCategories() {
+    // Struktura: label.tile > input[type=checkbox], img, .checkmark, .tooltip
+    const labels = document.querySelectorAll('#cattiles label.tile');
+    const picked = [];
+    labels.forEach((lab, idx) => {
+      const cb = lab.querySelector('input[type="checkbox"]');
+      if (cb && cb.checked) {
+        const tooltip = lab.querySelector('.tooltip');
+        const label   = tooltip ? tooltip.textContent.trim() : `cat${idx+1}`;
+        // Pošleme kompaktně indexy i názvy (příjemce si může vybrat)
+        picked.push({ id: (idx+1), name: label });
+      }
+    });
+    return picked;
+  }
+
+  // --- odeslání do game_online.html ---
+  startEl.addEventListener('click', () => {
+    const name = (nameEl.value || '').trim();
+    const mode = currentModeKey();
+    const cats = getSelectedCategories();
+
+    // základní validace
+    if (!name) { alert('Zadej prosím jméno hráče.'); nameEl.focus(); return; }
+    if (!mode) { alert('Vyber prosím herní režim.'); return; }
+    if (cats.length === 0) { alert('Vyber aspoň jednu kategorii.'); return; }
+
+    // zabalíme do query parametrů (kompaktní i čitelné)
+    const params = new URLSearchParams();
+    params.set('name', name);
+    params.set('mode', mode);
+    // CSV idček (např. "1,2,5")
+    params.set('cats', cats.map(c => c.id).join(','));
+    // volitelně i názvy (URL-encoded JSON) – pokud chceš číst názvy rovnou
+    params.set('catnames', encodeURIComponent(JSON.stringify(cats.map(c => c.name))));
+
+    // pokud je to "friends" a máš vygenerovaný link, můžeš přidat roomCode
+    if (mode === 'friends' && roomInput.value) {
+      // vytáhneme kód z /room/XXXXXX
+      const m = roomInput.value.match(/\/room\/([a-z0-9]{4,})$/i);
+      if (m) params.set('room', m[1]);
+    }
+
+    // přesměrování
+    window.location.href = `game_online.html?${params.toString()}`;
+  });
+
+  // Enter v poli Jméno spustí hru
+  nameEl.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') startEl.click();
+  });
+})();
+</script>

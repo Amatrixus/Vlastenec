@@ -18,6 +18,7 @@ html, body {
   flex-direction: column;
   justify-content: space-between;
   min-height: 100vh;
+  overflow: hidden;
 }
 
 /* Zajistí, že #main-layout se roztáhne, ale footer zůstane dole */
@@ -26,7 +27,7 @@ html, body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 3rem;
+  gap: 1rem;
   max-width: 1200px;
   margin: 0 auto;
   padding: 4rem 2rem;
@@ -146,12 +147,12 @@ html, body {
 }
 
 .right-column {
-  flex: 1;
+  flex: 1.2;
   display: flex;
   flex-direction: column;
   align-items: flex-end;
   justify-content: flex-start;
-  gap: 1.5rem;
+  gap: 1rem;
 }
 
 .video-preview {
@@ -549,8 +550,8 @@ html, body {
   position: relative;
   display: inline-block;
   float:left;
-  width: 25%;
-  height: 22%;
+  width: 134px;
+  height: 134px;
 }
 
 .tooltip {
@@ -559,7 +560,7 @@ html, body {
   background-color: transparent;
   color: #fff;
   text-align: center;
-  padding: 5px 8px;
+  padding: 3px 8px;
   border-radius: 4px;
   position: absolute;
   bottom: 0%;   /* nad obrázkem */
@@ -568,6 +569,7 @@ html, body {
   white-space: nowrap;
   transition: opacity 0.2s;
   z-index: 10;
+  font-size: 12px;
 }
 
 .tile:hover .tooltip {
@@ -606,10 +608,10 @@ html, body {
 /* fajfka v rohu */
 .checkmark {
   position: absolute;
-  bottom: 3%;
-  right: 3%;
-  height: 20px;
-  width: 20px;
+  bottom: 2px;
+  right: 2px;
+  height: 15px;
+  width: 15px;
   background-color: rgb(46, 46, 46);
   border: 2px solid #333;
   border-radius: 4px;
@@ -760,3 +762,451 @@ background-color: transparent;
 
 
 }
+
+
+.altermod{
+
+  width: 280px;
+  height: 310px;
+  background-size: cover;
+  background-position-y: -150px;
+  float: left;
+  margin: 1px;
+  font-size: 20px;
+  display: flex;
+  padding: 10px;
+
+  filter: brightness(80%);
+  text-shadow: 2px 2px 8px #000000;
+ 
+  
+
+}
+
+
+.altermod:hover{
+
+   filter: brightness(100%);
+  cursor: pointer;
+
+}
+
+.altermod span {
+  align-self: flex-end;
+}
+
+
+
+#alterrandom{
+
+  background-image: url("randomfull.png");
+  background-position-y: -170px;
+
+}
+
+
+#alterfriends{
+
+  background-image: url("friendsfull.png");
+
+}
+
+#alterbots{
+
+  background-image: url("botsfull.png");
+
+}
+
+
+#alterliga{
+
+  background-image: url("ligafull.png");
+
+}
+
+
+#alterrandom:hover{
+
+  background-image: url("randomhover.png");
+  background-position-y: -180px;
+
+}
+
+
+#alterfriends:hover{
+
+  background-image: url("friendshover.png");
+
+}
+
+
+#alterbots:hover{
+
+  background-image: url("botshover.png");
+
+}
+
+#alterliga:hover{
+
+  background-image: url("ligahover.png");
+
+}
+
+
+
+
+
+#logintile{
+
+  position: absolute;
+  display: block;
+  top: 30px;
+  right: 0px;
+  width: 180px;
+  height: 50px;
+  background-color: rgb(255, 189, 66);
+  z-index: 10;
+  border-radius: 10px;
+  padding: 4px;
+
+
+}
+
+#loginavatar{
+
+  position: relative;
+  display: inline-block;
+  border-radius: 10px;
+  height: 40px;
+  width: 40px;
+  left: 0px;
+  float: left;
+
+
+}
+
+#logintext{
+
+  position:relative;
+  display:inline-block;
+  float: right;
+  height: 40px;
+  background-color: transparent;
+  line-height: 40px;
+  width: 90px;
+  margin-left: 4px;
+  right: 0px;
+  text-align: left;
+
+}
+
+
+#setname{
+
+  position:relative;
+  display:block;
+  background-color: black;
+  border-radius: 10px;
+  padding: 10px;
+  width: 260px;
+  height: 100px;
+
+}
+
+#setcategories{
+
+  position:relative;
+  display:block;
+  background-color: black;
+  border-radius: 10px;
+  padding: 10px;
+  width: 260px;
+  height: 240px;
+  margin-top: 5px;
+
+}
+
+#setstartgame{
+
+    position:relative;
+  display:block;
+  background-color: black;
+  border-radius: 10px;
+  padding: 10px;
+  width: 260px;
+  height: 100px;
+  margin-top: 5px;
+
+}
+
+
+#lobbychat{
+
+    position:relative;
+  display:inline-block;
+  float: left;  
+  background: rgba(0,0,0,0.7);
+  border-radius: 10px;
+  
+  width: 400px;
+  height: 450px;
+  
+  margin-right: 10px;
+
+}
+
+
+
+
+
+#catsblock{
+
+    position:relative;
+  display:inline-block;
+  float: left;  
+  background: rgba(0,0,0,0.7);
+  border-radius: 10px;
+  
+  width: 402px;
+  height: 450px;
+  
+  margin-left: 10px;
+
+}
+
+
+#catsheadline{
+
+  width: 380px;
+  height: 40px;
+  padding: 10px;
+
+
+}
+
+
+#lobbyheadline{
+
+  width: 380px;
+  height: 40px;
+  padding: 10px;
+
+
+}
+
+#playerheadline{
+
+  width: 380px;
+  height: 40px;
+  padding: 10px;
+  text-align: left;
+
+}
+
+
+#lobbybody{
+
+    position:relative;
+  display:inline-block;
+  float: left;  
+  background: rgba(0,0,0,0.7);
+ 
+  
+  width: 400px;
+  height: 360px;
+  
+
+}
+
+
+
+#settings {
+
+display: inline-block;
+float: left;
+width: 260px;
+
+
+}
+
+
+#modeTitle {
+
+text-align: left;
+font-size: 16px;
+height: 25px;
+line-height: 25px;
+padding-left: 10px;
+background-color: rgba(0, 0, 0, 0.3);
+
+}
+
+
+#modeDescription {
+
+text-align: left;
+font-size: 14px;
+height: 50px;
+padding-left: 10px;
+padding-top: 5px;
+background-color: rgba(0, 0, 0, 0.1);
+
+}
+
+
+#shareLink {
+
+  margin-top: 10px;
+
+
+
+}
+
+#roomLink {
+
+margin-bottom: 10px;
+background-color: rgba(0, 0, 0, 0.3);
+width: 230px; 
+height: 30px;
+border-radius: 5px;
+
+}
+
+#copyLinkBtn {
+
+  width: 230px;
+  background: linear-gradient(90deg, #a72c2c, #f09273);
+
+}
+
+.player-info, .mode-settings, .actions {
+  background: rgba(0,0,0,0.7);
+  border-radius: 10px;
+  padding: 1rem;
+  margin-bottom: 5px;
+  color: white;
+}
+
+.player-info {
+
+  padding: 0px;
+  text-align: center;
+  height: 105px;
+
+}
+
+.player-info input {
+  width: 230px;
+  margin-top: 0.3rem;
+  border-radius: 6px;
+  border: none;
+  padding: 0.4rem;
+  margin-bottom: 4px;
+  background-color: rgba(0, 0, 0, 0.3);
+  color:white;
+}
+
+button {
+  background: linear-gradient(90deg, #c94b00, #f0a000);
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+
+#startBtn {
+  width: 100%;
+}
+
+
+button:hover {
+  filter: brightness(1.2);
+}
+
+.secondary {
+  background: rgba(255,255,255,0.2);
+}
+
+
+.mode-settings {
+ 
+  height: 267px;
+  padding: 0px;
+  text-align: center;
+
+}
+
+.selectmodepic {
+
+  width: 25%;
+  height: 80px;
+  object-fit: cover;
+}
+
+
+#randomselect {
+
+  border-top-left-radius: 10px;
+
+}
+
+#ligaselect {
+
+  border-top-right-radius: 10px;
+
+}
+
+
+
+
+/* Skryjeme kolečka; vizuál dělají obrázky */
+.mode-option input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Výchozí: černobílé; vybrané: barevné */
+.selectmodepic {
+  filter: grayscale(100%) brightness(40%);
+  transition: filter .15s ease;
+  float: left;
+}
+.mode-option input[type="radio"]:checked + .selectmodepic {
+  filter: none;
+}
+
+/* (volitelné) kurzor přes obrázky */
+.mode-option .selectmodepic { cursor: pointer; }
+
+
+
+#selectmode {
+
+  display: block;
+  height: 80px;
+
+
+}
+
+
+/* skryj samotné radio prvky; kliká se na obrázky (label obal) */
+.mode-option input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* výchozí černobílá, vybrané barevné */
+.selectmodepic {  filter: grayscale(100%) brightness(40%); transition: filter .15s ease; }
+.mode-option input[type="radio"]:checked + .selectmodepic { filter: none; }
+
+/* kurzor na obrázcích */
+.mode-option .selectmodepic { cursor: pointer; }
+
+/* pomocná třída hidden pokud ji nemáš v CSS */
+.hidden { display: none; }

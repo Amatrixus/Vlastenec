@@ -1052,10 +1052,10 @@ fill: white;
   height: 20%;
   top: 2%;
   left: 0px;
-  background-color: rgba(204, 237, 159, 0.8);
+  background-color: rgba(19, 19, 19, 0.8);
   z-index: 5;
   font-weight: bold;
-  color: text;
+  color: white;
   outline: none;
 
 
@@ -1068,7 +1068,8 @@ fill: white;
   top: 2%;
   width: 17.5%;
   height: 20%;
-
+  background: linear-gradient(to right, #c22f02, #d57202);
+  color: white;
 }
 
 
@@ -1077,10 +1078,10 @@ fill: white;
 
   position: absolute;
   width: 97%;
-  height: 70%;
+  height: 64%;
   top: 24%;
   left: 1px;
-  background-color: rgba(206, 224, 182, 0.8);
+  background-color: rgba(50, 50, 50, 0.8);
   z-index: 5;
   font-weight: bold;
   color: text;
@@ -1100,7 +1101,7 @@ fill: white;
 
 #chat { max-width: 70%; }
 #chatcontent {
-  height: 68%; overflow-y: auto; border: 1px solid #ccc; padding: 1%; background: #transparent; width: 95%; left: 1%;
+  height: 64%; overflow-y: auto; border: 1px solid #1a1a1a; padding: 1%; background: #transparent; width: 95%; left: 1%;
 }
 .chat-line { margin: .2rem 0; line-height: 1.2; }
 .chat-time { opacity: .6; margin-right: .25rem; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }

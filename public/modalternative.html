@@ -12,33 +12,33 @@
   <div id="cover"></div>
   <div class="glow-behind"></div>
 
- 
-
-
-
   <div id="wrapper">
     <main id="main-layout">
 
-       <div id="logintile">
+
+         <div id="logintile">
             <img id="loginavatar" src="avatar.png">
             <div id="logintext">Přihlásit se</div>
         
 
       </div>
       
+
+
+
       <div class="left-column">
         <h1>VLASTENEC</h1>
-        <p class="tagline">Ovládni mapu. Braň svou základnu. Vědomostmi.</p>
-        <p class="intro-text">Vlastenecká vědomostní hra, ve které bráníš svou základnu pomocí znalostí o České republice. Vyber si téma, vyhraj souboj a získej území!</p>
-        <button class="play-button" onclick="window.location.href='modalternative.html'">HRÁT</button>
+        <p class="tagline">Vyber si herní mód.</p><br>
+
+         <div onclick="window.location.href='altersettings.html?mode=random'" id="alterrandom" class="altermod"><span>Náhodní soupeři</span></div>
+         <div onclick="window.location.href='altersettings.html?mode=friends'" id="alterfriends" class="altermod"><span>Hra s přáteli</span></div>
+         <div onclick="window.location.href='altersettings.html?mode=botx'" id="alterbots" class="altermod"><span>Hra s boty</span></div>
+         <div onclick="window.location.href='altersettings.html?mode=liga'" id="alterliga" class="altermod"><span>Liga</span></div>
+
       </div>
 
-      <div class="right-column">
-        
-        
-          <img src="map.svg" width="100%">
-       
-      </div>
+      
+      
     </main>
 
    

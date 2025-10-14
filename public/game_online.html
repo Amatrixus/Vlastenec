@@ -1,3 +1,22 @@
+<script>
+  const qp = new URLSearchParams(location.search);
+  const playerName = qp.get('name') || '';
+  const gameMode   = qp.get('mode') || 'random';
+  const catsCsv    = qp.get('cats') || '';
+  const catIds     = catsCsv.split(',').filter(Boolean).map(n => parseInt(n, 10));
+  const catNames   = (() => {
+    const raw = qp.get('catnames');
+    if (!raw) return [];
+    try { return JSON.parse(decodeURIComponent(raw)); } catch { return []; }
+  })();
+  const roomCode   = qp.get('room') || null;
+
+  // Tady můžeš spustit matchmaking podle gameMode / roomCode
+  console.log({ playerName, gameMode, catIds, catNames, roomCode });
+</script>
+
+
+
 <html>
 
 	<head>
@@ -819,7 +838,7 @@
                     
 
 
-                    <button class="leavebutton" onclick="window.location.href='modeselection2.html'">Ano</button>
+                    <button class="leavebutton" onclick="window.location.href='altersettings.html'">Ano</button>
                     <button class="leavebutton" onclick="closeLeavegame();">Ne</button>
                     
                 </div>
