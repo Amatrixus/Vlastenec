@@ -231,7 +231,7 @@
   // Klik na "Generovat odkaz" → vytvoř share link pro hosty (jen ?room=CODE)
   copyBtn?.addEventListener('click', async () => {
     currentRoomCode = genRoomCode();
-    const link = `${GAME_URL_BASE}?room=${currentRoomCode}`;
+    const link = `${GAME_URL_BASE}?mode=friends&room=${currentRoomCode}`;
     roomInput.value = link;
 
     try {
