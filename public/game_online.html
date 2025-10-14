@@ -47,7 +47,10 @@
     const socket = io(); // bez URL – připojí se na stejnou doménu/port
     
     //ZJIŠTĚNÍ JMÉNA
-    let myName = prompt("Zadej své jméno:");
+    let myName = playerName;
+        if (!myName) {
+        myName = prompt("Zadej své jméno:");
+        }
 
     //ZJIŠTĚNÍ ČÍSLA MÍSTNOSTI
     let currentRoomId = null;
