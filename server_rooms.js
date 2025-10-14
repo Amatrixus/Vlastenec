@@ -38,26 +38,32 @@ const rooms = {}; // roomId -> { players, scores, bases, regions, regionValues, 
 
 
 
-function makeEmptyRoom(roomId) {
+function makeEmptyRoom(roomId, mode = 'random') {
   rooms[roomId] = {
+    mode,                  // ← důležité
     players: [],
     scores: { 1: 0, 2: 0, 3: 0 },
     bases: {},
-    regions: {
-      Player1regions: [],
-      Player2regions: [],
-      Player3regions: []
-    },
+    regions: { Player1regions: [], Player2regions: [], Player3regions: [] },
     regionValues: { ...defaultRegionValues },
     defenseBonuses: { Player1: 0, Player2: 0, Player3: 0 },
     playerLives: { Player1: 3, Player2: 3, Player3: 3 },
-    chat: []
+    chat: [],
+    settings: {}           // volitelné – můžeš sem ukládat cats/catNames
   };
   return rooms[roomId];
 }
 
+
 function roomAddPlayerAndBroadcast(roomId, socket, name) {
   const room = rooms[roomId];
+  if (!room) return;
+
+  // ✅ už v místnosti? nic nepřidávej
+  if (room.players.some(p => p.id === socket.id)) {
+    return;
+  }
+
   const myNumber = room.players.length + 1;
 
   socket.join(roomId);
@@ -76,7 +82,10 @@ function roomAddPlayerAndBroadcast(roomId, socket, name) {
   io.to(roomId).emit("updatePlayers", { allNames });
   io.to(roomId).emit("updateScores", { scores: room.scores });
 
-  // Pokud je plno (3 hráči), nastartuj hru stejně jako u submitName
+  // ✅ pošleme historii chatu nově připojenému hráči
+  socket.emit("chat:history", room.chat ?? []);
+
+  // Když je plno, nastartuj hru (původní logika)
   if (room.players.length === MAX_PLAYERS_PER_ROOM) {
     const possibleBases = ['Rho', 'Omega', 'Theta'];
     const shuffled = possibleBases.sort(() => Math.random() - 0.5);
@@ -101,22 +110,6 @@ function roomAddPlayerAndBroadcast(roomId, socket, name) {
     runGameScenario(roomId);
   }
 }
-
-// krátký čitelný kod místnosti pro „friends“
-function genRoomCode(len = 6) {
-  const alphabet = "abcdefghijklmnopqrstuvwxyz0123456789";
-  let s = "";
-  for (let i = 0; i < len; i++) s += alphabet[Math.floor(Math.random() * alphabet.length)];
-  return s;
-}
-
-
-
-
-
-
-
-
 
 
 
@@ -1376,21 +1369,23 @@ io.on('connection', socket => {
 
   // FRIENDS: host vytvoří místnost a rovnou se do ní přidá
 socket.on("createRoom", ({ settings }) => {
-  const name = (settings?.name || "").toString().trim() || "Host";
-  const roomId = `room_${genRoomCode(6)}`;
+  const name = (settings?.name || "Host").toString();
+  const roomId = `room_${genRoomCode?.(6) || Date.now()}`;
 
-  const room = makeEmptyRoom(roomId);
-  // volitelně si můžeš uložit i settings (mode, cats, catNames) do room
+  const room = makeEmptyRoom(roomId, 'friends'); // friends room
   room.settings = settings || {};
 
-  // potvrď hostovi room kód
   socket.emit("roomReady", { room: roomId });
 
-  // přidej hráče do místnosti (stejně jako v submitName)
-  roomAddPlayerAndBroadcast(roomId, socket, name);
+  socket.data = socket.data || {};
+  socket.data.joinedRoom = roomId;
+  socket.data.name = name;
 
-  console.log(`🏠 createRoom → ${roomId} by ${name}`);
+  // 🔁 dřív: addPlayerOnce → teď:
+  roomAddPlayerAndBroadcast(roomId, socket, name);
 });
+
+
 
 // FRIENDS: hosté (nebo host, pokud už má kód) se připojují do existující room
 socket.on("joinRoom", ({ room, settings }) => {
@@ -1402,10 +1397,8 @@ socket.on("joinRoom", ({ room, settings }) => {
     return;
   }
 
-  // pokud místnost neexistuje, můžeš ji buď založit, nebo odmítnout
   if (!rooms[roomId]) {
-    // varianta A (přátelštější): založit prázdnou, aby se hosté mohli připojit i když host ještě „neběží“
-    makeEmptyRoom(roomId);
+    makeEmptyRoom(roomId, 'friends');   // <-- důležité
     rooms[roomId].settings = settings || {};
   }
 
@@ -1414,6 +1407,10 @@ socket.on("joinRoom", ({ room, settings }) => {
     socket.emit("roomError", { message: "Room is full" });
     return;
   }
+
+  socket.data = socket.data || {};
+  socket.data.joinedRoom = roomId;
+  socket.data.name = name;
 
   roomAddPlayerAndBroadcast(roomId, socket, name);
   console.log(`👥 joinRoom → ${roomId} by ${name}`);
@@ -1427,123 +1424,70 @@ socket.on("joinRoom", ({ room, settings }) => {
 
 
 
+
+
+
+
   socket.on("submitName", name => {
-    let roomId = Object.keys(rooms).find(id => rooms[id].players.length < MAX_PLAYERS_PER_ROOM);
+    // ✅ už je socket v nějaké room (friends)? ignoruj random přihlášku
+    if (socket.data?.joinedRoom) return;
+
+    // ✅ vezmi první NEplnou room, která je opravdu random
+    let roomId = Object.keys(rooms).find(id =>
+      rooms[id].mode === 'random' && rooms[id].players.length < MAX_PLAYERS_PER_ROOM
+    );
+
+    // žádná random room? vytvoř novou
     if (!roomId) {
       roomId = `room_${Date.now()}`;
-      rooms[roomId] = {
-        players: [],
-        scores: { 1: 0, 2: 0, 3: 0 },
-        bases: {},
-        regions: {
-          Player1regions: [],
-          Player2regions: [],
-          Player3regions: []
-        },
-        regionValues: { ...defaultRegionValues },
-        defenseBonuses: {
-          Player1: 0,
-          Player2: 0,
-          Player3: 0
-        },
-
-        playerLives: {
-          Player1: 3,
-          Player2: 3,
-          Player3: 3
-        },
-
-
-        chat: []
-
-      };
+      makeEmptyRoom(roomId, 'random');
     }
 
-    const room = rooms[roomId];
-    const myNumber = room.players.length + 1;
+    socket.data = socket.data || {};
+    socket.data.joinedRoom = roomId;
+    socket.data.name = name;
 
-    socket.join(roomId);
-    room.players.push({ id: socket.id, name });
+    roomAddPlayerAndBroadcast(roomId, socket, name);
+
+    console.log(`🎮 ${name} joined ${roomId}`);
+  });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  socket.on("disconnect", () => {
+    const roomId = socket.data?.joinedRoom;
+    if (!roomId || !rooms[roomId]) return;
+
+    const room = rooms[roomId];
+    const index = room.players.findIndex(p => p.id === socket.id);
+    if (index === -1) return;
+
+    const name = room.players[index].name;
+    room.players.splice(index, 1);
 
     const allNames = {};
-    room.players.forEach((p, index) => {
-      allNames[index + 1] = p.name;
-    });
-
-    socket.emit("assignPlayerNumber", {
-      number: myNumber,
-      allNames,
-      scores: room.scores,
-      roomId // ✅ přidáno
-    });
+    room.players.forEach((p, i) => { allNames[i + 1] = p.name; });
 
     io.to(roomId).emit("updatePlayers", { allNames });
     io.to(roomId).emit("updateScores", { scores: room.scores });
 
-    // Jakmile je místnost plná, startujeme hru
-    if (room.players.length === MAX_PLAYERS_PER_ROOM) {
-      const possibleBases = ['Rho', 'Omega', 'Theta'];
-      const shuffled = possibleBases.sort(() => Math.random() - 0.5);
+    console.log(`❌ ${name} left ${roomId}`);
 
-      room.bases[1] = shuffled[0];
-      room.bases[2] = shuffled[1];
-      room.bases[3] = shuffled[2];
-
-      room.regions.Player1regions = [room.bases[1]];
-      room.regions.Player2regions = [room.bases[2]];
-      room.regions.Player3regions = [room.bases[3]];
-
-      
-
-      // Spočítáme skóre včetně bonusů
-      room.scores = calculateScores(room.regions, room.regionValues, room.defenseBonuses);
-
-      io.to(roomId).emit("startGame", {
-        bases: room.bases,
-        regions: room.regions,
-        regionValues: room.regionValues
-      });
-
-      io.to(roomId).emit("updateScores", { scores: room.scores });
-
-      runGameScenario(roomId);
-    }
-
-    console.log(`🎮 ${name} joined ${roomId}`);
-    console.table(allNames);
-
-
-
-    socket.emit("chat:history", rooms[roomId].chat ?? []);
-
-
-
-
-  });
-
-  socket.on("disconnect", () => {
-    for (const roomId in rooms) {
-      const room = rooms[roomId];
-      const index = room.players.findIndex(p => p.id === socket.id);
-      if (index !== -1) {
-        const name = room.players[index].name;
-        room.players.splice(index, 1);
-
-        const allNames = {};
-        room.players.forEach((p, i) => {
-          allNames[i + 1] = p.name;
-        });
-
-        io.to(roomId).emit("updatePlayers", { allNames });
-        io.to(roomId).emit("updateScores", { scores: room.scores });
-
-        console.log(`❌ ${name} left ${roomId}`);
-        if (room.players.length === 0) {
-          delete rooms[roomId];
-          console.log(`🗑️ Room ${roomId} deleted`);
-        }
-        break;
-      }
+    if (room.players.length === 0) {
+      delete rooms[roomId];
+      console.log(`🗑️ Room ${roomId} deleted`);
     }
   });
 
