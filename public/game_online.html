@@ -1,19 +1,21 @@
-
-
-
-<html>
-
-	<head>
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="utf-8" />
   <title>VLASTENEC</title>
   <link rel="stylesheet" href="mainstyle.css">
-  <!-- 1) Načti Socket.IO dřív, ideálně s defer -->
-  <script src="https://cdn.socket.io/4.6.1/socket.io.min.js" defer></script>
-  <!-- 2) Tvůj klientský kód také s defer (nebo ho dej na úplný konec <body>) -->
-  <script defer>
+</head>
+<body>
+
+  <!-- Socket.IO knihovna MUSÍ být dřív než volání io() -->
+    <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
+
+  <!-- Klientský kód (varianta B – server umí createRoom/joinRoom) -->
+  <script>
     // --- URL parametry ---
     const qp = new URLSearchParams(location.search);
     const playerName = qp.get('name') || '';
-    const gameMode   = qp.get('mode') || 'friends';
+    const gameMode   = qp.get('mode') || 'random';
     const catsCsv    = qp.get('cats') || '';
     const catIds     = catsCsv.split(',').filter(Boolean).map(n => parseInt(n, 10));
     const catNames   = (() => {
@@ -22,70 +24,64 @@
     })();
     const roomCodeFromUrl = qp.get('room') || null;
 
-    // --- SERVER ---
-    const socket = io(); // stejný origin
-
     // --- Jméno (fallback na prompt jen když není v URL) ---
-    let myName = playerName || '';
-    if (!myName) myName = prompt("Zadej své jméno:") || "Host";
+    let myName = playerName || prompt("Zadej své jméno:") || "Host";
 
+    // --- Fallback proměnné ještě před prvními listenery ---
+    let player1 = 'Robot Emil';
+    let player2 = 'Robot Jirka';
+    let player3 = 'Robot Honza';
+    let myPlayerNumber = null;
+    const playerControlledByUser = { 1:false, 2:false, 3:false };
+
+    // --- Room + settings ---
     let currentRoomId = roomCodeFromUrl || null;
-
     const settings = { name: myName, mode: gameMode, cats: catIds, catNames };
 
+    // --- Jediná inicializace socketu ---
+    const socket = io();
+
+    // Připojení: friends → joinRoom/createRoom, random → createRoom také OK (server to může ignorovat)
     socket.on('connect', () => {
       if (currentRoomId) {
         socket.emit('joinRoom', { room: currentRoomId, settings });
-        // POZOR: server čeká STRING, ne objekt
-        socket.emit('submitName', myName);
       } else {
         socket.emit('createRoom', { settings });
       }
-    });
-
-    socket.on('roomReady', ({ room }) => {
-      currentRoomId = room;
-
-      // sjednotit URL (nepovinné)
-      const url = new URL(location.href);
-      url.searchParams.set('room', room);
-      history.replaceState(null, '', url.toString());
-
-      // POZOR: server čeká STRING, ne objekt
+      // Legacy: server si případně stále bere jméno odsud (string)
       socket.emit('submitName', myName);
     });
 
-    // --- ZBYTEK TVÝCH LISTENERŮ ---
-    let myPlayerNumber;
-    const playerControlledByUser = {1:false,2:false,3:false};
+    // Server potvrdí vytvoření místnosti (host)
+    socket.on('roomReady', ({ room }) => {
+      currentRoomId = room;
+      const url = new URL(location.href);
+      url.searchParams.set('room', room);
+      history.replaceState(null, '', url.toString());
+    });
 
+    // --- Tvé stávající listenery ---
     socket.on("assignPlayerNumber", ({ number, allNames, scores, roomId }) => {
       myPlayerNumber = number;
       currentRoomId = roomId;
       playerControlledByUser[number] = true;
 
-      player1 = allNames[1] || "Robot Emil";
-      player2 = allNames[2] || "Robot Jirka";
-      player3 = allNames[3] || "Robot Honza";
+      player1 = allNames[1] || player1;
+      player2 = allNames[2] || player2;
+      player3 = allNames[3] || player3;
 
-      updateScoreNames();
-      updateScoreUI(scores);
-      updateLobbyList(allNames);
+      updateScoreNames && updateScoreNames();
+      updateScoreUI && updateScoreUI(scores);
+      updateLobbyList && updateLobbyList(allNames);
     });
 
-    socket.on("updateScores", ({ scores }) => updateScoreUI(scores));
-  </script>
-</head>
+    socket.on("updateScores", ({ scores }) => {
+      updateScoreUI && updateScoreUI(scores);
+    });
 
 
-		
-
-	<body>
 
 
-    <script>
-    
-    
 
 
     socket.on("startGame", ({ bases, regions, regionValues }) => {
@@ -1752,8 +1748,7 @@
             <div id="chatcontent"></div>
             </div>
 
-            <!-- 1) Ujisti se, že tahle knihovna je načtená -->
-            <script src="/socket.io/socket.io.js"></script>
+            
 
             <!-- 2) Tvůj klientský chat -->
             <script>
