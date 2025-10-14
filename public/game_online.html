@@ -7,15 +7,14 @@
 </head>
 <body>
 
-  <!-- Socket.IO knihovna MUSÍ být dřív než volání io() -->
-    <script src="https://cdn.socket.io/4.6.1/socket.io.min.js"></script>
+  <!-- Na Renderu používej verzi ze stejného originu -->
+  <script src="/socket.io/socket.io.js"></script>
 
-  <!-- Klientský kód (varianta B – server umí createRoom/joinRoom) -->
   <script>
     // --- URL parametry ---
     const qp = new URLSearchParams(location.search);
     const playerName = qp.get('name') || '';
-    const gameMode   = qp.get('mode') || 'random';
+    const gameMode   = qp.get('mode') || 'random'; // random výchozí
     const catsCsv    = qp.get('cats') || '';
     const catIds     = catsCsv.split(',').filter(Boolean).map(n => parseInt(n, 10));
     const catNames   = (() => {
@@ -41,19 +40,24 @@
     // --- Jediná inicializace socketu ---
     const socket = io();
 
-    // Připojení: friends → joinRoom/createRoom, random → createRoom také OK (server to může ignorovat)
+    // Připojení:
+    // - friends → joinRoom/createRoom (NEposílat submitName)
+    // - random  → jen submitName (NEposílat create/join)
     socket.on('connect', () => {
-      if (currentRoomId) {
-        socket.emit('joinRoom', { room: currentRoomId, settings });
-      } else {
-        socket.emit('createRoom', { settings });
+      if (gameMode === 'friends') {
+        if (currentRoomId) {
+          socket.emit('joinRoom', { room: currentRoomId, settings });
+        } else {
+          socket.emit('createRoom', { settings });
+        }
+      } else { // 'random'
+        socket.emit('submitName', myName); // STRING
       }
-      // Legacy: server si případně stále bere jméno odsud (string)
-      socket.emit('submitName', myName);
     });
 
-    // Server potvrdí vytvoření místnosti (host)
+    // Server potvrdí vytvoření místnosti (host ve friends)
     socket.on('roomReady', ({ room }) => {
+      if (gameMode !== 'friends') return; // jen friends sjednocujeme URL
       currentRoomId = room;
       const url = new URL(location.href);
       url.searchParams.set('room', room);
@@ -78,6 +82,9 @@
     socket.on("updateScores", ({ scores }) => {
       updateScoreUI && updateScoreUI(scores);
     });
+
+    // (volitelně pro debug)
+    socket.on("connect_error", (e) => console.error("connect_error:", e?.message || e));
 
 
 
