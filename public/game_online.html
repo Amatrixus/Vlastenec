@@ -1,20 +1,83 @@
 <script>
-  const qp = new URLSearchParams(location.search);
-  const playerName = qp.get('name') || '';
-  const gameMode   = qp.get('mode') || 'random';
-  const catsCsv    = qp.get('cats') || '';
-  const catIds     = catsCsv.split(',').filter(Boolean).map(n => parseInt(n, 10));
-  const catNames   = (() => {
-    const raw = qp.get('catnames');
-    if (!raw) return [];
-    try { return JSON.parse(decodeURIComponent(raw)); } catch { return []; }
-  })();
-  const roomCode   = qp.get('room') || null;
+// --- URL parametry (máš už nahoře, klidně použij ty své) ---
+const qp = new URLSearchParams(location.search);
+const playerName = qp.get('name') || '';
+const gameMode   = qp.get('mode') || 'friends';
+const catsCsv    = qp.get('cats') || '';
+const catIds     = catsCsv.split(',').filter(Boolean).map(n => parseInt(n, 10));
+const catNames   = (() => {
+  const raw = qp.get('catnames'); if (!raw) return [];
+  try { return JSON.parse(decodeURIComponent(raw)); } catch { return []; }
+})();
+const roomCodeFromUrl = qp.get('room') || null;
 
-  // Tady můžeš spustit matchmaking podle gameMode / roomCode
-  console.log({ playerName, gameMode, catIds, catNames, roomCode });
+// --- SERVER ---
+const socket = io(); // stejný origin
+
+// --- Jméno hráče (fallback na prompt jen když není v URL) ---
+let myName = playerName || '';
+if (!myName) {
+  myName = prompt("Zadej své jméno:") || "Host";
+}
+
+// --- Místnost z URL (pokud sdílený odkaz) ---
+let currentRoomId = roomCodeFromUrl || null;
+
+// --- Nastavení, které posíláme serveru (host i hosté) ---
+const settings = {
+  name: myName,
+  mode: gameMode,
+  cats: catIds,
+  catNames
+};
+
+// Připojení: pokud máme room → joinRoom, jinak createRoom
+socket.on('connect', () => {
+  if (currentRoomId) {
+    socket.emit('joinRoom', { room: currentRoomId, settings });
+    // (volitelné) poslat i submitName s roomem, pokud to server pořád čeká:
+    socket.emit('submitName', { name: myName, room: currentRoomId });
+  } else {
+    socket.emit('createRoom', { settings });
+  }
+});
+
+// Server nám po createRoom může vrátit roomId
+socket.on('roomReady', ({ room }) => {
+  currentRoomId = room;
+  // (volitelné) sjednotit URL, aby host měl ?room=...
+  const url = new URL(location.href);
+  url.searchParams.set('room', room);
+  history.replaceState(null, '', url.toString());
+
+  // pokud chceš držet i submitName kvůli kompatibilitě:
+  socket.emit('submitName', { name: myName, room: currentRoomId });
+});
+
+// --- ZBYTEK TVÝCH LISTENERŮ NECHÁVÁŠ ---
+let myPlayerNumber;
+const playerControlledByUser = {1: false, 2: false, 3: false};
+
+socket.on("assignPlayerNumber", ({ number, allNames, scores, roomId }) => {
+  myPlayerNumber = number;
+  currentRoomId = roomId; // přepiš, ať je jistota
+  playerControlledByUser[number] = true;
+
+  // Přiděl jména ostatním (fallback na boty)
+  player1 = allNames[1] || "Robot Emil";
+  player2 = allNames[2] || "Robot Jirka";
+  player3 = allNames[3] || "Robot Honza";
+
+  updateScoreNames();
+  updateScoreUI(scores);
+  updateLobbyList(allNames);
+});
+
+socket.on("updateScores", ({ scores }) => {
+  updateScoreUI(scores);
+});
+
 </script>
-
 
 
 <html>
@@ -31,56 +94,6 @@
 
 
     <script>
-
-
-    var player1 = 'Robot Emil';
-    var player2 = 'Robot Jirka';
-    var player3 = 'Robot Honza';
-
-
-
-
-
-
-
-    //SERVER
-    const socket = io(); // bez URL – připojí se na stejnou doménu/port
-    
-    //ZJIŠTĚNÍ JMÉNA
-    let myName = playerName;
-        if (!myName) {
-        myName = prompt("Zadej své jméno:");
-        }
-
-    //ZJIŠTĚNÍ ČÍSLA MÍSTNOSTI
-    let currentRoomId = null;
-   
-    //ODESLÁNÍ JMÉNA NA SERVER
-    socket.emit("submitName", myName);
-
-    let myPlayerNumber;
-    const playerControlledByUser = {1: false, 2: false, 3: false};
-
-    socket.on("assignPlayerNumber", ({ number, allNames, scores, roomId }) => {
-    myPlayerNumber = number;
-    currentRoomId = roomId;
-    playerControlledByUser[number] = true;
-
-    // Přiděl jména ostatním
-    player1 = allNames[1] || "Robot Emil";
-    player2 = allNames[2] || "Robot Jirka";
-    player3 = allNames[3] || "Robot Honza";
-
-    updateScoreNames();
-    updateScoreUI(scores); 
-    updateLobbyList(allNames);
-    });
-
-    socket.on("updateScores", ({ scores }) => {
-        updateScoreUI(scores);
-    });
-
-
     
     
 
