@@ -114,8 +114,8 @@ async function delayAlive(roomId, ms) {
 // NEW: zjistí číslo hráče (1..3) v dané room podle socket.id
 function getSeatNumber(room, socketId) {
   if (!room) return null;
-  const ix = room.players.findIndex(p => p.id === socketId);
-  return ix >= 0 ? (ix + 1) : null;
++  const ix = room.players.findIndex(p => p && p.id === socketId);
+   return ix >= 0 ? (ix + 1) : null;
 }
 
 
@@ -141,37 +141,45 @@ function roomAddPlayerAndBroadcast(roomId, socket, name) {
   const room = rooms[roomId];
   if (!room) return;
 
-  // ✅ už v místnosti? nic nepřidávej
-  if (room.players.some(p => p.id === socket.id)) {
+  // Už je hráč v místnosti? Jen pošli aktuální stav a vrať se (ať se doplní lobby).
+  if (room.players.some(p => p && p.id === socket.id)) {
+    const allNames = {};
+    room.players.forEach((p, idx) => { if (p) allNames[idx + 1] = p.name; });
+    socket.emit("assignPlayerNumber", {
+      number: getSeatNumber(room, socket.id),
+      allNames,
+      scores: room.scores,
+      roomId
+    });
+    io.to(roomId).emit("updatePlayers", { allNames });
+    io.to(roomId).emit("updateScores", { scores: room.scores });
     return;
   }
 
-  // vyber sedadlo: preferuj stejné jméno → volné/null-id → nové
-  let myNumber = findSeatForReturningOrBot(room, name);
+  
 
+  let myNumber = findSeatForReturningOrBot();
   if (!myNumber) {
-    // plno
     socket.emit("roomError", { message: "Room is full" });
     return;
   }
 
-  // fyzicky připrav pole players na 3 prvky (aby šlo přiřadit indexově)
+  // 2) Připoj socket do room a zapiš hráče na konkrétní index (bez push!)
+  socket.join(roomId);
   while (room.players.length < MAX_PLAYERS_PER_ROOM) room.players.push(undefined);
-
-  // zapiš hráče na dané sedadlo (indexované od 1)
   room.players[myNumber - 1] = { id: socket.id, name };
+  room.seatControllers = room.seatControllers || {1:"human",2:"human",3:"human"};
   room.seatControllers[myNumber] = "human";
 
-
-    // NEW: ulož sedadlo k socketu (užitečné i do budoucna)
+  // 3) Ulož seat/room do socketu
   socket.data = socket.data || {};
-  socket.data.seat   = myNumber;  // 1 | 2 | 3
+  socket.data.seat   = myNumber;
   socket.data.roomId = roomId;
   socket.data.name   = name;
 
-
+  // 4) Rozposlat lobby + číslo hráče
   const allNames = {};
-  room.players.forEach((p, index) => { allNames[index + 1] = p.name; });
+  room.players.forEach((p, idx) => { if (p) allNames[idx + 1] = p.name; });
 
   socket.emit("assignPlayerNumber", {
     number: myNumber,
@@ -183,19 +191,8 @@ function roomAddPlayerAndBroadcast(roomId, socket, name) {
   io.to(roomId).emit("updatePlayers", { allNames });
   io.to(roomId).emit("updateScores", { scores: room.scores });
 
-  // ✅ pošleme historii chatu nově připojenému hráči
-  // CHANGED: pošli historii s doplněným 'number' i pro staré zprávy, které ho neměly
-  const historyWithNumbers = (room.chat ?? []).map(m => {
-    if (typeof m.number === 'number') return m; // už obsahuje number
-    // fallback: dopočítej podle aktuálního pořadí (lepší než nic)
-    const n = getSeatNumber(room, (room.players.find(p => p.name === m.name) || {}).id) || 0;
-    return { ...m, number: n };
-  });
-  socket.emit("chat:history", historyWithNumbers);
-
-
-  // Když je plno a hra ještě nezačala → start jen jednou
-  if (room.players.length === MAX_PLAYERS_PER_ROOM && !room.hasStarted) {
+  // 5) Start hry pouze jednou (zbytek nech tak, jak už máš – hasStarted guard)
+  if (room.players.filter(Boolean).length === MAX_PLAYERS_PER_ROOM && !room.hasStarted) {
     const possibleBases = ['Rho', 'Omega', 'Theta'];
     const shuffled = possibleBases.sort(() => Math.random() - 0.5);
 
@@ -220,22 +217,14 @@ function roomAddPlayerAndBroadcast(roomId, socket, name) {
     });
 
     io.to(roomId).emit("updateScores", { scores: room.scores });
-
-    if (isRoomAlive(roomId)) {
-      runGameScenario(roomId);
-    }
-
-  // Hra už běží → nově příchozí (nebo reconnect) dostane jen snapshot
+    if (isRoomAlive(roomId)) runGameScenario(roomId);
   } else if (room.hasStarted) {
-    socket.emit("stateSync", {
-      myNumber: myNumber,
-      snapshot: buildRoomSnapshot(room)
-    });
+    // Pozdější vstup/reconnect = jen snapshot (pokud tu funkci máš)
+    if (typeof buildRoomSnapshot === 'function') {
+      socket.emit("stateSync", { myNumber, snapshot: buildRoomSnapshot(room) });
+    }
   }
-
 }
-
-
 
 
 
@@ -394,6 +383,7 @@ function runMultipleChoice(roomId, participatingPlayers = [1, 2, 3]) {
 
     // ✅ Pošli všem hráčům otázku – třetí hráč jen neinteraguje
     room.players.forEach((p, index) => {
+      if (!p || !p.id) return;            // ⬅︎ guard
       const playerNumber = index + 1;
       io.to(p.id).emit("multipleChoiceQuestion", {
         question: question.question,
@@ -403,7 +393,7 @@ function runMultipleChoice(roomId, participatingPlayers = [1, 2, 3]) {
         defender,
         attackerName: isDuel ? room.players[attacker - 1].name : "",
         defenderName: isDuel ? room.players[defender - 1].name : "",
-        canAnswer: participatingPlayers.includes(playerNumber) // ✅ nový klíč
+        canAnswer: participatingPlayers.includes(playerNumber)
       });
     });
 
@@ -858,10 +848,11 @@ async function runConquestPhase(roomId) {
 
       // 4️⃣ Získej dostupné regiony pro vítěze
       const available = getAvailableRegionsConquest(room);
-      const playerSocketId = room.players[winner - 1].id;
-
-      // Pošli seznam dostupných polí pouze vítězi
-      io.to(playerSocketId).emit("availableRegions", { regions: available });
+      const winRec = room.players[winner - 1];
+      const playerSocketId = winRec && winRec.id;
+      if (playerSocketId) {
+        io.to(playerSocketId).emit("availableRegions", { regions: available });
+      }
 
 
       console.log("📊 Dostupná pole pro hráče", winner, ":", getAvailableRegionsConquest(room));
@@ -1015,8 +1006,11 @@ async function runBattleClaiming(roomId, attacker) {
     return null;
   }
 
-  const attackerSocketId = room.players[attacker - 1].id;
-  io.to(attackerSocketId).emit("battleAvailableRegions", { regions: availableEnemyRegions });
+  const attRec = room.players[attacker - 1];
+  const attackerSocketId = attRec && attRec.id;
+  if (attackerSocketId) {
+    io.to(attackerSocketId).emit("battleAvailableRegions", { regions: availableEnemyRegions });
+  }
 
   const selectedRegion = await waitForPlayerSelection(roomId, attacker, 10000, availableEnemyRegions);
 
@@ -1355,10 +1349,13 @@ async function runPlayerTurns(roomId, round, order) {
       timeLeft: 10
     });
 
-    const playerSocketId = room.players[player - 1].id;
-    io.to(playerSocketId).emit("availableRegions", {
-      regions: getAvailableRegions(room, player)
-    });
+      const playerRec = room.players[player - 1];
+      const playerSocketId = playerRec && playerRec.id;
+      if (playerSocketId) {
+        io.to(playerSocketId).emit("availableRegions", {
+          regions: getAvailableRegions(room, player)
+        });
+      }
 
     console.log(`🎯 Hráč ${player} je na tahu (kolo ${round})`);
 
@@ -1566,7 +1563,10 @@ io.on('connection', socket => {
 
     // ať ostatní vidí, že hráč je zpět “human”
     const allNames = {};
-    room.players.forEach((p, i) => { allNames[i + 1] = p.name; });
+    room.players.forEach((p, i) => { allNames[i + 1] = (p && p.name) ? p.name : `Player${i+1}`; });
+
+
+
     io.to(roomId).emit("updatePlayers", { allNames, seatControllers: room.seatControllers });
   });
 
@@ -1706,35 +1706,34 @@ socket.on("joinRoom", ({ room, settings }) => {
 
 
    socket.on("disconnect", () => {
-      const roomId = socket.data?.joinedRoom;
-      if (!roomId || !rooms[roomId]) return;
+  const roomId = socket.data?.joinedRoom;
+  if (!roomId || !rooms[roomId]) return;
 
-      const room = rooms[roomId];
-      const seat = getSeatNumber(room, socket.id); // 1..3 nebo null
-      if (!seat) return;
+  const room = rooms[roomId];
+  const ix = room.players.findIndex(p => p && p.id === socket.id);
+  if (ix === -1) return;
 
-      const name = room.players[seat - 1]?.name || `Player${seat}`;
+  const seat = ix + 1;
+  const name = room.players[ix]?.name || `Player${seat}`;
 
-      console.log(`⌛ ${name} temporarily left ${roomId} – switching seat ${seat} to BOT (grace 20s)`);
+  console.log(`⌛ ${name} temporarily left ${roomId} – switching seat ${seat} to BOT (grace 20s)`);
 
-      // označ sedadlo jako bot a zneplatni socket id
-      room.seatControllers[seat] = "bot";
-      if (room.players[seat - 1]) room.players[seat - 1].id = null;
+  // Přepnout kontroler na bota a zneplatnit id (slot zůstává!)
+  room.seatControllers = room.seatControllers || {1:"human",2:"human",3:"human"};
+  room.seatControllers[seat] = "bot";
+  if (room.players[ix]) room.players[ix].id = null;
 
-      // informuj klienty
-      const allNames = {};
-      room.players.forEach((p, i) => { allNames[i + 1] = p?.name || `Player${i + 1}`; });
-      io.to(roomId).emit("updatePlayers", { allNames, seatControllers: room.seatControllers });
-      io.to(roomId).emit("updateScores", { scores: room.scores });
+  const allNames = {};
+  room.players.forEach((p, i) => { if (p) allNames[i + 1] = p.name; });
+  io.to(roomId).emit("updatePlayers", { allNames, seatControllers: room.seatControllers });
+  io.to(roomId).emit("updateScores", { scores: room.scores });
 
-      // grace period (ponecháváme slot, jen logujeme)
-      const to = setTimeout(() => {
-        console.log(`🤖 Seat ${seat} in ${roomId} remains BOT after grace.`);
-      }, 20000);
-
-      room.reconnectHolds.set(seat, to);
-    });
-
+  // Nepovinná grace period
+  const to = setTimeout(() => {
+    console.log(`🤖 Seat ${seat} in ${roomId} remains BOT after grace.`);
+  }, 20000);
+  room.reconnectHolds?.set?.(seat, to);
+});
 
 
 
