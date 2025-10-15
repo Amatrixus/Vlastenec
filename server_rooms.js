@@ -55,6 +55,37 @@ function makeEmptyRoom(roomId, mode = 'random') {
 }
 
 
+
+
+// 🔴 NEW – helpery pro řízení životního cyklu místnosti
+function markRoomClosed(roomId) {
+  const room = rooms[roomId];
+  if (!room) return;
+  room.__closed = true;
+}
+
+function isRoomAlive(roomId) {
+  const room = rooms[roomId];
+  return !!room && room.__closed !== true;
+}
+
+// Volitelné: místo běžného delay použijeme cancellable delay
+async function delayAlive(roomId, ms) {
+  const step = 50;
+  let waited = 0;
+  while (waited < ms) {
+    if (!isRoomAlive(roomId)) return false; // zrušeno
+    await new Promise(r => setTimeout(r, Math.min(step, ms - waited)));
+    waited += step;
+  }
+  return true; // doběhlo celé
+}
+
+
+
+
+
+
 function roomAddPlayerAndBroadcast(roomId, socket, name) {
   const room = rooms[roomId];
   if (!room) return;
@@ -107,7 +138,16 @@ function roomAddPlayerAndBroadcast(roomId, socket, name) {
     });
 
     io.to(roomId).emit("updateScores", { scores: room.scores });
-    runGameScenario(roomId);
+
+    
+    
+    if (room.players.length === MAX_PLAYERS_PER_ROOM && isRoomAlive(roomId)) {
+
+
+          runGameScenario(roomId);
+    }
+  
+  
   }
 }
 
@@ -296,6 +336,9 @@ function runMultipleChoice(roomId, participatingPlayers = [1, 2, 3]) {
 
     setTimeout(() => {
       io.off("playerAnswered", handler);
+
+      if (!isRoomAlive(roomId)) return resolve([]); // 🔴 NEW
+
 
       for (const player in room.answers) {
         if (room.answers[player] === question.correct) {
@@ -556,23 +599,27 @@ async function runGameScenario(roomId) {
 
 // Scénář po startGame
 async function runGameScenario(roomId) {
+
+
+  if (!isRoomAlive(roomId)) return; // 🔴 NEW
   const room = rooms[roomId];
   if (!room) return;
 
 
-  await delay(7000);
+    if (!await delayAlive(roomId, 7000)) return; // 🔴 NEW
 
   //FÁZE USAZENÍ
       io.to(roomId).emit("runClientScenario", { action: "basesSettle" });
-      await delay(8000);
+       if (!await delayAlive(roomId, 8000)) return; // 🔴 NEW
 
   //INTRO K ROZŠIŘOVÁNÍ
 
+       if (!isRoomAlive(roomId)) return; // 🔴 NEW
       //VYGENEROVÁNÍ HERNÍHO PLÁNU
-      const expansionPlan = generateExpansionPlan();
-
-      //ULOŽENÍ PLÁNU PRO POZDĚJŠÍ KONTROLU
-      room.expansionPlan = expansionPlan;
+        const expansionPlan = generateExpansionPlan();
+        const room = rooms[roomId]; // může být bezpečně undefined, ale nahoře jsme ověřili
+        if (!room) return;
+        room.expansionPlan = expansionPlan;
 
       //POSLÁNÍ PLÁNU KLIENTŮM
       io.to(roomId).emit("runClientScenario", {
@@ -581,11 +628,19 @@ async function runGameScenario(roomId) {
       });
 
       console.log("🧭 Odeslán expansionPlan:", expansionPlan);
-      await delay(2000);
+      if (!await delayAlive(roomId, 2000)) return; // 🔴 NEW
 
       //FÁZE ROZŠIŘOVÁNÍ
+      if (!isRoomAlive(roomId)) return; // 🔴 NEW
+
       await runExpansionPhase(roomId);
+
+      if (!isRoomAlive(roomId)) return; // 🔴 NEW
+
       await runConquestPhase(roomId);
+
+      if (!isRoomAlive(roomId)) return; // 🔴 NEW
+
       await runBattlePhase(roomId);
 
 }
@@ -599,9 +654,12 @@ async function runGameScenario(roomId) {
 
 async function runExpansionPhase(roomId) {
   const room = rooms[roomId];
-  if (!room) return;
+    if (!room || !isRoomAlive(roomId)) return; // 🔴 NEW
+
 
   for (let round = 1; round <= 6; round++) {
+
+    if (!isRoomAlive(roomId)) return; // 🔴 NEW
     room.claimedRegionsThisRound = new Set();
 
     io.to(roomId).emit("startExpansionRound", {
@@ -614,10 +672,14 @@ async function runExpansionPhase(roomId) {
     
 
     await runPlayerTurns(roomId, round, room.expansionPlan[round - 1]);
+    if (!isRoomAlive(roomId)) return; // 🔴 NEW
+
 
     const correctPlayers = await runMultipleChoice(roomId);
+    if (!isRoomAlive(roomId)) return; // 🔴 NEW
 
-    await delay(6000);
+
+    if (!await delayAlive(roomId, 6000)) return; // 🔴 NEW
 
 
     correctPlayers.forEach(player => {
@@ -666,7 +728,7 @@ async function runExpansionPhase(roomId) {
 
 async function runConquestPhase(roomId) {
   const room = rooms[roomId];
-  if (!room) return;
+  if (!room || !isRoomAlive(roomId)) return; // 🔴 NEW
 
   console.log("⚔️ Fáze dobývání spuštěna!");
   io.to(roomId).emit("phaseChange", { phase: "conquest" });
@@ -676,6 +738,9 @@ async function runConquestPhase(roomId) {
   let round = 1;
 
   while (takenTiles < Object.keys(room.regionValues).length) {
+
+    if (!isRoomAlive(roomId)) return; // 🔴 NEW
+
     console.log(`⚔️ Dobývání – ${round}. kolo (obsazeno: ${takenTiles})`);
 
     // 1️⃣ Intro pro klienty – animace a název kola
@@ -683,16 +748,18 @@ async function runConquestPhase(roomId) {
       round,
       title: `Dobývání – ${round}. kolo`
     });
-    await delay(4000);
+    if (!await delayAlive(roomId, 4000)) return; // 🔴 NEW
 
     // 2️⃣ Numerická otázka – vítěz
     const winner = await runNumericQuestionForThree(roomId);
+    if (!isRoomAlive(roomId)) return; // 🔴 NEW
+
 
     if (winner) {
       console.log(`🏆 Hráč ${winner} vyhrál numerickou otázku`);
 
       // 3️⃣ Počkej na animaci výsledků na klientovi (stejně jako offline verze)
-      await delay(6000);
+      if (!await delayAlive(roomId, 6000)) return; // 🔴 NEW
 
       // 4️⃣ Získej dostupné regiony pro vítěze
       const available = getAvailableRegionsConquest(room);
@@ -709,6 +776,8 @@ async function runConquestPhase(roomId) {
 
       // Čekej na výběr regionu nebo náhodné přiřazení
       const selectedRegion = await waitForPlayerSelection(roomId, winner, 10000);
+      if (!isRoomAlive(roomId)) return; // 🔴 NEW
+
 
       if (selectedRegion) {
         // ✅ Okamžitě zobraz pin na mapě všem hráčům
@@ -724,7 +793,7 @@ async function runConquestPhase(roomId) {
 
         console.log(`✅ Hráč ${winner} obsadil ${selectedRegion} (+300 bodů)`);
 
-        await delay(2000);
+      await delayAlive(roomId, 2000); // 🔴 NEW
 
         // ✅ Aktualizace pro všechny hráče (zabarvení + skóre)
         io.to(roomId).emit("updateRegions", {
@@ -756,7 +825,7 @@ async function runConquestPhase(roomId) {
 
 async function runBattlePhase(roomId) {
   const room = rooms[roomId];
-  if (!room) return;
+  if (!room || !isRoomAlive(roomId)) return; // 🔴 NEW
 
   console.log("⚔️ Fáze bitev spuštěna!");
 
@@ -772,6 +841,9 @@ async function runBattlePhase(roomId) {
   console.log("📋 BattlePlan:", battlePlan);
 
   for (let round = 1; round <= 6; round++) {
+    if (!isRoomAlive(roomId)) return; // 🔴 NEW
+
+
     io.to(roomId).emit("startBattleRound", {
       round,
       order: room.battlePlan[round - 1]
@@ -780,6 +852,8 @@ async function runBattlePhase(roomId) {
     console.log(`🔵 Bitvy – ${round}. kolo`);
 
     for (let battlestick = 1; battlestick <= 3; battlestick++) {
+      if (!isRoomAlive(roomId)) return; // 🔴 NEW
+
       const attacker = room.battlePlan[round - 1][battlestick - 1];
 
       io.to(roomId).emit("updateBattleStick", {
@@ -813,6 +887,8 @@ async function runBattlePhase(roomId) {
       }
 
       const selections = await runBattleClaiming(roomId, attacker);
+      if (!isRoomAlive(roomId)) return; // 🔴 NEW
+
       if (!selections) continue;
 
       const { claimedBy, currentlyOwnedBy, selectedRegion } = selections;
@@ -822,7 +898,7 @@ async function runBattlePhase(roomId) {
 
       await runBattleOnRegion(roomId, claimedBy, currentlyOwnedBy, selectedRegion);
 
-      await delay(2000);
+      if (!await delayAlive(roomId, 2000)) return; // 🔴 NEW
     }
   }
 
@@ -1284,6 +1360,16 @@ function waitForPlayerSelection(roomId, player, timeout, forcedAvailableRegions 
 
     let elapsed = 0;
     const interval = setInterval(() => {
+
+
+
+      if (!isRoomAlive(roomId)) { // 🔴 NEW
+        clearInterval(interval);
+        return resolve(null);
+      }
+
+
+
       if (room.pendingSelections[player]) {
         clearInterval(interval);
         const region = room.pendingSelections[player];
@@ -1466,7 +1552,7 @@ socket.on("joinRoom", ({ room, settings }) => {
 
 
 
-  socket.on("disconnect", () => {
+   socket.on("disconnect", () => {
     const roomId = socket.data?.joinedRoom;
     if (!roomId || !rooms[roomId]) return;
 
@@ -1486,8 +1572,15 @@ socket.on("joinRoom", ({ room, settings }) => {
     console.log(`❌ ${name} left ${roomId}`);
 
     if (room.players.length === 0) {
-      delete rooms[roomId];
-      console.log(`🗑️ Room ${roomId} deleted`);
+      // 🔴 NEW: nejdřív scénář zastav
+      markRoomClosed(roomId);
+      io.to(roomId).emit("roomClosed"); // volitelné pro klienty
+
+      // 🔴 NEW: chvíli počkej, ať async části bezpečně vycouvají, pak teprve smaž
+      setTimeout(() => {
+        delete rooms[roomId];
+        console.log(`🗑️ Room ${roomId} deleted`);
+      }, 100); // 100 ms stačí – jen “oddech” pro promisy/intervaly
     }
   });
 
