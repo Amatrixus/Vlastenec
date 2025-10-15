@@ -1806,20 +1806,26 @@
                 try { return new Date(ts).toLocaleTimeString('cs-CZ', {hour:'2-digit', minute:'2-digit'}); }
                 catch { return ''; }
             }
-            function appendMsg({ name, text, ts }) {
-                    const line = document.createElement('div');
-                    line.className = 'chat-line';
+            
+            
 
-                    const teamClass = teamClassFor(name);
+            const numberToTeamClass = { 1: 'team-blue', 2: 'team-red', 3: 'team-white' };
 
-                    line.innerHTML =
-                        `<span class="chat-time">[${fmtTime(ts)}]</span> ` +
-                        `<span class="chat-name ${teamClass}"><strong>${escapeHtml(name)}:</strong></span> ` +
-                        `<span class="chat-text">${escapeHtml(text)}</span>`;
+            function appendMsg({ name, text, ts, number }) {
+            const line = document.createElement('div');
+            line.className = 'chat-line';
 
-                    chatBox.appendChild(line);
-                    chatBox.scrollTop = chatBox.scrollHeight;
+            const teamClass = numberToTeamClass[number] || teamClassFor(name); // fallback na jméno
+
+            line.innerHTML =
+                `<span class="chat-time">[${fmtTime(ts)}]</span> ` +
+                `<span class="chat-name ${teamClass || ''}" data-name="${escapeHtml(name)}"><strong>${escapeHtml(name)}:</strong></span> ` +
+                `<span class="chat-text">${escapeHtml(text)}</span>`;
+
+            chatBox.appendChild(line);
+            chatBox.scrollTop = chatBox.scrollHeight;
             }
+
 
             // ====== Elementy ======
             const chatInput = document.getElementById('chatinput');

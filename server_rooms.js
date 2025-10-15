@@ -82,6 +82,14 @@ async function delayAlive(roomId, ms) {
 }
 
 
+// NEW: zjistí číslo hráče (1..3) v dané room podle socket.id
+function getSeatNumber(room, socketId) {
+  if (!room) return null;
+  const ix = room.players.findIndex(p => p.id === socketId);
+  return ix >= 0 ? (ix + 1) : null;
+}
+
+
 
 
 
@@ -100,6 +108,14 @@ function roomAddPlayerAndBroadcast(roomId, socket, name) {
   socket.join(roomId);
   room.players.push({ id: socket.id, name });
 
+
+    // NEW: ulož sedadlo k socketu (užitečné i do budoucna)
+  socket.data = socket.data || {};
+  socket.data.seat   = myNumber;  // 1 | 2 | 3
+  socket.data.roomId = roomId;
+  socket.data.name   = name;
+
+
   const allNames = {};
   room.players.forEach((p, index) => { allNames[index + 1] = p.name; });
 
@@ -114,7 +130,15 @@ function roomAddPlayerAndBroadcast(roomId, socket, name) {
   io.to(roomId).emit("updateScores", { scores: room.scores });
 
   // ✅ pošleme historii chatu nově připojenému hráči
-  socket.emit("chat:history", room.chat ?? []);
+  // CHANGED: pošli historii s doplněným 'number' i pro staré zprávy, které ho neměly
+  const historyWithNumbers = (room.chat ?? []).map(m => {
+    if (typeof m.number === 'number') return m; // už obsahuje number
+    // fallback: dopočítej podle aktuálního pořadí (lepší než nic)
+    const n = getSeatNumber(room, (room.players.find(p => p.name === m.name) || {}).id) || 0;
+    return { ...m, number: n };
+  });
+  socket.emit("chat:history", historyWithNumbers);
+
 
   // Když je plno, nastartuj hru (původní logika)
   if (room.players.length === MAX_PLAYERS_PER_ROOM) {
@@ -1608,30 +1632,43 @@ socket.on("joinRoom", ({ room, settings }) => {
 
 
 socket.on("chat:send", ({ roomId, text }) => {
-    console.log("📩 chat:send received", { from: socket.id, roomId, text });
+  console.log("📩 chat:send received", { from: socket.id, roomId, text });
 
-    const room = rooms[roomId];
-    if (!room) {
-      console.log("❌ room not found for chat:", roomId);
-      return;
-    }
+  const room = rooms[roomId];
+  if (!room) {
+    console.log("❌ room not found for chat:", roomId);
+    return;
+  }
 
-    const clean = (typeof text === "string" ? text.trim() : "");
-    if (!clean) {
-      console.log("❌ empty/invalid text");
-      return;
-    }
+  const clean = (typeof text === "string" ? text.trim() : "");
+  if (!clean) {
+    console.log("❌ empty/invalid text");
+    return;
+  }
 
-    const ix = room.players.findIndex(p => p.id === socket.id);
-    const name = ix !== -1 ? room.players[ix].name : "Neznámý hráč";
+  // CHANGED: určete číslo hráče (1..3) – vždy podle aktuálního pořadí
+  const number = getSeatNumber(room, socket.id) || 0;
 
-    const msg = { id: `${Date.now()}_${Math.random().toString(16).slice(2)}`, name, text: clean.slice(0,500), ts: Date.now() };
-    room.chat.push(msg);
-    if (room.chat.length > 200) room.chat.shift();
+  const ix = room.players.findIndex(p => p.id === socket.id);
+  const name = ix !== -1 ? room.players[ix].name : "Neznámý hráč";
 
-    console.log(`💬 [${roomId}] ${name}: ${clean}`);
-    io.to(roomId).emit("chat:new", msg);
-  });
+  // CHANGED: ukládáme i number do historie
+  const msg = {
+    id: `${Date.now()}_${Math.random().toString(16).slice(2)}`,
+    name,
+    text: clean.slice(0, 500),
+    ts: Date.now(),
+    number // 1|2|3 (0 = neznámý/observer)
+  };
+
+  room.chat = room.chat || [];
+  room.chat.push(msg);
+  if (room.chat.length > 200) room.chat.shift();
+
+  console.log(`💬 [${roomId}] #${number} ${name}: ${clean}`);
+  io.to(roomId).emit("chat:new", msg);
+});
+
 
 
 
