@@ -75,10 +75,6 @@
     });
 
 
-
-
-    });
-
     // Server potvrdí vytvoření místnosti (host ve friends)
     socket.on('roomReady', ({ room }) => {
       if (gameMode !== 'friends') return; // jen friends sjednocujeme URL
