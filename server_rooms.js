@@ -617,7 +617,7 @@ async function runGameScenario(roomId) {
        if (!isRoomAlive(roomId)) return; // 🔴 NEW
       //VYGENEROVÁNÍ HERNÍHO PLÁNU
         const expansionPlan = generateExpansionPlan();
-        const room = rooms[roomId]; // může být bezpečně undefined, ale nahoře jsme ověřili
+        
         if (!room) return;
         room.expansionPlan = expansionPlan;
 
