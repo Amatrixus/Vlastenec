@@ -11,6 +11,12 @@
   <script src="/socket.io/socket.io.js"></script>
 
   <script>
+    // ---- anti-refresh guards ----
+    let gameStarted = false;        // přijmi startGame jen 1×
+    let hydratedFromServer = false; // už mám nahraný aktuální stav?
+
+
+
     // --- URL parametry ---
     const qp = new URLSearchParams(location.search);
     const playerName = qp.get('name') || '';
@@ -44,15 +50,26 @@
     // - friends → joinRoom/createRoom (NEposílat submitName)
     // - random  → jen submitName (NEposílat create/join)
     socket.on('connect', () => {
+
+     // 🧲 pokus o „resume“
+    const savedRoom = sessionStorage.getItem('vl_room');
+    const savedName = sessionStorage.getItem('vl_name');
+
+
       if (gameMode === 'friends') {
-        if (currentRoomId) {
-          socket.emit('joinRoom', { room: currentRoomId, settings });
-        } else {
-          socket.emit('createRoom', { settings });
+        // Preferuj navázání do stejné místnosti (pokud je v URL nebo v sessionStorage)
+        const targetRoom = currentRoomId || savedRoom;
+        if (targetRoom) {
+        currentRoomId = targetRoom;
+        socket.emit('joinRoom', { room: targetRoom, settings });
+        return;
         }
-      } else { // 'random'
-        socket.emit('submitName', myName); // STRING
-      }
+        socket.emit('createRoom', { settings });
+    } else {
+        // random mód – aspoň beze změny jména, ať tě server pozná
+        if (savedName) myName = savedName;
+        socket.emit('submitName', myName);
+    }
     });
 
     // Server potvrdí vytvoření místnosti (host ve friends)
@@ -70,6 +87,10 @@
       currentRoomId = roomId;
       playerControlledByUser[number] = true;
 
+         sessionStorage.setItem('vl_room', currentRoomId);
+        sessionStorage.setItem('vl_name', myName);
+        sessionStorage.setItem('vl_seat', String(myPlayerNumber));
+
         syncNameTeamMap(allNames);
 
       player1 = allNames[1] || player1;
@@ -79,6 +100,10 @@
       updateScoreNames && updateScoreNames();
       updateScoreUI && updateScoreUI(scores);
       updateLobbyList && updateLobbyList(allNames);
+
+
+      hydratedFromServer = true;
+
     });
 
     socket.on("updateScores", ({ scores }) => {
@@ -94,6 +119,12 @@
 
 
     socket.on("startGame", ({ bases, regions, regionValues }) => {
+       
+        
+         if (gameStarted) return;
+
+        gameStarted = true;
+
         console.log("🎮 Hra spuštěna");
 
         const lobby = document.getElementById("lobby_container");
@@ -111,35 +142,23 @@
         // Ulož kontrolované oblasti
         playerControlledRegions = regions;
 
-        // Ulož hodnoty území
-        for (const region in regionValues) {
-            regionValues[region] = regionValues[region];
-        }
+       // ⚠️ Nepřepisuj objekt sám sebou, jen zkopíruj hodnoty
+        Object.keys(regionValues).forEach((k) => { window.regionValues[k] = regionValues[k]; });
 
-        console.log("📌 Základny:", bases);
-        console.log("📍 Území:", regions);
-        console.log("💰 Hodnoty:", regionValues);
-
-        // Odpočet
+        // Krátký odpočet jen v prvním startu
         let seconds = 5;
-        countdown.textContent = seconds;
-
+        if (countdown) countdown.textContent = seconds;
         const interval = setInterval(() => {
             seconds--;
             if (seconds > 0) {
-            countdown.textContent = seconds;
+            if (countdown) countdown.textContent = seconds;
             } else {
-            countdown.textContent = "Začínáme!";
+            if (countdown) countdown.textContent = "Začínáme!";
             clearInterval(interval);
-
-            setTimeout(() => {
-                overlay.style.display = "none";
-
-               
-            }, 1000);
+            setTimeout(() => { if (overlay) overlay.style.display = "none"; }, 1000);
             }
         }, 1000);
-    });
+        });
 
 
 

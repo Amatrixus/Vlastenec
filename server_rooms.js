@@ -30,6 +30,19 @@ const rooms = {}; // roomId -> { players, scores, bases, regions, regionValues, 
 
 
 
+function buildRoomSnapshot(room) {
+  return {
+    hasStarted: room.hasStarted,
+    phase: room.phase,
+    round: room.round,
+    bases: room.bases,
+    regions: room.regions,
+    regionValues: room.regionValues,
+    scores: room.scores,
+    defenseBonuses: room.defenseBonuses,
+    seatControllers: room.seatControllers
+  };
+}
 
 
 
@@ -49,7 +62,21 @@ function makeEmptyRoom(roomId, mode = 'random') {
     defenseBonuses: { Player1: 0, Player2: 0, Player3: 0 },
     playerLives: { Player1: 3, Player2: 3, Player3: 3 },
     chat: [],
-    settings: {}           // volitelné – můžeš sem ukládat cats/catNames
+    settings: {},           // volitelné – můžeš sem ukládat cats/catNames
+
+
+
+     // 🔽 NOVÉ:
+    hasStarted: false,
+    phase: "lobby",          // lobby | settle | expansion | conquest | battle
+    round: 0,
+    reconnectHolds: new Map(),     // map<seatNumber, timeoutId>
+    playerTokens: {},              // {1: "abc", 2: "...", 3: "..."}
+    seatControllers: {             // kdo právě ovládá sedadlo
+      1: "human", 2: "human", 3: "human"   // "human" | "bot"
+    }
+
+
   };
   return rooms[roomId];
 }
@@ -140,8 +167,8 @@ function roomAddPlayerAndBroadcast(roomId, socket, name) {
   socket.emit("chat:history", historyWithNumbers);
 
 
-  // Když je plno, nastartuj hru (původní logika)
-  if (room.players.length === MAX_PLAYERS_PER_ROOM) {
+  // Když je plno a hra ještě nezačala → start jen jednou
+  if (room.players.length === MAX_PLAYERS_PER_ROOM && !room.hasStarted) {
     const possibleBases = ['Rho', 'Omega', 'Theta'];
     const shuffled = possibleBases.sort(() => Math.random() - 0.5);
 
@@ -155,6 +182,10 @@ function roomAddPlayerAndBroadcast(roomId, socket, name) {
 
     room.scores = calculateScores(room.regions, room.regionValues, room.defenseBonuses);
 
+    room.hasStarted = true;
+    room.phase = "settle";
+    room.round = 0;
+
     io.to(roomId).emit("startGame", {
       bases: room.bases,
       regions: room.regions,
@@ -163,16 +194,18 @@ function roomAddPlayerAndBroadcast(roomId, socket, name) {
 
     io.to(roomId).emit("updateScores", { scores: room.scores });
 
-    
-    
-    if (room.players.length === MAX_PLAYERS_PER_ROOM && isRoomAlive(roomId)) {
-
-
-          runGameScenario(roomId);
+    if (isRoomAlive(roomId)) {
+      runGameScenario(roomId);
     }
-  
-  
+
+  // Hra už běží → nově příchozí (nebo reconnect) dostane jen snapshot
+  } else if (room.hasStarted) {
+    socket.emit("stateSync", {
+      myNumber: myNumber,
+      snapshot: buildRoomSnapshot(room)
+    });
   }
+
 }
 
 
@@ -630,12 +663,18 @@ async function runGameScenario(roomId) {
   if (!room) return;
 
 
+  room.phase = "settle";
+  room.round = 0;
+
+
     if (!await delayAlive(roomId, 7000)) return; // 🔴 NEW
 
   //FÁZE USAZENÍ
       io.to(roomId).emit("runClientScenario", { action: "basesSettle" });
        if (!await delayAlive(roomId, 8000)) return; // 🔴 NEW
 
+
+       room.phase ="expansion" 
   //INTRO K ROZŠIŘOVÁNÍ
 
        if (!isRoomAlive(roomId)) return; // 🔴 NEW
@@ -661,10 +700,15 @@ async function runGameScenario(roomId) {
 
       if (!isRoomAlive(roomId)) return; // 🔴 NEW
 
+      room.phase = "conquest";
+      room.round = 1;
       await runConquestPhase(roomId);
 
       if (!isRoomAlive(roomId)) return; // 🔴 NEW
 
+
+      room.phase = "battle";
+      room.round = 1;
       await runBattlePhase(roomId);
 
 }
@@ -1444,6 +1488,64 @@ io.on('connection', socket => {
 
 
 
+  socket.on("auth:token", ({ token }) => {
+    if (!token) return;
+    const roomId = socket.data?.roomId || socket.data?.joinedRoom;
+    const room = rooms[roomId];
+    if (!room) return;
+
+    const seat = getSeatNumber(room, socket.id);
+    if (seat) {
+      room.playerTokens[seat] = token;
+    }
+  });
+
+
+  socket.on("resume", ({ roomId, token }) => {
+    const room = rooms[roomId];
+    if (!room) return socket.emit("resume:error", { message: "room not found" });
+
+    const entry = Object.entries(room.playerTokens).find(([seat, t]) => t === token);
+    if (!entry) return socket.emit("resume:error", { message: "player not recognized" });
+
+    const seat = parseInt(entry[0], 10);
+
+    // připoj socket do room
+    socket.join(roomId);
+    socket.data = socket.data || {};
+    socket.data.joinedRoom = roomId;
+    socket.data.roomId = roomId;
+    socket.data.seat = seat;
+
+    // rebinding hráče na nový socket.id
+    const rec = room.players[seat - 1];
+    if (rec) rec.id = socket.id;
+
+    // když byl dočasně bot → vrať člověka k volantu
+    room.seatControllers[seat] = "human";
+
+    // zruš grace timeout (viz níž)
+    const prevTO = room.reconnectHolds.get(seat);
+    if (prevTO) {
+      clearTimeout(prevTO);
+      room.reconnectHolds.delete(seat);
+    }
+
+    // Pošli snapshot místo startu
+    socket.emit("stateSync", {
+      myNumber: seat,
+      snapshot: buildRoomSnapshot(room)
+    });
+
+    // ať ostatní vidí, že hráč je zpět “human”
+    const allNames = {};
+    room.players.forEach((p, i) => { allNames[i + 1] = p.name; });
+    io.to(roomId).emit("updatePlayers", { allNames, seatControllers: room.seatControllers });
+  });
+
+
+
+
 
   console.log(`✅ ${socket.id} connected`);
 
@@ -1577,36 +1679,38 @@ socket.on("joinRoom", ({ room, settings }) => {
 
 
    socket.on("disconnect", () => {
-    const roomId = socket.data?.joinedRoom;
-    if (!roomId || !rooms[roomId]) return;
+      const roomId = socket.data?.joinedRoom;
+      if (!roomId || !rooms[roomId]) return;
 
-    const room = rooms[roomId];
-    const index = room.players.findIndex(p => p.id === socket.id);
-    if (index === -1) return;
+      const room = rooms[roomId];
+      const seat = getSeatNumber(room, socket.id); // 1..3 nebo null
+      if (!seat) return;
 
-    const name = room.players[index].name;
-    room.players.splice(index, 1);
+      const name = room.players[seat - 1]?.name || `Player${seat}`;
 
-    const allNames = {};
-    room.players.forEach((p, i) => { allNames[i + 1] = p.name; });
+      console.log(`⌛ ${name} temporarily left ${roomId} – switching seat ${seat} to BOT (grace 20s)`);
 
-    io.to(roomId).emit("updatePlayers", { allNames });
-    io.to(roomId).emit("updateScores", { scores: room.scores });
+      // 1) nepřehazuj slots v poli players, jen přepni kontrolér
+      room.seatControllers[seat] = "bot";
 
-    console.log(`❌ ${name} left ${roomId}`);
+      // 2) oznam klientům (můžeš podle toho např. “zešednout” jeho jmenovku)
+      const allNames = {};
+      room.players.forEach((p, i) => { allNames[i + 1] = p.name; });
+      io.to(roomId).emit("updatePlayers", { allNames, seatControllers: room.seatControllers });
+      io.to(roomId).emit("updateScores", { scores: room.scores });
 
-    if (room.players.length === 0) {
-      // 🔴 NEW: nejdřív scénář zastav
-      markRoomClosed(roomId);
-      io.to(roomId).emit("roomClosed"); // volitelné pro klienty
+      // 3) grace period – pokud se do 20 s nevrátí s tokenem → uvolni slot (nebo nech bota dál)
+      const to = setTimeout(() => {
+        // pokud chceš slot udržet jako bota i po 20 s, nic nemaž
+        // Pokud bys chtěl slot plně uzavřít: room.players.splice(seat-1, 1) a posunout další,
+        // ale to by rozhazovalo indexy — nedělejme to.
+        console.log(`🤖 Seat ${seat} in ${roomId} remains BOT after grace.`);
+      }, 20000);
 
-      // 🔴 NEW: chvíli počkej, ať async části bezpečně vycouvají, pak teprve smaž
-      setTimeout(() => {
-        delete rooms[roomId];
-        console.log(`🗑️ Room ${roomId} deleted`);
-      }, 100); // 100 ms stačí – jen “oddech” pro promisy/intervaly
-    }
-  });
+      room.reconnectHolds.set(seat, to);
+
+      // Pokud by odešli úplně všichni “natrvalo”, zavírání room řešíš už v safe-stop logice
+    });
 
 
 
