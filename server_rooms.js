@@ -114,7 +114,7 @@ async function delayAlive(roomId, ms) {
 // NEW: zjistí číslo hráče (1..3) v dané room podle socket.id
 function getSeatNumber(room, socketId) {
   if (!room) return null;
-+  const ix = room.players.findIndex(p => p && p.id === socketId);
+  const ix = room.players.findIndex(p => p && p.id === socketId);
    return ix >= 0 ? (ix + 1) : null;
 }
 
@@ -158,7 +158,7 @@ function roomAddPlayerAndBroadcast(roomId, socket, name) {
 
   
 
-  let myNumber = findSeatForReturningOrBot();
+  let myNumber = findSeatForReturningOrBot(room, name);
   if (!myNumber) {
     socket.emit("roomError", { message: "Room is full" });
     return;
