@@ -1070,6 +1070,8 @@ fill: white;
   height: 20%;
   background: linear-gradient(to right, #c22f02, #d57202);
   color: white;
+  border: 0px;
+  border-radius: 4px;
 }
 
 
@@ -1107,6 +1109,45 @@ fill: white;
 .chat-line { margin: .2rem 0; line-height: 1.2; }
 .chat-time { opacity: .6; margin-right: .25rem; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
 .chat-name { font-weight: 600; margin-right: .25rem; }
+
+
+
+.chat-name{
+  position: relative;
+  padding-left: 1rem;         /* místo pro tečku */
+  font-weight: 600;
+}
+
+/* Barevná tečka */
+.chat-name::before{
+  content:"";
+  position:absolute;
+  left:0; top:50%;
+  width:.6rem; height:.6rem;
+  border-radius:50%;
+  transform:translateY(-50%);
+  box-shadow:0 0 0 2px rgba(0,0,0,.45); /* kontrast na tmavém pozadí */
+}
+
+/* Týmy */
+.team-red::before   { background:#ef4444; }
+.team-blue::before  { background:#3b82f6; }
+.team-white::before { background:#ffffff; box-shadow:0 0 0 2px rgba(0,0,0,.6); }
+
+/* Bílý tým: outline textu, aby nezanikl */
+.team-white{
+  text-shadow:
+    0  1px 0 rgba(0,0,0,.65),
+    0 -1px 0 rgba(0,0,0,.65),
+    1px 0  0 rgba(0,0,0,.65),
+   -1px 0  0 rgba(0,0,0,.65);
+}
+
+
+
+
+
+
 
 
 

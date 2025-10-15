@@ -70,6 +70,8 @@
       currentRoomId = roomId;
       playerControlledByUser[number] = true;
 
+        syncNameTeamMap(allNames);
+
       player1 = allNames[1] || player1;
       player2 = allNames[2] || player2;
       player3 = allNames[3] || player3;
@@ -1759,6 +1761,41 @@
 
             <!-- 2) Tvůj klientský chat -->
             <script>
+
+
+
+                // ====== Týmové barvy podle čísla hráče ======
+                const numberToTeamClass = {
+                1: 'team-blue',
+                2: 'team-red',
+                3: 'team-white'
+                };
+
+                // Mapování jméno -> třída týmu (dynamicky plníme z allNames)
+                const nameToTeamClass = new Map();
+
+                /** Projede allNames {1: 'Jarmila', 2: 'Hynek', 3: 'Amatrixus'} a naplní mapu jméno->třída */
+                function syncNameTeamMap(allNames) {
+                if (!allNames) return;
+                for (let i = 1; i <= 3; i++) {
+                    const nm = allNames[i];
+                    if (nm) {
+                    nameToTeamClass.set(nm, numberToTeamClass[i] || '');
+                    }
+                }
+                }
+
+                /** Vrátí CSS třídu pro dané jméno hráče (nebo prázdný string) */
+                function teamClassFor(name) {
+                return nameToTeamClass.get(name) || '';
+                }
+
+
+
+
+
+
+
             // ====== Pomocné funkce ======
             function escapeHtml(s) {
                 return String(s).replace(/[&<>"']/g, m => (
@@ -1770,14 +1807,18 @@
                 catch { return ''; }
             }
             function appendMsg({ name, text, ts }) {
-                const line = document.createElement('div');
-                line.className = 'chat-line';
-                line.innerHTML =
-                `<span class="chat-time">[${fmtTime(ts)}]</span> ` +
-                `<span class="chat-name"><strong>${escapeHtml(name)}:</strong></span> ` +
-                `<span class="chat-text">${escapeHtml(text)}</span>`;
-                chatBox.appendChild(line);
-                chatBox.scrollTop = chatBox.scrollHeight;
+                    const line = document.createElement('div');
+                    line.className = 'chat-line';
+
+                    const teamClass = teamClassFor(name);
+
+                    line.innerHTML =
+                        `<span class="chat-time">[${fmtTime(ts)}]</span> ` +
+                        `<span class="chat-name ${teamClass}"><strong>${escapeHtml(name)}:</strong></span> ` +
+                        `<span class="chat-text">${escapeHtml(text)}</span>`;
+
+                    chatBox.appendChild(line);
+                    chatBox.scrollTop = chatBox.scrollHeight;
             }
 
             // ====== Elementy ======
