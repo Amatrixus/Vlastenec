@@ -14,6 +14,58 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
+    // ---- anti-refresh guards ----
+    let gameStarted = false;        // přijmi startGame jen 1×
+    let hydratedFromServer = false; // už mám nahraný aktuální stav?
+
+
+
+    // --- URL parametry ---
+    const qp = new URLSearchParams(location.search);
+    const playerName = qp.get('name') || '';
+    const gameMode   = qp.get('mode') || 'random'; // random výchozí
+    const catsCsv    = qp.get('cats') || '';
+    const catIds     = catsCsv.split(',').filter(Boolean).map(n => parseInt(n, 10));
+    const catNames   = (() => {
+      const raw = qp.get('catnames'); if (!raw) return [];
+      try { return JSON.parse(decodeURIComponent(raw)); } catch { return []; }
+    })();
+    const roomCodeFromUrl = qp.get('room') || null;
+
+    // --- Jméno (fallback na prompt jen když není v URL) ---
+    let myName = playerName || prompt("Zadej své jméno:") || "Host";
+
+    // --- Fallback proměnné ještě před prvními listenery ---
+    let player1 = 'Robot Emil';
+    let player2 = 'Robot Jirka';
+    let player3 = 'Robot Honza';
+    let myPlayerNumber = null;
+    const playerControlledByUser = { 1:false, 2:false, 3:false };
+
+    // --- Room + settings ---
+    let currentRoomId = roomCodeFromUrl || null;
+    const settings = { name: myName, mode: gameMode, cats: catIds, catNames };
+
+    // --- Jediná inicializace socketu ---
+    const socket = io();
+
+
+
+
+
+
+
+    
     socket.on("stateSync", ({ myNumber, snapshot }) => {
         // --- identita a anti-refresh guardy ---
         window.myPlayerNumber = myNumber;
@@ -75,42 +127,6 @@
 
 
 
-
-
-    // ---- anti-refresh guards ----
-    let gameStarted = false;        // přijmi startGame jen 1×
-    let hydratedFromServer = false; // už mám nahraný aktuální stav?
-
-
-
-    // --- URL parametry ---
-    const qp = new URLSearchParams(location.search);
-    const playerName = qp.get('name') || '';
-    const gameMode   = qp.get('mode') || 'random'; // random výchozí
-    const catsCsv    = qp.get('cats') || '';
-    const catIds     = catsCsv.split(',').filter(Boolean).map(n => parseInt(n, 10));
-    const catNames   = (() => {
-      const raw = qp.get('catnames'); if (!raw) return [];
-      try { return JSON.parse(decodeURIComponent(raw)); } catch { return []; }
-    })();
-    const roomCodeFromUrl = qp.get('room') || null;
-
-    // --- Jméno (fallback na prompt jen když není v URL) ---
-    let myName = playerName || prompt("Zadej své jméno:") || "Host";
-
-    // --- Fallback proměnné ještě před prvními listenery ---
-    let player1 = 'Robot Emil';
-    let player2 = 'Robot Jirka';
-    let player3 = 'Robot Honza';
-    let myPlayerNumber = null;
-    const playerControlledByUser = { 1:false, 2:false, 3:false };
-
-    // --- Room + settings ---
-    let currentRoomId = roomCodeFromUrl || null;
-    const settings = { name: myName, mode: gameMode, cats: catIds, catNames };
-
-    // --- Jediná inicializace socketu ---
-    const socket = io();
 
     // Připojení:
     // - friends → joinRoom/createRoom (NEposílat submitName)
