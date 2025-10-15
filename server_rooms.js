@@ -25,6 +25,8 @@ server.listen(PORT, '0.0.0.0', () => console.log('Server běží na', PORT));
 
 const MAX_PLAYERS_PER_ROOM = 3;
 const rooms = {}; // roomId -> { players, scores, bases, regions, regionValues, defenseBonuses }
+const regionValuesByRoom = {};
+
 
 
 
@@ -117,6 +119,20 @@ function getSeatNumber(room, socketId) {
 }
 
 
+// Najdi sedadlo pro navrátilce (podle jména) nebo volné/bot sedadlo
+function findSeatForReturningOrBot(room, name) {
+  // 1) pokud už v poli players existuje záznam se stejným jménem → tohle sedadlo
+  for (let i = 0; i < MAX_PLAYERS_PER_ROOM; i++) {
+    if (room.players[i] && room.players[i].name === name) return i + 1;
+  }
+  // 2) první volné sedadlo (neexistuje hráč) nebo sedadlo s null id (bot)
+  for (let i = 0; i < MAX_PLAYERS_PER_ROOM; i++) {
+    if (!room.players[i] || room.players[i].id == null) return i + 1;
+  }
+  // 3) jinak není místo
+  return null;
+}
+
 
 
 
@@ -130,10 +146,21 @@ function roomAddPlayerAndBroadcast(roomId, socket, name) {
     return;
   }
 
-  const myNumber = room.players.length + 1;
+  // vyber sedadlo: preferuj stejné jméno → volné/null-id → nové
+  let myNumber = findSeatForReturningOrBot(room, name);
 
-  socket.join(roomId);
-  room.players.push({ id: socket.id, name });
+  if (!myNumber) {
+    // plno
+    socket.emit("roomError", { message: "Room is full" });
+    return;
+  }
+
+  // fyzicky připrav pole players na 3 prvky (aby šlo přiřadit indexově)
+  while (room.players.length < MAX_PLAYERS_PER_ROOM) room.players.push(undefined);
+
+  // zapiš hráče na dané sedadlo (indexované od 1)
+  room.players[myNumber - 1] = { id: socket.id, name };
+  room.seatControllers[myNumber] = "human";
 
 
     // NEW: ulož sedadlo k socketu (užitečné i do budoucna)
@@ -1690,27 +1717,24 @@ socket.on("joinRoom", ({ room, settings }) => {
 
       console.log(`⌛ ${name} temporarily left ${roomId} – switching seat ${seat} to BOT (grace 20s)`);
 
-      // 1) nepřehazuj slots v poli players, jen přepni kontrolér
+      // označ sedadlo jako bot a zneplatni socket id
       room.seatControllers[seat] = "bot";
+      if (room.players[seat - 1]) room.players[seat - 1].id = null;
 
-      // 2) oznam klientům (můžeš podle toho např. “zešednout” jeho jmenovku)
+      // informuj klienty
       const allNames = {};
-      room.players.forEach((p, i) => { allNames[i + 1] = p.name; });
+      room.players.forEach((p, i) => { allNames[i + 1] = p?.name || `Player${i + 1}`; });
       io.to(roomId).emit("updatePlayers", { allNames, seatControllers: room.seatControllers });
       io.to(roomId).emit("updateScores", { scores: room.scores });
 
-      // 3) grace period – pokud se do 20 s nevrátí s tokenem → uvolni slot (nebo nech bota dál)
+      // grace period (ponecháváme slot, jen logujeme)
       const to = setTimeout(() => {
-        // pokud chceš slot udržet jako bota i po 20 s, nic nemaž
-        // Pokud bys chtěl slot plně uzavřít: room.players.splice(seat-1, 1) a posunout další,
-        // ale to by rozhazovalo indexy — nedělejme to.
         console.log(`🤖 Seat ${seat} in ${roomId} remains BOT after grace.`);
       }, 20000);
 
       room.reconnectHolds.set(seat, to);
-
-      // Pokud by odešli úplně všichni “natrvalo”, zavírání room řešíš už v safe-stop logice
     });
+
 
 
 

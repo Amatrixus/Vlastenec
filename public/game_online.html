@@ -70,6 +70,34 @@
         if (savedName) myName = savedName;
         socket.emit('submitName', myName);
     }
+
+
+
+    // 🧲 Pokus o „resume“ pro OBA módy (friends i random)
+      const savedRoom = sessionStorage.getItem('vl_room');
+      const savedName = sessionStorage.getItem('vl_name');
+      const targetRoom = currentRoomId || savedRoom;
+    
+      // zachovej jméno, ať se UI i server shodnou
+      if (savedName) myName = savedName;
+    
+      if (targetRoom) {
+        currentRoomId = targetRoom;
+        socket.emit('joinRoom', { room: targetRoom, settings });
+        return;
+      }
+    
+      // fallbacky, pokud žádná roomka není uložená
+      if (gameMode === 'friends') {
+        socket.emit('createRoom', { settings });
+      } else {
+        socket.emit('submitName', myName);
+      }
+    });
+
+
+
+
     });
 
     // Server potvrdí vytvoření místnosti (host ve friends)
