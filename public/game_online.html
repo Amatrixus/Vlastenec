@@ -11,6 +11,72 @@
   <script src="/socket.io/socket.io.js"></script>
 
   <script>
+
+
+
+    socket.on("stateSync", ({ myNumber, snapshot }) => {
+        // --- identita a anti-refresh guardy ---
+        window.myPlayerNumber = myNumber;
+        myPlayerNumber = myNumber;                 // některé tvoje funkce používají tuto globální
+        gameStarted = true;                        // blokne opětovné starty/odpočty
+        hydratedFromServer = true;
+
+        // Ulož pro budoucí reconnect
+        if (snapshot.roomId) sessionStorage.setItem('vl_room', snapshot.roomId);
+        if (typeof myName === 'string' && myName) sessionStorage.setItem('vl_name', myName);
+
+        // --- jména hráčů (pokud jsou v snapshotu) ---
+        if (snapshot.allNames) {
+        player1 = snapshot.allNames[1] || player1;
+        player2 = snapshot.allNames[2] || player2;
+        player3 = snapshot.allNames[3] || player3;
+        if (typeof updateScoreNames === 'function') updateScoreNames();
+        if (typeof updateLobbyList === 'function') updateLobbyList(snapshot.allNames);
+        }
+
+        // --- základní stav mapy a skóré ---
+        if (snapshot.bases) {
+        player1CurrentBase = snapshot.bases[1] || "";
+        player2CurrentBase = snapshot.bases[2] || "";
+        player3CurrentBase = snapshot.bases[3] || "";
+        }
+
+        if (snapshot.regions) {
+        // Přepis celého objektu, ať nezůstanou staré zbytky
+        playerControlledRegions = {
+            Player1regions: snapshot.regions.Player1regions || [],
+            Player2regions: snapshot.regions.Player2regions || [],
+            Player3regions: snapshot.regions.Player3regions || []
+        };
+        }
+
+        if (snapshot.regionValues) {
+        // Bezpečně přepiš hodnoty regionů
+        window.regionValues = { ...window.regionValues, ...snapshot.regionValues };
+        }
+
+        // --- UI: schovej lobby/overlay, přepočítej a vykresli ---
+        const overlay = document.getElementById("start_overlay");
+        if (overlay) overlay.style.display = "none";
+        const lobby = document.getElementById("lobby_container");
+        if (lobby) lobby.style.display = "none";
+
+        // Překreslení mapy + skóre (voláme jen to, co existuje v klientovi)
+        if (typeof colorizeTiles === 'function') colorizeTiles();
+        if (typeof updateScoreUI === 'function') updateScoreUI();   // pozor: správný název je updateScoreUI
+    });
+
+
+
+
+
+
+
+
+
+
+
+
     // ---- anti-refresh guards ----
     let gameStarted = false;        // přijmi startGame jen 1×
     let hydratedFromServer = false; // už mám nahraný aktuální stav?
@@ -59,16 +125,20 @@
     
       // zachovej jméno, ať se UI i server shodnou
       if (savedName) myName = savedName;
+        if (!myName || !myName.trim()) {
+          // nouzové jméno, ať nikdy neposíláme undefined
+           myName = `Player_${Math.random().toString(36).slice(2,6)}`;
+        }
     
       if (targetRoom) {
         currentRoomId = targetRoom;
-        socket.emit('joinRoom', { room: targetRoom, settings });
+        socket.emit('joinRoom', { room: targetRoom, name: myName, settings });
         return;
       }
     
       // fallbacky, pokud žádná roomka není uložená
       if (gameMode === 'friends') {
-        socket.emit('createRoom', { settings });
+        socket.emit('createRoom', { settings: { ...settings, name: myName } });
       } else {
         socket.emit('submitName', myName);
       }

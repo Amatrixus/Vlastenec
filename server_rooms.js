@@ -1650,11 +1650,13 @@ socket.on("joinRoom", ({ room, settings }) => {
     return;
   }
 
+  const safeName = (name || socket.data?.name || "Host").toString();
+
   socket.data = socket.data || {};
   socket.data.joinedRoom = roomId;
   socket.data.name = name;
 
-  roomAddPlayerAndBroadcast(roomId, socket, name);
+  roomAddPlayerAndBroadcast(roomId, socket, safeName);
   console.log(`👥 joinRoom → ${roomId} by ${name}`);
 });
 
