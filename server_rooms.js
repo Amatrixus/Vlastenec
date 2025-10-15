@@ -48,6 +48,13 @@ function buildRoomSnapshot(room) {
 
 
 
+// nahoru k ostatním helperům
+function occupiedSeatCount(room) {
+  return (room.players || []).filter(Boolean).length; // počítá jen skutečně obsazená sedadla
+}
+
+
+
 
 
 
@@ -117,7 +124,6 @@ function getSeatNumber(room, socketId) {
   const ix = room.players.findIndex(p => p && p.id === socketId);
   return ix >= 0 ? (ix + 1) : null;
 }
-
 
 
 // Najdi sedadlo pro navrátilce (podle jména) nebo volné/bot sedadlo
@@ -1557,7 +1563,10 @@ io.on('connection', socket => {
 
     // ať ostatní vidí, že hráč je zpět “human”
     const allNames = {};
-    room.players.forEach((p, i) => { allNames[i + 1] = (p && p.name) ? p.name : `Player${i+1}`; });
+    for (let i = 0; i < MAX_PLAYERS_PER_ROOM; i++) {
+      const p = room.players[i];
+      allNames[i + 1] = (p && p.name) ? p.name : `Robot ${i + 1}`;
+    }
 
 
 
@@ -1636,7 +1645,7 @@ socket.on("joinRoom", ({ room, settings }) => {
   }
 
   const current = rooms[roomId];
-  if (current.players.length >= MAX_PLAYERS_PER_ROOM) {
+  if (occupiedSeatCount(current) >= MAX_PLAYERS_PER_ROOM) {
     socket.emit("roomError", { message: "Room is full" });
     return;
   }
@@ -1667,7 +1676,7 @@ socket.on("joinRoom", ({ room, settings }) => {
 
     // ✅ vezmi první NEplnou room, která je opravdu random
     let roomId = Object.keys(rooms).find(id =>
-      rooms[id].mode === 'random' && rooms[id].players.length < MAX_PLAYERS_PER_ROOM
+      rooms[id].mode === 'random' && occupiedSeatCount(rooms[id]) < MAX_PLAYERS_PER_ROOM
     );
 
     // žádná random room? vytvoř novou

@@ -353,6 +353,8 @@
 
             let allNames = {};
                     socket.on("updatePlayers", ({ allNames: names }) => {
+
+                        console.log("updatePlayers:", names); // <-- do konzole
                     allNames = names;
                     player1 = allNames[1] || "Robot Emil";
                     player2 = allNames[2] || "Robot Jirka";
