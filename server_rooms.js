@@ -29,6 +29,31 @@ const regionValuesByRoom = {};
 
 
 
+// ——— helpers pro "friends" room ———
+function genRoomCode(n = 6) {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // bez 0, O, I, 1
+  let out = '';
+  for (let i = 0; i < n; i++) out += chars[Math.floor(Math.random() * chars.length)];
+  return out;
+}
+
+function makeFriendsRoomId() {
+  // zkus unikátní id několikrát, pak fallback na timestamp
+  for (let i = 0; i < 50; i++) {
+    const candidate = `room_${genRoomCode(6)}`;
+    if (!rooms[candidate]) return candidate;
+  }
+  return `room_${Date.now()}`;
+}
+
+// (volitelné) jednoduchá sanitace, když by přišlo "room" z URL:
+function sanitizeRoomId(s) {
+  s = String(s || '');
+  // povolíme jen [A-Z2-9] v části za "room_"
+  const m = s.match(/^room_([A-Z2-9]{4,12})$/i);
+  return m ? `room_${m[1].toUpperCase()}` : '';
+}
+
 
 
 function buildRoomSnapshot(room, roomId) {
@@ -1619,9 +1644,9 @@ io.on('connection', socket => {
   // FRIENDS: host vytvoří místnost a rovnou se do ní přidá
 socket.on("createRoom", ({ settings }) => {
   const name = (settings?.name || "Host").toString();
-  const roomId = `room_${genRoomCode?.(6) || Date.now()}`;
+  const roomId = makeFriendsRoomId();          // ← použij náš helper
 
-  const room = makeEmptyRoom(roomId, 'friends'); // friends room
+  const room = makeEmptyRoom(roomId, 'friends');
   room.settings = settings || {};
 
   socket.emit("roomReady", { room: roomId });
@@ -1630,7 +1655,6 @@ socket.on("createRoom", ({ settings }) => {
   socket.data.joinedRoom = roomId;
   socket.data.name = name;
 
-  // 🔁 dřív: addPlayerOnce → teď:
   roomAddPlayerAndBroadcast(roomId, socket, name);
 });
 
@@ -1639,10 +1663,10 @@ socket.on("createRoom", ({ settings }) => {
 // FRIENDS: hosté (nebo host, pokud už má kód) se připojují do existující room
 socket.on("joinRoom", ({ room, settings }) => {
   const name = (settings?.name || "").toString().trim() || "Host";
-  const roomId = (room || "").toString().trim();
+  const roomId = sanitizeRoomId(room);
 
   if (!roomId) {
-    socket.emit("roomError", { message: "Missing room id" });
+    socket.emit("roomError", { message: "Missing or invalid room id" });
     return;
   }
 
