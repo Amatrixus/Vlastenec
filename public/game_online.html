@@ -74,7 +74,15 @@
         hydratedFromServer = true;
 
         // Ulož pro budoucí reconnect
-        if (snapshot.roomId) sessionStorage.setItem('vl_room', snapshot.roomId);
+        if (snapshot.roomId){
+
+             currentRoomId = snapshot.roomId;               
+             sessionStorage.setItem('vl_room', snapshot.roomId);
+
+
+        }
+
+
         if (typeof myName === 'string' && myName) sessionStorage.setItem('vl_name', myName);
 
         // --- jména hráčů (pokud jsou v snapshotu) ---
@@ -116,6 +124,12 @@
         // Překreslení mapy + skóre (voláme jen to, co existuje v klientovi)
         if (typeof colorizeTiles === 'function') colorizeTiles();
         if (typeof updateScoreUI === 'function') updateScoreUI();   // pozor: správný název je updateScoreUI
+
+
+        try { roomId = snapshot.roomId || roomId; } catch {}
+
+        
+         ensureToken();
     });
 
 
@@ -124,6 +138,18 @@
 
 
 
+
+
+    function ensureToken() {
+    let token = sessionStorage.getItem('vl_token');
+    if (!token) {
+        token = crypto.randomUUID?.() || Math.random().toString(36).slice(2);
+        sessionStorage.setItem('vl_token', token);
+    }
+    socket.emit("auth:token", { token });
+    }
+
+    
 
 
 
@@ -135,23 +161,21 @@
 
    
     // 🧲 Pokus o „resume“ pro OBA módy (friends i random)
-      const savedRoom = sessionStorage.getItem('vl_room');
-      const savedName = sessionStorage.getItem('vl_name');
-      const targetRoom = currentRoomId || savedRoom;
+        const savedRoom = sessionStorage.getItem('vl_room');
+        const savedToken = sessionStorage.getItem('vl_token');
+        const savedName = sessionStorage.getItem('vl_name');
+        const targetRoom = currentRoomId || savedRoom;
     
       // zachovej jméno, ať se UI i server shodnou
-      if (savedName) myName = savedName;
-        if (!myName || !myName.trim()) {
-          // nouzové jméno, ať nikdy neposíláme undefined
-           myName = `Player_${Math.random().toString(36).slice(2,6)}`;
+        if (savedName) myName = savedName;
+        if (!myName?.trim()) myName = `Player_${Math.random().toString(36).slice(2,6)}`;
+
+        if (targetRoom && savedToken) {
+        socket.emit('resume', { roomId: targetRoom, token: savedToken });
+        return; // ← zkuste resume jako první
         }
-    
-      if (targetRoom) {
-        currentRoomId = targetRoom;
-        socket.emit('joinRoom', { room: targetRoom, name: myName, settings });
-        return;
-      }
-    
+
+        
       // fallbacky, pokud žádná roomka není uložená
       if (gameMode === 'friends') {
         socket.emit('createRoom', { settings: { ...settings, name: myName } });
@@ -192,7 +216,8 @@
 
 
       hydratedFromServer = true;
-
+      
+      ensureToken();
     });
 
     socket.on("updateScores", ({ scores }) => {
@@ -1943,7 +1968,7 @@
             const chatBox   = document.getElementById('chatcontent');
 
             // ====== Socket ======
-            window.socket ??= io(); // případně io("http://localhost:3000")
+            window.socket = socket;
             let roomId = null;
 
             socket.on("connect", () => {

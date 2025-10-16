@@ -31,9 +31,16 @@ const regionValuesByRoom = {};
 
 
 
+function buildRoomSnapshot(room, roomId) {
+  const allNames = {};
+  for (let i = 0; i < MAX_PLAYERS_PER_ROOM; i++) {
+    const p = room.players[i];
+    allNames[i + 1] = (p && p.name) ? p.name : `Robot ${i + 1}`;
+  }
 
-function buildRoomSnapshot(room) {
   return {
+    roomId,                          // ← DOPLNĚNO
+    allNames,                        // ← DOPLNĚNO (hodí se i pro chat/score)
     hasStarted: room.hasStarted,
     phase: room.phase,
     round: room.round,
@@ -1558,7 +1565,7 @@ io.on('connection', socket => {
     // Pošli snapshot místo startu
     socket.emit("stateSync", {
       myNumber: seat,
-      snapshot: buildRoomSnapshot(room)
+      snapshot: buildRoomSnapshot(room, roomId)
     });
 
     // ať ostatní vidí, že hráč je zpět “human”
