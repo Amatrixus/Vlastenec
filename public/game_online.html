@@ -79,9 +79,9 @@
 
 function renderBaseInfo(){
 
-    settlePlayer1;
-    settlePlayer2;
-    settlePlayer3;
+    settlePlayer1();
+    settlePlayer2();
+    settlePlayer3();
 
 };
 
@@ -93,7 +93,7 @@ let __pendingSnapshot = null;
 // Poznáme, že je mapa připravená pro barvení (uprav si selektor dle projektu)
 function isBoardReady() {
   // aspoň nějaké dlaždice v DOM
-  return document.querySelector('[data-tile-id]') !== null;
+  return document.querySelector('.region') !== null;   // ✅ tvoje dlaždice
 }
 
 // Aplikace snapshotu s bezpečným odložením, dokud není mapa ready
@@ -171,9 +171,12 @@ function applySnapshotWhenReady(myNumber, snapshot, attempt = 0) {
   }
 
   // skóre do UI (pokud máš funkci)
-  if (typeof updateScoreUI === 'function' && snapshot.scores) {
-    updateScoreUI(snapshot.scores);
-  }
+
+  if (typeof updateScores === 'function') updateScores();   // ✅ přepočítej
+
+  if (typeof updateScoreUI === 'function') {
+  updateScoreUI(snapshot.scores || playerScores);         // ✅ promítni
+}
 
   // vykreslení mapy + čísel hodnot + případné info o základnách
   if (typeof colorizeTiles === 'function') colorizeTiles();
@@ -197,10 +200,9 @@ socket.on("stateSync", ({ myNumber, snapshot }) => {
 // === Jakmile se hra OPRAVDU spustí (po animaci rozdělení) → pokud byl odložený snapshot, aplikuj ho teď ===
 // Připoj to do své existující logiky po animaci startu:
 window.addEventListener('gameStartedAfterAnimation', () => {
+  allowPaint = true; // pro jistotu i tady
   if (__pendingSnapshot && __pendingSnapshot.snapshot) {
-    // a) server mezitím mohl poslat nový stateSync → pro jistotu převeď flag
     __pendingSnapshot.snapshot.hasStarted = true;
-    // b) aplikuj kompletně
     applySnapshotWhenReady(__pendingSnapshot.myNumber, __pendingSnapshot.snapshot);
   }
 });
@@ -398,6 +400,18 @@ window.addEventListener('gameStartedAfterAnimation', () => {
                 }
 
                 requestAnimationFrame(step);
+
+
+
+
+
+                allowPaint = true;
+                window.dispatchEvent(new Event('gameStartedAfterAnimation'));
+                colorizeTiles();
+                displayRegionValues();
+                updateScores();
+                updateScoreUI();
+
             }
 
 
@@ -2682,13 +2696,16 @@ window.addEventListener('gameStartedAfterAnimation', () => {
 
         // Colorize my controlled tiles
 
-        function colorizeTiles() {
+       function colorizeTiles() {
+    if (!allowPaint) return;     // ✅ nic nebarvit před animací
+
     const colors = {
         "Player1regions": "blue",
         "Player2regions": "red",
         "Player3regions": "white"
     };
 
+    
     Object.keys(colors).forEach(playerKey => {
         let controlledRegions = playerControlledRegions[playerKey] || [];
         let color = colors[playerKey];
