@@ -54,6 +54,32 @@ function sanitizeRoomId(s) {
 
 
 
+// === SNAPSHOT: sestavení stavu místnosti pro rehydrataci klienta ===
+function buildRoomSnapshot(room, roomId) {
+  const allNames = {};
+  for (let i = 0; i < MAX_PLAYERS_PER_ROOM; i++) {
+    const p = room.players[i];
+    allNames[i + 1] = (p && p.name) ? p.name : `Robot ${i + 1}`;
+  }
+  return {
+    roomId,
+    allNames,
+    hasStarted: room.hasStarted,
+    phase: room.phase,
+    round: room.round,
+    bases: room.bases,
+    regions: room.regions,
+    regionValues: room.regionValues,
+    scores: room.scores,
+    defenseBonuses: room.defenseBonuses,
+    seatControllers: room.seatControllers
+  };
+}
+
+
+
+
+
 
 
 function buildRoomSnapshot(room, roomId) {
@@ -1656,6 +1682,12 @@ socket.on("createRoom", ({ settings }) => {
   socket.data.name = name;
 
   roomAddPlayerAndBroadcast(roomId, socket, name);
+
+
+  // Po přidání hráče do room:
+  const seatNum = getSeatNumber(rooms[roomId], socket.id);
+  socket.emit("stateSync", { myNumber: seatNum, snapshot: buildRoomSnapshot(rooms[roomId], roomId) });
+    
 });
 
 
@@ -1691,6 +1723,12 @@ socket.on("joinRoom", ({ room, settings }) => {
 
   roomAddPlayerAndBroadcast(roomId, socket, safeName);
   console.log(`👥 joinRoom → ${roomId} by ${name}`);
+
+  // Po přidání hráče do room:
+  const seatNum = getSeatNumber(rooms[roomId], socket.id);
+  socket.emit("stateSync", { myNumber: seatNum, snapshot: buildRoomSnapshot(rooms[roomId], roomId) });
+
+
 });
 
 
