@@ -172,18 +172,14 @@ function applySnapshotWhenReady(myNumber, snapshot, attempt = 0) {
 
   // skóre do UI (pokud máš funkci)
 
-  if (typeof updateScores === 'function') updateScores();   // ✅ přepočítej
 
-  if (typeof updateScoreUI === 'function') {
-  updateScoreUI(snapshot.scores || playerScores);         // ✅ promítni
-}
 
   // vykreslení mapy + čísel hodnot + případné info o základnách
   if (typeof updateScores === 'function') updateScores();
     if (typeof updateScoreUI === 'function' && snapshot.scores) updateScoreUI(snapshot.scores);
     if (typeof colorizeTiles === 'function') colorizeTiles();
     if (typeof displayRegionValues === 'function') displayRegionValues();
-  //if (typeof renderBaseInfo === 'function') renderBaseInfo(); // pokud v projektu máš
+    if (typeof renderBaseInfo === 'function') renderBaseInfo(); // pokud v projektu máš
 
   // schovat lobby/overlay (už hrajeme)
   const lobby = document.getElementById("lobby_container");
@@ -350,7 +346,16 @@ window.addEventListener('gameStartedAfterAnimation', () => {
             } else {
             if (countdown) countdown.textContent = "Začínáme!";
             clearInterval(interval);
-            setTimeout(() => { if (overlay) overlay.style.display = "none"; }, 1000);
+            setTimeout(() => {
+                if (overlay) overlay.style.display = "none";
+                // ⬇️ povol barvení až po odpočtu
+                allowPaint = true;
+                window.dispatchEvent(new Event('gameStartedAfterAnimation'));
+                if (typeof colorizeTiles === 'function') colorizeTiles();
+                if (typeof displayRegionValues === 'function') displayRegionValues();
+                if (typeof updateScores === 'function') updateScores();
+                if (typeof updateScoreUI === 'function') updateScoreUI();
+                }, 1000);
             }
         }, 1000);
         });
@@ -407,12 +412,6 @@ window.addEventListener('gameStartedAfterAnimation', () => {
 
 
 
-               allowPaint = true;
-                window.dispatchEvent(new Event('gameStartedAfterAnimation'));
-                if (typeof colorizeTiles === 'function') colorizeTiles();
-                if (typeof displayRegionValues === 'function') displayRegionValues();
-                if (typeof updateScores === 'function') updateScores();
-                if (typeof updateScoreUI === 'function') updateScoreUI();
 
             }
 
