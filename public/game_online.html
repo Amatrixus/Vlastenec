@@ -34,10 +34,10 @@
     const qp = new URLSearchParams(location.search);
 
     function normalizeRoom(param) {
-            if (!param) return null;
-            const code = String(param).replace(/^room_/i, '').trim();
-            if (!/^[A-HJ-NP-Z2-9]{6}$/i.test(code)) return null;
-            return `room_${code.toUpperCase()}`;
+    if (!param) return null;
+        const code = String(param).replace(/^room_/i, '').trim();
+        if (!/^[A-Z0-9]{6}$/i.test(code)) return null;   // ← změna
+        return `room_${code.toUpperCase()}`;
     }
 
 

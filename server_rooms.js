@@ -47,10 +47,8 @@ function makeFriendsRoomId() {
 
 
 function sanitizeRoomId(s) {
-  // přijmi "ROOM_ABC123" i "ABC123"
   const code = String(s || '').replace(/^room_/i, '').trim();
-  // bez I a O, bez 0 a 1, přesně 6 znaků (stejně jako genRoomCode)
-  const m = code.match(/^[A-HJ-NP-Z2-9]{6}$/i);
+  const m = code.match(/^[A-Z0-9]{6}$/i);          // ← změna
   return m ? `room_${m[0].toUpperCase()}` : '';
 }
 
@@ -1876,7 +1874,11 @@ socket.on("playerNumericAnswer", ({ room: roomId, player, answer }) => {
   const room = rooms[roomId];
   if (!room) return;
 
-  room.numericAnswers = room.numericAnswers || {};
+  room.numericAnswers = room.numericAnswers || {};function sanitizeRoomId(s) {
+  const code = String(s || '').replace(/^room_/i, '').trim();
+  const m = code.match(/^[A-Z0-9]{6}$/i);          // ← změna
+  return m ? `room_${m[0].toUpperCase()}` : '';
+}
   const startTime = room.numericStartTime || Date.now(); // server uchovává začátek
 
   if (!room.numericAnswers[player]) {
