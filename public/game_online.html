@@ -52,7 +52,7 @@
       const raw = qp.get('catnames'); if (!raw) return [];
       try { return JSON.parse(decodeURIComponent(raw)); } catch { return []; }
     })();
-    const roomCodeFromUrl = qp.get('room') || null;
+    
 
     // --- Jméno (fallback na prompt jen když není v URL) ---
     let myName = playerName || prompt("Zadej své jméno:") || "Host";
@@ -170,31 +170,35 @@
     // - friends → joinRoom/createRoom (NEposílat submitName)
     // - random  → jen submitName (NEposílat create/join)
     socket.on('connect', () => {
-
-   
-    // 🧲 Pokus o „resume“ pro OBA módy (friends i random)
-        const savedRoom = sessionStorage.getItem('vl_room');
+        const savedRoom  = sessionStorage.getItem('vl_room');
         const savedToken = sessionStorage.getItem('vl_token');
-        const savedName = sessionStorage.getItem('vl_name');
+        const savedName  = sessionStorage.getItem('vl_name');
         const targetRoom = currentRoomId || savedRoom;
-    
-      // zachovej jméno, ať se UI i server shodnou
+
         if (savedName) myName = savedName;
         if (!myName?.trim()) myName = `Player_${Math.random().toString(36).slice(2,6)}`;
 
+        // 1) zkus resume (friends i random)
         if (targetRoom && savedToken) {
-        socket.emit('resume', { roomId: targetRoom, token: savedToken });
-        return; // ← zkuste resume jako první
+            socket.emit('resume', { roomId: targetRoom, token: savedToken });
+            return;
         }
 
+        // 2) pokud je v URL room, ale nemám token → JSEM NOVÝ HOST → joinRoom
+        if (targetRoom) {
+            currentRoomId = targetRoom;
+            socket.emit('joinRoom', { room: targetRoom, settings: { ...settings, name: myName } });
+            return;
+        }
 
-      // fallbacky, pokud žádná roomka není uložená
-      if (gameMode === 'friends') {
-        socket.emit('createRoom', { settings: { ...settings, name: myName } });
-      } else {
-        socket.emit('submitName', myName);
-      }
+        // 3) fallback: založ friends, nebo dej mě do random
+        if (gameMode === 'friends') {
+            socket.emit('createRoom', { settings: { ...settings, name: myName } });
+        } else {
+            socket.emit('submitName', myName);
+        }
     });
+
 
 
     // Server potvrdí vytvoření místnosti (host ve friends)
@@ -1981,7 +1985,6 @@
 
             // ====== Socket ======
             window.socket = socket;
-            let roomId = null;
 
             socket.on("connect", () => {
                 console.log("🔌 connected:", socket.id);
