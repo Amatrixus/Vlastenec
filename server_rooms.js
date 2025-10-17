@@ -46,13 +46,15 @@ function makeFriendsRoomId() {
 
 
 
-// (volitelné) jednoduchá sanitace, když by přišlo "room" z URL:
 function sanitizeRoomId(s) {
-  s = String(s || '');
-  // povolíme jen [A-Z2-9] v části za "room_"
-  const m = s.match(/^room_([A-Z2-9]{4,12})$/i);
-  return m ? `room_${m[1].toUpperCase()}` : '';
+  // přijmi "ROOM_ABC123" i "ABC123"
+  const code = String(s || '').replace(/^room_/i, '').trim();
+  // bez I a O, bez 0 a 1, přesně 6 znaků (stejně jako genRoomCode)
+  const m = code.match(/^[A-HJ-NP-Z2-9]{6}$/i);
+  return m ? `room_${m[0].toUpperCase()}` : '';
 }
+
+
 
 
 
@@ -1661,12 +1663,6 @@ socket.on("createRoom", ({ settings }) => {
 
 
 
-function normalizeRoomId(s) {
-  s = (s || '').toString();
-  const code = s.replace(/^room_/i, '').trim();
-  if (!/^[A-Z0-9]{4,16}$/i.test(code)) return '';
-  return `room_${code.toUpperCase()}`;
-}
 
 // FRIENDS: hosté (nebo host, pokud už má kód) se připojují do existující room
 socket.on("joinRoom", ({ room, settings }) => {

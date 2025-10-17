@@ -35,14 +35,14 @@
 
     function normalizeRoom(param) {
             if (!param) return null;
-            // povolíme písmena/číslice, odfiltrujeme volitelný prefix room_
             const code = String(param).replace(/^room_/i, '').trim();
-            if (!/^[A-Z0-9]{4,16}$/i.test(code)) return null;
+            if (!/^[A-HJ-NP-Z2-9]{6}$/i.test(code)) return null;
             return `room_${code.toUpperCase()}`;
     }
 
 
-    const roomCodeFromUrl = normalizeRoom(qp.get('room'));   // ← tady
+
+    const roomCodeFromUrl = normalizeRoom(qp.get('room')); // ✅ jen TAHLE deklarace
 
     const playerName = qp.get('name') || '';
     const gameMode   = qp.get('mode') || 'random'; // random výchozí
@@ -54,6 +54,7 @@
     })();
     
 
+    
     // --- Jméno (fallback na prompt jen když není v URL) ---
     let myName = playerName || prompt("Zadej své jméno:") || "Host";
 
