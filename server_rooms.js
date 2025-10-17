@@ -31,20 +31,20 @@ const regionValuesByRoom = {};
 
 // ——— helpers pro "friends" room ———
 function genRoomCode(n = 6) {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // bez 0, O, I, 1
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   let out = '';
   for (let i = 0; i < n; i++) out += chars[Math.floor(Math.random() * chars.length)];
   return out;
 }
-
 function makeFriendsRoomId() {
-  // zkus unikátní id několikrát, pak fallback na timestamp
   for (let i = 0; i < 50; i++) {
-    const candidate = `room_${genRoomCode(6)}`;
-    if (!rooms[candidate]) return candidate;
+    const id = `room_${genRoomCode(6)}`;
+    if (!rooms[id]) return id;
   }
   return `room_${Date.now()}`;
 }
+
+
 
 // (volitelné) jednoduchá sanitace, když by přišlo "room" z URL:
 function sanitizeRoomId(s) {
@@ -1659,6 +1659,14 @@ socket.on("createRoom", ({ settings }) => {
 });
 
 
+
+
+function normalizeRoomId(s) {
+  s = (s || '').toString();
+  const code = s.replace(/^room_/i, '').trim();
+  if (!/^[A-Z0-9]{4,16}$/i.test(code)) return '';
+  return `room_${code.toUpperCase()}`;
+}
 
 // FRIENDS: hosté (nebo host, pokud už má kód) se připojují do existující room
 socket.on("joinRoom", ({ room, settings }) => {

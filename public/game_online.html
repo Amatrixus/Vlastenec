@@ -32,6 +32,18 @@
 
     // --- URL parametry ---
     const qp = new URLSearchParams(location.search);
+
+    function normalizeRoom(param) {
+            if (!param) return null;
+            // povolíme písmena/číslice, odfiltrujeme volitelný prefix room_
+            const code = String(param).replace(/^room_/i, '').trim();
+            if (!/^[A-Z0-9]{4,16}$/i.test(code)) return null;
+            return `room_${code.toUpperCase()}`;
+    }
+
+
+    const roomCodeFromUrl = normalizeRoom(qp.get('room'));   // ← tady
+
     const playerName = qp.get('name') || '';
     const gameMode   = qp.get('mode') || 'random'; // random výchozí
     const catsCsv    = qp.get('cats') || '';
@@ -175,7 +187,7 @@
         return; // ← zkuste resume jako první
         }
 
-        
+
       // fallbacky, pokud žádná roomka není uložená
       if (gameMode === 'friends') {
         socket.emit('createRoom', { settings: { ...settings, name: myName } });
