@@ -64,7 +64,7 @@ function buildRoomSnapshot(room, roomId) {
   return {
     roomId,
     allNames,
-    hasStarted: room.hasStarted,
+    hasStarted: !!room.hasStarted,
     phase: room.phase,
     round: room.round,
     bases: room.bases,
@@ -75,6 +75,7 @@ function buildRoomSnapshot(room, roomId) {
     seatControllers: room.seatControllers
   };
 }
+
 
 
 
@@ -1686,7 +1687,8 @@ socket.on("createRoom", ({ settings }) => {
 
   // Po přidání hráče do room:
   const seatNum = getSeatNumber(rooms[roomId], socket.id);
-  socket.emit("stateSync", { myNumber: seatNum, snapshot: buildRoomSnapshot(rooms[roomId], roomId) });
+socket.emit("stateSync", { myNumber: seatNum, snapshot: buildRoomSnapshot(rooms[roomId], roomId) });
+
     
 });
 
@@ -1725,8 +1727,9 @@ socket.on("joinRoom", ({ room, settings }) => {
   console.log(`👥 joinRoom → ${roomId} by ${name}`);
 
   // Po přidání hráče do room:
-  const seatNum = getSeatNumber(rooms[roomId], socket.id);
-  socket.emit("stateSync", { myNumber: seatNum, snapshot: buildRoomSnapshot(rooms[roomId], roomId) });
+const seatNum = getSeatNumber(rooms[roomId], socket.id);
+socket.emit("stateSync", { myNumber: seatNum, snapshot: buildRoomSnapshot(rooms[roomId], roomId) });
+
 
 
 });

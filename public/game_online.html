@@ -28,7 +28,7 @@
     let gameStarted = false;        // přijmi startGame jen 1×
     let hydratedFromServer = false; // už mám nahraný aktuální stav?
 
-
+    let allowPaint = false;
 
     // --- URL parametry ---
     const qp = new URLSearchParams(location.search);
@@ -179,9 +179,11 @@ function applySnapshotWhenReady(myNumber, snapshot, attempt = 0) {
 }
 
   // vykreslení mapy + čísel hodnot + případné info o základnách
-  if (typeof colorizeTiles === 'function') colorizeTiles();
-  if (typeof displayRegionValues === 'function') displayRegionValues();
-  if (typeof renderBaseInfo === 'function') renderBaseInfo(); // pokud v projektu máš
+  if (typeof updateScores === 'function') updateScores();
+    if (typeof updateScoreUI === 'function' && snapshot.scores) updateScoreUI(snapshot.scores);
+    if (typeof colorizeTiles === 'function') colorizeTiles();
+    if (typeof displayRegionValues === 'function') displayRegionValues();
+  //if (typeof renderBaseInfo === 'function') renderBaseInfo(); // pokud v projektu máš
 
   // schovat lobby/overlay (už hrajeme)
   const lobby = document.getElementById("lobby_container");
@@ -405,12 +407,12 @@ window.addEventListener('gameStartedAfterAnimation', () => {
 
 
 
-                allowPaint = true;
+               allowPaint = true;
                 window.dispatchEvent(new Event('gameStartedAfterAnimation'));
-                colorizeTiles();
-                displayRegionValues();
-                updateScores();
-                updateScoreUI();
+                if (typeof colorizeTiles === 'function') colorizeTiles();
+                if (typeof displayRegionValues === 'function') displayRegionValues();
+                if (typeof updateScores === 'function') updateScores();
+                if (typeof updateScoreUI === 'function') updateScoreUI();
 
             }
 
