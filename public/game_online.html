@@ -77,18 +77,48 @@
 
 
 
+function renderBaseInfo(){
 
-    
-    socket.on("stateSync", ({ myNumber, snapshot }) => {
-  // --- identita a guardy ---
+    settlePlayer1;
+    settlePlayer2;
+    settlePlayer3;
+
+};
+
+
+
+// ====== Re-hydratace stavu po připojení / refreshi ======
+let __pendingSnapshot = null;
+
+// Poznáme, že je mapa připravená pro barvení (uprav si selektor dle projektu)
+function isBoardReady() {
+  // aspoň nějaké dlaždice v DOM
+  return document.querySelector('[data-tile-id]') !== null;
+}
+
+// Aplikace snapshotu s bezpečným odložením, dokud není mapa ready
+function applySnapshotWhenReady(myNumber, snapshot, attempt = 0) {
+  const MAX_ATTEMPTS = 40; // ~4s při 100ms
+  const RETRY_MS = 100;
+
+  // Ještě není mapa → odlož
+  if (!isBoardReady()) {
+    if (attempt === 0) __pendingSnapshot = { myNumber, snapshot };
+    if (attempt < MAX_ATTEMPTS) {
+      return setTimeout(() => applySnapshotWhenReady(myNumber, snapshot, attempt + 1), RETRY_MS);
+    }
+    // poslední pokus – zkusit přesto (fail-safe)
+  }
+
+  // identita + základní flagy
   window.myPlayerNumber = myNumber;
   myPlayerNumber = myNumber;
 
-  // 👇 Klíčová změna: respektuj skutečný stav hry na serveru
+  // Respektuj skutečný stav hry na serveru
   gameStarted = !!snapshot.hasStarted;
   hydratedFromServer = true;
 
-  // Perzistence pro resume
+  // perzistence pro resume
   if (snapshot.roomId) {
     currentRoomId = snapshot.roomId;
     sessionStorage.setItem('vl_room', snapshot.roomId);
@@ -97,23 +127,36 @@
     sessionStorage.setItem('vl_name', myName);
   }
 
-  // --- jména hráčů / lobby seznam ---
+  // --- jména hráčů (scoreboard & lobby) ---
   if (snapshot.allNames) {
     player1 = snapshot.allNames[1] || player1;
     player2 = snapshot.allNames[2] || player2;
     player3 = snapshot.allNames[3] || player3;
     if (typeof updateScoreNames === 'function') updateScoreNames();
-    if (typeof updateLobbyList === 'function') updateLobbyList(snapshot.allNames);
+    if (!gameStarted && typeof updateLobbyList === 'function') {
+      updateLobbyList(snapshot.allNames);
+    }
   }
 
-  // --- základny (string id regionu pro hráče 1..3) ---
+  // Pokud hra JEŠTĚ NEZAČALA → nic neprozrazovat (žádné base/regions/barvení)
+  if (!gameStarted) {
+    const lobby = document.getElementById("lobby_container");
+    const overlay = document.getElementById("start_overlay");
+    if (lobby)   lobby.style.display   = "";       // lobby zůstává
+    if (overlay) overlay.style.display = "none";   // overlay klidně pryč
+    __pendingSnapshot = { myNumber, snapshot };    // uschovat pro start
+    return;
+  }
+
+  // --- !! HRA UŽ BĚŽÍ → aplikuj vše autoritativně ---
+  // základny (id políček základen pro hráče 1..3)
   if (snapshot.bases) {
     player1CurrentBase = snapshot.bases[1] || "";
     player2CurrentBase = snapshot.bases[2] || "";
     player3CurrentBase = snapshot.bases[3] || "";
   }
 
-  // --- kontrolované regiony (přepsat celé) ---
+  // kontrolované regiony – přepsat celé
   if (snapshot.regions) {
     playerControlledRegions = {
       Player1regions: snapshot.regions.Player1regions || [],
@@ -122,31 +165,44 @@
     };
   }
 
-  // --- hodnoty regionů (přepiš, ne mergovat) ---
+  // hodnoty regionů – přepsat celé (ne mergovat, ať nezůstává staré)
   if (snapshot.regionValues) {
     window.regionValues = { ...snapshot.regionValues };
   }
 
-  // --- UI ---
-  const overlay = document.getElementById("start_overlay");
-  const lobby   = document.getElementById("lobby_container");
-
-  if (gameStarted) {
-    // Hra už běží → skryj lobby, překresli mapu i skóre
-    if (lobby)   lobby.style.display   = "none";
-    if (overlay) overlay.style.display = "none";
-
-    if (typeof colorizeTiles === 'function') colorizeTiles();
-    if (typeof updateScoreUI === 'function' && snapshot.scores) updateScoreUI(snapshot.scores);
-    if (typeof displayRegionValues === 'function') displayRegionValues();
-  } else {
-    // Ještě nezačala → nech lobby viditelnou, jen aktualizuj seznam hráčů
-    if (lobby)   lobby.style.display   = "";
-    if (overlay) overlay.style.display = "none";
+  // skóre do UI (pokud máš funkci)
+  if (typeof updateScoreUI === 'function' && snapshot.scores) {
+    updateScoreUI(snapshot.scores);
   }
 
-  // token pro další resume
-  ensureToken();
+  // vykreslení mapy + čísel hodnot + případné info o základnách
+  if (typeof colorizeTiles === 'function') colorizeTiles();
+  if (typeof displayRegionValues === 'function') displayRegionValues();
+  if (typeof renderBaseInfo === 'function') renderBaseInfo(); // pokud v projektu máš
+
+  // schovat lobby/overlay (už hrajeme)
+  const lobby = document.getElementById("lobby_container");
+  const overlay = document.getElementById("start_overlay");
+  if (lobby)   lobby.style.display   = "none";
+  if (overlay) overlay.style.display = "none";
+
+  __pendingSnapshot = null;
+}
+
+// === Socket: autoritativní stav od serveru ===
+socket.on("stateSync", ({ myNumber, snapshot }) => {
+  applySnapshotWhenReady(myNumber, snapshot);
+});
+
+// === Jakmile se hra OPRAVDU spustí (po animaci rozdělení) → pokud byl odložený snapshot, aplikuj ho teď ===
+// Připoj to do své existující logiky po animaci startu:
+window.addEventListener('gameStartedAfterAnimation', () => {
+  if (__pendingSnapshot && __pendingSnapshot.snapshot) {
+    // a) server mezitím mohl poslat nový stateSync → pro jistotu převeď flag
+    __pendingSnapshot.snapshot.hasStarted = true;
+    // b) aplikuj kompletně
+    applySnapshotWhenReady(__pendingSnapshot.myNumber, __pendingSnapshot.snapshot);
+  }
 });
 
 
