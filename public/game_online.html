@@ -174,8 +174,8 @@ function applySnapshotWhenReady(myNumber, snapshot, attempt = 0) {
 
 
 
-  // vykreslení mapy + čísel hodnot + případné info o základnách
-  if (typeof updateScores === 'function') updateScores();
+   // vykreslení mapy + čísel hodnot + případné info o základnách
+    if (typeof updateScores === 'function') updateScores();
     if (typeof updateScoreUI === 'function' && snapshot.scores) updateScoreUI(snapshot.scores);
     if (typeof colorizeTiles === 'function') colorizeTiles();
     if (typeof displayRegionValues === 'function') displayRegionValues();
@@ -335,6 +335,9 @@ window.addEventListener('gameStartedAfterAnimation', () => {
 
        // ⚠️ Nepřepisuj objekt sám sebou, jen zkopíruj hodnoty
         Object.keys(regionValues).forEach((k) => { window.regionValues[k] = regionValues[k]; });
+
+        basesSettle();
+
 
         // Krátký odpočet jen v prvním startu
         let seconds = 5;
