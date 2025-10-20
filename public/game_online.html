@@ -345,6 +345,7 @@ function applySnapshotWhenReady(myNumber, snapshot, attempt = 0) {
       if (typeof updateScoreUI     === 'function' && snapshot.scores) updateScoreUI(snapshot.scores);
       if (typeof colorizeTiles     === 'function') colorizeTiles();
       if (typeof displayRegionValues === 'function') displayRegionValues();
+      if (typeof basesSettle === 'function') basesSettle();
 
       const lobby = document.getElementById("lobby_container");
       if (lobby) lobby.style.display = "none";
