@@ -29,6 +29,17 @@
 
 
 
+
+        // --- safe defaults for state objects ---
+        window.regionValues = (typeof window.regionValues === 'object' && window.regionValues) ? window.regionValues : {};
+        window.playerControlledRegions = window.playerControlledRegions || {
+        Player1regions: [],
+        Player2regions: [],
+        Player3regions: []
+        };
+
+
+
         // === Overlay & start helpers ===
         let uiStartHandled = false;        // tento klient už odbavil UI start (overlay/animace nebo rehydratace)
         let uiOverlayRunning = false;      // právě běží odpočet/overlay
@@ -284,9 +295,10 @@ function applySnapshotWhenReady(myNumber, snapshot, attempt = 0) {
       Player3regions: snapshot.regions.Player3regions || []
     };
   }
-  if (snapshot.regionValues) {
-    window.regionValues = { ...snapshot.regionValues };
-  }
+  if (snapshot.regionValues && typeof snapshot.regionValues === 'object') {
+    if (!window.regionValues || typeof window.regionValues !== 'object') window.regionValues = {};
+    Object.entries(snapshot.regionValues).forEach(([k,v]) => { window.regionValues[k] = v; });
+    }
   if (snapshot.allNames) {
     player1 = snapshot.allNames[1] || player1;
     player2 = snapshot.allNames[2] || player2;
@@ -522,7 +534,10 @@ window.addEventListener('gameStartedAfterAnimation', () => {
     player2CurrentBase = bases[2];
     player3CurrentBase = bases[3];
     playerControlledRegions = regions;
-    Object.keys(regionValues || {}).forEach((k) => { window.regionValues[k] = regionValues[k]; });
+if (regionValues && typeof regionValues === 'object') {
+  if (!window.regionValues || typeof window.regionValues !== 'object') window.regionValues = {};
+  Object.entries(regionValues).forEach(([k,v]) => { window.regionValues[k] = v; });
+}
 
     // --- jednotný overlay + countdown + start animace ---
     kickoffStartUI();
