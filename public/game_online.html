@@ -103,12 +103,17 @@
         function kickoffStartUI() {
         // Spusť overlay + odpočet + basesSettle přesně jednou
         if (uiStartHandled) { DBG && DBG('kickoffStartUI: already handled'); return; }
+
         uiStartHandled = true;
+        gameStarted    = true;                           // ← přesunuto sem
+        try { sessionStorage.setItem(startSeenKey(currentRoomId), '1'); } catch {} // ← sem
+
         showOverlay();
         startOverlayCountdown(5, () => {
-            runBasesOnce();
+            runBasesOnce(); // uvnitř volá basesSettle() jen jednou
         });
         }
+
 
 
 
@@ -315,11 +320,7 @@ function applySnapshotWhenReady(myNumber, snapshot, attempt = 0) {
   if (!seenStart && !animDone) {
     // (A) late join → sjednocený start UI
     DBG('FALLBACK overlay → kickoffStartUI', { seenStart, animDone, room: roomKey });
-    // označ, že overlay byl v tomhle roomu viděn (pro tvoje klíče)
-    sessionStorage.setItem(startSeenKey(roomKey), '1');
-
-    // označ lokálně, že hra běží (aby se větev neopakovala během toho samého stateSync kolotoče)
-    gameStarted = true;
+    
 
     kickoffStartUI();
     return;
@@ -520,9 +521,7 @@ window.addEventListener('gameStartedAfterAnimation', () => {
 
     // jediný guard
     if (uiStartHandled) { DBG('startGame IGNORED (uiStartHandled=true)'); return; }
-    uiStartHandled = true;
-    gameStarted    = true;
-    sessionStorage.setItem(startSeenKey(currentRoomId), '1');
+   
 
     DBG('startGame will show overlay', { uiStartHandled, gameStarted, key:startSeenKey(currentRoomId) });
     dumpFlags('after startGame set gameStarted=true');
