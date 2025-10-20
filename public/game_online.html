@@ -96,51 +96,7 @@
 
         
 
-        // === START ANIMACE ZÁKLADEN (po odpočtu) ===
-        function basesSettle() {
-        DBG('basesSettle START');
-
-        // UI copy — jen informativní (ponech/odstraň dle potřeby)
-        const gamePhase = document.getElementById("gamephase");
-        const gameRounds = document.getElementById("gamerounds");
-        const playerSticks = document.getElementById("playersticks");
-        const gameProgress = document.getElementById("gameprogress");
-        if (gamePhase)   { gamePhase.innerHTML = "Výběr základny"; gamePhase.style.height = "100%"; }
-        if (gameRounds)  gameRounds.style.display  = "none";
-        if (playerSticks) playerSticks.style.display = "none";
-        if (gameProgress) gameProgress.style.height  = "7%";
-
-        // zvuk "thud"
-        const thud = document.getElementById('thud');
-        const thudOnce = () => {
-            try { thud.pause(); thud.currentTime = 0; thud.play(); } catch {}
-        };
-
-        // jeden krok animace
-        const dropFor = (n) => {
-            thudOnce();
-            DBG(`thud #${n} + settlePlayer${n}`);
-            if (typeof window[`settlePlayer${n}`] === 'function') window[`settlePlayer${n}`]();
-            if (typeof colorizeBaseRegion === 'function') colorizeBaseRegion(n);
-        };
-
-        // postupné „dopadnutí“ základen
-        setTimeout(() => dropFor(1), 1000);
-        setTimeout(() => dropFor(2), 2000);
-        setTimeout(() => dropFor(3), 3000);
-
-        // konec animace → odemkni barvení, vyrenderuj hodnoty a pošli signál
-        setTimeout(() => {
-            allowPaint = true;
-            if (typeof colorizeTiles       === 'function') colorizeTiles();
-            if (typeof displayRegionValues === 'function') displayRegionValues();
-            if (typeof updateScores        === 'function') updateScores();
-            sessionStorage.setItem(animDoneKey(currentRoomId), '1');
-            DBG('basesSettle END → unlock paint');
-            window.dispatchEvent(new Event('gameStartedAfterAnimation'));
-        }, 4000);
-        }
-
+        
 
 
 
@@ -604,8 +560,6 @@ if (regionValues && typeof regionValues === 'object') {
          
           
 
-
-
             function updateScoreUI(scores) {
                 const myScoreElement = document.getElementById("myscorenumber");
                 const player2ScoreElement = document.getElementById("player2scorenumber");
@@ -798,17 +752,6 @@ if (regionValues && typeof regionValues === 'object') {
                     player3 = allNames[3] || "Robot Honza";
                     updateScoreNames();
                     updateLobbyList(allNames);
-
-
-
-                    try {
-                    const count = Object.values(allNames || {}).filter(Boolean).length;
-                    if (count === 3 && serverSaysStarted && !uiStartHandled) {
-                        DBG('updatePlayers: 3 players + serverSaysStarted → kickoffStartUI()');
-                        kickoffStartUI();
-                    }
-                    } catch {}
-
             });
 
 
@@ -5314,4 +5257,2261 @@ document.querySelectorAll(".region").forEach(region => {
                                       playerControlledRegions['Myregions'] = playerControlledRegions['Player2regions']
                                       break;
                                   case 3:
-                                      playerControlledRe
+                                      playerControlledRegions['Myregions'] = playerControlledRegions['Player3regions']
+                                      break;
+                                  default:
+                                      console.log("Unknown player");
+                              }
+
+
+
+
+                                        // Get the controlled regions for the specified player
+                                        var controlledRegions = playerControlledRegions['Myregions'] || [];
+
+                                        // Iterate over each region
+                                        document.querySelectorAll('.region').forEach(region => {
+
+                                            
+                                            console.log("ahoj");
+                                            // Check if the region is adjacent to any controlled region
+                                            var adjacentToControlledRegion = controlledRegions.some(controlledRegion => {
+                                                return adjacencyInfo[controlledRegion].includes(region.id);
+                                            });
+
+                                            // If the region is not adjacent to any controlled region, apply the class
+                                            if (!adjacentToControlledRegion || controlledRegions.includes(region.id)) {
+                                                region.classList.add("unavailable");
+                                            }
+                                        });
+                                        }
+
+
+
+
+
+
+
+
+                                
+                function updateAllPlayerBasePositions() {
+                    const players = [
+                        { baseId: player1CurrentBase, name: player1, nameId: "player1basename", visualId: "player1basevisual" },
+                        { baseId: player2CurrentBase, name: player2, nameId: "player2basename", visualId: "player2basevisual" },
+                        { baseId: player3CurrentBase, name: player3, nameId: "player3basename", visualId: "player3basevisual" }
+                    ];
+
+                    players.forEach(({ baseId, name, nameId, visualId }) => {
+                        const regionElement = document.getElementById(baseId);
+                        if (!regionElement) return;
+
+                        const regionRect = regionElement.getBoundingClientRect();
+                        let centerX = regionRect.left + regionRect.width / 2 + window.scrollX;
+                        let centerY = regionRect.top + regionRect.height / 2 + window.scrollY;
+
+                        if (pinPositions[baseId]) {
+                            centerX = regionRect.left + regionRect.width * pinPositions[baseId].x + window.scrollX;
+                            centerY = regionRect.top + regionRect.height * pinPositions[baseId].y + window.scrollY;
+                        }
+
+                        const nameElement = document.getElementById(nameId);
+                        if (nameElement) {
+                            nameElement.style.left = `${centerX}px`;
+                            nameElement.style.top = `${centerY - 30}px`;
+                        }
+
+                        const visualElement = document.getElementById(visualId);
+                        if (visualElement) {
+                            visualElement.style.left = `${centerX}px`;
+                            visualElement.style.top = `${centerY}px`;
+                        }
+                    });
+                }
+
+
+
+
+
+
+
+
+
+                //GAME PHASES 
+
+
+
+                
+                //PHASE 1 - BASE SELECTION
+                function basesSettle() {
+
+
+                  var gamePhase = document.getElementById("gamephase");
+                  gamePhase.innerHTML = "Výběr základny";
+                  
+                  var gameRounds = document.getElementById("gamerounds");
+                  gameRounds.style.display = "none";
+
+                  var playerSticks = document.getElementById("playersticks");
+                  playerSticks.style.display = "none";
+
+                  var gameProgress = document.getElementById("gameprogress");
+                  gameProgress.style.height = "7%";
+
+                  var gamePhase = document.getElementById("gamephase");
+                  gamePhase.style.height = "100%";
+                
+
+
+                  var thudSound = document.getElementById('thud');
+                        
+                    
+                    setTimeout(() => {
+                        thudSound.play();
+                        settlePlayer1();
+                        colorizeBaseRegion(1);
+
+                       
+                    }, 2000);
+                    setTimeout(() => {
+                        thudSound.pause();
+                        thudSound.currentTime = 0; // Reset audio to beginning
+                        thudSound.play();
+                        settlePlayer2();
+                        colorizeBaseRegion(2);
+
+                        
+                    }, 4000); // Delay of 2000 milliseconds (2 seconds)
+
+                    setTimeout(() => {
+                        thudSound.pause();
+                        thudSound.currentTime = 0; // Reset audio to beginning
+                        thudSound.play();
+                        settlePlayer3();
+                        colorizeBaseRegion(3);
+
+                        
+                    }, 6000); // Delay of 4000 milliseconds (2 seconds after the previous couplet)
+
+
+                    setTimeout(() => {
+
+                      
+
+                    }, 8000);
+                    
+                }
+
+
+
+
+                    function applyStickColors(expansionPlan) {
+                        // Barvy pro hráče
+                        const playerColors = {
+                            1: "blue",
+                            2: "red",
+                            3: "white"
+                        };
+
+                        // Získáme všechny "bundle" prvky (každé kolo)
+                        let bundles = document.querySelectorAll(".bundle");
+
+                        // Projdeme všechny čtyři kola
+                        expansionPlan.forEach((round, roundIndex) => {
+                            let sticks = bundles[roundIndex].querySelectorAll(".stick");
+
+                            // Každému hráči v kole přiřadíme odpovídající barvu
+                            round.forEach((player, playerIndex) => {
+                                sticks[playerIndex].style.backgroundColor = playerColors[player];
+                            });
+                        });
+                    }
+
+
+
+
+
+                
+               function expansion_intro() {
+                const gamePhase = document.getElementById("gamephase");
+                gamePhase.innerHTML = "Rozšiřování";
+
+                const gameRounds = document.getElementById("gamerounds");
+                gameRounds.style.display = "block";
+
+                const playerSticks = document.getElementById("playersticks");
+                playerSticks.style.display = "block";
+
+                const gameProgress = document.getElementById("gameprogress");
+                gameProgress.style.height = "15%";
+
+                gamePhase.style.height = "33%";
+
+                // Reset všech kol
+                const roundElements = document.getElementsByClassName("round");
+                for (let i = 0; i < roundElements.length; i++) {
+                    roundElements[i].classList.remove("roundpast");
+                    roundElements[i].classList.remove("roundactive");
+                }
+
+                // Nastavíme první kolo jako aktivní
+                const round1 = document.getElementById("round1");
+                if (round1) round1.classList.add("roundactive");
+                }
+
+
+
+
+
+
+
+
+
+
+
+                
+
+
+
+
+                //PHASE 2 - EXPANSION
+                function battle_intro() {
+
+                   
+                            var gamePhase = document.getElementById("gamephase");
+                            gamePhase.innerHTML = "Bitva";
+
+                            var gameRounds = document.getElementById("gamerounds");
+                            gameRounds.style.display = "block";
+
+                            var playerSticks = document.getElementById("playersticks");
+                            playerSticks.style.display = "block";
+
+                            var gameProgress = document.getElementById("gameprogress");
+                            gameProgress.style.height = "15%";
+
+                            var gamePhase = document.getElementById("gamephase");
+                            gamePhase.style.height = "33%";
+
+
+                            var roundElements = document.getElementsByClassName("round");
+
+                            // Loop through each element and remove the class "active"
+                            for (var i = 0; i < roundElements.length; i++) {
+                                roundElements[i].classList.remove("roundpast");
+                                roundElements[i].classList.remove("roundactive");
+                            }
+
+
+                            var round1 = document.getElementById("round1");
+                            round1.classList.add("roundactive");
+
+
+
+                            setTimeout(() => {
+                                
+                                
+                            
+                            }, 2000); // Delay of 4000 milliseconds (2 seconds after the previous couplet)
+
+
+
+
+
+
+                }
+
+
+
+
+
+
+
+
+
+
+                async function claiming_conquering(player){
+                    claimedRegionsThisRound.clear();
+                   
+                    if(player == myPlayerNumber){
+                    
+                        // ✅ Aktualizujeme dostupné oblasti pro hráče
+                        let availableRegions = setAvailableRegionsForClaiming(myPlayerNumber).map(region => region.id);
+
+                        // ✅ Odfiltrujeme regiony, které už byly obsazené
+                        availableRegions = availableRegions.filter(regionId => 
+                            !claimedRegionsThisRound.has(regionId) &&
+                            !Object.values(playerControlledRegions).some(playerRegions => playerRegions.includes(regionId))
+                        );
+
+                        // ✅ Pokud nejsou žádná sousední volná políčka, hledáme jiná volná políčka
+                        if (availableRegions.length === 0) {
+                            console.log("⚠️ Jsi zablokovaný! Můžeš si vybrat z ostatních neobsazených políček.");
+
+                            availableRegions = Array.from(document.querySelectorAll(".region"))
+                                .map(region => region.id)
+                                .filter(regionId => 
+                                    !claimedRegionsThisRound.has(regionId) &&
+                                    !Object.values(playerControlledRegions).some(playerRegions => playerRegions.includes(regionId))
+                                );
+
+                            // ✅ Umožníme klikání na volná políčka
+                            availableRegions.forEach(regionId => {
+                                let regionElement = document.getElementById(regionId);
+                                if (regionElement) {
+                                    regionElement.classList.remove("unavailable");
+                                    regionElement.style.pointerEvents = "auto";
+                                }
+                            });
+
+                            console.log(`📌 Hráč ${myPlayerNumber} si může vybrat z volných políček:`, availableRegions);
+                        }
+
+                        // ✅ Odstraníme `unavailable` z dostupných políček před výběrem
+                        document.querySelectorAll(".region").forEach(region => {
+                            if (availableRegions.includes(region.id)) {
+                                region.classList.remove("unavailable");
+                                region.style.pointerEvents = "auto";
+                            }
+                        });
+
+                        // ✅ Čekáme na výběr hráče
+                        let selectedRegion = await Promise.race([
+                            waitForClick(".region"), 
+                            delay(10000)
+                        ]);
+
+                        // ✅ Pokud hráč vybral oblast, ale jen pokud byla dostupná
+                        if (selectedRegion && selectedRegion.id && availableRegions.includes(selectedRegion.id)) {
+                            console.log(`✅ Hráč ${myPlayerNumber} vybral oblast: ${selectedRegion.id}`);
+                            playerSelections[myPlayerNumber] = selectedRegion.id;
+                            let claimSound = new Audio("claim.mp3");
+                            claimSound.play();
+
+                            // ✅ Přiřadíme zvolený region
+                            conquered_region = selectedRegion.id;
+
+                            // ✅ Odeslání tahu ostatním hráčům (simulace)
+                            sendMoveToOtherPlayers(myPlayerNumber, selectedRegion.id);
+                        } else {
+                            console.log("⏳ Čas vypršel, vybírám náhodně.");
+                            
+                            if (availableRegions.length > 0) {
+                                let randomRegionId = availableRegions[Math.floor(Math.random() * availableRegions.length)];
+                                let randomRegion = document.getElementById(randomRegionId);
+
+                                 // ✅ Přidáme oblast do seznamu obsazených políček v tomto kole
+                                conquered_region = randomRegionId;
+
+                                // ✅ Odeslání tahu ostatním hráčům (simulace)
+                                sendMoveToOtherPlayers(myPlayerNumber, randomRegionId);
+
+
+                                console.log(`🎲 Automaticky vybraná oblast: ${randomRegionId}`);
+                                let claimSound = new Audio("claim.mp3");
+                                claimSound.play();
+
+                                playerSelections[myPlayerNumber] = randomRegionId;
+                                sendMoveToOtherPlayers(myPlayerNumber, randomRegionId);
+
+                                // ✅ Přidání špendlíku
+                                addPinToRegion(randomRegion, myPlayerNumber);
+                            } else {
+                                console.log("❌ Žádné dostupné oblasti!");
+                                playerSelections[myPlayerNumber] = "nevybral";
+                            }
+                        }
+
+                        // ✅ Po provedení tahu odstraníme `unavailable`
+                        document.querySelectorAll(".region").forEach(region => region.classList.remove("unavailable"));
+
+                    } else {
+                        console.log(`🔴 Čekání na tah hráče ${player}...`);
+                        
+                        // ✅ Simulace tahu protihráče (nejsou připojeni, takže zvolíme náhodně)
+                        let selectedRegion = await simulateOpponentMove(player);
+                        if (selectedRegion) {
+                            console.log(`✅ Hráč ${player} vybral oblast: ${selectedRegion.id}`);
+                            
+                            conquered_region = selectedRegion.id;
+
+                            // ✅ Zobrazíme výběr protihráče na mapě
+                            addPinToRegion(selectedRegion, player);
+                            let claimSound = new Audio("claim.mp3");
+                            claimSound.play();
+                        } else {
+                            console.log(`❌ Hráč ${player} nevybral žádnou oblast.`);
+                        }
+
+                        await delay(2000);
+                    }
+
+
+                    return conquered_region;
+                    
+
+                }
+
+
+                //FUNKCE NA PŘIDÁNÍ DOBYTÝCH POLÍ
+
+                async function addConqueredTiles(winner, selectedRegion){
+
+                    let playerKey = `Player${winner}regions`;
+
+                    
+    
+                    if (playerControlledRegions.hasOwnProperty(playerKey)) {
+                        playerControlledRegions[playerKey].push(selectedRegion);
+                        regionValues[selectedRegion] = 300;
+                    } else {
+                        console.warn(`Player key ${playerKey} does not exist.`);
+                    }
+
+
+                        await delay(1000);
+
+                        //Zabarvení políček
+                        colorizeTiles();
+                        updateScores();
+                        updateScoreUI();
+
+                    
+
+                        await delay(1000);
+
+                        //Odstranění špendlíků
+                        document.querySelectorAll(".pin-marker").forEach(pin => pin.remove());
+
+
+                        console.log("📌 Aktualizovaný stav regionů:", playerControlledRegions);
+                }
+
+
+
+
+
+                //FUNKCE NA AKTUALIZACI KOL
+                function updateRoundClasses(currentRound) {
+                    let rounds = document.querySelectorAll(".round");
+
+                    rounds.forEach((round, index) => {
+                        let roundNumber = index + 1; // Číslování od 1
+
+                        // ✅ Odebrání starých tříd
+                        round.classList.remove("roundactive", "roundpast");
+
+                        if (roundNumber < currentRound) {
+                            // ✅ Předchozí kola dostanou "roundpast"
+                            round.classList.add("roundpast");
+                        } else if (roundNumber === currentRound) {
+                            // ✅ Aktuální kolo dostane "roundactive"
+                            round.classList.add("roundactive");
+                        }
+                    });
+                }
+
+
+                //FUNKCE NA SOUČET OBSAZENÝCH POLÍ
+                function countOccupiedRegions() {
+                    let occupiedRegions = 0;
+
+                    Object.keys(playerControlledRegions).forEach(playerKey => {
+                        occupiedRegions += playerControlledRegions[playerKey].length;
+                    });
+
+                    return occupiedRegions;
+                }
+
+
+                //FUNKCE KONTROLUJÍCÍ, ZDA NĚKDO NEMÁ VŠECH 15 REGIONŮ
+                function isAnyoneWinning(playerControlledRegions, totalRegions = 15) {
+                    for (let playerKey in playerControlledRegions) {
+                        if (playerControlledRegions[playerKey].length === totalRegions) {
+                            return true; // Někdo vyhrál
+                        }
+                    }
+                    return false; // Nikdo ještě nevyhrál
+                }
+
+
+
+                //FUNKCE VYHODNOCUJÍCÍ HRU
+                function endOfGame(){
+
+                    var gameRounds = document.getElementById("gamerounds");
+                    gameRounds.style.display = "none";
+
+                    var playerSticks = document.getElementById("playersticks");
+                    playerSticks.style.display = "none";
+
+                    var gameProgress = document.getElementById("gameprogress");
+                    gameProgress.style.height = "7%";
+
+                    var gamePhase = document.getElementById("gamephase");
+                    gamePhase.style.height = "100%";
+
+                    var gamePhase = document.getElementById("gamephase");
+                    gamePhase.innerHTML = "Konec hry";
+
+
+                }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                
+
+                
+
+                function delay(ms) {
+                    return new Promise(resolve => setTimeout(resolve, ms));
+                }
+
+
+
+    socket.on("startExpansionRound", ({ round}) => {
+
+        updateRoundClasses(round);
+
+    });
+
+
+
+    socket.on("startBattleRound", ({ round }) => {
+        
+        updateRoundClasses(round);
+
+    });
+
+
+
+    let currentPhase = "";
+
+
+    socket.on("phaseChange", (data) => {
+        currentPhase = data.phase;
+        console.log(`📢 Fáze změněna na: ${currentPhase}`);
+    });
+
+
+
+
+    socket.on("conquestIntro", (data) => {
+        const { title } = data;
+        console.log(`📢 ${title}`);
+
+        // Zobraz na obrazovce – můžeš použít svůj existující panel
+        document.getElementById("gamephase").innerText = title;
+
+        var gameRounds = document.getElementById("gamerounds");
+        gameRounds.style.display = "none";
+
+        var playerSticks = document.getElementById("playersticks");
+        playerSticks.style.display = "none";
+
+        var gameProgress = document.getElementById("gameprogress");
+        gameProgress.style.height = "7%";
+
+        var gamePhase = document.getElementById("gamephase");
+        gamePhase.style.height = "100%";
+        
+
+        // Po 4 s se zase schová (stejně jako v rozšiřování)
+        setTimeout(() => {
+            document.getElementById("phasePanel").style.display = "none";
+        }, 4000);
+    });
+
+
+
+    socket.on("battleIntro", ({ battlePlan, title }) => {
+        console.log("⚔️ Fáze bitev začíná! Pořadí hráčů:", battlePlan);
+        
+        // Zobraz na obrazovce – můžeš použít svůj existující panel
+        document.getElementById("gamephase").innerText = title;
+
+        var gameRounds = document.getElementById("gamerounds");
+        gameRounds.style.display = "block";
+
+        var playerSticks = document.getElementById("playersticks");
+        playerSticks.style.display = "block";
+
+        var gameProgress = document.getElementById("gameprogress");
+        gameProgress.style.height = "15%";
+
+        var gamePhase = document.getElementById("gamephase");
+        gamePhase.style.height = "33%";
+
+        applyStickColors(battlePlan); // ✅ tvoje původní funkce z offline verze
+
+
+    });
+
+
+
+
+
+socket.on("battleAvailableRegions", ({ regions }) => {
+    console.log("🟢 Dostupná nepřátelská políčka:", regions);
+
+    // ✅ Reset filtrů a listenerů (aby nezůstaly staré efekty z minulých kol)
+    document.querySelectorAll(".region").forEach(el => {
+        el.style.filter = "";
+        el.replaceWith(el.cloneNode(true)); // kompletně odstraní staré event listenery
+    });
+
+    // ✅ Nastav dostupnost
+    document.querySelectorAll(".region").forEach(el => {
+        if (regions.includes(el.id)) {
+            // Dostupná nepřátelská pole → zvýraznit a povolit klik
+            el.classList.remove("unavailable");
+            el.style.pointerEvents = "auto";
+            el.addEventListener("mouseover", highlightRegion);
+            el.addEventListener("mouseout", resetRegion);
+        } else {
+            // Všechno ostatní (včetně vlastních polí) → ztmavit a zablokovat klik
+            el.classList.add("unavailable");
+            el.style.pointerEvents = "none";
+        }
+    });
+
+    enableBattleSelection(regions); // Spuštění výběru pro bitvy
+});
+
+
+
+
+
+
+
+
+async function enableBattleSelection(validRegions) {
+    console.log("✅ Vyber území pro útok");
+    startCountdownTile(10); // ✅ Spustíme časomíru
+
+    try {
+        const clickedRegion = await waitForClick(".region", validRegions);
+
+        console.log(`🖱️ (Bitva) Vybral jsi: ${clickedRegion.id}`);
+        socket.emit("claimRegion", { region: clickedRegion.id });
+
+    } catch (err) {
+        console.error("❌ Chyba při výběru regionu v bitvě:", err);
+    }
+}
+
+
+
+
+
+
+
+// ✅ Zobrazení mini základny při začátku boje
+socket.on("showBaseMini", ({ defender, lives }) => {
+    console.log(`🏰 Zobrazuji mini základnu hráče ${defender} (životy: ${lives})`);
+
+    const baseMini = document.getElementById("basevisualmini");
+    baseMini.style.display = "block";
+    baseMini.style.top = "2%";
+    baseMini.style.left = "26.5%";
+    baseMini.style.height = "12%";
+
+    // ✅ Zobrazit věže podle počtu životů
+    ["baseminileft","baseminiright","baseminimain"].forEach(id => {
+        document.getElementById(id).style.display = "block";
+    });
+
+    if (lives < 3) document.getElementById("baseminileft").style.display = "none";
+    if (lives < 2) document.getElementById("baseminiright").style.display = "none";
+    if (lives < 1) document.getElementById("baseminimain").style.display = "none";
+});
+
+
+
+
+// ✅ Zničení věže obránce
+socket.on("destroyTower", ({ defender, remainingLives }) => {
+
+    const baseMini = document.getElementById("basevisualmini");
+
+    console.log(`💥 Ničím věž hráče ${defender}, zbývá životů: ${remainingLives}`);
+
+    console.log("DESTROY TOWER - Otevírám okno")
+    //Zobrazíme okno
+    question.style.display = 'block';
+    qplayers.style.display = 'block';
+    choice_question.style.display= 'block' ;
+    qtext.innerHTML="";
+
+
+    
+
+
+    
+    //Dáváme miniaturu na start
+    
+        baseMini.style.height = "12%";
+        baseMini.style.left = "26.5%";
+        baseMini.style.top = "2%";
+
+
+    //Skryjeme otázky u multiple choice
+    document.querySelectorAll(".option").forEach(el => {
+        el.style.display = "none";
+       
+    });
+
+    
+    setTimeout(() => {
+
+            // ✅ Přesun do středu a zvětšení pro animaci
+            baseMini.style.top = "50%";
+            baseMini.style.left = "0%";
+            baseMini.style.height = "36%";
+
+    }, 1000);
+
+    
+
+    setTimeout(() => {
+
+
+        //ANIMACE
+
+                    // Urči pozici věže
+                    const towerElement = document.getElementById("basevisualmini"); // nebo 2/3 podle hráče
+                    const rect = towerElement.getBoundingClientRect();
+                    const x = rect.left + rect.width / 2 + window.scrollX;
+                    const y = rect.top + rect.height / 2 + window.scrollY;
+
+                    // Spusť efekt
+                    showShockwave(x, y, towerElement);
+                    spawnSmokePuffs(x,y,20);
+                    spawnSparks(x, y, 30); // 💥 jiskry
+
+        //KONEC ANIMACE
+
+
+
+        // ✅ Zvuk efektu
+        let destroySound = new Audio("smallrock.mp3");
+        destroySound.play();
+        
+        if (remainingLives === 2){
+            
+            let baseKey = `base${defender}left`;
+            document.getElementById(baseKey).style.display = "none";
+            document.getElementById("baseminileft").style.display = "none";
+
+        }
+
+        else if (remainingLives === 1){
+
+            let baseKey = `base${defender}right`;
+            document.getElementById(baseKey).style.display = "none";
+            document.getElementById("baseminiright").style.display = "none";
+        
+        }
+
+        else if (remainingLives === 0){
+            
+            let baseKey = `base${defender}main`;
+            document.getElementById(baseKey).style.display = "none";
+            document.getElementById("baseminimain").style.display = "none";
+        
+        
+        }
+        
+    }, 4000);
+
+
+    setTimeout(() => {
+
+        // ✅ Vrátíme základnu zpět do rohu
+        baseMini.style.height = "12%";
+        baseMini.style.left = "26.5%";
+        baseMini.style.top = "2%";
+
+    }, 5000);
+
+
+    setTimeout(() => {
+
+
+            //skryjeme okno
+            console.log("DESTROY TOWER - Zavírám okno")
+
+            question.style.display = 'none';
+
+    }, 6000);
+
+});
+
+// ✅ Skrytí mini základny po skončení tahu
+socket.on("hideBaseMini", () => {
+    console.log("🏰 Skrývám mini základnu");
+    const baseMini = document.getElementById("basevisualmini");
+    baseMini.style.display = "none";
+});
+
+
+
+
+socket.on("playerLoses", ({defender}) => {
+
+    const baseNameElement = document.getElementById(`player${defender}basename`);
+    if (baseNameElement) {
+        baseNameElement.style.display = "none";
+    }
+
+    console.log("Hráč", defender, "prohrál.");
+
+});
+
+
+
+
+socket.on("removeAnswerOptions", () => {
+
+
+
+    document.querySelectorAll(".option").forEach(el => {
+        el.style.display = "none";
+       
+    });
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                
+    //PŘIJÍMEJ POKYNY OD SERVERU
+    socket.on("runClientScenario", ({ action, expansionPlan }) => {
+
+        //FÁZE 1 - ROZDĚLENÍ ZÁKLADEN
+        if (action === "basesSettle") {
+            console.log("▶️ Spouštím fázi rozdělování základen");
+            basesSettle();
+        }
+
+        if (action === "expansionintro") {
+            console.log("▶️ Spouštím fázi rozšiřování");
+            console.log("🧭 Přijat expansionPlan:", expansionPlan);
+            
+
+            // Uložíme plán do globální proměnné (pro další kola)
+            window.expansionPlan = expansionPlan;
+
+            // Vykreslíme vizuál
+            applyStickColors(expansionPlan);
+
+            // Zobrazíme hráčům, že začíná fáze rozšiřování
+            expansion_intro();
+            
+        }
+
+
+
+    });
+
+
+
+    socket.on("playerTurn", ({ player, round, timeLeft }) => {
+        console.log(`🎯 Tah hráče ${player}`);
+        if (player === myPlayerNumber) {
+            console.log("✅ Jsi na tahu, čekám na dostupná políčka...");
+            startCountdownTile(10);
+            // čekáme na socket "availableRegions"
+        }
+    });
+
+
+
+// 🔹 Funkce pro zvýraznění
+function highlightRegion(e) {
+    e.target.style.filter = "brightness(120%)";
+}
+
+// 🔹 Funkce pro návrat k normálu
+function resetRegion(e) {
+    e.target.style.filter = "brightness(100%)";
+}
+
+
+
+
+socket.on("availableRegions", ({ regions }) => {
+    console.log("🟢 Dostupná políčka:", regions);
+
+    // ✅ Reset filtrů a listenerů
+    document.querySelectorAll(".region").forEach(el => {
+        el.style.filter = "";
+        el.replaceWith(el.cloneNode(true)); // smaže staré listenery i filtry
+    });
+
+    document.querySelectorAll(".region").forEach(el => {
+        if (regions.includes(el.id)) {
+            el.classList.remove("unavailable");
+            el.style.pointerEvents = "auto";
+            el.addEventListener("mouseover", highlightRegion);
+            el.addEventListener("mouseout", resetRegion);
+        } else {
+            el.classList.add("unavailable");
+            el.style.pointerEvents = "none";
+        }
+    });
+
+    if (currentPhase === "conquest") {
+        enableConquestSelection();
+    } else {
+        enableRegionSelection();
+    }
+});
+
+
+
+
+
+
+
+    async function enableRegionSelection(round) {
+    console.log("✅ Můžeš vybrat region");
+
+    startCountdownTile(10); // ✅ Spustíme časomíru
+
+    try {
+        const clickedRegion = await waitForClick(".region");
+
+        console.log(`🖱️ Vybral jsi: ${clickedRegion.id}`);
+
+        // Odeslat serveru
+        socket.emit("claimRegion", {
+            round,
+            region: clickedRegion.id
+        });
+
+    } catch (err) {
+        console.error("❌ Chyba při výběru regionu:", err);
+    }
+}
+
+
+
+
+
+    async function enableConquestSelection() {
+        console.log("✅ Můžeš vybrat region (dobývání)");
+
+        startCountdownTile(10); // stejná časomíra jako v rozšiřování
+
+        try {
+            const clickedRegion = await waitForClick(".region");
+
+            console.log(`🖱️ (Dobývání) Vybral jsi: ${clickedRegion.id}`);
+
+            socket.emit("claimRegion", {
+                region: clickedRegion.id // při dobývání neposíláme round
+            });
+
+        } catch (err) {
+            console.error("❌ Chyba při výběru regionu (dobývání):", err);
+        }
+}
+
+
+
+
+    socket.on("playerSelectedRegion", ({ player, region }) => {
+        console.log(`📍 Hráč ${player} vybral region: ${region}`);
+
+        addPinToRegion(region, player); // Tvoje existující funkce na vykreslení špendlíku
+
+        document.querySelectorAll(".region").forEach(regionEl => {
+            regionEl.classList.remove("unavailable");
+        });
+       
+    });
+
+
+
+
+    socket.on("updateRegions", ({ regions, regionValues }) => {
+            console.log("🎨 Aktualizace regionů:", regions);
+
+            playerControlledRegions = regions;
+            window.regionValues = regionValues; // pokud používáš globální
+
+            document.querySelectorAll(".pin-marker").forEach(pin => pin.remove());
+            colorizeTiles(); // tvoje existující funkce na přebarvení mapy
+            
+    });
+
+
+
+
+let lastQuestionOptions = [];
+
+
+ socket.on("multipleChoiceQuestion", (data) => {
+    const { question, options, time, attacker, defender, attackerName, defenderName, canAnswer } = data;
+    showMultipleChoice(question, options, time, attacker, defender, attackerName, defenderName, canAnswer);
+});
+
+// Přijme výsledky od serveru
+socket.on("multipleChoiceResults", (data) => {
+    const { correctAnswer, answersByPlayer } = data;
+
+    
+    showMultipleChoiceResults(correctAnswer, answersByPlayer, lastQuestionOptions);
+
+});
+
+let myAnswer = ""; // Uložení mojí odpovědi
+
+function showMultipleChoice(qText, options, timeLimit, attacker, defender, attackerName, defenderName, canAnswer = true) {
+    myAnswer = "";
+
+
+
+    document.querySelectorAll('.option').forEach(option => {
+
+            option.style.display = "block";                                                
+            option.classList.remove("unavailable_multiple_choice", "highlighted_choice");
+            option.style.background = "";
+            option.style.backgroundImage = "linear-gradient(   rgb(57, 54, 54), 5%, rgb(19, 18, 18), 95%,   rgb(57, 54, 54));";
+
+
+    });
+
+
+    // ✅ Zobrazit panel hráčů, pokud je duel
+    if (attacker && defender) {
+        qplayers.style.display = "block";
+        qplayername1.innerHTML = attackerName;
+        qplayername2.innerHTML = defenderName;
+
+        const playerColors = {
+            1: "linear-gradient(rgb(13 0 76),5%,rgb(58 0 232),95%,rgb(13 0 76))",
+            2: "linear-gradient(rgb(102 0 0),5%,rgb(202 0 0),95%,rgb(102,0,0))",
+            3: "linear-gradient(rgb(57,54,54),5%,rgb(176,176,176),95%,rgb(57,54,54))"
+        };
+
+        qplayerone.style.backgroundImage = playerColors[attacker];
+        qplayertwo.style.backgroundImage = playerColors[defender];
+    } else {
+        qplayers.style.display = "none";
+    }
+
+    // ✅ Pokud hráč nehraje (není účastníkem), zobraz "abort"
+    if (!canAnswer) {
+        abort.style.display = "block";
+    } else {
+        abort.style.display = "none";
+    }
+
+    // ✅ Nastavení základních panelů
+    question.style.display = "block";
+    choice_question.style.display = "block";
+    qtext.innerHTML = qText;
+
+    // ✅ Reset možností
+    [option1, option2, option3, option4].forEach((opt, i) => {
+        opt.innerHTML = options[i];
+        opt.classList.remove("highlighted_choice", "unavailable_multiple_choice");
+    });
+
+    // ✅ Reset listenerů
+    document.querySelectorAll(".option").forEach(opt => {
+        const newOpt = opt.cloneNode(true);
+        opt.parentNode.replaceChild(newOpt, opt);
+    });
+
+    // ✅ Povolení / zakázání klikání
+    if (canAnswer) {
+        document.querySelectorAll(".option").forEach(option => {
+            option.addEventListener("click", () => {
+                if (myAnswer !== "") return;
+
+                const selectedIndex = options.indexOf(option.textContent.trim());
+                myAnswer = selectedIndex;
+
+                socket.emit("playerAnswered", {
+                    room: currentRoomId,
+                    player: myPlayerNumber,
+                    answerIndex: selectedIndex
+                });
+
+                new Audio("send2.mp3").play();
+
+                document.querySelectorAll(".option").forEach(o => o.classList.add("unavailable_multiple_choice"));
+                option.classList.remove("unavailable_multiple_choice");
+                option.classList.add("highlighted_choice");
+            });
+        });
+    } else {
+        // ✅ Třetí hráč má odpovědi zakázané
+        document.querySelectorAll(".option").forEach(option => {
+            option.classList.add("unavailable_multiple_choice");
+        });
+    }
+
+    startCountdown(timeLimit);
+}
+
+
+
+
+
+
+
+
+
+
+function showMultipleChoiceResults(correctIndex, answersByPlayer, options) {
+    const playerGradients = {
+        1: "linear-gradient(rgb(13 0 76),5%,rgb(58 0 232),95%,rgb(13 0 76))",
+        2: "linear-gradient(rgb(102 0 0),5%,rgb(202 0 0),95%,rgb(102,0,0))",
+        3: "linear-gradient(rgb(57,54,54),5%,rgb(176,176,176),95%,rgb(57,54,54))"
+    };
+
+    document.querySelectorAll(".option").forEach(opt => {
+        opt.classList.add("unavailable_multiple_choice");
+    });
+
+    const selectedOptions = { option1: [], option2: [], option3: [], option4: [] };
+
+    for (let player in answersByPlayer) {
+        const answerIndex = answersByPlayer[player]; // ✅ teď je to číslo
+        const optionId = `option${answerIndex + 1}`;
+        selectedOptions[optionId].push(Number(player));
+    }
+
+    Object.keys(selectedOptions).forEach(optionId => {
+        const option = document.getElementById(optionId);
+        const players = selectedOptions[optionId];
+        if (players.length === 1) {
+            option.style.background = playerGradients[players[0]];
+        } else if (players.length === 2) {
+            option.style.background = `${playerGradients[players[0]]}, ${playerGradients[players[1]]}`;
+            option.style.backgroundSize = "50% 100%";
+            option.style.backgroundPosition = "left, right";
+            option.style.backgroundRepeat = "no-repeat";
+        } else if (players.length === 3) {
+            option.style.background = `${playerGradients[1]}, ${playerGradients[2]}, ${playerGradients[3]}`;
+            option.style.backgroundSize = "33.3% 100%";
+            option.style.backgroundPosition = "left, center, right";
+            option.style.backgroundRepeat = "no-repeat";
+        }
+    });
+
+    setTimeout(() => {
+        if (myAnswer === correctIndex) {
+            new Audio("success.mp3").play();
+        } else {
+            new Audio("reveal.mp3").play();
+        }
+
+        const optionCover = document.getElementById(`optioncover${correctIndex + 1}`);
+        if (optionCover) {
+            optionCover.classList.add("multipleblinker");
+            optionCover.style.display = "inline-block";
+        }
+
+        setTimeout(() => {
+            console.log("MULTIPLE VÝSLEDKY - Zavírám okno")
+            question.style.display = "none";
+            choice_question.style.display = "none";
+            qplayers.style.display = "none";
+            [optioncover1, optioncover2, optioncover3, optioncover4].forEach(cover => {
+                cover.style.display = "none";
+            });
+        }, 3000);
+    }, 2000);
+}
+
+
+
+
+
+
+
+let myNumericAnswer = 0;
+let numericStartTime = 0;
+
+
+socket.on("numericQuestion", (data) => {
+    const { question, time } = data;
+    showNumericQuestionForThree(question, time);
+});
+
+
+socket.on("numericQuestionResults", (data) => {
+    const { correctAnswer, answers } = data;
+    showNumericResultsForThree(correctAnswer, answers);
+});
+
+
+
+socket.on("numericQuestionForTwo", ({ question, time, attacker, defender, attackerName, defenderName }) => {
+    showNumericQuestionForTwo(question, time, attacker, defender, attackerName, defenderName);
+});
+
+
+socket.on("numericQuestionResultsForTwo", ({ correctAnswer, answers, attacker, defender }) => {
+    showNumericResultsForTwo(correctAnswer, answers, attacker, defender);
+});
+
+
+
+
+
+socket.on("gameOver", ({ message, finalScores }) => {
+  console.log(`🎮 ${message}`);
+  console.log("🏆 Konečné pořadí:");
+
+  // Mapování čísel hráčů na jména
+  const allNames = {
+    1: player1,
+    2: player2,
+    3: player3
+  };
+
+  const resultBox = document.getElementById("endgame_results");
+  resultBox.innerHTML = `<div class="endtitle">${message}</div>`;
+
+  finalScores.forEach((entry, index) => {
+  const name = allNames[entry.player] || `Hráč ${entry.player}`;
+  console.log(`${index + 1}. ${name} – ${entry.score} bodů`);
+
+  const line = document.createElement("div");
+  line.className = "scoreline";
+  if (index === 0) line.classList.add("winner"); // zvýrazni vítěze
+
+  line.innerHTML = `
+    <span class="rank"></span>
+    <span class="playername">${name}</span>
+    <span class="score">${entry.score}</span>
+  `;
+  resultBox.appendChild(line);
+});
+
+
+  // Výchozí zobrazená tabulka
+  showEndgameTab("results");
+
+  // Zobraz okno
+  showEndgameWindow();
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+function showNumericResultsForTwo(correctAnswer, answers, attacker, defender) {
+    console.log("📊 Výsledky numerické otázky (2 hráči):", answers);
+
+   
+
+    num2answerarea.style.display = "block";
+    ["num2answerbox1","num2answerbox2"].forEach(id=>{
+        document.getElementById(id).style.opacity = "1";
+    });
+
+    document.getElementById("numerical_correct2").innerHTML = correctAnswer;
+    document.getElementById("numerical_correct2").style.opacity = "1";
+
+    // ✅ Najdeme odpovědi útočníka a obránce
+    const attackerAnswer = answers.find(a => a.player === attacker);
+    const defenderAnswer = answers.find(a => a.player === defender);
+
+     console.log("✅ Útočník:", attackerAnswer);
+    console.log("✅ Obránce:", defenderAnswer);
+
+    // Útočník = box 1
+    if (attackerAnswer) {
+        document.getElementById("num2answer1").textContent = attackerAnswer.num;
+        document.getElementById("num2answertime1").textContent = (attackerAnswer.time / 1000).toFixed(2) + " s";
+        document.getElementById("num2answeruser1").textContent = attackerAnswer.name;
+    }
+
+    // Obránce = box 2
+    if (defenderAnswer) {
+        document.getElementById("num2answer2").textContent = defenderAnswer.num;
+        document.getElementById("num2answertime2").textContent = (defenderAnswer.time / 1000).toFixed(2) + " s";
+        document.getElementById("num2answeruser2").textContent = defenderAnswer.name;
+    }
+
+    // ✅ Zvýraznit vítěze a animovat pořadí
+    setTimeout(() => {
+        const winnerId = answers[0].player;
+
+        // Najdeme, jestli vítěz je útočník (box1) nebo obránce (box2)
+        const winnerBox = winnerId === attacker ? 1 : 2;
+        const loserBox = winnerBox === 1 ? 2 : 1;
+
+        // ✅ Posuneme jen vítěze
+        document.getElementById(`num2answerbox${winnerBox}`).style.top = "10%";
+        document.getElementById(`num2answerbox${winnerBox}`).classList.add("boxblinker");
+
+        // ✅ Poražený zůstane na svém místě (nebo ho můžeš snížit)
+        document.getElementById(`num2answerbox${loserBox}`).style.top = "20%";
+
+        // ✅ Zvuk
+        if (winnerId === myPlayerNumber) {
+            new Audio("success.mp3").play();
+        } else {
+            new Audio("reveal.mp3").play();
+        }
+
+        console.log(`🏆 Vítěz (2 hráči): Hráč ${winnerId}`);
+    }, 1000);
+
+    setTimeout(() => {
+        question.style.display = "none";
+        numerical_question_two.style.display = "none";
+        qplayers.style.display = "none";
+    }, 6000);
+}
+
+
+
+
+function showNumericQuestionForTwo(questionText, timeLimit, attacker, defender, attackerName, defenderName) {
+    myNumericAnswerTwo = 0;
+    numericStartTimeTwo = Date.now();
+
+
+
+
+
+
+    // ✅ Zobrazení panelů
+    question.style.display = "block";
+    numerical_question_two.style.display = "block";
+    document.getElementById("numinput2").style.display = "block";
+    document.getElementById("numsubmit2").style.display = "block";
+
+        // ✅ Pokud nejsem účastníkem otázky → zablokuj input
+    if (![attacker, defender].includes(myPlayerNumber)) {
+        document.getElementById("numinput2").style.display = "none";
+        document.getElementById("numsubmit2").style.display = "none";
+    }
+    
+
+    qplayers.style.display = "block";
+
+    qplayername1.innerHTML = attackerName;
+    qplayername2.innerHTML = defenderName;
+
+    const playerColors = {
+        1: "linear-gradient(rgb(13 0 76),5%,rgb(58 0 232),95%,rgb(13 0 76))",
+        2: "linear-gradient(rgb(102 0 0),5%,rgb(202 0 0),95%,rgb(102,0,0))",
+        3: "linear-gradient(rgb(57,54,54),5%,rgb(176,176,176),95%,rgb(57,54,54))"
+    };
+
+    qplayerone.style.backgroundImage = playerColors[attacker];
+    qplayertwo.style.backgroundImage = playerColors[defender];
+
+
+
+
+
+    // ✅ Reset polí
+    document.getElementById("numinput2").value = "";
+    ["num2answerbox1","num2answerbox2"].forEach(id=>{
+        const el = document.getElementById(id);
+        el.style.opacity = "0";
+        el.style.top = "10%";
+        el.classList.remove("boxblinker");
+    });
+
+    document.getElementById("numerical_correct2").style.opacity = "0";
+    num2answerarea.style.display = "none";
+
+    // ✅ Nastavení otázky
+    numerical_qtext2.innerHTML = questionText;
+
+    // ✅ Funkce pro odeslání
+    function submitNumericAnswerTwo() {
+        let sendSound = new Audio("send2.mp3");
+        sendSound.play();
+
+        myNumericAnswerTwo = parseInt(document.getElementById("numinput2").value) || 0;
+        const elapsedTime = Date.now() - numericStartTimeTwo;
+
+        console.log(`📤 Odesílám numerickou odpověď (2 hráči): ${myNumericAnswerTwo} (${elapsedTime}ms)`);
+
+        socket.emit("playerNumericAnswer", {
+            room: currentRoomId,
+            player: myPlayerNumber,
+            answer: myNumericAnswerTwo
+        });
+
+        // ✅ Skryj input
+        document.getElementById("numinput2").style.display = "none";
+        document.getElementById("numsubmit2").style.display = "none";
+    }
+
+    document.getElementById("numsubmit2").onclick = submitNumericAnswerTwo;
+    document.getElementById("numinput2").addEventListener("keydown", function(event) {
+        if (event.key === "Enter") submitNumericAnswerTwo();
+    });
+
+    // ✅ Spusť odpočet (použij stejnou funkci startCountdown)
+    startCountdown(timeLimit);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+function showNumericQuestionForThree(questionText, timeLimit) {
+    myNumericAnswer = 0;
+    numericStartTime = Date.now();
+
+    // ✅ Zobrazení panelů
+    question.style.display = "block";
+    numerical_question_three.style.display = "block";
+    document.getElementById("numinput3").style.display = "block";
+    document.getElementById("numsubmit3").style.display = "block";
+
+    // ✅ Reset polí
+    document.getElementById("numinput3").value = "";
+    ["num3answerbox1","num3answerbox2","num3answerbox3"].forEach(id=>{
+        const el = document.getElementById(id);
+        el.style.opacity = "0";
+        el.style.top = "10%";
+        el.classList.remove("boxblinker");
+    });
+
+    document.getElementById("numerical_correct").style.display = "none";
+    document.getElementById("numerical_correct").style.width = "0%";
+    document.getElementById("numerical_correct").style.left = "100%";
+    document.getElementById("numerical_qtext").style.width = "100%";
+
+    // ✅ Nastavení otázky
+    numerical_qtext.innerHTML = questionText;
+
+    // ✅ Funkce pro odeslání
+    function submitNumericAnswer() {
+        let sendSound = new Audio("send2.mp3");
+        sendSound.play();
+
+        myNumericAnswer = parseInt(document.getElementById("numinput3").value) || 0;
+        const elapsedTime = Date.now() - numericStartTime;
+
+        console.log(`📤 Odesílám numerickou odpověď: ${myNumericAnswer} (${elapsedTime}ms)`);
+
+        socket.emit("playerNumericAnswer", {
+            room: currentRoomId,
+            player: myPlayerNumber,
+            answer: myNumericAnswer
+        });
+
+        // ✅ Skryj input
+        document.getElementById("numinput3").style.display = "none";
+        document.getElementById("numsubmit3").style.display = "none";
+    }
+
+    document.getElementById("numsubmit3").onclick = submitNumericAnswer;
+    document.getElementById("numinput3").addEventListener("keydown", function(event) {
+        if (event.key === "Enter") submitNumericAnswer();
+    });
+
+    // ✅ Spusť odpočet (máš vlastní funkci startCountdown)
+    startCountdown(timeLimit);
+}
+
+
+
+
+function showNumericResultsForThree(correctAnswer, answers) {
+    // ✅ Zobraz odpovědi všech hráčů
+    document.getElementById("num3answerarea").style.display = "block";
+    ["num3answerbox1","num3answerbox2","num3answerbox3"].forEach(id=>{
+        document.getElementById(id).style.opacity = "1";
+    });
+
+    document.getElementById("numerical_correct").innerHTML = correctAnswer;
+
+    // ✅ Vyplň odpovědi hráčů
+    answers.forEach((a, i) => {
+        document.getElementById(`numanswer${a.player}`).textContent = a.num;
+        document.getElementById(`numanswertime${a.player}`).textContent = (a.time/1000).toFixed(2) + " s";
+    });
+
+    // ✅ Ukázat správnou odpověď (posun textu)
+    setTimeout(() => {
+        numerical_correct.style.display = "inline-block";
+        numerical_qtext.style.width = "70%";
+        numerical_correct.style.width = "30%";
+        numerical_correct.style.left = "70%";
+    }, 0);
+
+    // ✅ Zvýraznit vítěze a animovat pořadí
+    setTimeout(() => {
+        let winnerTop = 10;
+        answers.forEach(playerData => {
+            const divId = `num3answerbox${playerData.player}`;
+            document.getElementById(divId).style.top = `${winnerTop}%`;
+            winnerTop += 10;
+
+            if (playerData.player === answers[0].player) {
+                document.getElementById(divId).classList.add("boxblinker");
+            }
+        });
+
+        // ✅ Zvuk
+        if (answers[0].player === myPlayerNumber) {
+            new Audio("success.mp3").play();
+        } else {
+            new Audio("reveal.mp3").play();
+        }
+
+        console.log(`🏆 Vítěz: Hráč ${answers[0].player}`);
+    }, 1000);
+
+    // ✅ Zavření okna po 6 s
+    setTimeout(() => {
+        question.style.display = "none";
+        numerical_question_three.style.display = "none";
+    }, 6000);
+}
+
+
+
+                /*
+                async function runFunctions() {
+                    // ✅ Vygenerování expansionPlan před použitím
+                    let expansionPlan = generatePlayerOrder(); 
+                    applyStickColors(expansionPlan);
+
+                    console.log("Aplikované barvy podle pořadí hráčů:", expansionPlan);
+
+                    console.log("1. fáze spuštěna: Rozdělení základen");
+                    basesRandom();
+                    await delay(8000);
+                    /*
+                    console.log("2. fáze spuštěna: Zahájení Rozšiřování");
+                    expansion_intro();
+                    await delay(2000);
+
+                    console.log("STAV PŘED ROZŠÍŘENÍM:", playerControlledRegions);
+
+                                                // ✅ FÁZE ROZŠIŘOVÁNÍ
+                                                for (let round = 1; round < 7; round++) {
+                                                    updateRoundClasses(round);
+
+
+                                                    
+                                                    //Vymazat údaje o claimnutých políčcích
+                                                    claimedRegionsThisRound.clear();
+
+                                                    console.log(`🔵 2. fáze - Kolo ${round} - Vybírání polí`);
+                                                    let selections = await claiming(round - 1, expansionPlan);
+                                                    
+                                                    console.log("✅ Výběry všech hráčů:", selections);
+
+                                                    await delay(2000);
+
+                                                    console.log("🟢 2. fáze - Multiple choice otázka");
+                                                    let successors = await multipleChoiceQuestion([1,2,3]);
+
+                                                    console.log("🔵 3. fáze - Přiřazení oblastí hráčům.");
+                                                
+                                                    
+                                                    // ✅ Přidání regionů hráčům pouze pokud odpověděli správně
+                                                    if (!Array.isArray(successors) || successors.length === 0) {
+                                                        console.log("⚠️ Žádný hráč neodpověděl správně, žádné regiony nebudou přidány.");
+                                                    } else {
+                                                        console.log("🏆 Hráči, kteří odpověděli správně:", successors);
+
+                                                        successors.forEach(player => {
+                                                            let playerKey = `Player${player}regions`;
+
+                                                            // ✅ Ověříme, zda hráč v `selections` skutečně nějaký region vybral
+                                                            if (selections[player]) {
+                                                                let selectedRegion = selections[player];
+
+                                                                // ✅ Ověříme, že region ještě není přidán
+                                                                if (!playerControlledRegions[playerKey].includes(selectedRegion)) {
+                                                                    playerControlledRegions[playerKey].push(selectedRegion);
+                                                                    console.log(`✅ Hráč ${player} získal region: ${selectedRegion}`);
+                                                                } else {
+                                                                    console.log(`⚠️ Hráč ${player} již kontroluje region ${selectedRegion}, nepřidáno.`);
+                                                                }
+                                                            } else {
+                                                                console.log(`⚠️ Hráč ${player} nevybral žádný region, region se mu nepřidává.`);
+                                                            }
+                                                        });
+                                                    }
+
+                                                    
+                                                    
+
+                                                    await delay(1000);
+
+                                                    //Zabarvení políček
+                                                    colorizeTiles();
+                                                    updateScores();
+                                                    updateScoreUI();
+
+                                                
+
+                                                    await delay(1000);
+
+                                                    //Odstranění špendlíků
+                                                    document.querySelectorAll(".pin-marker").forEach(pin => pin.remove());
+
+
+                                                    console.log("📌 Aktualizovaný stav regionů:", playerControlledRegions);
+
+                                                    taken_tiles = countOccupiedRegions();
+                                                    console.log("Obsazená políčka:", taken_tiles);
+
+                                                    if(taken_tiles > 12){
+
+                                                        break;
+                                                    }
+                                                    
+                                                }
+                    
+                    taken_tiles = countOccupiedRegions();
+                    console.log("3. fáze spuštěna: Zahájení Dobývání");
+
+                    i = 1;
+                    while(taken_tiles < 15){
+                            
+                            await conquering_intro(i);
+
+                            await delay(4000);
+
+                            let winner = await numericalQuestionForThree();
+                           
+                            await delay(5000);
+
+                            let conquered_tile = await claiming_conquering(winner);
+                          
+                            console.log(winner, conquered_tile);
+                          
+                            await addConqueredTiles(winner, conquered_tile);
+                            
+                            taken_tiles++;
+                            i++;
+                            console.log("Obsazená políčka na konci kola: ", taken_tiles);
+
+
+
+                   
+                   } 
+                    
+                    await delay(2000);         
+                    
+                                                        battle_intro();
+                                                        let battlePlan = generatePlayerOrder(); 
+                                                        applyStickColors(battlePlan);
+
+                                                        console.log("Aplikované barvy podle pořadí hráčů:", battlePlan);
+
+                                                        console.log("4. fáze spuštěna: Bitva");
+
+                                                                    // ✅ FÁZE BITEV
+                                                                    for (let round = 1; round < 7; round++) {
+
+
+                                                                                if(isAnyoneWinning(playerControlledRegions)){
+
+                                                                                    break;
+
+
+                                                                                }
+
+
+
+                                                                                updateRoundClasses(round);
+                                                                                let battlestick = 1;
+
+                                                                                for (battlestick = 1; battlestick < 4; battlestick++){ 
+
+                                                                                    if(isAnyoneWinning(playerControlledRegions)){
+
+                                                                                            break;
+
+
+                                                                                    }
+
+
+                                                                                            //Vymazat údaje o claimnutých políčcích
+                                                                                            claimedRegionsThisRound.clear();
+
+                                                                                            
+                                                                                            
+                                                                                                            let selections = await battle_claiming(round - 1, battlePlan, battlestick);
+                                                                                                            console.log("VÝSLEDEK BATTLE-CLAIMING: ", selections);
+
+                                                                                                            await delay(2000);
+
+                                                                                                            participant1 = selections.claimedBy;
+                                                                                                            participant2 = selections.currentlyOwnedBy;
+                                                                                                            selectedRegion = selections.selectedRegion;
+
+                                                                                                            
+
+
+                                                                                            //POKUD HRÁČ MÁ JEŠTĚ ŽIVOTY
+                                                                                            let attackerKey = `Player${participant1}`;
+                                                                                            if(playerLives[attackerKey] > 0){
+
+                                                                                                            console.log("🟢 2. fáze - Multiple choice otázka");
+                                                                                                            //POKUD JDE O ZÁKLADNU, UKÁZAT MINIATURKU
+                                                                                                            if(selectedRegion == player1CurrentBase || selectedRegion == player2CurrentBase || selectedRegion == player3CurrentBase){
+                                                                                                                
+
+
+                                                                                                                
+
+                                                                                                                document.getElementById("basevisualmini").style.display = "block";
+                                                                                                                document.getElementById("baseminileft").style.display = "block";
+                                                                                                                document.getElementById("baseminiright").style.display = "block";
+                                                                                                                document.getElementById("baseminimain").style.display = "block";
+
+                                                                                                                let defenderKey = `Player${participant2}`;
+                                                                                                                
+                                                                                                                
+                                                                                                                if(playerLives[defenderKey] == 2){
+
+                                                                                                                let baseKey = `base${participant2}left`;
+                                                                                                                
+                                                                                                                document.getElementById("baseminileft").style.display = "none";
+
+                                                                                                                }
+
+                                                                                                                else if(playerLives[defenderKey] == 1){
+
+                                                                                                                let baseKey = `base${participant2}right`;
+                                                                                                                
+                                                                                                                document.getElementById("baseminileft").style.display = "none";
+                                                                                                                document.getElementById("baseminiright").style.display = "none";
+
+                                                                                                                }
+
+                                                                                                                else if(playerLives[defenderKey] == 0){
+
+                                                                                                                let baseKey = `base${participant2}main`;
+                                                                                                                
+                                                                                                                document.getElementById("baseminileft").style.display = "none";
+                                                                                                                document.getElementById("baseminiright").style.display = "none";
+                                                                                                                document.getElementById("baseminimain").style.display = "none";
+
+                                                                                                                }
+
+
+
+                                                                                                            
+
+                                                                                                            
+
+                                                                                                                                //SMYČKA, DOKUD JI NĚCO NEPŘERUŠÍ
+                                                                                                                                while(true){
+
+                                                                                                                                                
+
+                                                                                                                                                
+
+                                                                                                                                                //KONTROLA ŽIVOTŮ
+                                                                                                                                                if(playerLives[defenderKey] < 1){
+
+
+                                                                                                                                                    //ZBAVIT OBRÁNCE VŠECH ÚZEMÍ
+
+                                                                                                                                                    let ownerKey = `Player${participant2}regions`;
+                                                                                                                                                    
+                                                                                                                                                    let allRegions = playerControlledRegions[ownerKey];
+
+                                                                                                                                                    playerControlledRegions[ownerKey] = [];
+
+
+                                                                                                                                                    //PŘIDAT ÚTOČNÍKOVI VŠECHNA ÚZEMÍ
+
+                                                                                                                                                    let playerKey = `Player${participant1}regions`;
+                                                                                                                                                    
+                                                                                                                                                    playerControlledRegions[playerKey] = playerControlledRegions[playerKey].concat(allRegions);
+
+                                                                                                                                                    
+                                                                                                                                                    //NASTAVIT BÝVALOU ZÁKLADNU NA HODNOTU 400
+                                                                                                                                                    regionValues[selectedRegion] = 400;
+
+
+                                                                                                                                                    //VYMAZAT BÝVALOU ZÁKLADNU Z CURRENT BASES
+                                                                                                                                                    let deletedBase = `player${participant2}CurrentBase`;
+                                                                                                                                                    deletedBase = "";
+
+
+
+
+                                                                                                                                                    //PŘEDAT HRÁČOVY DEFENSE BONUSY VÍTĚZI
+                                                                                                                                                    defenseBonuses[playerKey] = defenseBonuses[playerKey] + defenseBonuses[ownerKey];
+                                                                                                                                                    defenseBonuses[ownerKey] = 0;
+
+
+                                                                                                                                                    await delay(2000);
+
+                                                                                                                                                    //Odstranění špendlíků
+                                                                                                                                                    document.querySelectorAll(".pin-marker").forEach(pin => pin.remove());
+
+                                                                                                                                                    await delay(1000);
+
+
+                                                                                                                                                    //ODSTRANIT JMÉNO PŮVODNÍHO HRÁČE
+                                                                                                                                                    let deletedBaseName = `player${participant2}basename`;
+                                                                                                                                                    document.getElementById(deletedBaseName).style.display = "none";
+                                                                                                                                                    
+
+                                                                                                                                                
+                                                                                                                                                    
+                                                                                                                                                    //UPDATOVAT SKÓRE
+                                                                                                                                                    colorizeTiles();
+                                                                                                                                                    updateScores();
+                                                                                                                                                    updateScoreUI();
+
+
+
+                                                                                                                                                    document.getElementById("basevisualmini").style.display = "none";
+                                                                                                                                                    break;
+
+                                                                                                                                                }
+
+                                                                                                                                                
+                                                                                                                                                //DALŠÍ SÉRIE OTÁZEK 
+                                                                                                                                                let successors = await multipleChoiceQuestion([participant1, participant2]);
+
+                                                                                                                                                console.log("úspěšní odpovídající", successors);
+
+
+                                                                                                                                                            //POKUD OBA HRÁČI ODPOVĚDĚLI SPRÁVNĚ, VYTASIT NUMERICKOU OTÁZKU
+                                                                                                                                                            if(successors.length > 1){
+
+
+                                                                                                                                                                    await delay(2000);
+
+                                                                                                                                                                    let winner = await numericalQuestionForTwo([participant1,participant2]);
+
+                                                                                                                                                                    await delay(2000);
+
+                                                                                                                                                                    console.log("VYTASENÁ NUMERICKÁ OTÁZKA VYBRALA TOHOTO VÍTĚZE:" + winner);
+
+
+                                                                                                                                                                    await delay(2000);
+
+
+
+                                                                                                                                                                    //POKUD V NUMERICKÉ ZVÍTĚZÍ ÚTOČNÍK
+                                                                                                                                                                    if(winner == 1){
+
+                                                                                                                                                                        //SEBRAT ŽIVOT
+                                                                                                                                                                        let loserKey = `Player${participant2}`;
+
+                                                                                                                                                                        playerLives[loserKey] = playerLives[loserKey] - 1;
+                                                                                                                                                                        console.log(loserKey + " má nyní " + playerLives[loserKey] + " životů.");
+
+                                                                                                                                                                        //ZNIČENÍ VĚŽÍ
+                                                                                                                                                                        await destroyTower(loserKey);
+
+                                                                                                                                                                    }
+
+
+                                                                                                                                                                    //POKUD V NUMERICKÉ ZVÍTĚZÍ OBRÁNCE
+                                                                                                                                                                    else{
+
+                                                                                                                                                                        //PŘIDAT BONUS ZA OBRANU
+                                                                                                                                                                        await delay(1000);
+
+                                                                                                                                                                        let ownerKey = `Player${participant2}`;
+
+                                                                                                                                                                        defenseBonuses[ownerKey] += 100;
+                                                                                                                                                                        updateScores();
+                                                                                                                                                                        updateScoreUI();
+
+                                                                                                                                                                        //Odstranění špendlíků
+                                                                                                                                                                        document.querySelectorAll(".pin-marker").forEach(pin => pin.remove());
+                                                                                                                                                                        await delay(1000);
+
+                                                                                                                                                                        //PŘERUŠIT SMYČKU
+                                                                                                                                                                        document.getElementById("basevisualmini").style.display = "none";
+                                                                                                                                                                        break;
+
+
+                                                                                                                                                                    }
+
+                                                                                                                                                            }
+
+                                                                                                                                                            
+
+
+                                                                                                                                                            //POKUD ZVÍTĚZÍ JEN JEDEN HRÁČ
+                                                                                                                                                            else if(successors.length == 1) {
+
+
+                                                                                                                                                                            //POKUD ZVÍTĚZÍ ÚTOČNÍK
+                                                                                                                                                                            if(successors.includes(participant1)){
+
+
+                                                                                                                                                                                //SEBRAT ŽIVOT
+                                                                                                                                                                                let loserKey = `Player${participant2}`;
+
+                                                                                                                                                                                playerLives[loserKey] = playerLives[loserKey] - 1;
+                                                                                                                                                                                console.log(loserKey + " má nyní " + playerLives[loserKey] + " životů.");
+
+                                                                                                                                                                                //ZNIČENÍ VĚŽÍ
+                                                                                                                                                                                
+                                                                                                                                                                                await destroyTower(loserKey);
+
+
+                                                                                                                                                                            }
+
+
+
+                                                                                                                                                                            //POKUD ZVÍTĚZÍ OBRÁNCE
+                                                                                                                                                                            else {
+
+                                                                                                                                                                                //PŘIDAT BONUS ZA OBRANU
+                                                                                                                                                                                await delay(1000);
+
+                                                                                                                                                                                let ownerKey = `Player${participant2}`;
+
+                                                                                                                                                                                defenseBonuses[ownerKey] += 100;
+                                                                                                                                                                                updateScores();
+                                                                                                                                                                                updateScoreUI();
+
+                                                                                                                                                                                //Odstranění špendlíků
+                                                                                                                                                                                document.querySelectorAll(".pin-marker").forEach(pin => pin.remove());
+                                                                                                                                                                                await delay(1000);
+
+                                                                                                                                                                                //PŘERUŠIT SMYČKU
+                                                                                                                                                                                document.getElementById("basevisualmini").style.display = "none";
+                                                                                                                                                                                break;
+
+                                                                                                                                                                            }
+
+                                                                                                                                                            }
+
+
+                                                                                                                                                            //POKUD NEZVÍTĚZÍ NIKDO
+
+                                                                                                                                                            else{
+
+                                                                                                                                                                //Odstranění špendlíků
+                                                                                                                                                                document.querySelectorAll(".pin-marker").forEach(pin => pin.remove());
+                                                                                                                                                                await delay(1000);
+                                                                                                                                                                //Přerušit smyčku
+                                                                                                                                                                document.getElementById("basevisualmini").style.display = "none";
+                                                                                                                                                                break;
+                                                                                                                                                            }
+
+
+
+                                                                                                                                }
+
+
+                                                                                                            }
+
+
+                                                                                                            
+                                                                                                            //POKUD JDE O BĚŽNÉ ÚZEMÍ A NE O ZÁKLADNU
+                                                                                                            else if(selectedRegion != player1CurrentBase && selectedRegion != player2CurrentBase && selectedRegion != player3CurrentBase){
+
+
+                                                                                                                //VYTASÍME OTÁZKU
+                                                                                                                let successors = await multipleChoiceQuestion([participant1, participant2]);
+
+                                                                                                                 console.log("úspěšní odpovídající", successors);
+
+                                                                                                                    //POKUD OBA HRÁČI ODPOVĚDĚLI SPRÁVNĚ, VYTASIT NUMERICKOU OTÁZKU
+                                                                                                                    if(successors.length > 1){  
+
+
+                                                                                                                            await delay(2000);
+
+                                                                                                                            let winner = await numericalQuestionForTwo([participant1,participant2]);
+
+                                                                                                                            await delay(2000);
+
+                                                                                                                            console.log("VYTASENÁ NUMERICKÁ OTÁZKA VYBRALA TOHOTO VÍTĚZE:" + winner);
+
+
+                                                                                                                            //POKUD V NUMERICKÉ ZVÍTĚZÍ ÚTOČNÍK
+                                                                                                                            if(winner == 1){
+
+
+                                                                                                                                
+
+                                                                                                                                                //ODEBRÁNÍ ÚZEMÍ OBRÁNCI
+
+                                                                                                                                                let ownerKey = `Player${participant2}regions`;
+
+                                                                                                                                                // 2. Najdeme index regionu
+                                                                                                                                                let index = playerControlledRegions[ownerKey].indexOf(selectedRegion);
+
+                                                                                                                                                // 3. Pokud region existuje, odstraníme ho
+                                                                                                                                                if (index !== -1) {
+                                                                                                                                                    playerControlledRegions[ownerKey].splice(index, 1);
+                                                                                                                                                    console.log(`❌ Region '${selectedRegion}' odebrán hráči ${participant2}`);
+                                                                                                                                                }
+
+
+
+
+
+
+                                                                                                                                                //PŘIDÁNÍ ÚZEMÍ ÚTOČNÍKOVI
+
+                                                                                                                                                let playerKey = `Player${participant1}regions`;
+
+
+
+                                                                                                                                                // ✅ Ověříme, že region ještě není přidán
+                                                                                                                                                if (!playerControlledRegions[playerKey].includes(selectedRegion)) {
+                                                                                                                                                    playerControlledRegions[playerKey].push(selectedRegion);
+                                                                                                                                                    regionValues[selectedRegion] = 400;
+                                                                                                                                                    console.log(`✅ Hráč ${participant1} získal region: ${selectedRegion}`);
+                                                                                                                                                } else {
+                                                                                                                                                    console.log(`⚠️ Hráč ${participant1} již kontroluje region ${selectedRegion}, nepřidáno.`);
+                                                                                                                                                }
+
+
+
+                                                                                                                                                await delay(3000);
+
+                                                                                                                                                //Zabarvení políček
+                                                                                                                                                colorizeTiles();
+                                                                                                                                                updateScores();
+                                                                                                                                                updateScoreUI();
+
+
+                                                                                                                                                //Odstranění špendlíků
+                                                                                                                                                document.querySelectorAll(".pin-marker").forEach(pin => pin.remove());
+
+                                                                                                                                                await delay(1000);
+
+                                                                                                                            }
+
+
+                                                                                                                            //POKUD V NUMERICKÉ ZVÍTĚZÍ OBRÁNCE
+                                                                                                                            else {
+
+                                                                                                                                await delay(1000);
+
+                                                                                                                                let ownerKey = `Player${participant2}`;
+
+                                                                                                                                defenseBonuses[ownerKey] += 100;
+                                                                                                                                updateScores();
+                                                                                                                                updateScoreUI();
+
+                                                                                                                                //Odstranění špendlíků
+                                                                                                                                document.querySelectorAll(".pin-marker").forEach(pin => pin.remove());
+                                                                                                                                await delay(1000);
+
+                                                                                                                            }
+                                                                                                            
+                                                                               
+
+                                                                                                                    }
+
+
+                                                                                                                    //POKUD ZVÍTĚZÍ JEN JEDEN HRÁČ
+                                                                                                                    else if(successors.length == 1) {
+
+                                                                                                                        //POKUD ZVÍTĚZÍ ÚTOČNÍK
+                                                                                                                        if(successors.includes(participant1)){
+
+                                                                                                                                //ODEBRÁNÍ ÚZEMÍ OBRÁNCI
+
+                                                                                                                                let ownerKey = `Player${participant2}regions`;
+
+                                                                                                                                // 2. Najdeme index regionu
+                                                                                                                                let index = playerControlledRegions[ownerKey].indexOf(selectedRegion);
+
+                                                                                                                                // 3. Pokud region existuje, odstraníme ho
+                                                                                                                                if (index !== -1) {
+                                                                                                                                    playerControlledRegions[ownerKey].splice(index, 1);
+                                                                                                                                    console.log(`❌ Region '${selectedRegion}' odebrán hráči ${participant2}`);
+                                                                                                                                }
+
+
+
+
+
+
+                                                                                                                                //PŘIDÁNÍ ÚZEMÍ ÚTOČNÍKOVI
+
+                                                                                                                                let playerKey = `Player${participant1}regions`;
+
+
+
+                                                                                                                                // ✅ Ověříme, že region ještě není přidán
+                                                                                                                                if (!playerControlledRegions[playerKey].includes(selectedRegion)) {
+                                                                                                                                    playerControlledRegions[playerKey].push(selectedRegion);
+                                                                                                                                    regionValues[selectedRegion] = 400;
+                                                                                                                                    console.log(`✅ Hráč ${participant1} získal region: ${selectedRegion}`);
+                                                                                                                                } else {
+                                                                                                                                    console.log(`⚠️ Hráč ${participant1} již kontroluje region ${selectedRegion}, nepřidáno.`);
+                                                                                                                                }
+
+
+
+                                                                                                                                await delay(1000);
+
+                                                                                                                                //Zabarvení políček
+                                                                                                                                colorizeTiles();
+                                                                                                                                updateScores();
+                                                                                                                                updateScoreUI();
+
+
+                                                                                                                                //Odstranění špendlíků
+                                                                                                                                document.querySelectorAll(".pin-marker").forEach(pin => pin.remove());
+
+                                                                                                                                await delay(1000);
+                                                                                                                        }
+
+
+
+                                                                                                                        //POKUD ZVÍTĚZÍ OBRÁNCE
+                                                                                                                        else if(successors.includes(participant2)){
+
+                                                                                                                                await delay(1000);
+
+                                                                                                                                let ownerKey = `Player${participant2}`;
+
+                                                                                                                                defenseBonuses[ownerKey] += 100;
+                                                                                                                                updateScores();
+                                                                                                                                updateScoreUI();
+
+                                                                                                                                //Odstranění špendlíků
+                                                                                                                                document.querySelectorAll(".pin-marker").forEach(pin => pin.remove());
+                                                                                                                                await delay(1000);
+
+
+                                                                                                                        }
+
+
+                                                                                                                    }
+
+
+
+                                                                                                                    //POKUD NEUHÁDNE NIKDO
+                                                                                                                    else {
+
+                                                                                                                            await delay(1000);
+
+                                                                                                                            //Odstranění špendlíků
+                                                                                                                            document.querySelectorAll(".pin-marker").forEach(pin => pin.remove());
+                                                                                                                            await delay(1000);
+
+
+                                                                                                                    }
+
+
+
+
+                                                                                                                    console.log("🔵 3. fáze - Přiřazení oblastí hráčům.");
+
+
+
+
+                                                                                                                        
+                                                                                                            //KONEC SKRIPTU PRO BĚŽNÉ ÚZEMÍ
+                                                                                                            }
+                                                                                            //KONEC SKRIPTU, JESTLI MÁ HRÁČ JEŠTĚ ŽIVOTY
+                                                                                            }
+                                                                                //KONEC CYKLU PRO JEDNOTLIVÉ BATTLY
+                                                                                }
+                                                                            //KONEC CYKLU PRO KOLA    
+                                                                            }
+
+                            //KONEC HRY
+                            endOfGame();
+
+
+
+                            
+                }
+
+                */
+
+              
+                
+
+
+
+
+
+
+
+
+
+
+
+                       
+
+
+
+
+
+
+
+
+
+        </script>
+
+
+	</body>
+
+
+</html>
