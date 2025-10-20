@@ -345,7 +345,9 @@ function applySnapshotWhenReady(myNumber, snapshot, attempt = 0) {
       if (typeof updateScoreUI     === 'function' && snapshot.scores) updateScoreUI(snapshot.scores);
       if (typeof colorizeTiles     === 'function') colorizeTiles();
       if (typeof displayRegionValues === 'function') displayRegionValues();
-      if (typeof basesSettle === 'function') basesSettle();
+      if (typeof settlePlayer1 === 'function') settlePlayer1();
+      if (typeof settlePlayer2 === 'function') settlePlayer2();
+      if (typeof settlePlayer3 === 'function') settlePlayer3();
 
       const lobby = document.getElementById("lobby_container");
       if (lobby) lobby.style.display = "none";
