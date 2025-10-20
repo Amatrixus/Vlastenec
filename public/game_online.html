@@ -188,85 +188,91 @@ function applySnapshotWhenReady(myNumber, snapshot, attempt = 0) {
     return;
   }
 
-  // --- HRA UŽ BĚŽÍ ---
-  // a) dosadit bases/regions/values
-  if (snapshot.bases) {
-    player1CurrentBase = snapshot.bases[1] || "";
-    player2CurrentBase = snapshot.bases[2] || "";
-    player3CurrentBase = snapshot.bases[3] || "";
-  }
-  if (snapshot.regions) {
-    playerControlledRegions = {
-      Player1regions: snapshot.regions.Player1regions || [],
-      Player2regions: snapshot.regions.Player2regions || [],
-      Player3regions: snapshot.regions.Player3regions || []
-    };
-  }
-  if (snapshot.regionValues) {
-    window.regionValues = { ...snapshot.regionValues };
-  }
+ 
+  
+        // --- HRA UŽ BĚŽÍ ---
+        if (snapshot.bases) {
+        player1CurrentBase = snapshot.bases[1] || "";
+        player2CurrentBase = snapshot.bases[2] || "";
+        player3CurrentBase = snapshot.bases[3] || "";
+        }
+        if (snapshot.regions) {
+        playerControlledRegions = {
+            Player1regions: snapshot.regions.Player1regions || [],
+            Player2regions: snapshot.regions.Player2regions || [],
+            Player3regions: snapshot.regions.Player3regions || []
+        };
+        }
+        if (snapshot.regionValues) {
+        window.regionValues = { ...snapshot.regionValues };
+        }
 
-  // b) **fallback pro 3. hráče, který nestihl startGame** → ukaž overlay + lokální odpočet, pak basesSettle()
-  if (!gameStarted) {
-    DBG('FALLBACK START OVERLAY (server says started, local not started)');
-    const lobby    = document.getElementById("lobby_container");
-    const overlay  = document.getElementById("start_overlay");
-    const countdown= document.getElementById("countdown_number");
+        // ⬇️ ROZHODNUTÍ: overlay/animace jen pokud tento klient ještě nikdy neviděl start
+        const seenStart = sessionStorage.getItem('vl_start_seen') === '1';
+        const animDone  = sessionStorage.getItem('vl_anim_done') === '1';
 
-    DBG('DOM displays BEFORE', { lobby: lobby?.style.display, overlay: overlay?.style.display });
-    if (lobby)   lobby.style.display = "none";
-    if (overlay) overlay.style.display = "flex";
-    DBG('DOM displays AFTER', { lobby: lobby?.style.display, overlay: overlay?.style.display });
+        if (!gameStarted) {
+        if (!seenStart && !animDone) {
+            // (A) late join → ukaž lokální overlay + 5s odpočet, pak basesSettle()
+            const lobby     = document.getElementById("lobby_container");
+            const overlay   = document.getElementById("start_overlay");
+            const countdown = document.getElementById("countdown_number");
 
-    let seconds = 5;
-    if (countdown) countdown.textContent = seconds;
-    const interval = setInterval(() => {
-      seconds--;
-      if (seconds > 0) {
-        if (countdown) countdown.textContent = seconds;
-      } else {
-        if (countdown) countdown.textContent = "Začínáme!";
-        clearInterval(interval);
-        setTimeout(() => {
-          DBG('FALLBACK overlay hide + basesSettle');
+            if (lobby) lobby.style.display = "none";
+            if (overlay) overlay.style.display = "flex";
 
-          if (overlay) overlay.style.display = "none";
-          // spustit animaci základen stejně jako po startGame
-          basesSettle(); // odemknutí malování a vykreslení máš v jejím 8s bloku
-        }, 1000);
-      }
-    }, 1000);
+            sessionStorage.setItem('vl_start_seen', '1'); // od teď víme, že overlay už tenhle klient viděl
 
-    gameStarted = true; // ať pozdě dojetý startGame už neudělá druhý start
-    dumpFlags('after FALLBACK start overlay');
+            let seconds = 5;
+            if (countdown) countdown.textContent = seconds;
+            const interval = setInterval(() => {
+            seconds--;
+            if (seconds > 0) {
+                if (countdown) countdown.textContent = seconds;
+            } else {
+                if (countdown) countdown.textContent = "Začínáme!";
+                clearInterval(interval);
+                setTimeout(() => {
+                if (overlay) overlay.style.display = "none";
+                basesSettle(); // v jejím 8s bloku se nastaví vl_anim_done + odemkne se paint
+                }, 1000);
+            }
+            }, 1000);
 
-    return;
-  }
+            gameStarted = true;   // ať případný pozdější startGame nic nedubluje
+            return;
+        } else {
+            // (B) refresh/reconnect → žádný overlay, žádná animace; rovnou vykreslit
+            allowPaint = true;    // animace už na tomhle klientu proběhla dřív
+            if (typeof updateScores === 'function') updateScores();
+            if (typeof updateScoreUI === 'function' && snapshot.scores) updateScoreUI(snapshot.scores);
+            if (typeof colorizeTiles === 'function') colorizeTiles();
+            if (typeof displayRegionValues === 'function') displayRegionValues();
 
-  // c) Hra běží a tento klient už start viděl → jen vykresli (po animaci už bude allowPaint = true)
-  DBG('RUNNING: just render (no overlay)');
-  if (typeof updateScores === 'function') updateScores();
-  if (typeof updateScoreUI === 'function' && snapshot.scores) updateScoreUI(snapshot.scores);
-  if (typeof colorizeTiles === 'function') colorizeTiles();
-  if (typeof displayRegionValues === 'function') displayRegionValues();
-  if (typeof renderBaseInfo === 'function') renderBaseInfo(); // pokud v projektu máš
+            const lobby   = document.getElementById("lobby_container");
+            const overlay = document.getElementById("start_overlay");
+            if (lobby)   lobby.style.display   = "none";
+            if (overlay) overlay.style.display = "none";
 
-  DBG('hide lobby/overlay at end', { beforeLobby: lobby?.style.display, beforeOv: overlay?.style.display });
+            gameStarted = true;
+            __pendingSnapshot = null;
+            return;
+        }
+        }
 
+        // (C) Hra běží a tenhle klient už start viděl → jen znovu vykresli, bez overlaye
+        if (typeof updateScores === 'function') updateScores();
+        if (typeof updateScoreUI === 'function' && snapshot.scores) updateScoreUI(snapshot.scores);
+        if (typeof colorizeTiles === 'function') colorizeTiles();
+        if (typeof displayRegionValues === 'function') displayRegionValues();
 
+        const lobby   = document.getElementById("lobby_container");
+        const overlay = document.getElementById("start_overlay");
+        if (lobby)   lobby.style.display   = "none";
+        if (overlay) overlay.style.display = "none";
 
-  // (renderBaseInfo NEvolej — ikony/jména základen nech na basesSettle / pasivních funkcích)
-  const lobby = document.getElementById("lobby_container");
-  const overlay = document.getElementById("start_overlay");
+        __pendingSnapshot = null;
 
-
-
-  DBG('hidden', { afterLobby: lobby?.style.display, afterOv: overlay?.style.display });
-
-  if (lobby)   lobby.style.display   = "none";
-  if (overlay) overlay.style.display = "none";
-
-  __pendingSnapshot = null;
 }
 
 
@@ -428,6 +434,8 @@ window.addEventListener('gameStartedAfterAnimation', () => {
 
         if (gameStarted) { DBG('startGame IGNORED (gameStarted=true)'); return; }
         gameStarted = true;
+        sessionStorage.setItem('vl_start_seen', '1');  // tento klient už viděl start overlay
+
         dumpFlags('after startGame set gameStarted=true');
 
 
@@ -5309,6 +5317,7 @@ document.querySelectorAll(".region").forEach(region => {
 
                    setTimeout(() => {
                 // Animační „rozdání základen“ právě doběhlo
+                        sessionStorage.setItem('vl_anim_done', '1');   // tento klient už dokončil animační ceremonii
 
                         DBG('basesSettle END → unlock paint');
                         allowPaint = true;                                  // až teď dovol barvit
