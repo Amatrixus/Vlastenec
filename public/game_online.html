@@ -12,6 +12,20 @@
 
   <script>
 
+    // --- DEBUG ---
+        let serverSaysStarted = false; // ať je jisté, že existuje globálně
+        function DBG(...args){
+        const t = new Date().toISOString().slice(11,19);
+        const p = (typeof myPlayerNumber === 'number' && myPlayerNumber) ? myPlayerNumber : '?';
+        console.log(`[DBG ${t} P${p}]`, ...args);
+        }
+        function dumpFlags(where){
+        DBG(where, {
+            gameStarted, serverSaysStarted, hydratedFromServer,
+            allowPaint, room: currentRoomId, name: myName,
+            seat: myPlayerNumber, token: sessionStorage.getItem('vl_token')
+        });
+        }
 
 
 
@@ -109,11 +123,14 @@ function isBoardReady() {
 
 
 function applySnapshotWhenReady(myNumber, snapshot, attempt = 0) {
+
+  DBG('applySnapshotWhenReady enter', { attempt });
   const MAX_ATTEMPTS = 40; // ~4s při 100ms
   const RETRY_MS = 100;
 
   // Ještě není mapa → odlož
   if (!isBoardReady()) {
+    DBG('board NOT ready → retry', { attempt });
     if (attempt === 0) __pendingSnapshot = { myNumber, snapshot };
     if (attempt < MAX_ATTEMPTS) {
       return setTimeout(() => applySnapshotWhenReady(myNumber, snapshot, attempt + 1), RETRY_MS);
@@ -124,9 +141,11 @@ function applySnapshotWhenReady(myNumber, snapshot, attempt = 0) {
   // identita + základní flagy
   window.myPlayerNumber = myNumber;
   myPlayerNumber = myNumber;
+  DBG('identity set', { myNumber, name: myName });
 
   // Stav ze serveru (NEpřepisuj tím gameStarted)
   serverSaysStarted = !!snapshot.hasStarted;
+  DBG('serverSaysStarted=', serverSaysStarted);
   hydratedFromServer = true;
 
   // perzistence pro resume
@@ -153,11 +172,22 @@ function applySnapshotWhenReady(myNumber, snapshot, attempt = 0) {
 
   // 2) větev „hra ještě nezačala“ → ukaž lobby, nic neprozrazuj, ulož snapshot a skonči
   if (!serverSaysStarted) {
+    DBG('PRE-GAME snapshot → keep lobby, hide overlay');
+    const lobby = document.getElementById("lobby_container");
+    const overlay = document.getElementById("start_overlay");
+    DBG('DOM displays BEFORE', { lobby: lobby?.style.display, overlay: overlay?.style.display });
+
+
     const lobby   = document.getElementById("lobby_container");
     const overlay = document.getElementById("start_overlay");
     if (lobby)   lobby.style.display   = "";
     if (overlay) overlay.style.display = "none";
     __pendingSnapshot = { myNumber, snapshot };
+    
+    
+    DBG('DOM displays AFTER', { lobby: lobby?.style.display, overlay: overlay?.style.display });
+    __pendingSnapshot = { myNumber, snapshot };
+    DBG('stored pending snapshot & return');
     return;
   }
 
@@ -181,11 +211,15 @@ function applySnapshotWhenReady(myNumber, snapshot, attempt = 0) {
 
   // b) **fallback pro 3. hráče, který nestihl startGame** → ukaž overlay + lokální odpočet, pak basesSettle()
   if (!gameStarted) {
+    DBG('FALLBACK START OVERLAY (server says started, local not started)');
     const lobby    = document.getElementById("lobby_container");
     const overlay  = document.getElementById("start_overlay");
     const countdown= document.getElementById("countdown_number");
+
+    DBG('DOM displays BEFORE', { lobby: lobby?.style.display, overlay: overlay?.style.display });
     if (lobby)   lobby.style.display = "none";
     if (overlay) overlay.style.display = "flex";
+    DBG('DOM displays AFTER', { lobby: lobby?.style.display, overlay: overlay?.style.display });
 
     let seconds = 5;
     if (countdown) countdown.textContent = seconds;
@@ -197,6 +231,8 @@ function applySnapshotWhenReady(myNumber, snapshot, attempt = 0) {
         if (countdown) countdown.textContent = "Začínáme!";
         clearInterval(interval);
         setTimeout(() => {
+          DBG('FALLBACK overlay hide + basesSettle');
+
           if (overlay) overlay.style.display = "none";
           // spustit animaci základen stejně jako po startGame
           basesSettle(); // odemknutí malování a vykreslení máš v jejím 8s bloku
@@ -205,20 +241,31 @@ function applySnapshotWhenReady(myNumber, snapshot, attempt = 0) {
     }, 1000);
 
     gameStarted = true; // ať pozdě dojetý startGame už neudělá druhý start
+    dumpFlags('after FALLBACK start overlay');
+
     return;
   }
 
   // c) Hra běží a tento klient už start viděl → jen vykresli (po animaci už bude allowPaint = true)
+  DBG('RUNNING: just render (no overlay)');
   if (typeof updateScores === 'function') updateScores();
   if (typeof updateScoreUI === 'function' && snapshot.scores) updateScoreUI(snapshot.scores);
   if (typeof colorizeTiles === 'function') colorizeTiles();
   if (typeof displayRegionValues === 'function') displayRegionValues();
   if (typeof renderBaseInfo === 'function') renderBaseInfo(); // pokud v projektu máš
 
+  DBG('hide lobby/overlay at end', { beforeLobby: lobby?.style.display, beforeOv: overlay?.style.display });
+
+
 
   // (renderBaseInfo NEvolej — ikony/jména základen nech na basesSettle / pasivních funkcích)
   const lobby = document.getElementById("lobby_container");
   const overlay = document.getElementById("start_overlay");
+
+
+
+  DBG('hidden', { afterLobby: lobby?.style.display, afterOv: overlay?.style.display });
+
   if (lobby)   lobby.style.display   = "none";
   if (overlay) overlay.style.display = "none";
 
@@ -235,14 +282,19 @@ function applySnapshotWhenReady(myNumber, snapshot, attempt = 0) {
 
 // === Socket: autoritativní stav od serveru ===
 socket.on("stateSync", ({ myNumber, snapshot }) => {
+  DBG('stateSync RX', { myNumber, hasStarted: snapshot?.hasStarted, roomId: snapshot?.roomId });
   applySnapshotWhenReady(myNumber, snapshot);
 });
 
 // === Jakmile se hra OPRAVDU spustí (po animaci rozdělení) → pokud byl odložený snapshot, aplikuj ho teď ===
 // Připoj to do své existující logiky po animaci startu:
 window.addEventListener('gameStartedAfterAnimation', () => {
+      DBG('event gameStartedAfterAnimation');
+
   allowPaint = true; // pro jistotu i tady
   if (__pendingSnapshot && __pendingSnapshot.snapshot) {
+        DBG('apply pending snapshot AFTER animation');
+
     __pendingSnapshot.snapshot.hasStarted = true;
     applySnapshotWhenReady(__pendingSnapshot.myNumber, __pendingSnapshot.snapshot);
   }
@@ -274,6 +326,14 @@ window.addEventListener('gameStartedAfterAnimation', () => {
     // - friends → joinRoom/createRoom (NEposílat submitName)
     // - random  → jen submitName (NEposílat create/join)
     socket.on('connect', () => {
+        DBG('socket connect');
+        const savedRoom  = sessionStorage.getItem('vl_room');
+        const savedToken = sessionStorage.getItem('vl_token');
+        const savedName  = sessionStorage.getItem('vl_name');
+        DBG('resume check', { savedRoom, hasToken: !!savedToken, savedName });
+
+
+
         const savedRoom  = sessionStorage.getItem('vl_room');
         const savedToken = sessionStorage.getItem('vl_token');
         const savedName  = sessionStorage.getItem('vl_name');
@@ -304,6 +364,10 @@ window.addEventListener('gameStartedAfterAnimation', () => {
     });
 
 
+    socket.on("connect_error", (e) => DBG("connect_error:", e?.message || e));
+
+
+
 
     // Server potvrdí vytvoření místnosti (host ve friends)
     socket.on('roomReady', ({ room }) => {
@@ -316,6 +380,7 @@ window.addEventListener('gameStartedAfterAnimation', () => {
 
     // --- Tvé stávající listenery ---
     socket.on("assignPlayerNumber", ({ number, allNames, scores, roomId }) => {
+      DBG('assignPlayerNumber', { number, roomId, allNames, scores });
       myPlayerNumber = number;
       currentRoomId = roomId;
       playerControlledByUser[number] = true;
@@ -338,6 +403,9 @@ window.addEventListener('gameStartedAfterAnimation', () => {
       hydratedFromServer = true;
       
       ensureToken();
+
+      dumpFlags('after assignPlayerNumber');
+
     });
 
     socket.on("updateScores", ({ scores }) => {
@@ -354,10 +422,19 @@ window.addEventListener('gameStartedAfterAnimation', () => {
 
     socket.on("startGame", ({ bases, regions, regionValues }) => {
        
+        DBG('startGame RX', { gameStarted, bases, regionsCount: {
+            p1: regions?.Player1regions?.length||0,
+            p2: regions?.Player2regions?.length||0,
+            p3: regions?.Player3regions?.length||0
+        }});
         
          if (gameStarted) return;
 
+
+        if (gameStarted) { DBG('startGame IGNORED (gameStarted=true)'); return; }
         gameStarted = true;
+        dumpFlags('after startGame set gameStarted=true');
+
 
         console.log("🎮 Hra spuštěna");
 
@@ -365,8 +442,13 @@ window.addEventListener('gameStartedAfterAnimation', () => {
         const overlay = document.getElementById("start_overlay");
         const countdown = document.getElementById("countdown_number");
 
+        DBG('show overlay', { beforeLobby: lobby?.style.display, beforeOv: overlay?.style.display });
+
         if (lobby) lobby.style.display = "none";
         if (overlay) overlay.style.display = "flex";
+        DBG('overlay shown', { afterLobby: lobby?.style.display, afterOv: overlay?.style.display });
+
+
 
         // Ulož základny
         player1CurrentBase = bases[1];
@@ -392,6 +474,7 @@ window.addEventListener('gameStartedAfterAnimation', () => {
             if (countdown) countdown.textContent = "Začínáme!";
             clearInterval(interval);
                 setTimeout(() => {
+                    DBG('overlay hide + basesSettle');
                     if (overlay) overlay.style.display = "none";
                     // ⬇️ po odpočtu TEPRVE STARTUJ animaci základny (thud → settlePlayer1/2/3)
                     basesSettle(); // spustí 2s, 4s, 6s postupně
@@ -5195,6 +5278,7 @@ document.querySelectorAll(".region").forEach(region => {
                 
                 //PHASE 1 - BASE SELECTION
                 function basesSettle() {
+                  DBG('basesSettle START');
 
 
                   var gamePhase = document.getElementById("gamephase");
@@ -5217,36 +5301,21 @@ document.querySelectorAll(".region").forEach(region => {
                   var thudSound = document.getElementById('thud');
                         
                     
-                    setTimeout(() => {
-                        thudSound.play();
-                        settlePlayer1();
-                        colorizeBaseRegion(1);
+                   
+                  
 
-                       
-                    }, 2000);
-                    setTimeout(() => {
-                        thudSound.pause();
-                        thudSound.currentTime = 0; // Reset audio to beginning
-                        thudSound.play();
-                        settlePlayer2();
-                        colorizeBaseRegion(2);
+                    setTimeout(() => { DBG('thud #1 + settlePlayer1'); thudSound.play?.(); settlePlayer1(); colorizeBaseRegion(1); }, 2000);
+                    setTimeout(() => { DBG('thud #2 + settlePlayer2'); thudSound.play?.(); settlePlayer2(); colorizeBaseRegion(2); }, 4000);
+                    setTimeout(() => { DBG('thud #3 + settlePlayer3'); thudSound.play?.(); settlePlayer3(); colorizeBaseRegion(3); }, 6000);
+                   
 
-                        
-                    }, 4000); // Delay of 2000 milliseconds (2 seconds)
 
-                    setTimeout(() => {
-                        thudSound.pause();
-                        thudSound.currentTime = 0; // Reset audio to beginning
-                        thudSound.play();
-                        settlePlayer3();
-                        colorizeBaseRegion(3);
-
-                        
-                    }, 6000); // Delay of 4000 milliseconds (2 seconds after the previous couplet)
 
 
                    setTimeout(() => {
                 // Animační „rozdání základen“ právě doběhlo
+
+                        DBG('basesSettle END → unlock paint');
                         allowPaint = true;                                  // až teď dovol barvit
                         window.dispatchEvent(new Event('gameStartedAfterAnimation')); // pro delayed snapshot
 
