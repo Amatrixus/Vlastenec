@@ -92,6 +92,7 @@ function renderBaseInfo(){
 
 // ====== Re-hydratace stavu po připojení / refreshi ======
 let __pendingSnapshot = null;
+let serverSaysStarted = false;
 
 // Poznáme, že je mapa připravená pro barvení (uprav si selektor dle projektu)
 function isBoardReady() {
@@ -118,7 +119,14 @@ function applySnapshotWhenReady(myNumber, snapshot, attempt = 0) {
   myPlayerNumber = myNumber;
 
   // Respektuj skutečný stav hry na serveru
-  gameStarted = !!snapshot.hasStarted;
+  
+  // přidej si nahoru vedle ostatních:
+  
+
+    // … a tady v applySnapshotWhenReady:
+    serverSaysStarted = !!snapshot.hasStarted;
+
+
   hydratedFromServer = true;
 
   // perzistence pro resume
@@ -131,25 +139,28 @@ function applySnapshotWhenReady(myNumber, snapshot, attempt = 0) {
   }
 
   // --- jména hráčů (scoreboard & lobby) ---
-  if (snapshot.allNames) {
+    if (snapshot.allNames) {
     player1 = snapshot.allNames[1] || player1;
     player2 = snapshot.allNames[2] || player2;
     player3 = snapshot.allNames[3] || player3;
     if (typeof updateScoreNames === 'function') updateScoreNames();
-    if (!gameStarted && typeof updateLobbyList === 'function') {
-      updateLobbyList(snapshot.allNames);
+    // 1) jména do lobby jen dokud hra na serveru ještě nezačala
+    if (!serverSaysStarted && typeof updateLobbyList === 'function') {
+        updateLobbyList(snapshot.allNames);
     }
-  }
+    }
 
-  // Pokud hra JEŠTĚ NEZAČALA → nic neprozrazovat (žádné base/regions/barvení)
-  if (!gameStarted) {
+    // 2) větev „hra ještě nezačala“
+    serverSaysStarted = !!snapshot.hasStarted;
+    if (!serverSaysStarted) {
     const lobby = document.getElementById("lobby_container");
     const overlay = document.getElementById("start_overlay");
     if (lobby)   lobby.style.display   = "";       // lobby zůstává
-    if (overlay) overlay.style.display = "none";   // overlay klidně pryč
+    if (overlay) overlay.style.display = "none";   // overlay pryč
     __pendingSnapshot = { myNumber, snapshot };    // uschovat pro start
     return;
-  }
+    }
+        
 
   // --- !! HRA UŽ BĚŽÍ → aplikuj vše autoritativně ---
   // základny (id políček základen pro hráče 1..3)
@@ -339,7 +350,6 @@ window.addEventListener('gameStartedAfterAnimation', () => {
        // ⚠️ Nepřepisuj objekt sám sebou, jen zkopíruj hodnoty
         Object.keys(regionValues).forEach((k) => { window.regionValues[k] = regionValues[k]; });
 
-        basesSettle();
 
 
         // Krátký odpočet jen v prvním startu
