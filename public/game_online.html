@@ -94,63 +94,53 @@
 
 
 
-         function basesSettle() {
+        
 
+        // === START ANIMACE ZÁKLADEN (po odpočtu) ===
+        function basesSettle() {
+        DBG('basesSettle START');
 
-                  var gamePhase = document.getElementById("gamephase");
-                  gamePhase.innerHTML = "Výběr základny";
-                  
-                  var gameRounds = document.getElementById("gamerounds");
-                  gameRounds.style.display = "none";
+        // UI copy — jen informativní (ponech/odstraň dle potřeby)
+        const gamePhase = document.getElementById("gamephase");
+        const gameRounds = document.getElementById("gamerounds");
+        const playerSticks = document.getElementById("playersticks");
+        const gameProgress = document.getElementById("gameprogress");
+        if (gamePhase)   { gamePhase.innerHTML = "Výběr základny"; gamePhase.style.height = "100%"; }
+        if (gameRounds)  gameRounds.style.display  = "none";
+        if (playerSticks) playerSticks.style.display = "none";
+        if (gameProgress) gameProgress.style.height  = "7%";
 
-                  var playerSticks = document.getElementById("playersticks");
-                  playerSticks.style.display = "none";
+        // zvuk "thud"
+        const thud = document.getElementById('thud');
+        const thudOnce = () => {
+            try { thud.pause(); thud.currentTime = 0; thud.play(); } catch {}
+        };
 
-                  var gameProgress = document.getElementById("gameprogress");
-                  gameProgress.style.height = "7%";
+        // jeden krok animace
+        const dropFor = (n) => {
+            thudOnce();
+            DBG(`thud #${n} + settlePlayer${n}`);
+            if (typeof window[`settlePlayer${n}`] === 'function') window[`settlePlayer${n}`]();
+            if (typeof colorizeBaseRegion === 'function') colorizeBaseRegion(n);
+        };
 
-                  var gamePhase = document.getElementById("gamephase");
-                  gamePhase.style.height = "100%";
-                
+        // postupné „dopadnutí“ základen
+        setTimeout(() => dropFor(1), 1000);
+        setTimeout(() => dropFor(2), 2000);
+        setTimeout(() => dropFor(3), 3000);
 
+        // konec animace → odemkni barvení, vyrenderuj hodnoty a pošli signál
+        setTimeout(() => {
+            allowPaint = true;
+            if (typeof colorizeTiles       === 'function') colorizeTiles();
+            if (typeof displayRegionValues === 'function') displayRegionValues();
+            if (typeof updateScores        === 'function') updateScores();
+            sessionStorage.setItem(animDoneKey(currentRoomId), '1');
+            DBG('basesSettle END → unlock paint');
+            window.dispatchEvent(new Event('gameStartedAfterAnimation'));
+        }, 4000);
+        }
 
-                  var thudSound = document.getElementById('thud');
-                        
-                    
-                    setTimeout(() => {
-                        thudSound.play();
-                        settlePlayer1();
-                        colorizeBaseRegion(1);
-
-                       
-                    }, 2000);
-                    setTimeout(() => {
-                        thudSound.pause();
-                        thudSound.currentTime = 0; // Reset audio to beginning
-                        thudSound.play();
-                        settlePlayer2();
-                        colorizeBaseRegion(2);
-
-                        
-                    }, 4000); // Delay of 2000 milliseconds (2 seconds)
-
-                    setTimeout(() => {
-                        thudSound.pause();
-                        thudSound.currentTime = 0; // Reset audio to beginning
-                        thudSound.play();
-                        settlePlayer3();
-                        colorizeBaseRegion(3);
-
-                        
-                    }, 6000); // Delay of 4000 milliseconds (2 seconds after the previous couplet)
-
-
-                    setTimeout(() => {
-
-                      
-
-                    }, 8000);
-                    
 
 
 
