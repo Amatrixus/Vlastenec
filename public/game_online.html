@@ -30,6 +30,20 @@
 
 
 
+        let uiStartHandled = false; // jediný UI guard
+
+        function startSeenKey(roomId = currentRoomId){ return `vl_start_seen:${roomId||'unknown'}`; }
+        function animDoneKey(roomId = currentRoomId){ return `vl_anim_done:${roomId||'unknown'}`; }
+
+        function clearUiFlagsForRoom(roomId){
+        sessionStorage.removeItem(startSeenKey(roomId));
+        sessionStorage.removeItem(animDoneKey(roomId));
+        }
+
+
+
+
+
 
 
 
@@ -144,6 +158,16 @@ function applySnapshotWhenReady(myNumber, snapshot, attempt = 0) {
 
   // Stav ze serveru (NEpřepisuj tím gameStarted)
   serverSaysStarted = !!snapshot.hasStarted;
+
+  // PRE-GAME → nový start v této místnosti = smaž případné staré příznaky
+if (!serverSaysStarted) {
+  clearUiFlagsForRoom(snapshot.roomId || currentRoomId);
+  uiStartHandled = false;   // dovol skutečný overlay ze startGame
+}
+
+
+
+
   DBG('serverSaysStarted=', serverSaysStarted);
   hydratedFromServer = true;
 
@@ -208,8 +232,8 @@ function applySnapshotWhenReady(myNumber, snapshot, attempt = 0) {
         }
 
         // ⬇️ ROZHODNUTÍ: overlay/animace jen pokud tento klient ještě nikdy neviděl start
-        const seenStart = sessionStorage.getItem('vl_start_seen') === '1';
-        const animDone  = sessionStorage.getItem('vl_anim_done') === '1';
+        const seenStart = sessionStorage.getItem(startSeenKey(snapshot.roomId || currentRoomId)) === '1';
+        const animDone  = sessionStorage.getItem(animDoneKey(snapshot.roomId || currentRoomId))  === '1';
 
         if (!gameStarted) {
         if (!seenStart && !animDone) {
@@ -217,6 +241,9 @@ function applySnapshotWhenReady(myNumber, snapshot, attempt = 0) {
             const lobby     = document.getElementById("lobby_container");
             const overlay   = document.getElementById("start_overlay");
             const countdown = document.getElementById("countdown_number");
+
+            DBG('FALLBACK overlay', { seenStart, animDone, room: snapshot.roomId || currentRoomId });
+
 
             if (lobby) lobby.style.display = "none";
             if (overlay) overlay.style.display = "flex";
@@ -239,7 +266,9 @@ function applySnapshotWhenReady(myNumber, snapshot, attempt = 0) {
             }
             }, 1000);
 
-            gameStarted = true;   // ať případný pozdější startGame nic nedubluje
+            uiStartHandled = true;
+            gameStarted    = true;
+            sessionStorage.setItem(startSeenKey(snapshot.roomId || currentRoomId), '1');          
             return;
         } else {
             // (B) refresh/reconnect → žádný overlay, žádná animace; rovnou vykreslit
@@ -254,7 +283,8 @@ function applySnapshotWhenReady(myNumber, snapshot, attempt = 0) {
             if (lobby)   lobby.style.display   = "none";
             if (overlay) overlay.style.display = "none";
 
-            gameStarted = true;
+            uiStartHandled = true;
+            gameStarted    = true;
             __pendingSnapshot = null;
             return;
         }
@@ -386,6 +416,15 @@ window.addEventListener('gameStartedAfterAnimation', () => {
       currentRoomId = roomId;
       playerControlledByUser[number] = true;
 
+
+        // ⚠️ nový room → smazat případné staré UI příznaky pro tento room
+        try { clearUiFlagsForRoom(roomId); } catch {}
+        uiStartHandled = false;     // nový room = nový UI start
+        gameStarted    = false;
+        allowPaint     = false;
+
+
+
          sessionStorage.setItem('vl_room', currentRoomId);
         sessionStorage.setItem('vl_name', myName);
         sessionStorage.setItem('vl_seat', String(myPlayerNumber));
@@ -429,12 +468,16 @@ window.addEventListener('gameStartedAfterAnimation', () => {
             p3: regions?.Player3regions?.length||0
         }});
         
-         if (gameStarted) return;
+        
+        // jediný guard: už jsme UI start odbavili?
+        if (uiStartHandled) { DBG('startGame IGNORED (uiStartHandled=true)'); return; }
+        uiStartHandled = true;
+        gameStarted    = true;
+        sessionStorage.setItem(startSeenKey(currentRoomId), '1');  // overlay viděn v tomto roomu
 
 
-        if (gameStarted) { DBG('startGame IGNORED (gameStarted=true)'); return; }
-        gameStarted = true;
-        sessionStorage.setItem('vl_start_seen', '1');  // tento klient už viděl start overlay
+        DBG('startGame will show overlay', { uiStartHandled, gameStarted, key:startSeenKey(currentRoomId) });
+
 
         dumpFlags('after startGame set gameStarted=true');
 
@@ -5317,7 +5360,7 @@ document.querySelectorAll(".region").forEach(region => {
 
                    setTimeout(() => {
                 // Animační „rozdání základen“ právě doběhlo
-                        sessionStorage.setItem('vl_anim_done', '1');   // tento klient už dokončil animační ceremonii
+                sessionStorage.setItem(animDoneKey(currentRoomId), '1');
 
                         DBG('basesSettle END → unlock paint');
                         allowPaint = true;                                  // až teď dovol barvit
