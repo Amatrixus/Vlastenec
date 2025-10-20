@@ -92,6 +92,74 @@
         }, 1000);
         }
 
+
+
+         function basesSettle() {
+
+
+                  var gamePhase = document.getElementById("gamephase");
+                  gamePhase.innerHTML = "Výběr základny";
+                  
+                  var gameRounds = document.getElementById("gamerounds");
+                  gameRounds.style.display = "none";
+
+                  var playerSticks = document.getElementById("playersticks");
+                  playerSticks.style.display = "none";
+
+                  var gameProgress = document.getElementById("gameprogress");
+                  gameProgress.style.height = "7%";
+
+                  var gamePhase = document.getElementById("gamephase");
+                  gamePhase.style.height = "100%";
+                
+
+
+                  var thudSound = document.getElementById('thud');
+                        
+                    
+                    setTimeout(() => {
+                        thudSound.play();
+                        settlePlayer1();
+                        colorizeBaseRegion(1);
+
+                       
+                    }, 2000);
+                    setTimeout(() => {
+                        thudSound.pause();
+                        thudSound.currentTime = 0; // Reset audio to beginning
+                        thudSound.play();
+                        settlePlayer2();
+                        colorizeBaseRegion(2);
+
+                        
+                    }, 4000); // Delay of 2000 milliseconds (2 seconds)
+
+                    setTimeout(() => {
+                        thudSound.pause();
+                        thudSound.currentTime = 0; // Reset audio to beginning
+                        thudSound.play();
+                        settlePlayer3();
+                        colorizeBaseRegion(3);
+
+                        
+                    }, 6000); // Delay of 4000 milliseconds (2 seconds after the previous couplet)
+
+
+                    setTimeout(() => {
+
+                      
+
+                    }, 8000);
+                    
+
+
+
+
+
+
+
+
+
         function runBasesOnce() {
         if (basesSettleRan) return;
         basesSettleRan = true;
