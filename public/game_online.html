@@ -79,6 +79,9 @@
 
 function renderBaseInfo(){
 
+
+      if (!allowPaint) return;  // nic nedělej, dokud neskončí animace
+
     settlePlayer1();
     settlePlayer2();
     settlePlayer3();
@@ -349,16 +352,15 @@ window.addEventListener('gameStartedAfterAnimation', () => {
             } else {
             if (countdown) countdown.textContent = "Začínáme!";
             clearInterval(interval);
-            setTimeout(() => {
-                if (overlay) overlay.style.display = "none";
-                // ⬇️ povol barvení až po odpočtu
-                allowPaint = true;
-                window.dispatchEvent(new Event('gameStartedAfterAnimation'));
-                if (typeof colorizeTiles === 'function') colorizeTiles();
-                if (typeof displayRegionValues === 'function') displayRegionValues();
-                if (typeof updateScores === 'function') updateScores();
-                if (typeof updateScoreUI === 'function') updateScoreUI();
+                setTimeout(() => {
+                    if (overlay) overlay.style.display = "none";
+                    // ⬇️ po odpočtu TEPRVE STARTUJ animaci základny (thud → settlePlayer1/2/3)
+                    basesSettle(); // spustí 2s, 4s, 6s postupně
+
+                    // ⬇️ odemknout barvení a dopočty až PO animaci (8s blok uvnitř basesSettle, viz krok 2)
+                    // sem už NIC dalšího nedávej
                 }, 1000);
+
             }
         }, 1000);
         });
@@ -5204,11 +5206,17 @@ document.querySelectorAll(".region").forEach(region => {
                     }, 6000); // Delay of 4000 milliseconds (2 seconds after the previous couplet)
 
 
-                    setTimeout(() => {
+                   setTimeout(() => {
+                // Animační „rozdání základen“ právě doběhlo
+                        allowPaint = true;                                  // až teď dovol barvit
+                        window.dispatchEvent(new Event('gameStartedAfterAnimation')); // pro delayed snapshot
 
-                      
+                        if (typeof colorizeTiles === 'function') colorizeTiles();     // zabarvi vlastnictví
+                        if (typeof displayRegionValues === 'function') displayRegionValues(); // čísla do mapy
+                        if (typeof updateScores === 'function') updateScores();       // přepočítej skóre
+                        if (typeof updateScoreUI === 'function') updateScoreUI();     // promítni skóre do UI
+                }, 8000);
 
-                    }, 8000);
                     
                 }
 
