@@ -177,8 +177,6 @@ function applySnapshotWhenReady(myNumber, snapshot, attempt = 0) {
     DBG('DOM displays BEFORE', { lobby: lobby?.style.display, overlay: overlay?.style.display });
 
 
-    const lobby   = document.getElementById("lobby_container");
-    const overlay = document.getElementById("start_overlay");
     if (lobby)   lobby.style.display   = "";
     if (overlay) overlay.style.display = "none";
     __pendingSnapshot = { myNumber, snapshot };
