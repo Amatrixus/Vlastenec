@@ -31,6 +31,8 @@
 
 
         let uiStartHandled = false; // jediný UI guard
+        let uiOverlayRunning = false; // true = probíhá odpočet/overlay
+
 
         function startSeenKey(roomId = currentRoomId){ return `vl_start_seen:${roomId||'unknown'}`; }
         function animDoneKey(roomId = currentRoomId){ return `vl_anim_done:${roomId||'unknown'}`; }
@@ -57,6 +59,8 @@
     let hydratedFromServer = false; // už mám nahraný aktuální stav?
 
     let allowPaint = false;
+
+    
 
     // --- URL parametry ---
     const qp = new URLSearchParams(location.search);
@@ -202,7 +206,7 @@ if (!serverSaysStarted) {
 
 
     if (lobby)   lobby.style.display   = "";
-    if (overlay) overlay.style.display = "none";
+    if (!uiOverlayRunning && overlay) overlay.style.display = "none";
     __pendingSnapshot = { myNumber, snapshot };
     
     
@@ -247,6 +251,8 @@ if (!serverSaysStarted) {
 
             if (lobby) lobby.style.display = "none";
             if (overlay) overlay.style.display = "flex";
+            uiOverlayRunning = true;   // ← přidat
+
 
             sessionStorage.setItem('vl_start_seen', '1'); // od teď víme, že overlay už tenhle klient viděl
 
@@ -260,7 +266,9 @@ if (!serverSaysStarted) {
                 if (countdown) countdown.textContent = "Začínáme!";
                 clearInterval(interval);
                 setTimeout(() => {
-                if (overlay) overlay.style.display = "none";
+                if (!uiOverlayRunning && overlay) overlay.style.display = "none";
+
+                uiOverlayRunning = false;  // ← přidat
                 basesSettle(); // v jejím 8s bloku se nastaví vl_anim_done + odemkne se paint
                 }, 1000);
             }
@@ -281,7 +289,8 @@ if (!serverSaysStarted) {
             const lobby   = document.getElementById("lobby_container");
             const overlay = document.getElementById("start_overlay");
             if (lobby)   lobby.style.display   = "none";
-            if (overlay) overlay.style.display = "none";
+            if (!uiOverlayRunning && overlay) overlay.style.display = "none";
+
 
             uiStartHandled = true;
             gameStarted    = true;
@@ -299,7 +308,8 @@ if (!serverSaysStarted) {
         const lobby   = document.getElementById("lobby_container");
         const overlay = document.getElementById("start_overlay");
         if (lobby)   lobby.style.display   = "none";
-        if (overlay) overlay.style.display = "none";
+        if (!uiOverlayRunning && overlay) overlay.style.display = "none";
+
 
         __pendingSnapshot = null;
 
@@ -492,6 +502,7 @@ window.addEventListener('gameStartedAfterAnimation', () => {
 
         if (lobby) lobby.style.display = "none";
         if (overlay) overlay.style.display = "flex";
+        uiOverlayRunning = true;  // ← přidat
         DBG('overlay shown', { afterLobby: lobby?.style.display, afterOv: overlay?.style.display });
 
 
@@ -521,7 +532,9 @@ window.addEventListener('gameStartedAfterAnimation', () => {
             clearInterval(interval);
                 setTimeout(() => {
                     DBG('overlay hide + basesSettle');
-                    if (overlay) overlay.style.display = "none";
+                    if (!uiOverlayRunning && overlay) overlay.style.display = "none";
+
+                    uiOverlayRunning = false;
                     // ⬇️ po odpočtu TEPRVE STARTUJ animaci základny (thud → settlePlayer1/2/3)
                     basesSettle(); // spustí 2s, 4s, 6s postupně
 
