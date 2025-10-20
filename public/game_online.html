@@ -331,9 +331,7 @@ window.addEventListener('gameStartedAfterAnimation', () => {
 
 
 
-        const savedRoom  = sessionStorage.getItem('vl_room');
-        const savedToken = sessionStorage.getItem('vl_token');
-        const savedName  = sessionStorage.getItem('vl_name');
+        
         const targetRoom = currentRoomId || savedRoom;
 
         if (savedName) myName = savedName;
