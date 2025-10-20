@@ -89,6 +89,18 @@
 
 
 
+        function kickoffStartUI() {
+        // Spusť overlay + odpočet + basesSettle přesně jednou
+        if (uiStartHandled) { DBG && DBG('kickoffStartUI: already handled'); return; }
+        uiStartHandled = true;
+        showOverlay();
+        startOverlayCountdown(5, () => {
+            runBasesOnce();
+        });
+        }
+
+
+
 
         function startSeenKey(roomId = currentRoomId){ return `vl_start_seen:${roomId||'unknown'}`; }
         function animDoneKey(roomId = currentRoomId){ return `vl_anim_done:${roomId||'unknown'}`; }
@@ -288,20 +300,18 @@ function applySnapshotWhenReady(myNumber, snapshot, attempt = 0) {
   const animDone  = sessionStorage.getItem(animDoneKey(roomKey))  === '1';
 
   if (!gameStarted) {
-    if (!seenStart && !animDone) {
-      // (A) late join → ukaž overlay + odpočet, pak jednotně spustí animaci
-      DBG('FALLBACK overlay', { seenStart, animDone, room: roomKey });
+  if (!seenStart && !animDone) {
+    // (A) late join → sjednocený start UI
+    DBG('FALLBACK overlay → kickoffStartUI', { seenStart, animDone, room: roomKey });
+    // označ, že overlay byl v tomhle roomu viděn (pro tvoje klíče)
+    sessionStorage.setItem(startSeenKey(roomKey), '1');
 
-      uiStartHandled = true;
-      gameStarted    = true;
-      showOverlay();
-      startOverlayCountdown(5, () => {
-        // označ, že overlay už tenhle klient viděl v rámci roomu
-        sessionStorage.setItem(startSeenKey(roomKey), '1');
-        runBasesOnce();
-      });
-      return;
-    } else {
+    // označ lokálně, že hra běží (aby se větev neopakovala během toho samého stateSync kolotoče)
+    gameStarted = true;
+
+    kickoffStartUI();
+    return;
+  } else {
       // (B) refresh/reconnect → bez overlaye, rovnou vykreslit
       allowPaint = true;
       if (typeof updateScores      === 'function') updateScores();
@@ -515,10 +525,7 @@ window.addEventListener('gameStartedAfterAnimation', () => {
     Object.keys(regionValues || {}).forEach((k) => { window.regionValues[k] = regionValues[k]; });
 
     // --- jednotný overlay + countdown + start animace ---
-    showOverlay();
-    startOverlayCountdown(5, () => {
-        runBasesOnce();
-    });
+    kickoffStartUI();
     });
 
 
@@ -719,6 +726,17 @@ window.addEventListener('gameStartedAfterAnimation', () => {
                     player3 = allNames[3] || "Robot Honza";
                     updateScoreNames();
                     updateLobbyList(allNames);
+
+
+
+                    try {
+                    const count = Object.values(allNames || {}).filter(Boolean).length;
+                    if (count === 3 && serverSaysStarted && !uiStartHandled) {
+                        DBG('updatePlayers: 3 players + serverSaysStarted → kickoffStartUI()');
+                        kickoffStartUI();
+                    }
+                    } catch {}
+
             });
 
 
