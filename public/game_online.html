@@ -30,6 +30,14 @@
 
 
 
+        // --- Phase rehydration state ---
+        window.currentPhase          = 'lobby';     // 'settle' | 'expansion' | 'battle' | ...
+        window.currentExpansionPlan  = null;        // array-of-rounds (tvůj formát)
+        window.currentBattlePlan     = null;        // libovolný objekt podle serveru
+
+
+
+
         // --- safe defaults for state objects ---
         window.regionValues = (typeof window.regionValues === 'object' && window.regionValues) ? window.regionValues : {};
         window.playerControlledRegions = window.playerControlledRegions || {
@@ -37,7 +45,6 @@
         Player2regions: [],
         Player3regions: []
         };
-
 
 
         // === Overlay & start helpers ===
@@ -99,7 +106,7 @@
         
 
 
-
+        
 
 
 
@@ -139,6 +146,24 @@
         sessionStorage.removeItem(startSeenKey(roomId));
         sessionStorage.removeItem(animDoneKey(roomId));
         }
+
+
+
+
+
+
+
+        
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -240,6 +265,29 @@ function isBoardReady() {
 
 
 
+//FUNKCE NA REHYDRATACI FÁZE
+function updatePhaseUI(phase) {
+  const el = document.getElementById('gamephase');
+  if (!el) return;
+
+  // Překlad klíčů z backendu na text v UI
+  const PHASE_LABELS = {
+    lobby:      'Lobby',
+    base:       'Výběr základny',
+    expansion:  'Rozšiřování',
+    battle:     'Bitvy',
+    end:        'Konec hry'
+  };
+
+  el.textContent = PHASE_LABELS[phase] || phase || '';
+}
+
+
+
+
+
+
+
 function applySnapshotWhenReady(myNumber, snapshot, attempt = 0) {
   DBG('applySnapshotWhenReady enter', { attempt });
 
@@ -265,6 +313,15 @@ function applySnapshotWhenReady(myNumber, snapshot, attempt = 0) {
   serverSaysStarted = !!snapshot.hasStarted;
   DBG('serverSaysStarted=', serverSaysStarted);
   hydratedFromServer = true;
+
+
+  if (typeof snapshot.phase === 'string' && snapshot.phase) {
+    window.currentPhase = snapshot.phase;     // např. 'lobby' | 'base' | 'expansion' | 'battle' | 'end'
+    } else if (!serverSaysStarted) {
+    window.currentPhase = 'lobby';
+    }
+    updatePhaseUI(window.currentPhase);
+
 
   // 3) perzistence
   if (snapshot.roomId) {
@@ -324,6 +381,9 @@ function applySnapshotWhenReady(myNumber, snapshot, attempt = 0) {
     player3 = snapshot.allNames[3] || player3;
     if (typeof updateScoreNames === 'function') updateScoreNames();
   }
+
+  updatePhaseUI(window.currentPhase);
+
 
   // 6) rozhodnutí podle lokálního stavu
   const roomKey = snapshot.roomId || currentRoomId;
