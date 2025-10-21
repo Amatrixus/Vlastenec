@@ -802,6 +802,8 @@ async function runExpansionPhase(roomId) {
 
 
   for (let round = 1; round <= 6; round++) {
+    room.round = round; // ⬅️ DOPLNIT
+
 
     if (!isRoomAlive(roomId)) return; // 🔴 NEW
     room.claimedRegionsThisRound = new Set();
@@ -882,6 +884,8 @@ async function runConquestPhase(roomId) {
   let round = 1;
 
   while (takenTiles < Object.keys(room.regionValues).length) {
+    room.round = round; // ⬅️ DOPLNIT
+
 
     if (!isRoomAlive(roomId)) return; // 🔴 NEW
 
@@ -986,6 +990,8 @@ async function runBattlePhase(roomId) {
   console.log("📋 BattlePlan:", battlePlan);
 
   for (let round = 1; round <= 6; round++) {
+        room.round = round; // ⬅️ DOPLNIT
+
     if (!isRoomAlive(roomId)) return; // 🔴 NEW
 
 
