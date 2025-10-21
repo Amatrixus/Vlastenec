@@ -388,16 +388,7 @@ function applySnapshotWhenReady(myNumber, snapshot, attempt = 0) {
     const __chatInput = document.getElementById('chat_input');
     if (__chatInput) { __chatInput.disabled = false; __chatInput.removeAttribute('disabled'); }
 
-    // a teď bezpečně zpracuj historii + drát
-    rehydrateChat(snapshot.chat);
-    ensureChatReady();
-
-
-    window.addEventListener('DOMContentLoaded', () => {
-    ensureChatReady();
-    flushPendingChatHistory();
-    });
-
+   
 
 
   if (typeof myName === 'string' && myName) {
