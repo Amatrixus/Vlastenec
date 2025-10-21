@@ -287,13 +287,16 @@ function updatePhaseUI(phase) {
 
 
 
-// --- CHAT INIT & REHYDRATACE ---
-// --- CHAT INIT & REHYDRATACE (robustní) ---
+
+
+
+
+// --- CHAT INIT & REHYDRATACE (final) ---
 function escapeHtml(s){ const d=document.createElement('div'); d.textContent=String(s||''); return d.innerHTML; }
 
 function appendChatMessage({ name, text, number }) {
   const log = document.getElementById('chat_log');
-  if (!log) return; // ještě není připraven – vykreslíme později
+  if (!log) return; // log ještě není v DOMu → zprávy vykreslí flush
   const row = document.createElement('div');
   row.className = 'chat_msg';
   row.innerHTML = `<strong class="p${number||0}">${escapeHtml(name||'?')}</strong>: ${escapeHtml(text||'')}`;
@@ -304,16 +307,23 @@ function appendChatMessage({ name, text, number }) {
 function flushPendingChatHistory() {
   if (!Array.isArray(window.__chatHistoryPending) || window.__chatHistoryPending.length === 0) return;
   const log = document.getElementById('chat_log');
-  if (!log) return; // ještě počkáme
+  if (!log) return; // počkáme na existenci logu
   log.innerHTML = '';
   window.__chatHistoryPending.forEach(appendChatMessage);
   window.__chatHistoryPending = [];
 }
 
 function rehydrateChat(history) {
-  // ulož do pending; vykreslíme, jakmile existuje #chat_log
+  // uložíme snapshot (posledních n zpráv); vykreslí se, jakmile existuje #chat_log
   window.__chatHistoryPending = Array.isArray(history) ? history.slice() : [];
   flushPendingChatHistory();
+}
+
+function sendChat(text){
+  const msg = (text || '').trim();
+  if (!msg) return;
+  if (!window.currentRoomId) { console.warn('No currentRoomId yet → cannot send chat'); return; }
+  socket.emit('chat:send', { roomId: window.currentRoomId, text: msg });
 }
 
 function wireChatOnce() {
@@ -323,29 +333,36 @@ function wireChatOnce() {
   const input = document.getElementById('chat_input');
   const log   = document.getElementById('chat_log');
 
-  if (!form || !input || !log) return false; // ještě nejsou v DOMu
+  if (!form || !input || !log) return false; // UI ještě není v DOMu
 
-  // submit -> chat:send
+  // umožni psaní
   input.disabled = false;
   input.removeAttribute('disabled');
+
+  // submit tlačítkem / Enter ve formu
   form.addEventListener('submit', (e) => {
     e.preventDefault();
-    const text = input.value.trim();
-    if (!text || !currentRoomId) return;
-    socket.emit('chat:send', { roomId: currentRoomId, text });
+    sendChat(input.value);
     input.value = '';
+  });
+
+  // volitelné: Enter bez Shiftu také pošle
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendChat(input.value);
+      input.value = '';
+    }
   });
 
   // příjem nových zpráv – navázat jen jednou
   if (!window.__chatNewBound) {
     window.__chatNewBound = true;
-    socket.on('chat:new', (msg) => {
-      appendChatMessage(msg);
-    });
+    socket.on('chat:new', (msg) => appendChatMessage(msg));
   }
 
   window.__chatWired = true;
-  // jakmile je drát hotový, zkus vykreslit uloženou historii
+  // jakmile je drát hotový, vykresli pending historii
   flushPendingChatHistory();
   return true;
 }
@@ -354,7 +371,7 @@ function ensureChatReady() {
   // zkus hned teď
   if (wireChatOnce()) return;
 
-  // jinak dej krátký retry loop (např. 50x po 100ms ~ 5s)
+  // jinak krátký retry loop (50x po 100ms ~ 5s)
   if (window.__chatRetryTimer) return;
   let attempts = 0;
   window.__chatRetryTimer = setInterval(() => {
@@ -366,6 +383,8 @@ function ensureChatReady() {
   }, 100);
 }
 
+// volitelná pojistka, kdyby se chat renderoval až po onload
+window.addEventListener('DOMContentLoaded', ensureChatReady);
 
 
 
