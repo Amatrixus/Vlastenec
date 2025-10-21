@@ -73,6 +73,8 @@ function buildRoomSnapshot(room, roomId) {
     scores: room.scores,
     defenseBonuses: room.defenseBonuses,
     seatControllers: room.seatControllers
+    expansionPlan: room.expansionPlan || null,
+    battlePlan: room.battlePlan || null,
   };
 }
 

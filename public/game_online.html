@@ -339,6 +339,29 @@ function applySnapshotWhenReady(myNumber, snapshot, attempt = 0) {
 
 
 
+    // --- ⬇️ NEW: STICKY (plány) rehydration ---
+    if (Array.isArray(snapshot.expansionPlan)) {
+        window.currentExpansionPlan = snapshot.expansionPlan;
+    }
+    if (Array.isArray(snapshot.battlePlan)) {
+        window.currentBattlePlan = snapshot.battlePlan;
+    }
+
+    // Po nastavení phase/round/plánů promítnout sticky do UI podle fáze
+    if (typeof applyStickColors === 'function') {
+        try {
+        if (window.currentPhase === 'expansion' && Array.isArray(window.currentExpansionPlan)) {
+            applyStickColors(window.currentExpansionPlan);
+        } else if (window.currentPhase === 'battle' && Array.isArray(window.currentBattlePlan)) {
+            applyStickColors(window.currentBattlePlan);
+        }
+        } catch (e) {
+        DBG('applyStickColors error', e);
+        }
+    }
+
+
+
   // 3) perzistence
   if (snapshot.roomId) {
     currentRoomId = snapshot.roomId;
