@@ -291,106 +291,6 @@ function updatePhaseUI(phase) {
 
 
 
-// --- CHAT INIT & REHYDRATACE (final) ---
-function escapeHtml(s){ const d=document.createElement('div'); d.textContent=String(s||''); return d.innerHTML; }
-
-function appendChatMessage({ name, text, number }) {
-  const log = document.getElementById('chat_log');
-  if (!log) return; // log ještě není v DOMu → zprávy vykreslí flush
-  const row = document.createElement('div');
-  row.className = 'chat_msg';
-  row.innerHTML = `<strong class="p${number||0}">${escapeHtml(name||'?')}</strong>: ${escapeHtml(text||'')}`;
-  log.appendChild(row);
-  log.scrollTop = log.scrollHeight;
-}
-
-function flushPendingChatHistory() {
-  if (!Array.isArray(window.__chatHistoryPending) || window.__chatHistoryPending.length === 0) return;
-  const log = document.getElementById('chat_log');
-  if (!log) return; // počkáme na existenci logu
-  log.innerHTML = '';
-  window.__chatHistoryPending.forEach(appendChatMessage);
-  window.__chatHistoryPending = [];
-}
-
-function rehydrateChat(history) {
-  // uložíme snapshot (posledních n zpráv); vykreslí se, jakmile existuje #chat_log
-  window.__chatHistoryPending = Array.isArray(history) ? history.slice() : [];
-  flushPendingChatHistory();
-}
-
-function wireChatOnce() {
-  if (window.__chatWired) return true;
-
-  const form  = document.getElementById('chat_form');
-  const input = document.getElementById('chat_input');
-  const log   = document.getElementById('chat_log');
-
-  if (!form || !input || !log) return false;
-
-  // ⬇️ NEpovoluj hned, ale podle currentRoomId
-  if (window.currentRoomId) {
-    input.disabled = false;
-    input.removeAttribute('disabled');
-  } else {
-    input.disabled = true;
-  }
-
-  form.addEventListener('submit', (e) => {
-    e.preventDefault();
-    sendChat(input.value);
-    input.value = '';
-  });
-
-  input.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      sendChat(input.value);
-      input.value = '';
-    }
-  });
-
-  if (!window.__chatNewBound) {
-    window.__chatNewBound = true;
-    socket.on('chat:new', (msg) => appendChatMessage(msg));
-  }
-
-  window.__chatWired = true;
-  flushPendingChatHistory();
-  return true;
-}
-
-
-
-
-
-function ensureChatReady() {
-  // zkus hned teď
-  if (wireChatOnce()) return;
-
-  // jinak krátký retry loop (50x po 100ms ~ 5s)
-  if (window.__chatRetryTimer) return;
-  let attempts = 0;
-  window.__chatRetryTimer = setInterval(() => {
-    attempts++;
-    if (wireChatOnce() || attempts > 50) {
-      clearInterval(window.__chatRetryTimer);
-      window.__chatRetryTimer = null;
-    }
-  }, 100);
-}
-
-// volitelná pojistka, kdyby se chat renderoval až po onload
-window.addEventListener('DOMContentLoaded', ensureChatReady);
-
-
-
-
-
-
-
-
-
 
 
 
@@ -2427,7 +2327,7 @@ if (regionValues && typeof regionValues === 'object') {
             <!-- 2) Tvůj klientský chat -->
             <script>
 
-
+                /* FUNKČNÍ CHAT
 
                 // ====== Týmové barvy podle čísla hráče ======
                 const numberToTeamClass = {
@@ -2439,7 +2339,6 @@ if (regionValues && typeof regionValues === 'object') {
                 // Mapování jméno -> třída týmu (dynamicky plníme z allNames)
                 const nameToTeamClass = new Map();
 
-                /** Projede allNames {1: 'Jarmila', 2: 'Hynek', 3: 'Amatrixus'} a naplní mapu jméno->třída */
                 function syncNameTeamMap(allNames) {
                 if (!allNames) return;
                 for (let i = 1; i <= 3; i++) {
@@ -2450,7 +2349,7 @@ if (regionValues && typeof regionValues === 'object') {
                 }
                 }
 
-                /** Vrátí CSS třídu pro dané jméno hráče (nebo prázdný string) */
+                
                 function teamClassFor(name) {
                 return nameToTeamClass.get(name) || '';
                 }
@@ -2546,6 +2445,136 @@ if (regionValues && typeof regionValues === 'object') {
                 console.log("⬅️ chat:new", msg);
                 appendMsg(msg);
             });
+
+
+
+
+
+            */
+
+
+
+
+
+
+
+
+
+
+
+                // ====== Týmové barvy podle čísla hráče ======
+                const numberToTeamClass = { 1: 'team-blue', 2: 'team-red', 3: 'team-white' };
+                const nameToTeamClass = new Map();
+
+                function syncNameTeamMap(allNames) {
+                if (!allNames) return;
+                for (let i = 1; i <= 3; i++) {
+                    const nm = allNames[i];
+                    if (nm) nameToTeamClass.set(nm, numberToTeamClass[i] || '');
+                }
+                }
+                function teamClassFor(name) { return nameToTeamClass.get(name) || ''; }
+
+                // ====== Pomocné funkce ======
+                function escapeHtml(s) {
+                return String(s).replace(/[&<>"']/g, m => (
+                    {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]
+                ));
+                }
+                function fmtTime(ts) {
+                try { return new Date(ts).toLocaleTimeString('cs-CZ', {hour:'2-digit', minute:'2-digit'}); }
+                catch { return ''; }
+                }
+                function appendMsg({ name, text, ts, number }) {
+                const line = document.createElement('div');
+                line.className = 'chat-line';
+                const teamClass = numberToTeamClass[number] || teamClassFor(name);
+                line.innerHTML =
+                    `<span class="chat-time">[${fmtTime(ts)}]</span> ` +
+                    `<span class="chat-name ${teamClass || ''}" data-name="${escapeHtml(name)}"><strong>${escapeHtml(name)}:</strong></span> ` +
+                    `<span class="chat-text">${escapeHtml(text)}</span>`;
+                chatBox.appendChild(line);
+                chatBox.scrollTop = chatBox.scrollHeight;
+                }
+
+                // ====== Elementy ======
+                const chatInput = document.getElementById('chatinput');
+                const chatBtn   = document.getElementById('chatbutton');
+                const chatBox   = document.getElementById('chatcontent');
+
+                // ====== Stav + socket ======
+                let roomId = window.currentRoomId || null;     // ⬅️ globální, aby sendChat nikdy nepadal
+                window.socket = socket;                        // používáš už existující `socket`
+
+                // ====== Odeslání zprávy ======
+                function sendChat() {
+                const text = (chatInput?.value || "").trim();
+                if (!text) return;
+                if (!roomId) {
+                    console.warn("⚠️ roomId není k dispozici. Neposílám.");
+                    return;
+                }
+                socket.emit("chat:send", { roomId, text });
+                chatInput.value = "";
+                chatInput.focus();
+                }
+
+                chatBtn?.addEventListener('click', sendChat);
+                chatInput?.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') sendChat();
+                });
+
+                // ====== Drátování socketu ======
+                socket.on("connect", () => {
+                console.log("🔌 connected:", socket.id);
+                });
+                socket.on("connect_error", (err) => {
+                console.log("❌ connect_error:", err?.message || err);
+                });
+
+                // Když server přiřadí číslo hráče + roomId (přichází brzo u “nové” session)
+                socket.on("assignPlayerNumber", (data) => {
+                roomId = data?.roomId || roomId || window.currentRoomId || null;
+                console.log("✅ assignPlayerNumber:", data);
+                });
+
+                // === REHYDRATACE PO OBNOVENÍ / RESUME ===
+                // 1) preferuj chat v snapshotu (server ho může přidat do buildRoomSnapshot)
+                // 2) pokud v snapshotu není, požádej o historii
+                socket.on("stateSync", ({ myNumber, snapshot }) => {
+                // ulož roomId i tady – při resume se `assignPlayerNumber` nemusí hned trefit
+                roomId = snapshot?.roomId || roomId || window.currentRoomId || null;
+
+                if (Array.isArray(snapshot?.chat)) {
+                    // máme historii přímo v snapshotu
+                    chatBox.innerHTML = "";
+                    snapshot.chat.forEach(appendMsg);
+                } else if (roomId) {
+                    // snapshot chat neobsahuje → vyžádáme si ji
+                    socket.emit("chat:history:get", { roomId });
+                }
+                });
+
+                // Server vrací historii (buď při založení místnosti, nebo po našem chat:history:get)
+                socket.on("chat:history", (msgs) => {
+                console.log("📜 chat:history", msgs);
+                chatBox.innerHTML = "";
+                (msgs || []).forEach(appendMsg);
+                });
+
+                // Nové zprávy
+                socket.on("chat:new", (msg) => {
+                console.log("⬅️ chat:new", msg);
+                appendMsg(msg);
+                });
+                </script>
+
+
+
+
+
+
+
             </script>
 
             <!-- Volitelně jednoduché styly -->
