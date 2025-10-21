@@ -72,9 +72,9 @@ function buildRoomSnapshot(room, roomId) {
     regionValues: room.regionValues,
     scores: room.scores,
     defenseBonuses: room.defenseBonuses,
-    seatControllers: room.seatControllers
+    seatControllers: room.seatControllers,
     expansionPlan: room.expansionPlan || null,
-    battlePlan: room.battlePlan || null,
+    battlePlan: room.battlePlan || null
   };
 }
 
