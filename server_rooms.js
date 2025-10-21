@@ -74,7 +74,8 @@ function buildRoomSnapshot(room, roomId) {
     defenseBonuses: room.defenseBonuses,
     seatControllers: room.seatControllers,
     expansionPlan: room.expansionPlan || null,
-    battlePlan: room.battlePlan || null
+    battlePlan: room.battlePlan || null,
+    chat: Array.isArray(room.chat) ? room.chat.slice(-50) : []
   };
 }
 

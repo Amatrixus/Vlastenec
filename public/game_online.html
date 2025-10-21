@@ -287,6 +287,79 @@ function updatePhaseUI(phase) {
 
 
 
+// --- CHAT INIT & REHYDRATACE ---
+function escapeHtml(s){ const d=document.createElement('div'); d.textContent=String(s||''); return d.innerHTML; }
+
+function appendChatMessage({ name, text, number }) {
+  const log = document.getElementById('chat_log');
+  if (!log) return;
+  const row = document.createElement('div');
+  row.className = 'chat_msg';
+  row.innerHTML = `<strong class="p${number||0}">${escapeHtml(name||'?')}</strong>: ${escapeHtml(text||'')}`;
+  log.appendChild(row);
+  log.scrollTop = log.scrollHeight;
+}
+
+function rehydrateChat(history) {
+  const log = document.getElementById('chat_log');
+  const input = document.getElementById('chat_input');
+  if (log) {
+    log.innerHTML = '';
+    (history || []).forEach(appendChatMessage);
+  }
+  if (input) {
+    input.disabled = false;
+    input.removeAttribute('disabled');
+  }
+}
+
+function initChatOnce() {
+  if (window.__chatInitDone) return;
+  window.__chatInitDone = true;
+
+  const form  = document.getElementById('chat_form');
+  const input = document.getElementById('chat_input');
+
+  // submit -> chat:send
+  if (form && input) {
+    input.disabled = false;
+    input.removeAttribute('disabled');
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const text = input.value.trim();
+      if (!text || !currentRoomId) return;
+      socket.emit('chat:send', { roomId: currentRoomId, text });
+      input.value = '';
+    });
+  }
+
+  // příjem nových zpráv
+  if (!window.__chatNewBound) {
+    window.__chatNewBound = true;
+    socket.on('chat:new', (msg) => appendChatMessage(msg));
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 function applySnapshotWhenReady(myNumber, snapshot, attempt = 0) {
@@ -367,6 +440,13 @@ function applySnapshotWhenReady(myNumber, snapshot, attempt = 0) {
     currentRoomId = snapshot.roomId;
     sessionStorage.setItem('vl_room', snapshot.roomId);
   }
+
+
+  initChatOnce();
+  rehydrateChat(snapshot.chat);
+
+
+
   if (typeof myName === 'string' && myName) {
     sessionStorage.setItem('vl_name', myName);
   }
