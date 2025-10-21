@@ -30,26 +30,6 @@
 
 
 
-        // --- redraw helper --- Protože se nekreslily pole po získání
-         let pendingMapRedraw = false;
-
-        function redrawMapIfAllowed() {
-        if (allowPaint) {
-            if (typeof colorizeTiles === 'function') colorizeTiles();
-            if (typeof displayRegionValues === 'function') displayRegionValues();
-            pendingMapRedraw = false;
-        } else {
-            // běží animace → vykreslíme hned po odemčení
-            pendingMapRedraw = true;
-        }
-        }
-
-           
-
-
-
-
-
         // --- Phase rehydration state ---
         window.currentPhase          = 'lobby';     // 'settle' | 'expansion' | 'battle' | ...
         window.currentExpansionPlan  = null;        // array-of-rounds (tvůj formát)
@@ -395,10 +375,6 @@ function applySnapshotWhenReady(myNumber, snapshot, attempt = 0) {
     if (!window.regionValues || typeof window.regionValues !== 'object') window.regionValues = {};
     Object.entries(snapshot.regionValues).forEach(([k,v]) => { window.regionValues[k] = v; });
     }
-
-
-    redrawMapIfAllowed();
-
   if (snapshot.allNames) {
     player1 = snapshot.allNames[1] || player1;
     player2 = snapshot.allNames[2] || player2;
@@ -484,11 +460,6 @@ window.addEventListener('gameStartedAfterAnimation', () => {
     __pendingSnapshot.snapshot.hasStarted = true;
     applySnapshotWhenReady(__pendingSnapshot.myNumber, __pendingSnapshot.snapshot);
   }
-
-
-    if (pendingMapRedraw) redrawMapIfAllowed();
-    
-
 });
 
 
@@ -644,9 +615,6 @@ if (regionValues && typeof regionValues === 'object') {
   Object.entries(regionValues).forEach(([k,v]) => { window.regionValues[k] = v; });
 }
 
-redrawMapIfAllowed();
-
-
     // --- jednotný overlay + countdown + start animace ---
     kickoffStartUI();
     });
@@ -743,28 +711,6 @@ redrawMapIfAllowed();
 
 
 */
-
-
-            socket.on("updateRegions", ({ regions, regionValues, scores }) => {
-            // bezpečně přepiš lokální stav
-            if (regions) {
-                window.playerControlledRegions = {
-                Player1regions: regions.Player1regions || [],
-                Player2regions: regions.Player2regions || [],
-                Player3regions: regions.Player3regions || []
-                };
-            }
-            if (regionValues && typeof regionValues === 'object') {
-                if (!window.regionValues || typeof window.regionValues !== 'object') window.regionValues = {};
-                Object.entries(regionValues).forEach(([k, v]) => { window.regionValues[k] = v; });
-            }
-
-            // skóre (pokud dorazí)
-            if (scores && typeof updateScoreUI === 'function') updateScoreUI(scores);
-
-            // a teď hned, nebo po animaci, překresli mapu + hodnoty
-            redrawMapIfAllowed();
-            });
 
 
 
@@ -6242,7 +6188,8 @@ socket.on("removeAnswerOptions", () => {
         if (action === "expansionintro") {
             console.log("▶️ Spouštím fázi rozšiřování");
             console.log("🧭 Přijat expansionPlan:", expansionPlan);
-            
+            allowPaint = true;
+
 
             // Uložíme plán do globální proměnné (pro další kola)
             window.expansionPlan = expansionPlan;
