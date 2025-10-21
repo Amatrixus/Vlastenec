@@ -34,6 +34,7 @@
         window.currentPhase          = 'lobby';     // 'settle' | 'expansion' | 'battle' | ...
         window.currentExpansionPlan  = null;        // array-of-rounds (tvůj formát)
         window.currentBattlePlan     = null;        // libovolný objekt podle serveru
+        window.currentRound = 0; // aktuální kolo pro UI
 
 
 
@@ -323,6 +324,21 @@ function applySnapshotWhenReady(myNumber, snapshot, attempt = 0) {
     updatePhaseUI(window.currentPhase);
 
 
+    // --- ROUND rehydration ---
+    if (Number.isInteger(snapshot.round)) {
+    window.currentRound = snapshot.round;
+    } else if (!serverSaysStarted) {
+    window.currentRound = 0; // lobby/reset
+    }
+
+    // Promítnout do UI (pokud funkce existuje)
+    if (typeof updateRoundClasses === 'function') {
+    try { updateRoundClasses(window.currentRound); }
+    catch (e) { DBG('updateRoundClasses error', e); }
+    }
+
+
+
   // 3) perzistence
   if (snapshot.roomId) {
     currentRoomId = snapshot.roomId;
@@ -355,6 +371,17 @@ function applySnapshotWhenReady(myNumber, snapshot, attempt = 0) {
 
     __pendingSnapshot = { myNumber, snapshot };
     DBG('PRE-GAME snapshot stored & return');
+
+
+    // reset kola v lobby
+    window.currentRound = 0;
+    if (typeof updateRoundClasses === 'function') {
+    try { updateRoundClasses(0); } catch(e) {}
+    }
+
+
+
+
     return;
   }
 
