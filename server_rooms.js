@@ -75,7 +75,7 @@ function buildRoomSnapshot(room, roomId) {
     seatControllers: room.seatControllers,
     expansionPlan: room.expansionPlan || null,
     battlePlan: room.battlePlan || null,
-    chat: Array.isArray(room.chat) ? room.chat.slice(-50) : []
+    chat: room.chat || []             // ⬅️ TADY
   };
 }
 
@@ -1860,6 +1860,12 @@ socket.on("chat:send", ({ roomId, text }) => {
 });
 
 
+
+socket.on('chat:history:get', ({ roomId }) => {
+  const room = rooms[roomId];
+  if (!room) return;
+  socket.emit('chat:history', room.chat || []);
+});
 
 
 
