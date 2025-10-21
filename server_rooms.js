@@ -85,30 +85,6 @@ function buildRoomSnapshot(room, roomId) {
 
 
 
-function buildRoomSnapshot(room, roomId) {
-  const allNames = {};
-  for (let i = 0; i < MAX_PLAYERS_PER_ROOM; i++) {
-    const p = room.players[i];
-    allNames[i + 1] = (p && p.name) ? p.name : `Robot ${i + 1}`;
-  }
-
-  return {
-    roomId,                          // ← DOPLNĚNO
-    allNames,                        // ← DOPLNĚNO (hodí se i pro chat/score)
-    hasStarted: room.hasStarted,
-    phase: room.phase,
-    round: room.round,
-    bases: room.bases,
-    regions: room.regions,
-    regionValues: room.regionValues,
-    scores: room.scores,
-    defenseBonuses: room.defenseBonuses,
-    seatControllers: room.seatControllers
-  };
-}
-
-
-
 // nahoru k ostatním helperům
 function occupiedSeatCount(room) {
   return (room.players || []).filter(Boolean).length; // počítá jen skutečně obsazená sedadla
@@ -758,6 +734,8 @@ async function runGameScenario(roomId) {
        if (!isRoomAlive(roomId)) return; // 🔴 NEW
       //VYGENEROVÁNÍ HERNÍHO PLÁNU
         const expansionPlan = generateExpansionPlan();
+        
+
         
         if (!room) return;
         room.expansionPlan = expansionPlan;
