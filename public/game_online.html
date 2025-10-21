@@ -319,13 +319,6 @@ function rehydrateChat(history) {
   flushPendingChatHistory();
 }
 
-function sendChat(text){
-  const msg = (text || '').trim();
-  if (!msg) return;
-  if (!window.currentRoomId) { console.warn('No currentRoomId yet → cannot send chat'); return; }
-  socket.emit('chat:send', { roomId: window.currentRoomId, text: msg });
-}
-
 function wireChatOnce() {
   if (window.__chatWired) return true;
 
@@ -333,20 +326,22 @@ function wireChatOnce() {
   const input = document.getElementById('chat_input');
   const log   = document.getElementById('chat_log');
 
-  if (!form || !input || !log) return false; // UI ještě není v DOMu
+  if (!form || !input || !log) return false;
 
-  // umožni psaní
-  input.disabled = false;
-  input.removeAttribute('disabled');
+  // ⬇️ NEpovoluj hned, ale podle currentRoomId
+  if (window.currentRoomId) {
+    input.disabled = false;
+    input.removeAttribute('disabled');
+  } else {
+    input.disabled = true;
+  }
 
-  // submit tlačítkem / Enter ve formu
   form.addEventListener('submit', (e) => {
     e.preventDefault();
     sendChat(input.value);
     input.value = '';
   });
 
-  // volitelné: Enter bez Shiftu také pošle
   input.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -355,17 +350,19 @@ function wireChatOnce() {
     }
   });
 
-  // příjem nových zpráv – navázat jen jednou
   if (!window.__chatNewBound) {
     window.__chatNewBound = true;
     socket.on('chat:new', (msg) => appendChatMessage(msg));
   }
 
   window.__chatWired = true;
-  // jakmile je drát hotový, vykresli pending historii
   flushPendingChatHistory();
   return true;
 }
+
+
+
+
 
 function ensureChatReady() {
   // zkus hned teď
@@ -487,7 +484,11 @@ function applySnapshotWhenReady(myNumber, snapshot, attempt = 0) {
   }
 
 
-    // ✅ chat: ulož historii + postarej se o (re)navázání po vykreslení DOMu
+  // chat: máme roomId → povol input (pokud už je vepsaný v DOMu)
+    const __chatInput = document.getElementById('chat_input');
+    if (__chatInput) { __chatInput.disabled = false; __chatInput.removeAttribute('disabled'); }
+
+    // a teď bezpečně zpracuj historii + drát
     rehydrateChat(snapshot.chat);
     ensureChatReady();
 
