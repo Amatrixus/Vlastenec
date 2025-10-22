@@ -2964,76 +2964,65 @@ if (regionValues && typeof regionValues === 'object') {
 
 
         function settlePlayer2() {
-            var player2Base = player2CurrentBase;
+        const seat = 2;
+        const playerBase = player2CurrentBase;
+        const displayName = seatDisplayName(seat, player2); // jméno hráče nebo „Robot … ⚙️“
 
-            // ✅ Nastavíme hodnotu základny na 1000 bodů
-           // regionValues[player2Base] = 1000;
-
-
-            
-
-            function updatePlayerBasePosition() {
-
-
-                let regionElement = document.getElementById(player2Base);
-                if (!regionElement) {
-                    console.error(`❌ Region '${player2Base}' nebyl nalezen!`);
-                    return;
-                }
-                let regionRect = regionElement.getBoundingClientRect();
-
-                // ✅ Určení středu regionu podle `pinPositions`, jinak geometrický střed
-                let centerX = regionRect.left + regionRect.width / 2 + window.scrollX;
-                let centerY = regionRect.top + regionRect.height / 2 + window.scrollY;
-
-                if (pinPositions[player2Base]) {
-                    centerX = regionRect.left + regionRect.width * pinPositions[player2Base].x + window.scrollX;
-                    centerY = regionRect.top + regionRect.height * pinPositions[player2Base].y + window.scrollY;
-                }
-
-                console.log(`📌 Souřadnice základny hráče 2: X=${centerX}, Y=${centerY}`);
-
-                // ✅ Umístění názvu hráče
-                let player2NameElement = document.getElementById("player2basename");
-                if (!player2NameElement) {
-                    player2NameElement = document.createElement("div");
-                    player2NameElement.id = "player2basename";
-                    player2NameElement.classList.add("player-name");
-                    document.body.appendChild(player2NameElement);
-                }
-
-                player2NameElement.textContent = player2;
-                player2NameElement.style.position = "absolute";
-                player2NameElement.style.left = `${centerX}px`;
-                player2NameElement.style.top = `${centerY - 30}px`;
-                player2NameElement.style.transform = "translate(-50%, -50%)";
-                player2NameElement.style.opacity = "1"; 
-                player2NameElement.style.visibility = "visible"; 
-
-                console.log(`📌 Název hráče 2 přidán do DOM: ${player2NameElement.outerHTML}`);
-
-                // ✅ Umístění vizuálu základny
-                let player2BaseVisual = document.getElementById("player2basevisual");
-                if (!player2BaseVisual) {
-                    player2BaseVisual = document.createElement("img");
-                    player2BaseVisual.id = "player2basevisual";
-                    player2BaseVisual.src = "base_icon.png";
-                    document.body.appendChild(player2BaseVisual);
-                }
-
-                player2BaseVisual.style.position = "absolute";
-                player2BaseVisual.style.left = `${centerX}px`;
-                player2BaseVisual.style.top = `${centerY}px`;
-                player2BaseVisual.style.transform = "translate(-50%, -50%)";
-                player2BaseVisual.style.display = "block";
+        function updatePlayerBasePosition() {
+            const regionElement = document.getElementById(playerBase);
+            if (!regionElement) {
+            console.error(`❌ Region '${playerBase}' nebyl nalezen!`);
+            return;
             }
 
-            updatePlayerBasePosition();
+            const rect = regionElement.getBoundingClientRect();
+            let centerX = rect.left + rect.width / 2 + window.scrollX;
+            let centerY = rect.top + rect.height / 2 + window.scrollY;
 
-            // ✅ Aktualizace při změně velikosti okna
-            window.addEventListener("resize", updatePlayerBasePosition);
-            socket.emit("baseSettled", { playerNumber: 2 }); 
+            if (pinPositions[playerBase]) {
+            centerX = rect.left + rect.width * pinPositions[playerBase].x + window.scrollX;
+            centerY = rect.top + rect.height * pinPositions[playerBase].y + window.scrollY;
+            }
+
+            // ✅ Jméno hráče (i robota)
+            let nameEl = document.getElementById("player2basename");
+            if (!nameEl) {
+            nameEl = document.createElement("div");
+            nameEl.id = "player2basename";
+            nameEl.classList.add("player-name");
+            document.body.appendChild(nameEl);
+            }
+
+            nameEl.innerHTML = displayName; // může obsahovat ⚙️
+            nameEl.style.position = "absolute";
+            nameEl.style.left = `${centerX}px`;
+            nameEl.style.top = `${centerY - 30}px`;
+            nameEl.style.transform = "translate(-50%, -50%)";
+            nameEl.style.zIndex = "4";
+            nameEl.style.opacity = "1";
+            nameEl.style.visibility = "visible";
+
+            // ✅ Ikona základny
+            let baseEl = document.getElementById("player2basevisual");
+            if (!baseEl) {
+            baseEl = document.createElement("img");
+            baseEl.id = "player2basevisual";
+            baseEl.src = "base_icon.png";
+            document.body.appendChild(baseEl);
+            }
+
+            baseEl.style.position = "absolute";
+            baseEl.style.left = `${centerX}px`;
+            baseEl.style.top = `${centerY}px`;
+            baseEl.style.transform = "translate(-50%, -50%)";
+            baseEl.style.display = "block";
         }
+
+        updatePlayerBasePosition();
+        window.addEventListener("resize", updatePlayerBasePosition);
+        socket.emit("baseSettled", { playerNumber: 2 });
+        }
+
 
 
 
