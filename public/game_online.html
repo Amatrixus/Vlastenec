@@ -48,6 +48,27 @@
         };
 
 
+        // --- Bot names
+        window.seatControllers = window.seatControllers || {1:"human",2:"human",3:"human"};
+        window.allNames = window.allNames || {};
+        window.displayNames = window.displayNames || {};
+
+
+        function seatDisplayName(seat, fallback) {
+        const base =
+            (window.displayNames?.[seat]) ||
+            fallback ||
+            (window.allNames?.[seat]) ||
+            `Hráč ${seat}`;
+
+        const isBot = window.seatControllers?.[seat] === 'bot';
+        return isBot ? `${base} <span class="bot-gear" title="Bot">⚙️</span>` : base;
+        }
+
+
+
+
+
         // === Overlay & start helpers ===
         let uiStartHandled = false;        // tento klient už odbavil UI start (overlay/animace nebo rehydratace)
         let uiOverlayRunning = false;      // právě běží odpočet/overlay
@@ -520,6 +541,17 @@ function applySnapshotWhenReady(myNumber, snapshot, attempt = 0) {
 socket.on("stateSync", ({ myNumber, snapshot }) => {
   DBG('stateSync RX', { myNumber, hasStarted: snapshot?.hasStarted, roomId: snapshot?.roomId });
   applySnapshotWhenReady(myNumber, snapshot);
+
+  window.seatControllers = snapshot.seatControllers || window.seatControllers;
+  window.allNames = snapshot.allNames || window.allNames;
+  window.displayNames = snapshot.displayNames || {
+    1: window.allNames[1], 2: window.allNames[2], 3: window.allNames[3]
+  };
+  updateScoreNames && updateScoreNames();
+
+
+
+
 });
 
 // === Jakmile se hra OPRAVDU spustí (po animaci rozdělení) → pokud byl odložený snapshot, aplikuj ho teď ===
@@ -786,17 +818,18 @@ if (regionValues && typeof regionValues === 'object') {
 
 */
 
-
+            function labelForSeat(seat) {
+                return (window.displayNames?.[seat] || window.allNames?.[seat] || `Hráč ${seat}`);
+            }
 
 
             
 
             function updateScoreNames() {
-            const allPlayers = {
-                1: player1 || "Robot Emil",
-                2: player2 || "Robot Jirka",
-                3: player3 || "Robot Honza"
-            };
+           
+            const allPlayers = window.displayNames && Object.keys(window.displayNames).length
+                ? window.displayNames
+                : window.allNames;
 
             const myScoreName = document.getElementById("myscorename");
             const other1 = document.getElementById("player2scorename");
@@ -880,15 +913,24 @@ if (regionValues && typeof regionValues === 'object') {
 
 
             let allNames = {};
-                    socket.on("updatePlayers", ({ allNames: names }) => {
+             socket.on("updatePlayers", ({ allNames: names }) => {
 
-                        console.log("updatePlayers:", names); // <-- do konzole
+                    console.log("updatePlayers:", names); // <-- do konzole
                     allNames = names;
                     player1 = allNames[1] || "Robot Emil";
                     player2 = allNames[2] || "Robot Jirka";
                     player3 = allNames[3] || "Robot Honza";
                     updateScoreNames();
                     updateLobbyList(allNames);
+            });
+
+
+            socket.on("updatePlayers", ({ allNames, displayNames, seatControllers }) => {
+                if (allNames) window.allNames = allNames;
+                if (displayNames) window.displayNames = displayNames;
+                if (seatControllers) window.seatControllers = seatControllers;
+                updateScoreNames && updateScoreNames();
+                updateLobbyList && updateLobbyList(window.displayNames);
             });
 
 
@@ -6582,8 +6624,8 @@ function showMultipleChoice(qText, options, timeLimit, attacker, defender, attac
     // ✅ Zobrazit panel hráčů, pokud je duel
     if (attacker && defender) {
         qplayers.style.display = "block";
-        qplayername1.innerHTML = attackerName;
-        qplayername2.innerHTML = defenderName;
+         qplayername1.innerHTML = seatDisplayName(attacker, attackerName);
+         qplayername2.innerHTML = seatDisplayName(defender, defenderName);
 
         const playerColors = {
             1: "linear-gradient(rgb(13 0 76),5%,rgb(58 0 232),95%,rgb(13 0 76))",
@@ -6906,8 +6948,8 @@ function showNumericQuestionForTwo(questionText, timeLimit, attacker, defender, 
 
     qplayers.style.display = "block";
 
-    qplayername1.innerHTML = attackerName;
-    qplayername2.innerHTML = defenderName;
+     qplayername1.innerHTML = seatDisplayName(attacker, attackerName);
+     qplayername2.innerHTML = seatDisplayName(defender, defenderName);
 
     const playerColors = {
         1: "linear-gradient(rgb(13 0 76),5%,rgb(58 0 232),95%,rgb(13 0 76))",

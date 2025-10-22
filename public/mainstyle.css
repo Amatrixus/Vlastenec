@@ -2054,3 +2054,10 @@ fill: white;
   display: flex;
   justify-content: space-between;
 }
+
+
+.bot-gear {
+  font-size: 0.9em;
+  opacity: 0.85;
+  margin-left: 4px;
+}

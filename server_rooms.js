@@ -61,9 +61,18 @@ function buildRoomSnapshot(room, roomId) {
     const p = room.players[i];
     allNames[i + 1] = (p && p.name) ? p.name : `Robot ${i + 1}`;
   }
+
+  const displayNames = {
+    1: displayName(room, 1, true),
+    2: displayName(room, 2, true),
+    3: displayName(room, 3, true)
+  };
+
+
   return {
     roomId,
     allNames,
+    displayNames,
     hasStarted: !!room.hasStarted,
     phase: room.phase,
     round: room.round,
@@ -193,7 +202,15 @@ function roomAddPlayerAndBroadcast(roomId, socket, name) {
       scores: room.scores,
       roomId
     });
-    io.to(roomId).emit("updatePlayers", { allNames, seatControllers: room.seatControllers });
+
+
+    const displayNames = {
+      1: displayName(room, 1, true),
+      2: displayName(room, 2, true),
+      3: displayName(room, 3, true)
+    };
+
+    io.to(roomId).emit("updatePlayers", { allNames, displayNames, seatControllers: room.seatControllers });
     io.to(roomId).emit("updateScores", { scores: room.scores });
     return;
   }
@@ -226,7 +243,15 @@ function roomAddPlayerAndBroadcast(roomId, socket, name) {
   socket.emit("assignPlayerNumber", {
     number: myNumber, allNames, scores: room.scores, roomId
   });
-  io.to(roomId).emit("updatePlayers", { allNames, seatControllers: room.seatControllers });
+  
+  
+  const displayNames = {
+      1: displayName(room, 1, true),
+      2: displayName(room, 2, true),
+      3: displayName(room, 3, true)
+    };
+
+  io.to(roomId).emit("updatePlayers", { allNames, displayNames, seatControllers: room.seatControllers });
   io.to(roomId).emit("updateScores", { scores: room.scores });
 
   // 5) Start hry pouze jednou (zbytek nech tak, jak už máš – hasStarted guard)
@@ -279,6 +304,16 @@ function randInt(a, b) { // včetně
 
 
 
+
+const ROBOT_NAMES = { 1: "Robot Emil", 2: "Robot Jirka", 3: "Robot Honza" };
+
+function displayName(room, seat, withGear = false) {
+  const isBotSeat = room?.seatControllers?.[seat] === "bot";
+  const base = isBotSeat
+    ? (ROBOT_NAMES[seat] || `Robot ${seat}`)
+    : (room.players[seat - 1]?.name || `Hráč ${seat}`);
+  return withGear && isBotSeat ? `${base} ⚙️` : base;
+}
 
 
 
@@ -455,8 +490,8 @@ function runMultipleChoice(roomId, participatingPlayers = [1, 2, 3]) {
         time: 10,
         attacker,
         defender,
-        attackerName: isDuel ? room.players[attacker - 1].name : "",
-        defenderName: isDuel ? room.players[defender - 1].name : "",
+        attackerName: isDuel ? displayName(room, attacker, true) : "",
+        defenderName: isDuel ? displayName(room, defender, true) : "",
         canAnswer: participatingPlayers.includes(playerNumber)
       });
     });
@@ -532,8 +567,8 @@ function runNumericQuestionForTwo(roomId, [player1, player2]) {
       time: 15,
       attacker: player1,
       defender: player2,
-      attackerName: room.players[player1 - 1].name,
-      defenderName: room.players[player2 - 1].name
+      attackerName: displayName(room, player1, true),
+      defenderName: displayName(room, player2, true)
     });
 
     // BOT odpovědi
@@ -1740,7 +1775,13 @@ io.on('connection', socket => {
 
 
 
-    io.to(roomId).emit("updatePlayers", { allNames, seatControllers: room.seatControllers });
+    const displayNames = {
+      1: displayName(room, 1, true),
+      2: displayName(room, 2, true),
+      3: displayName(room, 3, true)
+    };
+
+    io.to(roomId).emit("updatePlayers", { allNames, displayNames, seatControllers: room.seatControllers });
   });
 
 
@@ -1914,7 +1955,16 @@ socket.on("disconnect", () => {
   // pobídni klienty k refreshi UI (jména zůstávají stejné)
   const allNames = {};
   room.players.forEach((p, i) => { if (p) allNames[i + 1] = p.name; });
-  io.to(roomId).emit("updatePlayers", { allNames, seatControllers: room.seatControllers });
+
+
+
+  const displayNames = {
+      1: displayName(room, 1, true),
+      2: displayName(room, 2, true),
+      3: displayName(room, 3, true)
+    };
+
+  io.to(roomId).emit("updatePlayers", { allNames, displayNames, seatControllers: room.seatControllers });
   io.to(roomId).emit("updateScores", { scores: room.scores });
 
   // když je room opravdu prázdná (všechna sedadla bez id a živých socketů), pak uklidit
