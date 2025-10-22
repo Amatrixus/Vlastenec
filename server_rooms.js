@@ -193,7 +193,7 @@ function roomAddPlayerAndBroadcast(roomId, socket, name) {
       scores: room.scores,
       roomId
     });
-    io.to(roomId).emit("updatePlayers", { allNames });
+    io.to(roomId).emit("updatePlayers", { allNames, seatControllers: room.seatControllers });
     io.to(roomId).emit("updateScores", { scores: room.scores });
     return;
   }
@@ -226,7 +226,7 @@ function roomAddPlayerAndBroadcast(roomId, socket, name) {
   socket.emit("assignPlayerNumber", {
     number: myNumber, allNames, scores: room.scores, roomId
   });
-  io.to(roomId).emit("updatePlayers", { allNames });
+  io.to(roomId).emit("updatePlayers", { allNames, seatControllers: room.seatControllers });
   io.to(roomId).emit("updateScores", { scores: room.scores });
 
   // 5) Start hry pouze jednou (zbytek nech tak, jak už máš – hasStarted guard)
@@ -259,10 +259,38 @@ function roomAddPlayerAndBroadcast(roomId, socket, name) {
   } else if (room.hasStarted) {
     // Pozdější vstup/reconnect = jen snapshot (pokud tu funkci máš)
     if (typeof buildRoomSnapshot === 'function') {
-      socket.emit("stateSync", { myNumber, snapshot: buildRoomSnapshot(room) });
+      socket.emit("stateSync", { myNumber, snapshot: buildRoomSnapshot(room, roomId) });
     }
   }
 }
+
+
+
+
+
+//BOTS ADDED
+function isBot(room, seat) {
+  return room?.seatControllers?.[seat] === "bot";
+}
+
+function randInt(a, b) { // včetně
+  return a + Math.floor(Math.random() * (b - a + 1));
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -413,15 +441,13 @@ function runMultipleChoice(roomId, participatingPlayers = [1, 2, 3]) {
 
     room.answers = {};
 
-    console.log(`❓ Spouštím otázku: "${question.question}" pro hráče: ${participatingPlayers}`);
-
     const isDuel = participatingPlayers.length === 2;
     const attacker = isDuel ? participatingPlayers[0] : null;
     const defender = isDuel ? participatingPlayers[1] : null;
 
-    // ✅ Pošli všem hráčům otázku – třetí hráč jen neinteraguje
+    // Pošli otázku všem (canAnswer = jen účastníci)
     room.players.forEach((p, index) => {
-      if (!p || !p.id) return;            // ⬅︎ guard
+      if (!p || !p.id) return;
       const playerNumber = index + 1;
       io.to(p.id).emit("multipleChoiceQuestion", {
         question: question.question,
@@ -435,30 +461,47 @@ function runMultipleChoice(roomId, participatingPlayers = [1, 2, 3]) {
       });
     });
 
-    const handler = ({ room: rId, player, answerIndex }) => {
-      if (rId !== roomId) return;
-      if (!participatingPlayers.includes(player)) return;
-      if (room.answers[player] !== undefined) return;
+    // BOT odpovědi
+    try {
+      const BOT_CORRECT_PROB = 0.55;
+      const BOT_MIN_DELAY_MS = 600;
+      const BOT_MAX_DELAY_MS = 2200;
 
-      room.answers[player] = answerIndex;
-      console.log(`✏️ Hráč ${player} odpověděl: ${answerIndex}`);
-    };
+      participatingPlayers.forEach((seat) => {
+        if (!isBot(room, seat)) return;
+        const botDelay = randInt(BOT_MIN_DELAY_MS, BOT_MAX_DELAY_MS);
 
-    io.on("playerAnswered", handler);
+        setTimeout(() => {
+          const r = rooms[roomId];
+          if (!r || !isRoomAlive(roomId)) return;
+          if (!isBot(r, seat)) return;
+          if (r.answers?.[seat] !== undefined) return;
 
+          const indices = question.options.map((_, i) => i);
+          const wrong   = indices.filter(i => i !== question.correct);
+          const shouldBeCorrect = Math.random() < BOT_CORRECT_PROB;
+
+          // jediná proměnná pick (žádné stínění)
+          let pick = shouldBeCorrect
+            ? question.correct
+            : (wrong.length ? wrong[randInt(0, wrong.length - 1)] : question.correct);
+
+          r.answers = r.answers || {};
+          r.answers[seat] = pick;
+          console.log(`🤖 BOT ${seat} odpověděl MC: ${pick}`);
+        }, botDelay);
+      });
+    } catch (e) { console.warn('BOT MC error', e); }
+
+    // ⏲️ Timeout + vyhodnocení + resolve (VRÁCENO)
     setTimeout(() => {
-      io.off("playerAnswered", handler);
-
-      if (!isRoomAlive(roomId)) return resolve([]); // 🔴 NEW
-
+      if (!isRoomAlive(roomId)) return resolve([]);
 
       for (const player in room.answers) {
         if (room.answers[player] === question.correct) {
           correctPlayers.push(Number(player));
         }
       }
-
-      console.log(`✅ Správně odpověděli: ${correctPlayers}`);
 
       io.to(roomId).emit("multipleChoiceResults", {
         correctAnswer: question.correct,
@@ -473,23 +516,19 @@ function runMultipleChoice(roomId, participatingPlayers = [1, 2, 3]) {
 
 
 
-
 function runNumericQuestionForTwo(roomId, [player1, player2]) {
   return new Promise((resolve) => {
     const room = rooms[roomId];
     if (!room) return resolve(null);
 
-    // Vyber náhodnou otázku z JSONu
     const nq = numericQuestions[Math.floor(Math.random() * numericQuestions.length)];
     const correctAnswer = Number.isInteger(nq.answer) ? nq.answer : parseInt(nq.answer, 10);
-
-    console.log(`❓ Numerická (duel) ${player1} vs ${player2}: ${nq.question} → správně: ${correctAnswer}`);
 
     room.numericAnswers = {};
     room.numericStartTime = Date.now();
 
     io.to(roomId).emit("numericQuestionForTwo", {
-      question: nq.question,  // <— posíláme text otázky
+      question: nq.question,
       time: 15,
       attacker: player1,
       defender: player2,
@@ -497,48 +536,53 @@ function runNumericQuestionForTwo(roomId, [player1, player2]) {
       defenderName: room.players[player2 - 1].name
     });
 
-    const handler = ({ room: rId, player, answer }) => {
-      if (rId !== roomId) return;
-      if (![player1, player2].includes(player)) return;
+    // BOT odpovědi
+    try {
+      const BOT_MIN_DELAY_MS = 700;
+      const BOT_MAX_DELAY_MS = 2400;
 
-      // zkonvertuj vstup na celé číslo
-      const num = parseInt(answer, 10);
-      if (Number.isNaN(num)) return;
+      [player1, player2].forEach((seat) => {
+        if (!isBot(room, seat)) return;
+        const botDelay = randInt(BOT_MIN_DELAY_MS, BOT_MAX_DELAY_MS);
 
-      if (!room.numericAnswers[player]) {
-        room.numericAnswers[player] = {
-          num,
-          time: Date.now() - room.numericStartTime
-        };
-        console.log(`✏️ Hráč ${player} odpověděl: ${num} (${room.numericAnswers[player].time}ms)`);
-      }
-    };
+        setTimeout(() => {
+          const r = rooms[roomId];
+          if (!r || !isRoomAlive(roomId)) return;
+          if (!isBot(r, seat)) return;
+          if (r.numericAnswers?.[seat]) return;
 
-    io.on("playerNumericAnswer", handler);
+          const noise = Math.round((Math.random() - 0.5) * 0.2 * Math.max(10, Math.abs(correctAnswer)));
+          const guess = correctAnswer + noise;
 
+          r.numericAnswers = r.numericAnswers || {};
+          r.numericAnswers[seat] = { num: guess, time: Date.now() - r.numericStartTime };
+          console.log(`🤖 BOT ${seat} odpověděl NUM (duel): ${guess}`);
+        }, botDelay);
+      });
+    } catch (e) { console.warn('BOT duel numeric error', e); }
+
+    // ⏲️ Timeout + vyhodnocení + resolve
     setTimeout(() => {
-      io.off("playerNumericAnswer", handler);
+      if (!isRoomAlive(roomId)) return resolve(null);
 
       // doplň chybějící odpovědi
       [player1, player2].forEach(p => {
         if (!room.numericAnswers[p]) {
           room.numericAnswers[p] = { num: 0, time: 15000 };
-          console.log(`⏳ Hráč ${p} nestihl → nastavena odpověď 0 (15 s)`);
+          console.log(`⏳ Hráč ${p} nestihl → 0 (15 s)`);
         }
       });
 
       const sorted = Object.entries(room.numericAnswers)
         .map(([player, data]) => ({
           player: Number(player),
-          num: data.num,
-          diff: Math.abs(data.num - correctAnswer),
+          num: parseInt(data.num, 10),
+          diff: Math.abs(parseInt(data.num, 10) - correctAnswer),
           time: data.time
         }))
         .sort((a, b) => (a.diff !== b.diff ? a.diff - b.diff : a.time - b.time));
 
       const winner = sorted[0].player;
-
-      console.log(`🏆 Vítěz (duel): Hráč ${winner}`);
 
       io.to(roomId).emit("numericQuestionResultsForTwo", {
         correctAnswer,
@@ -560,6 +604,7 @@ function runNumericQuestionForTwo(roomId, [player1, player2]) {
 
 
 
+
 function runNumericQuestionForThree(roomId) {
   return new Promise((resolve) => {
     const room = rooms[roomId];
@@ -568,36 +613,44 @@ function runNumericQuestionForThree(roomId) {
     const nq = numericQuestions[Math.floor(Math.random() * numericQuestions.length)];
     const correctAnswer = Number.isInteger(nq.answer) ? nq.answer : parseInt(nq.answer, 10);
 
-    console.log(`❓ Numerická (3 hráči): ${nq.question} → správně: ${correctAnswer}`);
-
     room.numericAnswers = {};
     room.numericStartTime = Date.now();
 
     io.to(roomId).emit("numericQuestion", {
-      question: nq.question, // <— text otázky
+      question: nq.question,
       time: 15
     });
 
-    const handler = ({ room: rId, player, answer }) => {
-      if (rId !== roomId) return;
-      const num = parseInt(answer, 10);
-      if (Number.isNaN(num)) return;
+    // BOT odpovědi
+    try {
+      const BOT_MIN_DELAY_MS = 700;
+      const BOT_MAX_DELAY_MS = 2400;
 
-      if (!room.numericAnswers[player]) {
-        room.numericAnswers[player] = {
-          num,
-          time: Date.now() - room.numericStartTime
-        };
-        console.log(`✏️ Hráč ${player} odpověděl: ${num} (${room.numericAnswers[player].time}ms)`);
-      }
-    };
+      [1,2,3].forEach((seat) => {
+        if (!isBot(room, seat)) return;
+        const botDelay = randInt(BOT_MIN_DELAY_MS, BOT_MAX_DELAY_MS);
 
-    io.on("playerNumericAnswer", handler);
+        setTimeout(() => {
+          const r = rooms[roomId];
+          if (!r || !isRoomAlive(roomId)) return;
+          if (!isBot(r, seat)) return;
+          if (r.numericAnswers?.[seat]) return;
 
+          const noise = Math.round((Math.random() - 0.5) * 0.25 * Math.max(10, Math.abs(correctAnswer)));
+          const guess = correctAnswer + noise;
+
+          r.numericAnswers = r.numericAnswers || {};
+          r.numericAnswers[seat] = { num: guess, time: Date.now() - r.numericStartTime };
+          console.log(`🤖 BOT ${seat} odpověděl NUM (3): ${guess}`);
+        }, botDelay);
+      });
+    } catch (e) { console.warn('BOT 3p numeric error', e); }
+
+    // ⏲️ Timeout + vyhodnocení + resolve
     setTimeout(() => {
-      io.off("playerNumericAnswer", handler);
+      if (!isRoomAlive(roomId)) return resolve(null);
 
-      // doplň neodpověděné
+      // doplň chybějící
       [1, 2, 3].forEach(player => {
         if (!room.numericAnswers[player]) {
           room.numericAnswers[player] = { num: 0, time: 15000 };
@@ -608,15 +661,13 @@ function runNumericQuestionForThree(roomId) {
       const sorted = Object.entries(room.numericAnswers)
         .map(([player, data]) => ({
           player: Number(player),
-          num: data.num,
-          diff: Math.abs(data.num - correctAnswer),
+          num: parseInt(data.num, 10),
+          diff: Math.abs(parseInt(data.num, 10) - correctAnswer),
           time: data.time
         }))
         .sort((a, b) => (a.diff !== b.diff ? a.diff - b.diff : a.time - b.time));
 
       const winner = sorted[0].player;
-
-      console.log(`🏆 Vítěz (3 hráči): Hráč ${winner}`);
 
       io.to(roomId).emit("numericQuestionResults", {
         correctAnswer,
@@ -1058,6 +1109,38 @@ async function runBattleClaiming(roomId, attacker) {
     io.to(attackerSocketId).emit("battleAvailableRegions", { regions: availableEnemyRegions });
   }
 
+
+
+
+  //BOTS ADDED
+    if (isBot(room, attacker)) {
+    const pool = availableEnemyRegions;
+    if (pool.length) {
+      const pick = pool[randInt(0, pool.length - 1)];
+      // naplánuj „klik“ bota – nastav pendingSelections
+      setTimeout(() => {
+        const r = rooms[roomId];
+        if (!r || !isRoomAlive(roomId)) return;
+        if (!isBot(r, attacker)) return;
+        r.pendingSelections = r.pendingSelections || {};
+        if (!r.pendingSelections[attacker]) r.pendingSelections[attacker] = pick;
+      }, randInt(500, 1000));
+    }
+  }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   const selectedRegion = await waitForPlayerSelection(roomId, attacker, 10000, availableEnemyRegions);
 
   if (!selectedRegion) {
@@ -1494,6 +1577,47 @@ function waitForPlayerSelection(roomId, player, timeout, forcedAvailableRegions 
     const room = rooms[roomId];
     if (!room) return resolve(null);
 
+
+
+          //ADDED BOTS
+          // --- BOT auto-výběr (běží jen když je sedadlo v módu "bot") ---
+          if (isBot(room, player)) {
+            // z čeho vybíráme
+            const pool = forcedAvailableRegions !== null
+              ? forcedAvailableRegions
+              : getAvailableRegions(room, player);
+
+            if (Array.isArray(pool) && pool.length > 0) {
+              const pick = pool[randInt(0, pool.length - 1)];
+
+              // lehké zpoždění a pojistky (může se mezitím vrátit člověk)
+              setTimeout(() => {
+                const r = rooms[roomId];
+                if (!r || !isRoomAlive(roomId)) return;
+                if (!isBot(r, player)) return;                  // hráč se mezitím „vzal volant“
+                if (r.pendingSelections?.[player]) return;      // už vybráno (třeba člověkem)
+
+                r.pendingSelections = r.pendingSelections || {};
+                r.pendingSelections[player] = pick;
+                if (r.claimedRegionsThisRound) r.claimedRegionsThisRound.add(pick);
+                // dál už si to vyzvedne existující loop v waitForPlayerSelection
+              }, randInt(400, 900)); // „přirozené“ zpoždění bota
+            }
+          }
+
+
+
+
+
+
+
+
+    
+
+
+
+
+
     room.pendingSelections = room.pendingSelections || {};
 
     let elapsed = 0;
@@ -1790,7 +1914,7 @@ socket.on("disconnect", () => {
   // pobídni klienty k refreshi UI (jména zůstávají stejné)
   const allNames = {};
   room.players.forEach((p, i) => { if (p) allNames[i + 1] = p.name; });
-  io.to(roomId).emit("updatePlayers", { allNames });
+  io.to(roomId).emit("updatePlayers", { allNames, seatControllers: room.seatControllers });
   io.to(roomId).emit("updateScores", { scores: room.scores });
 
   // když je room opravdu prázdná (všechna sedadla bez id a živých socketů), pak uklidit
@@ -1908,11 +2032,8 @@ socket.on("playerNumericAnswer", ({ room: roomId, player, answer }) => {
   const room = rooms[roomId];
   if (!room) return;
 
-  room.numericAnswers = room.numericAnswers || {};function sanitizeRoomId(s) {
-  const code = String(s || '').replace(/^room_/i, '').trim();
-  const m = code.match(/^[A-Z0-9]{6}$/i);          // ← změna
-  return m ? `room_${m[0].toUpperCase()}` : '';
-}
+  
+  room.numericAnswers = room.numericAnswers || {};
   const startTime = room.numericStartTime || Date.now(); // server uchovává začátek
 
   if (!room.numericAnswers[player]) {
