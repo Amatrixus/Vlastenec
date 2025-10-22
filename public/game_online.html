@@ -928,11 +928,24 @@ if (regionValues && typeof regionValues === 'object') {
 
             */
 
+            let lastSeatControllers = {};
 
             socket.on("updatePlayers", ({ allNames, displayNames, seatControllers }) => {
                 if (allNames) window.allNames = allNames;
                 if (displayNames) window.displayNames = displayNames;
                 if (seatControllers) window.seatControllers = seatControllers;
+
+
+
+                  // 🔍 porovnej, zda se změnil stav "bot/human"
+                if (JSON.stringify(lastSeatControllers) !== JSON.stringify(seatControllers)) {
+                    console.log("♻️ Změna typu hráče – obnovuji základny");
+                    settlePlayer1();
+                    settlePlayer2();
+                    settlePlayer3();
+                    lastSeatControllers = { ...seatControllers };
+                }
+                
                 
 
                 updateScoreNames && updateScoreNames();
