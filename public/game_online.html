@@ -913,7 +913,9 @@ if (regionValues && typeof regionValues === 'object') {
 
 
             let allNames = {};
-             socket.on("updatePlayers", ({ allNames: names }) => {
+             
+            /*
+            socket.on("updatePlayers", ({ allNames: names }) => {
 
                     console.log("updatePlayers:", names); // <-- do konzole
                     allNames = names;
@@ -924,11 +926,19 @@ if (regionValues && typeof regionValues === 'object') {
                     updateLobbyList(allNames);
             });
 
+            */
+
 
             socket.on("updatePlayers", ({ allNames, displayNames, seatControllers }) => {
                 if (allNames) window.allNames = allNames;
                 if (displayNames) window.displayNames = displayNames;
                 if (seatControllers) window.seatControllers = seatControllers;
+                if (allowPaint){
+                    settlePlayer1();
+                    settlePlayer2();
+                    settlePlayer3();
+                }
+
                 updateScoreNames && updateScoreNames();
                 updateLobbyList && updateLobbyList(window.displayNames);
             });
