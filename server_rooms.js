@@ -338,6 +338,7 @@ function displayName(room, seat, withGear = false) {
 
 
 
+
 const defaultRegionValues = {
   Alpha: 0,
   Delta: 0,
@@ -1822,10 +1823,11 @@ io.on('connection', socket => {
 
   // FRIENDS: host vytvoří místnost a rovnou se do ní přidá
 socket.on("createRoom", ({ settings }) => {
-  const name = (settings?.name || "Host").toString();
-  const roomId = makeFriendsRoomId();          // ← použij náš helper
+  const name   = (settings?.name || "Host").toString();
+  const mode   = (settings?.mode || 'friends');   // ⬅️ vezmeme mód z klienta
+  const roomId = makeFriendsRoomId();
 
-  const room = makeEmptyRoom(roomId, 'friends');
+  const room = makeEmptyRoom(roomId, mode);       // ⬅️ použij mód i do room
   room.settings = settings || {};
 
   socket.emit("roomReady", { room: roomId });
@@ -1834,15 +1836,27 @@ socket.on("createRoom", ({ settings }) => {
   socket.data.joinedRoom = roomId;
   socket.data.name = name;
 
+  // === SOLO vs BOTI: předvyplň sedadla 2 a 3 jako boty ===
+  if (mode === 'bots') {
+    // zajisti délku pole players = 3
+    while (room.players.length < MAX_PLAYERS_PER_ROOM) room.players.push(undefined);
+
+    // sedadla 2 a 3: „bot“ (id=null), jméno necháme podle ROBOT_NAMES
+    room.players[1] = { id: null, name: (ROBOT_NAMES[2] || 'Robot 2') };
+    room.players[2] = { id: null, name: (ROBOT_NAMES[3] || 'Robot 3') };
+
+    room.seatControllers[2] = 'bot';
+    room.seatControllers[3] = 'bot';
+  }
+
+  // hostitele posaď normálně (obsadí první volné sedadlo – bude to 1)
   roomAddPlayerAndBroadcast(roomId, socket, name);
 
-
-  // Po přidání hráče do room:
+  // po přidání hráče pošli snapshot
   const seatNum = getSeatNumber(rooms[roomId], socket.id);
-socket.emit("stateSync", { myNumber: seatNum, snapshot: buildRoomSnapshot(rooms[roomId], roomId) });
-
-    
+  socket.emit("stateSync", { myNumber: seatNum, snapshot: buildRoomSnapshot(rooms[roomId], roomId) });
 });
+
 
 
 
@@ -1852,15 +1866,20 @@ socket.emit("stateSync", { myNumber: seatNum, snapshot: buildRoomSnapshot(rooms[
 socket.on("joinRoom", ({ room, settings }) => {
   const name = (settings?.name || "").toString().trim() || "Host";
   const roomId = sanitizeRoomId(room);
-
   if (!roomId) {
     socket.emit("roomError", { message: "Missing or invalid room id" });
     return;
   }
 
   if (!rooms[roomId]) {
-    makeEmptyRoom(roomId, 'friends');   // <-- důležité
+    makeEmptyRoom(roomId, 'friends');
     rooms[roomId].settings = settings || {};
+  }
+
+  // ⬇️ doplň tohle (volitelné)
+  if (rooms[roomId].mode === 'bots') {
+    socket.emit("roomError", { message: "Tahle místnost je sólo proti botům." });
+    return;
   }
 
   const current = rooms[roomId];
@@ -1870,7 +1889,6 @@ socket.on("joinRoom", ({ room, settings }) => {
   }
 
   const safeName = (name || socket.data?.name || "Host").toString();
-
   socket.data = socket.data || {};
   socket.data.joinedRoom = roomId;
   socket.data.name = name;
@@ -1878,14 +1896,9 @@ socket.on("joinRoom", ({ room, settings }) => {
   roomAddPlayerAndBroadcast(roomId, socket, safeName);
   console.log(`👥 joinRoom → ${roomId} by ${name}`);
 
-  // Po přidání hráče do room:
-const seatNum = getSeatNumber(rooms[roomId], socket.id);
-socket.emit("stateSync", { myNumber: seatNum, snapshot: buildRoomSnapshot(rooms[roomId], roomId) });
-
-
-
+  const seatNum = getSeatNumber(rooms[roomId], socket.id);
+  socket.emit("stateSync", { myNumber: seatNum, snapshot: buildRoomSnapshot(rooms[roomId], roomId) });
 });
-
 
 
 

@@ -622,7 +622,7 @@ window.addEventListener('gameStartedAfterAnimation', () => {
         }
 
         // 3) fallback: založ friends, nebo dej mě do random
-        if (gameMode === 'friends') {
+        if (gameMode === 'friends' || gameMode === 'bots') {
             socket.emit('createRoom', { settings: { ...settings, name: myName } });
         } else {
             socket.emit('submitName', myName);
