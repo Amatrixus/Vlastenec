@@ -2890,82 +2890,66 @@ if (regionValues && typeof regionValues === 'object') {
 
 
         function settlePlayer1() {
-            var player1Base =  player1CurrentBase;
-
-            // ✅ Nastavíme hodnotu základny na 1000 bodů
-            //  regionValues[player1Base] = 1000;
-
-            
-
-            
+            const seat = 1;
+            const playerBase = player1CurrentBase;
+            const displayName = seatDisplayName(seat, player1); // ⬅️ použijeme jméno z helperu
 
             function updatePlayerBasePosition() {
-
-                let regionElement = document.getElementById(player1Base);
+                const regionElement = document.getElementById(playerBase);
                 if (!regionElement) {
-                    console.error(`❌ Region '${player1Base}' nebyl nalezen!`);
-                    return;
+                console.error(`❌ Region '${playerBase}' nebyl nalezen!`);
+                return;
                 }
 
-                let regionRect = regionElement.getBoundingClientRect();
-
-                // ✅ Určení středu regionu podle `pinPositions`, jinak geometrický střed
+                const regionRect = regionElement.getBoundingClientRect();
                 let centerX = regionRect.left + regionRect.width / 2 + window.scrollX;
                 let centerY = regionRect.top + regionRect.height / 2 + window.scrollY;
 
-                if (pinPositions[player1Base]) {
-                    centerX = regionRect.left + regionRect.width * pinPositions[player1Base].x + window.scrollX;
-                    centerY = regionRect.top + regionRect.height * pinPositions[player1Base].y + window.scrollY;
+                if (pinPositions[playerBase]) {
+                centerX = regionRect.left + regionRect.width * pinPositions[playerBase].x + window.scrollX;
+                centerY = regionRect.top + regionRect.height * pinPositions[playerBase].y + window.scrollY;
                 }
 
-                console.log(`📌 Souřadnice základny hráče 1: X=${centerX}, Y=${centerY}`);
-
-                // ✅ Ověření existence názvu hráče
-                let player1NameElement = document.getElementById("player1basename");
-                if (!player1NameElement) {
-                    player1NameElement = document.createElement("div");
-                    player1NameElement.id = "player1basename";
-                    player1NameElement.classList.add("player-name");
-                    document.body.appendChild(player1NameElement);
+                // ✅ Jméno hráče (i robota)
+                let nameElement = document.getElementById("player1basename");
+                if (!nameElement) {
+                nameElement = document.createElement("div");
+                nameElement.id = "player1basename";
+                nameElement.classList.add("player-name");
+                document.body.appendChild(nameElement);
                 }
 
-                player1NameElement.textContent = player1;
+                nameElement.innerHTML = displayName; // ⬅️ může obsahovat ⚙️
 
-                // ✅ Oprava opacity, pokud byla nastavena na 0
-                player1NameElement.style.opacity = "1"; 
-                player1NameElement.style.visibility = "visible"; // Pro jistotu
+                nameElement.style.position = "absolute";
+                nameElement.style.left = `${centerX}px`;
+                nameElement.style.top = `${centerY - 30}px`;
+                nameElement.style.transform = "translate(-50%, -50%)";
+                nameElement.style.zIndex = "4";
+                nameElement.style.opacity = "1";
+                nameElement.style.visibility = "visible";
 
-                // ✅ Oprava pozicování (stejně jako piny)
-                player1NameElement.style.position = "absolute";
-                player1NameElement.style.left = `${centerX}px`;
-                player1NameElement.style.top = `${centerY - 30}px`;
-                player1NameElement.style.transform = "translate(-50%, -50%)";
-                player1NameElement.style.zIndex = "4";
-
-                console.log(`📌 Název hráče přidán do DOM: ${player1NameElement.outerHTML}`);
-
-                // ✅ Umístění vizuálu základny (stejný přístup jako u pinů)
-                let player1BaseVisual = document.getElementById("player1basevisual");
-                if (!player1BaseVisual) {
-                    player1BaseVisual = document.createElement("img");
-                    player1BaseVisual.id = "player1basevisual";
-                    player1BaseVisual.src = "base_icon.png"; // Ikona základny
-                    document.body.appendChild(player1BaseVisual);
+                // ✅ Obrázek základny
+                let baseVisual = document.getElementById("player1basevisual");
+                if (!baseVisual) {
+                baseVisual = document.createElement("img");
+                baseVisual.id = "player1basevisual";
+                baseVisual.src = "base_icon.png";
+                document.body.appendChild(baseVisual);
                 }
 
-                player1BaseVisual.style.position = "absolute";
-                player1BaseVisual.style.left = `${centerX}px`;
-                player1BaseVisual.style.top = `${centerY}px`;
-                player1BaseVisual.style.transform = "translate(-50%, -50%)";
-                player1BaseVisual.style.display = "block";
+                baseVisual.style.position = "absolute";
+                baseVisual.style.left = `${centerX}px`;
+                baseVisual.style.top = `${centerY}px`;
+                baseVisual.style.transform = "translate(-50%, -50%)";
+                baseVisual.style.display = "block";
             }
 
             updatePlayerBasePosition();
-
-            // ✅ Aktualizace pozic při změně velikosti okna
             window.addEventListener("resize", updatePlayerBasePosition);
-            socket.emit("baseSettled", { playerNumber: 1 }); 
-        }
+            socket.emit("baseSettled", { playerNumber: 1 });
+            }
+
 
 
 
