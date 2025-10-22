@@ -55,14 +55,14 @@
 
 
         function seatDisplayName(seat, fallback) {
+        // ⚙️ už je součástí displayNames z serveru – NEPŘIDÁVEJ ho znovu
         const base =
             (window.displayNames?.[seat]) ||
             fallback ||
             (window.allNames?.[seat]) ||
             `Hráč ${seat}`;
 
-        const isBot = window.seatControllers?.[seat] === 'bot';
-        return isBot ? `${base} <span class="bot-gear" title="Bot">⚙️</span>` : base;
+        return base;
         }
 
 
