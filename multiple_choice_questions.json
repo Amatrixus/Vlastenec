@@ -1,422 +1,807 @@
 [
   {
-    "id": "lit001",
+    "id": 1,
     "category": "kultura",
     "question": "Kdo napsal román „Na větrné hůrce“?",
     "options": ["Charlotte Brontëová", "Emily Brontëová", "Jane Austenová", "Mary Shelleyová"],
     "correct": 1
   },
   {
-    "id": "lit002",
+    "id": 2,
     "category": "kultura",
     "question": "Jak se jmenuje hlavní hrdina románu „1984“ od George Orwella?",
     "options": ["Winston Smith", "Big Brother", "John Proctor", "Guy Montag"],
     "correct": 0
   },
   {
-    "id": "lit003",
+    "id": 3,
     "category": "kultura",
     "question": "Kdo je autorem eposu „Božská komedie“?",
     "options": ["Giovanni Boccaccio", "Dante Alighieri", "Francesco Petrarca", "Torquato Tasso"],
     "correct": 1
   },
   {
-    "id": "lit004",
+    "id": 4,
     "category": "kultura",
     "question": "Jak se jmenuje autor románu „Sto roků samoty“?",
     "options": ["Mario Vargas Llosa", "Gabriel García Márquez", "Julio Cortázar", "Jorge Luis Borges"],
     "correct": 1
   },
   {
-    "id": "lit005",
+    "id":  5,
     "category": "kultura",
     "question": "Kdo napsal tragédii „Hamlet“?",
     "options": ["Christopher Marlowe", "William Shakespeare", "Ben Jonson", "Thomas Kyd"],
     "correct": 1
   },
   {
-    "id": "lit006",
+    "id":  6,
     "category": "kultura",
     "question": "Jaký francouzský spisovatel je autorem románu „Hrbáč z Notre-Dame“?",
     "options": ["Émile Zola", "Victor Hugo", "Gustave Flaubert", "Alexandre Dumas"],
     "correct": 1
   },
   {
-    "id": "lit007",
+    "id":  7,
     "category": "kultura",
     "question": "Který český spisovatel napsal „Osudy dobrého vojáka Švejka“?",
     "options": ["Karel Čapek", "Jaroslav Hašek", "Bohumil Hrabal", "Vladislav Vančura"],
     "correct": 1
   },
   {
-    "id": "lit008",
+    "id":  8,
     "category": "kultura",
     "question": "Jak se jmenuje autor knihy „Malý princ“?",
     "options": ["Jean-Paul Sartre", "Antoine de Saint-Exupéry", "Albert Camus", "Marcel Proust"],
     "correct": 1
   },
   {
-    "id": "lit009",
+    "id":  9,
     "category": "kultura",
     "question": "Kdo napsal román „Pýcha a předsudek“?",
     "options": ["Jane Austenová", "George Eliotová", "Virginia Woolfová", "Emily Brontëová"],
     "correct": 0
   },
   {
-    "id": "lit010",
+    "id":  10,
     "category": "kultura",
     "question": "Který ruský autor napsal „Zločin a trest“?",
     "options": ["Lev Tolstoj", "Anton Pavlovič Čechov", "Fjodor Michajlovič Dostojevskij", "Nikolaj Gogol"],
     "correct": 2
   },
   {
-    "id": "lit011",
+    "id":  11,
     "category": "kultura",
     "question": "Kdo je autorem románu „Babička“?",
     "options": ["Božena Němcová", "Karolina Světlá", "Teréza Nováková", "Eliška Krásnohorská"],
     "correct": 0
   },
   {
-    "id": "lit012",
+    "id":  12,
     "category": "kultura",
     "question": "Který český spisovatel napsal „Kytici“?",
     "options": ["Jan Neruda", "Karel Hynek Mácha", "Karel Jaromír Erben", "Vítězslav Hálek"],
     "correct": 2
   },
   {
-    "id": "lit013",
+    "id":  13,
     "category": "kultura",
     "question": "Jak se jmenuje hlavní hrdina Máchova díla „Máj“?",
     "options": ["Vilém", "Hynek", "Jarmil", "Marek"],
     "correct": 0
   },
   {
-    "id": "lit014",
+    "id":  14,
     "category": "kultura",
     "question": "Kdo napsal drama „R.U.R.“?",
     "options": ["František Langer", "Karel Čapek", "Josef Čapek", "Jaroslav Vrchlický"],
     "correct": 1
   },
   {
-    "id": "lit015",
+    "id":  15,
     "category": "kultura",
     "question": "Který autor napsal román „Obsluhoval jsem anglického krále“?",
     "options": ["Ladislav Fuks", "Bohumil Hrabal", "Milan Kundera", "Josef Škvorecký"],
     "correct": 1
   },
   {
-    "id": "lit016",
+    "id":  16,
     "category": "kultura",
     "question": "Kdo je autorem povídky „Romance pro křídlovku“?",
     "options": ["Vladimír Páral", "Jaroslav Seifert", "František Hrubín", "Jan Skácel"],
     "correct": 2
   },
   {
-    "id": "lit017",
+    "id":  17,
     "category": "kultura",
     "question": "Jak se jmenuje autor novely „Spalovač mrtvol“?",
     "options": ["Ladislav Fuks", "Arnošt Lustig", "Jiří Weil", "Ota Pavel"],
     "correct": 0
   },
   {
-    "id": "lit018",
+    "id":  18,
     "category": "kultura",
     "question": "Kdo napsal dílo „Povídky malostranské“?",
     "options": ["Jan Neruda", "Jakub Arbes", "Svatopluk Čech", "Vítězslav Hálek"],
     "correct": 0
   },
   {
-    "id": "lit019",
+    "id":  19,
     "category": "kultura",
     "question": "Který spisovatel je autorem románu „Žert“?",
     "options": ["Milan Kundera", "Josef Škvorecký", "Bohumil Hrabal", "Arnošt Lustig"],
     "correct": 0
   },
   {
-    "id": "lit020",
+    "id":  20,
     "category": "kultura",
     "question": "Kdo napsal básnickou sbírku „Maminka“?",
     "options": ["Jaroslav Seifert", "František Hrubín", "Vítězslav Nezval", "Jan Skácel"],
     "correct": 0
   },
   {
-    "id": "lit021",
+    "id":  21,
     "category": "kultura",
     "question": "Kdo napsal román „Cizinec“?",
     "options": ["Jean-Paul Sartre", "Albert Camus", "Franz Kafka", "Simone de Beauvoir"],
     "correct": 1
   },
   {
-    "id": "lit022",
+    "id":  22,
     "category": "kultura",
     "question": "Který spisovatel je autorem díla „Proces“?",
     "options": ["Thomas Mann", "Franz Kafka", "Stefan Zweig", "Robert Musil"],
     "correct": 1
   },
   {
-    "id": "lit023",
+    "id":  23,
     "category": "kultura",
     "question": "Kdo napsal román „Jméno růže“?",
     "options": ["Italo Calvino", "Umberto Eco", "Alberto Moravia", "Primo Levi"],
     "correct": 1
   },
   {
-    "id": "lit024",
+    "id":  24,
     "category": "kultura",
     "question": "Jaký ruský autor napsal „Mistr a Markétka“?",
     "options": ["Michail Bulgakov", "Ivan Bunin", "Alexandr Solženicyn", "Boris Pasternak"],
     "correct": 0
   },
   {
-    "id": "lit025",
+    "id":  25,
     "category": "kultura",
     "question": "Kdo je autorem díla „Pán much“?",
     "options": ["William Golding", "George Orwell", "John Steinbeck", "Aldous Huxley"],
     "correct": 0
   },
   {
-    "id": "lit026",
+    "id":  26,
     "category": "kultura",
     "question": "Jaké dílo napsal Miguel de Cervantes?",
     "options": ["Don Quijote", "Lazarillo de Tormes", "La Celestina", "El Cid"],
     "correct": 0
   },
   {
-    "id": "lit027",
+    "id":  27,
     "category": "kultura",
     "question": "Kdo je autorem tragédie „Faust“?",
     "options": ["Johann Wolfgang von Goethe", "Friedrich Schiller", "Gotthold Ephraim Lessing", "Heinrich Heine"],
     "correct": 0
   },
   {
-    "id": "lit028",
+    "id":  28,
     "category": "kultura",
     "question": "Jak se jmenuje autor románu „Na západní frontě klid“?",
     "options": ["Erich Maria Remarque", "Thomas Mann", "Günter Grass", "Hermann Hesse"],
     "correct": 0
   },
   {
-    "id": "lit029",
+    "id":  29,
     "category": "kultura",
     "question": "Kdo napsal román „Stoletý stařík, který vylezl z okna a zmizel“?",
     "options": ["Jonas Jonasson", "Henning Mankell", "Stieg Larsson", "Jo Nesbø"],
     "correct": 0
   },
   {
-    "id": "lit030",
+    "id":  30,
     "category": "kultura",
     "question": "Který americký spisovatel napsal „Hlava XXII“?",
     "options": ["Joseph Heller", "Kurt Vonnegut", "J.D. Salinger", "Truman Capote"],
     "correct": 0
   },
   {
-    "id": "lit031",
+    "id":  31,
     "category": "kultura",
     "question": "Jaké je hlavní téma románu „1984“ od George Orwella?",
     "options": ["Láska", "Totalita a sledování", "Cestování v čase", "Kolonialismus"],
     "correct": 1
   },
   {
-    "id": "lit032",
+    "id":  32,
     "category": "kultura",
     "question": "Kdo napsal „Mechanický pomeranč“?",
     "options": ["Anthony Burgess", "George Orwell", "Philip K. Dick", "Aldous Huxley"],
     "correct": 0
   },
   {
-    "id": "lit033",
+    "id":  33,
     "category": "kultura",
     "question": "Kdo je autorem románu „Na cestě“ (On the Road)?",
     "options": ["Allen Ginsberg", "Jack Kerouac", "William S. Burroughs", "Ken Kesey"],
     "correct": 1
   },
   {
-    "id": "lit034",
+    "id":  34,
     "category": "kultura",
     "question": "Který autor napsal román „Hlava XXII“?",
     "options": ["Kurt Vonnegut", "Joseph Heller", "Truman Capote", "Ray Bradbury"],
     "correct": 1
   },
   {
-    "id": "lit035",
+    "id":  35,
     "category": "kultura",
     "question": "Jak se jmenuje autor románu „Lolita“?",
     "options": ["Vladimir Nabokov", "Isaac Bashevis Singer", "Ernest Hemingway", "John Updike"],
     "correct": 0
   },
   {
-    "id": "lit036",
+    "id":  36,
     "category": "kultura",
     "question": "Kdo napsal „Pán prstenů“?",
     "options": ["J.R.R. Tolkien", "C.S. Lewis", "George R.R. Martin", "Terry Pratchett"],
     "correct": 0
   },
   {
-    "id": "lit037",
+    "id":  37,
     "category": "kultura",
     "question": "Kdo je autorem románu „Zločin a trest“?",
     "options": ["Fjodor Michajlovič Dostojevskij", "Lev Tolstoj", "Nikolaj Gogol", "Anton Čechov"],
     "correct": 0
   },
   {
-    "id": "lit038",
+    "id":  38,
     "category": "kultura",
     "question": "Jak se jmenuje autor románu „Horalka“ (La ciociara)?",
     "options": ["Giovanni Verga", "Alberto Moravia", "Luigi Pirandello", "Cesare Pavese"],
     "correct": 1
   },
   {
-    "id": "lit039",
+    "id":  39,
     "category": "kultura",
     "question": "Kdo napsal román „Kdo chytá v žitě“?",
     "options": ["Truman Capote", "John Steinbeck", "J.D. Salinger", "William Faulkner"],
     "correct": 2
   },
   {
-    "id": "lit040",
+    "id":  40,
     "category": "kultura",
     "question": "Jaký spisovatel získal Nobelovu cenu za literaturu v roce 1954?",
     "options": ["Albert Camus", "William Faulkner", "Ernest Hemingway", "Thomas Mann"],
     "correct": 2
   },
   {
-    "id": "lit041",
+    "id":  41,
     "category": "kultura",
     "question": "Který literární směr je spojen s dílem Charlese Baudelaira „Květy zla“?",
     "options": ["Realismus", "Romantismus", "Symbolismus", "Naturalismus"],
     "correct": 2
   },
   {
-    "id": "lit042",
+    "id":  42,
     "category": "kultura",
     "question": "Jaký směr je typický důrazem na popis skutečnosti bez idealizace, jak ji vidíme u Émila Zoly?",
     "options": ["Naturalismus", "Realismus", "Impresionismus", "Dekadence"],
     "correct": 0
   },
   {
-    "id": "lit043",
+    "id":  43,
     "category": "kultura",
     "question": "Který literární směr je spojen s postavou 'básníka-prokletce'?",
     "options": ["Romantismus", "Symbolismus", "Dekadence", "Modernismus"],
     "correct": 2
   },
   {
-    "id": "lit044",
+    "id":  44,
     "category": "kultura",
     "question": "Který literární směr vznikl jako reakce na osvícenství a klade důraz na cit a přírodu?",
     "options": ["Realismus", "Romantismus", "Klasismus", "Surrealismus"],
     "correct": 1
   },
   {
-    "id": "lit045",
+    "id":  45,
     "category": "kultura",
     "question": "Jak se nazývá literární hnutí, které čerpalo inspiraci ze snů a podvědomí?",
     "options": ["Existencialismus", "Surrealismus", "Expresionismus", "Impresionismus"],
     "correct": 1
   },
   {
-    "id": "lit046",
+    "id":  46,
     "category": "kultura",
     "question": "Který francouzský spisovatel byl představitelem existencialismu?",
     "options": ["Albert Camus", "Victor Hugo", "Marcel Proust", "Paul Verlaine"],
     "correct": 0
   },
   {
-    "id": "lit047",
+    "id":  47,
     "category": "kultura",
     "question": "Jaký směr literatury reprezentují díla Beat generation, např. Jack Kerouac nebo Allen Ginsberg?",
     "options": ["Realismus", "Existencialismus", "Avantgarda", "Beatnická literatura"],
     "correct": 3
   },
   {
-    "id": "lit048",
+    "id":  48,
     "category": "kultura",
     "question": "Který směr usiloval o návrat k antickým ideálům harmonie a rozumu?",
     "options": ["Romantismus", "Klasismus", "Renesance", "Realismus"],
     "correct": 1
   },
   {
-    "id": "lit049",
+    "id":  49,
     "category": "kultura",
     "question": "Jaký literární směr je spojen s Jamesem Joycem a technikou proudu vědomí?",
     "options": ["Modernismus", "Realismus", "Existencialismus", "Postmodernismus"],
     "correct": 0
   },
   {
-    "id": "lit050",
+    "id":  50,
     "category": "kultura",
     "question": "Jak se nazývá literární směr, který v první polovině 20. století reagoval na hrůzy války absurditou a ironií?",
     "options": ["Dadaismus", "Futurismus", "Surrealismus", "Expresionismus"],
     "correct": 0
   },
   {
-    "id": "lit051",
+    "id":  51,
     "category": "kultura",
     "question": "Jaký literární směr je typický pro Franze Kafku?",
     "options": ["Absurdní literatura", "Naturalismus", "Realismus", "Symbolismus"],
     "correct": 0
   },
   {
-    "id": "lit052",
+    "id":  52,
     "category": "kultura",
     "question": "Jaký literární směr je spojen s Hemingwayovým stylem 'ledovce' – jednoduchým jazykem s hlubším podtextem?",
     "options": ["Modernismus", "Realismus", "Minimalismus", "Postmodernismus"],
     "correct": 2
   },
   {
-    "id": "lit053",
+    "id":  53,
     "category": "kultura",
     "question": "Který směr je spojen s bojem proti dogmatům a náboženské autoritě a rozvíjel se v 18. století?",
     "options": ["Romantismus", "Osvícenství", "Humanismus", "Empirismus"],
     "correct": 1
   },
   {
-    "id": "lit054",
+    "id":  54,
     "category": "kultura",
     "question": "Jaký směr vznikl po druhé světové válce a typicky používá ironii a intertextualitu?",
     "options": ["Postmodernismus", "Realismus", "Naturalismus", "Impresionismus"],
     "correct": 0
   },
   {
-    "id": "lit055",
+    "id":  55,
     "category": "kultura",
     "question": "Který směr klade důraz na intenzivní vyjádření emocí a vnitřního napětí postav, často až deformací reality?",
     "options": ["Expresionismus", "Surrealismus", "Symbolismus", "Romantismus"],
     "correct": 0
   },
   {
-    "id": "lit056",
+    "id":  56,
     "category": "kultura",
     "question": "Jaký směr je spojen s renesancí a objevováním lidské individuality?",
     "options": ["Humanismus", "Klasismus", "Realismus", "Romantismus"],
     "correct": 0
   },
   {
-    "id": "lit057",
+    "id":  57,
     "category": "kultura",
     "question": "Který literární směr reagoval na průmyslovou revoluci a zobrazoval sociální problémy 19. století?",
     "options": ["Naturalismus", "Realismus", "Romantismus", "Existencialismus"],
     "correct": 1
   },
   {
-    "id": "lit058",
+    "id":  58,
     "category": "kultura",
     "question": "Který avantgardní směr vyzdvihoval rychlost, techniku a válku jako formu krásy?",
     "options": ["Futurismus", "Dadaismus", "Kubismus", "Expresionismus"],
     "correct": 0
   },
   {
-    "id": "lit059",
+    "id":  59,
     "category": "kultura",
     "question": "Jaký směr se vyznačuje absurdním humorem a motivem ztráty smyslu života, typickým pro Becketta?",
     "options": ["Existencialismus", "Absurdní drama", "Postmodernismus", "Dekadence"],
     "correct": 1
   },
   {
-    "id": "lit060",
+    "id":  60,
     "category": "kultura",
     "question": "Jaký směr 20. století kombinuje realitu s prvky fantazie, jak to vidíme u Márqueze nebo Borgese?",
     "options": ["Magický realismus", "Surrealismus", "Postmodernismus", "Symbolismus"],
     "correct": 0
+  },
+  {
+    "id": 61,
+    "category": "historie",
+    "question": "Kdy se odehrála bitva u Thermopyl?",
+    "options": ["490 př. n. l.", "480 př. n. l.", "431 př. n. l.", "322 př. n. l."],
+    "correct": 1
+  },
+  {
+    "id": 62,
+    "category": "historie",
+    "question": "Kdo byl zakladatelem Perské říše?",
+    "options": ["Kýros II. Veliký", "Dareios I.", "Xerxés I.", "Artaxerxés III."],
+    "correct": 0
+  },
+  {
+    "id": 63,
+    "category": "historie",
+    "question": "Kdy bylo založeno město Řím podle tradice?",
+    "options": ["753 př. n. l.", "509 př. n. l.", "476 př. n. l.", "27 př. n. l."],
+    "correct": 0
+  },
+  {
+    "id": 64,
+    "category": "historie",
+    "question": "Kdo byl prvním římským císařem?",
+    "options": ["Julius Caesar", "Augustus", "Tiberius", "Nero"],
+    "correct": 1
+  },
+  {
+    "id": 65,
+    "category": "historie",
+    "question": "Které město bylo centrem byzantské říše?",
+    "options": ["Athény", "Řím", "Konstantinopol", "Alexandrie"],
+    "correct": 2
+  },
+  {
+    "id": 66,
+    "category": "historie",
+    "question": "Jak se jmenoval první křesťanský císař Římské říše?",
+    "options": ["Konstantin Veliký", "Theodosius I.", "Justinián I.", "Hadrián"],
+    "correct": 0
+  },
+  {
+    "id": 67,
+    "category": "historie",
+    "question": "Ve kterém roce padla Západořímská říše?",
+    "options": ["410", "455", "476", "493"],
+    "correct": 2
+  },
+  {
+    "id": 68,
+    "category": "historie",
+    "question": "Který franský panovník byl korunován císařem roku 800?",
+    "options": ["Karel Martel", "Pipin Krátký", "Karel Veliký", "Ludvík Pobožný"],
+    "correct": 2
+  },
+  {
+    "id": 69,
+    "category": "historie",
+    "question": "Jak se jmenoval první český král?",
+    "options": ["Václav I.", "Vratislav II.", "Přemysl Otakar I.", "Boleslav I."],
+    "correct": 1
+  },
+  {
+    "id": 70,
+    "category": "historie",
+    "question": "Kdo byl zakladatelem dynastie Přemyslovců?",
+    "options": ["Krok", "Přemysl Oráč", "Svatopluk", "Bořivoj I."],
+    "correct": 1
+  },
+  {
+    "id": 71,
+    "category": "historie",
+    "question": "Kdy proběhla bitva na Bílé hoře?",
+    "options": ["1618", "1620", "1648", "1660"],
+    "correct": 1
+  },
+  {
+    "id": 72,
+    "category": "historie",
+    "question": "Jak dlouho trvala třicetiletá válka?",
+    "options": ["28 let", "30 let", "32 let", "33 let"],
+    "correct": 1
+  },
+  {
+    "id": 73,
+    "category": "historie",
+    "question": "Kdy začala Francouzská revoluce?",
+    "options": ["1776", "1789", "1793", "1804"],
+    "correct": 1
+  },
+  {
+    "id": 74,
+    "category": "historie",
+    "question": "Kdo se stal francouzským císařem po revoluci?",
+    "options": ["Ludvík XVI.", "Robespierre", "Napoleon Bonaparte", "Talleyrand"],
+    "correct": 2
+  },
+  {
+    "id": 75,
+    "category": "historie",
+    "question": "Ve kterém roce se odehrála bitva u Waterloo?",
+    "options": ["1805", "1812", "1815", "1821"],
+    "correct": 2
+  },
+  {
+    "id": 76,
+    "category": "historie",
+    "question": "Kdy došlo ke sjednocení Itálie?",
+    "options": ["1815", "1848", "1861", "1871"],
+    "correct": 2
+  },
+  {
+    "id": 77,
+    "category": "historie",
+    "question": "Kdo byl prvním kancléřem sjednoceného Německa?",
+    "options": ["Otto von Bismarck", "Helmut Kohl", "Adolf Hitler", "Wilhelm I."],
+    "correct": 0
+  },
+  {
+    "id": 78,
+    "category": "historie",
+    "question": "Kdy vzniklo Rakousko-Uhersko?",
+    "options": ["1848", "1861", "1867", "1871"],
+    "correct": 2
+  },
+  {
+    "id": 79,
+    "category": "historie",
+    "question": "Kdo byl posledním rakouským císařem?",
+    "options": ["František Josef I.", "Karel I.", "František II.", "Ferdinand V."],
+    "correct": 1
+  },
+  {
+    "id": 80,
+    "category": "historie",
+    "question": "Ve kterém roce začala první světová válka?",
+    "options": ["1912", "1914", "1916", "1918"],
+    "correct": 1
+  },
+  {
+    "id": 81,
+    "category": "historie",
+    "question": "Kde byl spáchán atentát, který rozpoutal první světovou válku?",
+    "options": ["Vídeň", "Praha", "Sarajevo", "Budapešť"],
+    "correct": 2
+  },
+  {
+    "id": 82,
+    "category": "historie",
+    "question": "Kdy vzniklo Československo?",
+    "options": ["1917", "1918", "1919", "1920"],
+    "correct": 1
+  },
+  {
+    "id": 83,
+    "category": "historie",
+    "question": "Kdo byl prvním prezidentem Československa?",
+    "options": ["Klement Gottwald", "Tomáš Garrigue Masaryk", "Edvard Beneš", "Antonín Švehla"],
+    "correct": 1
+  },
+  {
+    "id": 84,
+    "category": "historie",
+    "question": "Kdy začala druhá světová válka?",
+    "options": ["1937", "1938", "1939", "1941"],
+    "correct": 2
+  },
+  {
+    "id": 85,
+    "category": "historie",
+    "question": "Jak se jmenoval britský premiér během druhé světové války?",
+    "options": ["Neville Chamberlain", "Winston Churchill", "Clement Attlee", "Anthony Eden"],
+    "correct": 1
+  },
+  {
+    "id": 86,
+    "category": "historie",
+    "question": "Kdy skončila druhá světová válka v Evropě?",
+    "options": ["7. května 1945", "8. května 1945", "9. května 1945", "11. května 1945"],
+    "correct": 1
+  },
+  {
+    "id": 87,
+    "category": "historie",
+    "question": "Kdy vznikla Organizace spojených národů (OSN)?",
+    "options": ["1943", "1945", "1947", "1948"],
+    "correct": 1
+  },
+  {
+    "id": 88,
+    "category": "historie",
+    "question": "Kdo byl prvním prezidentem USA?",
+    "options": ["Thomas Jefferson", "George Washington", "John Adams", "Benjamin Franklin"],
+    "correct": 1
+  },
+  {
+    "id": 89,
+    "category": "historie",
+    "question": "Kdy se uskutečnila americká deklarace nezávislosti?",
+    "options": ["1774", "1775", "1776", "1778"],
+    "correct": 2
+  },
+  {
+    "id": 90,
+    "category": "historie",
+    "question": "Kdy se uskutečnila Velká říjnová socialistická revoluce v Rusku?",
+    "options": ["1915", "1917", "1918", "1921"],
+    "correct": 1
+  },
+  {
+    "id": 91,
+    "category": "historie",
+    "question": "Kdo byl vůdcem Sovětského svazu během druhé světové války?",
+    "options": ["Lenin", "Stalin", "Chruščov", "Brežněv"],
+    "correct": 1
+  },
+  {
+    "id": 92,
+    "category": "historie",
+    "question": "Kdy byl postaven Berlínský zeď?",
+    "options": ["1949", "1956", "1961", "1969"],
+    "correct": 2
+  },
+  {
+    "id": 93,
+    "category": "historie",
+    "question": "V kterém roce došlo k pádu Berlínské zdi?",
+    "options": ["1987", "1988", "1989", "1990"],
+    "correct": 2
+  },
+  {
+    "id": 94,
+    "category": "historie",
+    "question": "Kdy se rozpadlo Československo?",
+    "options": ["1989", "1990", "1992", "1993"],
+    "correct": 3
+  },
+  {
+    "id": 95,
+    "category": "historie",
+    "question": "Kdo byl prvním prezidentem České republiky?",
+    "options": ["Václav Havel", "Václav Klaus", "Miloš Zeman", "Alexander Dubček"],
+    "correct": 0
+  },
+  {
+    "id": 96,
+    "category": "kultura",
+    "question": "Kdo získal Nobelovu cenu za literaturu v roce 1954?",
+    "options": ["Ernest Hemingway", "Albert Camus", "William Faulkner", "Thomas Mann"],
+    "correct": 0
+  },
+  {
+    "id": 97,
+    "category": "kultura",
+    "question": "Který francouzský existencialista získal Nobelovu cenu za literaturu, ale odmítl ji převzít?",
+    "options": ["Jean-Paul Sartre", "Albert Camus", "Simone de Beauvoir", "André Gide"],
+    "correct": 0
+  },
+  {
+    "id": 98,
+    "category": "kultura",
+    "question": "Kdo získal Nobelovu cenu za literaturu v roce 1957?",
+    "options": ["Albert Camus", "Jean-Paul Sartre", "Francois Mauriac", "Claude Simon"],
+    "correct": 0
+  },
+  {
+    "id": 99,
+    "category": "kultura",
+    "question": "Který americký spisovatel, autor knihy „Hrozny hněvu“, obdržel Nobelovu cenu v roce 1962?",
+    "options": ["John Steinbeck", "William Faulkner", "Ernest Hemingway", "Toni Morrison"],
+    "correct": 0
+  },
+  {
+    "id": 100,
+    "category": "kultura",
+    "question": "Kdo jako první Afričan získal Nobelovu cenu za literaturu (1986)?",
+    "options": ["Wole Soyinka", "Chinua Achebe", "Ngũgĩ wa Thiong’o", "Ben Okri"],
+    "correct": 0
+  },
+  {
+    "id": 101,
+    "category": "kultura",
+    "question": "Jaký britský autor získal Nobelovu cenu v roce 1983 za dílo „Lord of the Flies“?",
+    "options": ["William Golding", "Harold Pinter", "Kazuo Ishiguro", "Graham Greene"],
+    "correct": 0
+  },
+  {
+    "id": 102,
+    "category": "kultura",
+    "question": "Kdo byl v roce 1991 oceněn Nobelovou cenou za literaturu jako první Jihoafričanka?",
+    "options": ["Nadine Gordimer", "Doris Lessing", "J.M. Coetzee", "Toni Morrison"],
+    "correct": 0
+  },
+  {
+    "id": 103,
+    "category": "kultura",
+    "question": "Který japonský spisovatel získal Nobelovu cenu za literaturu v roce 1968?",
+    "options": ["Yasunari Kawabata", "Kenzaburō Ōe", "Haruki Murakami", "Ryūnosuke Akutagawa"],
+    "correct": 0
+  },
+  {
+    "id": 104,
+    "category": "kultura",
+    "question": "Kdo byl oceněn Nobelovou cenou za literaturu v roce 1970 za román „Souostroví Gulag“?",
+    "options": ["Alexandr Solženicyn", "Boris Pasternak", "Mihail Bulgakov", "Vladimir Nabokov"],
+    "correct": 0
+  },
+  {
+    "id": 105,
+    "category": "kultura",
+    "question": "Který kolumbijský autor získal Nobelovu cenu za literaturu v roce 1982?",
+    "options": ["Gabriel García Márquez", "Mario Vargas Llosa", "Julio Cortázar", "Carlos Fuentes"],
+    "correct": 0
+  },
+  {
+    "id": 106,
+    "category": "kultura",
+    "question": "Který polský básník a esejista obdržel Nobelovu cenu za literaturu v roce 1980?",
+    "options": ["Czesław Miłosz", "Wisława Szymborska", "Zbigniew Herbert", "Adam Zagajewski"],
+    "correct": 0
+  },
+  {
+    "id": 107,
+    "category": "kultura",
+    "question": "Kdo získal Nobelovu cenu za literaturu v roce 1994 za román „Čekání na bárbara“?",
+    "options": ["J.M. Coetzee", "Nadine Gordimer", "V.S. Naipaul", "José Saramago"],
+    "correct": 0
+  },
+  {
+    "id": 108,
+    "category": "kultura",
+    "question": "Jaký portugalský spisovatel byl oceněn Nobelovou cenou v roce 1998?",
+    "options": ["José Saramago", "Fernando Pessoa", "Eça de Queirós", "Lídia Jorge"],
+    "correct": 0
+  },
+  {
+    "id": 109,
+    "category": "kultura",
+    "question": "Která americká autorka získala Nobelovu cenu za literaturu v roce 1993?",
+    "options": ["Toni Morrison", "Maya Angelou", "Joyce Carol Oates", "Alice Walker"],
+    "correct": 0
+  },
+  {
+    "id": 110,
+    "category": "kultura",
+    "question": "Kdo získal Nobelovu cenu za literaturu v roce 2006 jako první turecký autor?",
+    "options": ["Orhan Pamuk", "Elif Shafak", "Yaşar Kemal", "Nâzım Hikmet"],
+    "correct": 0
+  },
+  {
+    "id": 111,
+    "category": "kultura",
+    "question": "Jaký britský dramatik a scenárista obdržel Nobelovu cenu za literaturu v roce 2005?",
+    "options": ["Harold Pinter", "Tom Stoppard", "Alan Bennett", "Peter Shaffer"],
+    "correct": 0
+  },
+  {
+    "id": 112,
+    "category": "kultura",
+    "question": "Který francouzský autor získal Nobelovu cenu za literaturu v roce 2014?",
+    "options": ["Patrick Modiano", "Michel Houellebecq", "Jean-Marie Gustave Le Clézio", "Annie Ernaux"],
+    "correct": 0
+  },
+  {
+    "id": 113,
+    "category": "kultura",
+    "question": "Jaká švédská básnířka byla oceněna Nobelovou cenou za literaturu v roce 2011?",
+    "options": ["Tomas Tranströmer", "Lars Norén", "Pär Lagerkvist", "Karin Boye"],
+    "correct": 0
+  },
+  {
+    "id": 114,
+    "category": "kultura",
+    "question": "Který písničkář získal Nobelovu cenu za literaturu v roce 2016?",
+    "options": ["Bob Dylan", "Leonard Cohen", "Paul Simon", "Bruce Springsteen"],
+    "correct": 0
+  },
+  {
+    "id": 115,
+    "category": "kultura",
+    "question": "Kdo byl oceněn Nobelovou cenou za literaturu v roce 2022 za „inovativní romány prolínající vzpomínky a historii kolonialismu“?",
+    "options": ["Abdulrazak Gurnah", "Annie Ernaux", "Kazuo Ishiguro", "Olga Tokarczuk"],
+    "correct": 1
   }
 ]
