@@ -229,9 +229,10 @@
     const gameMode   = qp.get('mode') || 'random'; // random výchozí
     const catsCsv    = qp.get('cats') || '';
     const catIds     = catsCsv.split(',').filter(Boolean).map(n => parseInt(n, 10));
+
     const catNames   = (() => {
-      const raw = qp.get('catnames'); if (!raw) return [];
-      try { return JSON.parse(decodeURIComponent(raw)); } catch { return []; }
+        const raw = qp.get('catnames'); if (!raw) return [];
+        try { return JSON.parse(raw); } catch { return []; }   // URLSearchParams vrací už dekódované
     })();
     
 
@@ -642,6 +643,9 @@ window.addEventListener('gameStartedAfterAnimation', () => {
       const url = new URL(location.href);
       url.searchParams.set('room', room);
       history.replaceState(null, '', url.toString());
+      // po vytvoření friends místnosti rovnou pošli nastavení
+      socket.emit('settings:update', { roomId: currentRoomId, settings: { mode: gameMode, cats: catIds, catNames } });
+
     });
 
     // --- Tvé stávající listenery ---
@@ -650,6 +654,19 @@ window.addEventListener('gameStartedAfterAnimation', () => {
       myPlayerNumber = number;
       currentRoomId = roomId;
       playerControlledByUser[number] = true;
+
+
+
+
+
+        // 🔁 Po tom, co známe roomId, odešleme serveru kategorie (platí pro random/friends/bots i po resume)
+        socket.emit('settings:update', {
+           roomId: currentRoomId,
+           settings: { mode: gameMode, cats: catIds, catNames }
+        });
+
+
+
 
 
         // ⚠️ nový room → smazat případné staré UI příznaky pro tento room

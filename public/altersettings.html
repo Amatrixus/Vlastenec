@@ -172,6 +172,15 @@
 
 <script>
 (() => {
+
+  // --- jednoslovné slugy kategorií (1..9 dle dlaždic zleva doprava) ---
+  const CATEGORY_SLUGS = [
+    'vedy', 'literatura', 'technologie', 'geografie', 'historie',
+    'kultura', 'sport', 'osobnosti', 'politika'
+  ];
+
+
+
   // --- DOM refs ---
   const titleEl = document.getElementById('modeTitle');
   const descEl  = document.getElementById('modeDescription');
@@ -262,9 +271,9 @@
     labels.forEach((lab, idx) => {
       const cb = lab.querySelector('input[type="checkbox"]');
       if (cb && cb.checked) {
-        const tooltip = lab.querySelector('.tooltip');
-        const label   = tooltip ? tooltip.textContent.trim() : `cat${idx+1}`;
-        picked.push({ id: (idx+1), name: label });
+        // do URL posíláme jednoslovné slugy odpovídající DB
+        const slug = CATEGORY_SLUGS[idx] || `cat${idx+1}`;
+        picked.push({ id: (idx+1), name: slug });
       }
     });
     return picked;
@@ -284,7 +293,10 @@
     params.set('name', name);
     params.set('mode', mode);
     params.set('cats', cats.map(c => c.id).join(','));
-    params.set('catnames', encodeURIComponent(JSON.stringify(cats.map(c => c.name))));
+    // POZN.: URLSearchParams sám encoduje, takže už NEvoláme encodeURIComponent.
+    // Klidně posílejme jednoduchý CSV se slugy – čitelné a stabilní pro server/DB.
+    params.set('catnames', JSON.stringify(cats.map(c => c.name)));
+
 
     if (mode === 'friends') {
       if (!currentRoomCode) {

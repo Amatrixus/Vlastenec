@@ -54,6 +54,76 @@ function sanitizeRoomId(s) {
 
 
 
+// --- Kategorie: jednoduchý filtr podle nastavení room ---
+function allowedCategorySet(room) {
+  const s = room.settings || {};
+  const fromNames = Array.isArray(s.catNames) ? s.catNames : [];
+  const fromIds = Array.isArray(s.cats) ? s.cats : [];
+
+  // podle tvých 9 kategorií v pořadí
+  const CATEGORY_SLUGS = [
+    'vedy','literatura','technologie','geografie','historie',
+    'kultura','sport','osobnosti','politika'
+  ];
+
+  const idSlugs = fromIds
+    .map(n => CATEGORY_SLUGS[(parseInt(n,10) || 0) - 1])
+    .filter(Boolean);
+
+  return new Set([...fromNames, ...idSlugs]);
+}
+
+// Vyfiltruj otázky podle kategorií, fallback = celý pool
+function filterQuestionsByRoomCategories(allQs, room) {
+  const allowed = allowedCategorySet(room);
+  if (!allowed.size) return allQs;
+
+  const filtered = allQs.filter(q => {
+    const cats = Array.isArray(q.categories) ? q.categories : [q.category];
+    if (!cats) return false;
+    return cats.some(c => allowed.has(c));
+  });
+
+  return filtered.length ? filtered : allQs;
+}
+
+function pickRandom(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+
+
+
+
+
+function sanitizeSettings(incoming = {}) {
+  const out = { ...(incoming || {}) };
+
+  // cats: jen 1..9 (máš 9 dlaždic)
+  if (Array.isArray(out.cats)) {
+    out.cats = out.cats
+      .map(n => parseInt(n, 10))
+      .filter(n => Number.isInteger(n) && n >= 1 && n <= 9);
+  }
+
+  // catNames: neprázdné stringy
+  if (Array.isArray(out.catNames)) {
+    out.catNames = out.catNames
+      .map(s => String(s || '').trim())
+      .filter(Boolean);
+  }
+
+  // mode (nepovinné): jen známé hodnoty
+  if (out.mode && !['random','friends','bots','liga'].includes(out.mode)) {
+    delete out.mode;
+  }
+
+  return out;
+}
+
+
+
+
 // === SNAPSHOT: sestavení stavu místnosti pro rehydrataci klienta ===
 function buildRoomSnapshot(room, roomId) {
   const allNames = {};
@@ -84,7 +154,8 @@ function buildRoomSnapshot(room, roomId) {
     seatControllers: room.seatControllers,
     expansionPlan: room.expansionPlan || null,
     battlePlan: room.battlePlan || null,
-    chat: room.chat || []             // ⬅️ TADY
+    chat: room.chat || [],
+    settings: room.settings || {}
   };
 }
 
@@ -472,7 +543,10 @@ function runMultipleChoice(roomId, participatingPlayers = [1, 2, 3]) {
     const room = rooms[roomId];
     if (!room) return resolve([]);
 
-    const question = questions[Math.floor(Math.random() * questions.length)];
+    const pool = filterQuestionsByRoomCategories(questions, room);
+    const question = pickRandom(pool);
+    console.log(`🧠 MC otázka z kategorie: ${question.category}`);
+
     const correctPlayers = [];
 
     room.answers = {};
@@ -557,7 +631,11 @@ function runNumericQuestionForTwo(roomId, [player1, player2]) {
     const room = rooms[roomId];
     if (!room) return resolve(null);
 
-    const nq = numericQuestions[Math.floor(Math.random() * numericQuestions.length)];
+    const npool = filterQuestionsByRoomCategories(numericQuestions, room);
+    const nq = pickRandom(npool);
+    console.log(`🔢 Numeric otázka z kategorie: ${nq.category}`);
+
+
     const correctAnswer = Number.isInteger(nq.answer) ? nq.answer : parseInt(nq.answer, 10);
 
     room.numericAnswers = {};
@@ -646,7 +724,11 @@ function runNumericQuestionForThree(roomId) {
     const room = rooms[roomId];
     if (!room) return resolve(null);
 
-    const nq = numericQuestions[Math.floor(Math.random() * numericQuestions.length)];
+    const npool = filterQuestionsByRoomCategories(numericQuestions, room);
+    const nq = pickRandom(npool);
+    console.log(`🔢 Numeric (3p) otázka z kategorie: ${nq.category}`);
+
+
     const correctAnswer = Number.isInteger(nq.answer) ? nq.answer : parseInt(nq.answer, 10);
 
     room.numericAnswers = {};
@@ -1763,6 +1845,24 @@ function waitForPlayerSelection(roomId, player, timeout, forcedAvailableRegions 
 
 
 io.on('connection', socket => {
+
+
+
+
+
+  socket.on('settings:update', ({ roomId, settings }) => {
+    const room = rooms[roomId];
+    if (!room) return;
+
+    const safe = sanitizeSettings(settings);
+    room.settings = { ...(room.settings || {}), ...safe };
+
+    // (volitelně) pošli potvrzení všem v místnosti
+    io.to(roomId).emit('settings:applied', { settings: room.settings });
+
+    console.log('🧩 settings:update', roomId, room.settings);
+  });
+
 
 
 
