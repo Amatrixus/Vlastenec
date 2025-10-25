@@ -992,7 +992,7 @@ async function runConquestPhase(roomId) {
 
 
       // Čekej na výběr regionu nebo náhodné přiřazení
-      const selectedRegion = await waitForPlayerSelection(roomId, winner, 10000);
+      const selectedRegion = await waitForPlayerSelection(roomId, winner, 10000, available);
       if (!isRoomAlive(roomId)) return; // 🔴 NEW
 
 
@@ -1633,6 +1633,12 @@ function getAvailableRegionsConquest(room) {
 
 
 function waitForPlayerSelection(roomId, player, timeout, forcedAvailableRegions = null) {
+  console.log(
+    "[waitForPlayerSelection] p:", player,
+    " forcedAvailable:", Array.isArray(forcedAvailableRegions) ? forcedAvailableRegions.length : "none"
+  );
+
+
   return new Promise(resolve => {
     const room = rooms[roomId];
     if (!room) return resolve(null);
@@ -1647,7 +1653,7 @@ function waitForPlayerSelection(roomId, player, timeout, forcedAvailableRegions 
           // --- BOT auto-výběr (běží jen když je sedadlo v módu "bot") ---
           if (isBot(room, player)) {
             // z čeho vybíráme
-            const pool = forcedAvailableRegions !== null
+            const pool = Array.isArray(forcedAvailableRegions)
               ? forcedAvailableRegions
               : getAvailableRegions(room, player);
 
@@ -1713,7 +1719,7 @@ function waitForPlayerSelection(roomId, player, timeout, forcedAvailableRegions 
         clearInterval(interval);
 
         // ✅ POUŽIJ jen forcedAvailableRegions, pokud existují
-        const accessible = forcedAvailableRegions !== null
+        const accessible = Array.isArray(forcedAvailableRegions)
           ? forcedAvailableRegions
           : getAvailableRegions(room, player);
 
