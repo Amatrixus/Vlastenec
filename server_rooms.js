@@ -1184,6 +1184,16 @@ async function runBattleClaiming(roomId, attacker) {
     return null;
   }
 
+
+// revalidace cíle v aktuálním stavu
+ const nowValidTargets = getEnemyRegions(room, attacker);
+ if (!nowValidTargets.includes(selectedRegion)) {
+   console.log("⚠️ Cíl přestal být validní (stav se změnil) – tah přeskočen.");
+   return null;
+}
+
+
+
   // ✅ Okamžitě zobraz pin na mapě
   io.to(roomId).emit("playerSelectedRegion", {
     player: attacker,
@@ -1202,6 +1212,12 @@ async function runBattleClaiming(roomId, attacker) {
     }
   }
 
+
+ if (participant2 == null || participant2 === attacker) {
+  console.log(`⚠️ Neplatný cíl: útočník ${attacker} → ${selectedRegion} (majitel: ${participant2})`);
+   return null;
+ }
+
   console.log(`⚔️ Útočník ${attacker} → Napadá region ${selectedRegion} (majitel: ${participant2})`);
 
   return {
@@ -1215,8 +1231,8 @@ async function runBattleClaiming(roomId, attacker) {
 
 
 function getEnemyRegions(room, attacker) {
-  const owned = room.regions[`Player${attacker}regions`] || [];
-  const allEnemyRegions = [];
+const owned = new Set(room.regions[`Player${attacker}regions`] || []);
+const allEnemyRegions = new Set();
 
   for (let p = 1; p <= 3; p++) {
     if (p === attacker) continue;
@@ -1225,13 +1241,21 @@ function getEnemyRegions(room, attacker) {
 
     enemyRegions.forEach(region => {
       // ✅ Útočit lze jen na regiony, které sousedí s některým z útočníkových regionů
-      if (
-        owned.some(ownedRegion =>
-          adjacencyInfo[ownedRegion]?.includes(region)
-        )
-      ) {
-        allEnemyRegions.push(region);
-      }
+     
+      
+
+     if (owned.has(region)) return; // vylouč vlastní regiony při nekonzistenci
+     for (const r of owned) {
+       if (adjacencyInfo[r]?.includes(region)) {
+         allEnemyRegions.add(region);
+         break;
+       }
+     }
+
+
+
+
+
     });
   }
 
@@ -1243,7 +1267,7 @@ console.log(`  Regions P3:`, room.regions.Player3regions);
 
 console.log("ALL AVAILABLE ENEMY REGIONS", allEnemyRegions)
 
-  return allEnemyRegions;
+  return Array.from(allEnemyRegions);
 
 
 
@@ -1612,6 +1636,10 @@ function waitForPlayerSelection(roomId, player, timeout, forcedAvailableRegions 
   return new Promise(resolve => {
     const room = rooms[roomId];
     if (!room) return resolve(null);
+
+
+    room.pendingSelections = room.pendingSelections || {};
+    delete room.pendingSelections[player]; // čistý start kola pro hráče
 
 
 
