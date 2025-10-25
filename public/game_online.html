@@ -3441,19 +3441,6 @@ function startCountdownTile(secondsAmount) {
                                 question.style.display = 'block';
                                 numerical_question_three.style.display = 'block';
                                 document.getElementById("numinput3").style.display = "block";
-
-
-                                // Po zobrazení inputu:
-                                const numinput3 = document.getElementById("numinput3");
-                                if (numinput3) {
-                                // vyčisti, fokusuj, a umožni okamžité psaní
-                                numinput3.value = "";
-                                numinput3.focus();
-                                // volitelně: zabrání výběru jiných prvků (užitečné na mobilech)
-                                numinput3.select();
-                                }
-
-
                                 document.getElementById("numsubmit3").style.display = "block";
 
                                 document.getElementById('numinput3').value = '';
@@ -7049,6 +7036,19 @@ function showNumericQuestionForThree(questionText, timeLimit) {
     document.getElementById("numinput3").style.display = "block";
     document.getElementById("numsubmit3").style.display = "block";
 
+
+     // Po zobrazení inputu:
+    const numinput3 = document.getElementById("numinput3");
+    if (numinput3) {
+    // vyčisti, fokusuj, a umožni okamžité psaní
+    numinput3.value = "";
+    numinput3.focus();
+    // volitelně: zabrání výběru jiných prvků (užitečné na mobilech)
+    numinput3.select();
+    }
+
+
+
     // ✅ Reset polí
     document.getElementById("numinput3").value = "";
     ["num3answerbox1","num3answerbox2","num3answerbox3"].forEach(id=>{
@@ -7101,6 +7101,12 @@ function showNumericQuestionForThree(questionText, timeLimit) {
 
 
 function showNumericResultsForThree(correctAnswer, answers) {
+
+    // ✅ Skryj input
+        document.getElementById("numinput3").style.display = "none";
+        document.getElementById("numsubmit3").style.display = "none";
+
+
     // ✅ Zobraz odpovědi všech hráčů
     document.getElementById("num3answerarea").style.display = "block";
     ["num3answerbox1","num3answerbox2","num3answerbox3"].forEach(id=>{
