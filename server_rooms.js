@@ -1386,7 +1386,7 @@ async function runBattleOnRegion(roomId, attacker, defender, region) {
         defender,
         remainingLives: room.playerLives[`Player${defender}`]
       });
-      await delay(6000);
+      await delay(6100);
 
       if (room.playerLives[`Player${defender}`] <= 0) {
         transferBase(roomId, room, attacker, defender, region);
