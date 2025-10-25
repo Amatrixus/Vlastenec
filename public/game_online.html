@@ -1378,9 +1378,9 @@ if (regionValues && typeof regionValues === 'object') {
 
                                       
                                       <div id="num3answerarea">
-                                              <div id="num3answerbox1"  class="num3answerbox"><div id="numanswer1" class="numanswer">20</div><div class="numansweruser"><script>document.write(myplayer)</script></div><div id="numanswertime1" class="numanswertime"></div></div>
-                                              <div id="num3answerbox2"  class="num3answerbox"><div id="numanswer2" class="numanswer">50</div><div class="numansweruser"><script>document.write(possiblePlayers[0]);</script></div><div id="numanswertime2" class="numanswertime"></div></div>
-                                              <div id="num3answerbox3"  class="num3answerbox"><div id="numanswer3" class="numanswer">800</div><div class="numansweruser"><script>document.write(possiblePlayers[1]);</script></div><div id="numanswertime3" class="numanswertime"></div></div>
+                                              <div id="num3answerbox1"  class="num3answerbox"><div id="numanswer1" class="numanswer">20</div><div id="numansweruser1" class="numansweruser"></div><div id="numanswertime1" class="numanswertime"></div></div>
+                                              <div id="num3answerbox2"  class="num3answerbox"><div id="numanswer2" class="numanswer">50</div><div id="numansweruser2" class="numansweruser"></div><div id="numanswertime2" class="numanswertime"></div></div>
+                                              <div id="num3answerbox3"  class="num3answerbox"><div id="numanswer3" class="numanswer">800</div><div id ="numansweruser3" class="numansweruser"></div><div id="numanswertime3" class="numanswertime"></div></div>
                                       </div>      
                                       
                                     
@@ -7132,11 +7132,32 @@ function showNumericResultsForThree(correctAnswer, answers) {
     document.getElementById("numerical_correct").innerHTML = correctAnswer;
 
     // ✅ Vyplň odpovědi hráčů
-    answers.forEach((a, i) => {
-        document.getElementById(`numanswer${a.player}`).textContent = a.num;
-        document.getElementById(`numanswertime${a.player}`).textContent = (a.time/1000).toFixed(2) + " s";
-        document.getElementById(`numansweruser${a.player}`).textContent = a.name;
+    answers.forEach((a) => {
+        const name =
+            (typeof labelForSeat === 'function')
+            ? labelForSeat(a.player)                            // ✅ používá displayNames/allNames
+            : ({1: player1, 2: player2, 3: player3}[a.player]   // fallback
+                || `Hráč ${a.player}`);
+
+        const ansEl  = document.getElementById(`numanswer${a.player}`);
+        const infoEl = document.getElementById(`numanswertime${a.player}`);
+        const nameEl = document.getElementById(`numansweruser${a.player}`);
+        
+        if (nameEl) nameEl.textContent = name;
+        if (ansEl)  ansEl.textContent  = a.num;
+        if (infoEl) infoEl.textContent = `${name} · ${(a.time/1000).toFixed(2)} s`;
     });
+
+
+
+
+
+
+
+
+
+
+    
 
     // ✅ Ukázat správnou odpověď (posun textu)
     setTimeout(() => {
