@@ -3453,6 +3453,9 @@ function startCountdownTile(secondsAmount) {
                                 document.getElementById("num3answerbox1").style.opacity = "0";
                                 document.getElementById("num3answerbox2").style.opacity = "0";
                                 document.getElementById("num3answerbox3").style.opacity = "0";
+
+
+
                                 document.getElementById("num3answerbox1").style.top = "10%";
                                 document.getElementById("num3answerbox2").style.top = "10%";
                                 document.getElementById("num3answerbox3").style.top = "10%";
@@ -7038,6 +7041,7 @@ function showNumericQuestionForThree(questionText, timeLimit) {
     ["num3answerbox1","num3answerbox2","num3answerbox3"].forEach(id=>{
         const el = document.getElementById(id);
         el.style.opacity = "0";
+        el.style.display = "none";
         el.style.top = "10%";
         el.classList.remove("boxblinker");
     });
@@ -7088,6 +7092,7 @@ function showNumericResultsForThree(correctAnswer, answers) {
     document.getElementById("num3answerarea").style.display = "block";
     ["num3answerbox1","num3answerbox2","num3answerbox3"].forEach(id=>{
         document.getElementById(id).style.opacity = "1";
+        document.getElementById(id).style.display = "inline-block";
     });
 
     document.getElementById("numerical_correct").innerHTML = correctAnswer;
