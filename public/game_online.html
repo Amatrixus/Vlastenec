@@ -6944,6 +6944,21 @@ function showNumericQuestionForTwo(questionText, timeLimit, attacker, defender, 
     document.getElementById("numinput2").style.display = "block";
     document.getElementById("numsubmit2").style.display = "block";
 
+
+
+     // Po zobrazení inputu:
+    const numinput2 = document.getElementById("numinput2");
+    if (numinput2) {
+    // vyčisti, fokusuj, a umožni okamžité psaní
+    numinput2.value = "";
+    numinput2.focus();
+    // volitelně: zabrání výběru jiných prvků (užitečné na mobilech)
+    numinput2.select();
+    }
+
+
+
+
         // ✅ Pokud nejsem účastníkem otázky → zablokuj input
     if (![attacker, defender].includes(myPlayerNumber)) {
         document.getElementById("numinput2").style.display = "none";
