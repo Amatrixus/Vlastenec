@@ -3441,6 +3441,19 @@ function startCountdownTile(secondsAmount) {
                                 question.style.display = 'block';
                                 numerical_question_three.style.display = 'block';
                                 document.getElementById("numinput3").style.display = "block";
+
+
+                                // Po zobrazení inputu:
+                                const numinput3 = document.getElementById("numinput3");
+                                if (numinput3) {
+                                // vyčisti, fokusuj, a umožni okamžité psaní
+                                numinput3.value = "";
+                                numinput3.focus();
+                                // volitelně: zabrání výběru jiných prvků (užitečné na mobilech)
+                                numinput3.select();
+                                }
+
+
                                 document.getElementById("numsubmit3").style.display = "block";
 
                                 document.getElementById('numinput3').value = '';
