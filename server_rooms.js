@@ -1122,6 +1122,21 @@ async function runBattlePhase(roomId) {
   }
 
   console.log("🟢 Fáze bitev dokončena!");
+  const finalScores = calculateScores(room.regions, room.regionValues, room.defenseBonuses);
+
+            // Získání pořadí (seřazeno podle skóre)
+            const ordered = Object.entries(finalScores)
+              .map(([player, score]) => ({ player: Number(player), score }))
+              .sort((a, b) => b.score - a.score);
+
+            io.to(roomId).emit("gameOver", {
+              message: "Hra skončila!",
+              finalScores: ordered // obsahuje pole objektů: { player: 1, score: ... }, seřazeno
+  });
+
+
+
+
 }
 
 
