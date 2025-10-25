@@ -7135,6 +7135,7 @@ function showNumericResultsForThree(correctAnswer, answers) {
     answers.forEach((a, i) => {
         document.getElementById(`numanswer${a.player}`).textContent = a.num;
         document.getElementById(`numanswertime${a.player}`).textContent = (a.time/1000).toFixed(2) + " s";
+        document.getElementById(`numansweruser${a.player}`).textContent = a.name;
     });
 
     // ✅ Ukázat správnou odpověď (posun textu)
