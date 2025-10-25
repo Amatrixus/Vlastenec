@@ -1,637 +1,99 @@
 [
-    {
-        "id": 0,
-        "question": "Kolik Řeků zemřelo v bitvě u Maratónu?",
-        "answer": 192
-    },
-    {
-        "id": 1,
-        "question": "Kolik planet má sluneční soustava?",
-        "answer": 8
-    },
-    {
-        "id": 2,
-        "question": "Kolik dní má přestupný rok?",
-        "answer": 366
-    },
-    {
-        "id": 3,
-        "question": "Kolik kostí má lidské tělo?",
-        "answer": 206
-    },
-    {
-        "id": 4,
-        "question": "V kterém roce začala první světová válka?",
-        "answer": 1914
-    },
-    {
-        "id": 5,
-        "question": "Kolik členů měla v nejslavnějším složení skupina The Beatles?",
-        "answer": 4
-    },
-    {
-        "id": 6,
-        "question": "Kolik procent zemského povrchu pokrývá voda?",
-        "answer": 71
-    },
-    {
-        "id": 7,
-        "question": "Kolik hráčů má fotbalový tým na hřišti?",
-        "answer": 11
-    },
-    {
-        "id": 8,
-        "question": "Kolik sekund má jedna hodina?",
-        "answer": 3600
-    },
-    {
-        "id": 9,
-        "question": "Kolik hráčů má basketbalový tým na hřišti?",
-        "answer": 5
-    },
-    {
-        "id": 10,
-        "question": "Kolik gramů má kilogram?",
-        "answer": 1000
-    },
-    {
-        "id": 11,
-        "question": "Kolik je 7 na druhou?",
-        "answer": 49
-    },
-    {
-        "id": 12,
-        "question": "Kolik dní má únor v přestupném roce?",
-        "answer": 29
-    },
-    {
-        "id": 13,
-        "question": "Kolik hráčů je v hokejovém týmu na ledě (bez brankáře)?",
-        "answer": 5
-    },
-    {
-        "id": 14,
-        "question": "Kolik kilometrů je v jedné míli?",
-        "answer": 1.609
-    },
-    {
-        "id": 15,
-        "question": "Kolik měsíců má rok?",
-        "answer": 12
-    },
-    {
-        "id": 16,
-        "question": "Kolik minut má jedna hodina?",
-        "answer": 60
-    },
-    {
-        "id": 17,
-        "question": "Kolik noh má pavouk?",
-        "answer": 8
-    },
-    {
-        "id": 18,
-        "question": "Kolik hráčů má volejbalový tým?",
-        "answer": 6
-    },
-    {
-        "id": 19,
-        "question": "Kolik je 9 na druhou?",
-        "answer": 81
-    },
-    {
-        "id": 20,
-        "question": "Kolik států má Evropská unie?",
-        "answer": 27
-    },
-    {
-        "id": 21,
-        "question": "Kolik je 3 faktoriál (3!)?",
-        "answer": 6
-    },
-    {
-        "id": 22,
-        "question": "Kolik noh má krab?",
-        "answer": 10
-    },
-    {
-        "id": 23,
-        "question": "Kolik prstů má člověk na jedné ruce?",
-        "answer": 5
-    },
-    {
-        "id": 24,
-        "question": "Kolik gramů je v tuně?",
-        "answer": 1000000
-    },
-    {
-        "id": 25,
-        "question": "Kolik sekund má den?",
-        "answer": 86400
-    },
-    {
-        "id": 26,
-        "question": "Kolik procent dusíku je v atmosféře?",
-        "answer": 78
-    },
-    {
-        "id": 27,
-        "question": "Kolik let trvá jeden rok na Marsu (v pozemských letech)?",
-        "answer": 1.88
-    },
-    {
-        "id": 28,
-        "question": "Kolik je 5 faktoriál (5!)?",
-        "answer": 120
-    },
-    {
-        "id": 29,
-        "question": "Kolik světelných let je v jedné parseku?",
-        "answer": 3.26
-    },
-    {
-        "id": 30,
-        "question": "Kolik planet má Saturn?",
-        "answer": 0
-    },
-    {
-        "id": 31,
-        "question": "Kolik písmen má česká abeceda (včetně ch)?",
-        "answer": 42
-    },
-    {
-        "id": 32,
-        "question": "Kolik nohou má stonožka?",
-        "answer": 100
-    },
-    {
-        "id": 33,
-        "question": "Kolik lidí žije na Zemi (v miliardách, přibližně)?",
-        "answer": 8
-    },
-    {
-        "id": 34,
-        "question": "Kolik zemí má Afrika?",
-        "answer": 54
-    },
-    {
-        "id": 35,
-        "question": "Kolik měsíců má Jupiter?",
-        "answer": 79
-    },
-    {
-        "id": 36,
-        "question": "Kolik hodin je v týdnu?",
-        "answer": 168
-    },
-    {
-        "id": 37,
-        "question": "Kolik váží jeden litr vody (v kg)?",
-        "answer": 1
-    },
-    {
-        "id": 38,
-        "question": "Kolik procent lidského těla tvoří voda?",
-        "answer": 60
-    },
-    {
-        "id": 39,
-        "question": "Kolik let trvala druhá světová válka?",
-        "answer": 6
-    },
-    {
-        "id": 40,
-        "question": "Kolik procent kyslíku obsahuje atmosféra?",
-        "answer": 21
-    },
-    {
-        "id": 41,
-        "question": "Kolik hráčů má baseballový tým na hřišti?",
-        "answer": 9
-    },
-    {
-        "id": 42,
-        "question": "Kolik kilometrů má maraton?",
-        "answer": 42.195
-    },
-    {
-        "id": 43,
-        "question": "Kolik elektronů má atom uhlíku?",
-        "answer": 6
-    },
-    {
-        "id": 44,
-        "question": "Kolik hran má krychle?",
-        "answer": 12
-    },
-    {
-        "id": 45,
-        "question": "Kolik základních chutí rozlišuje člověk?",
-        "answer": 5
-    },
-    {
-        "id": 46,
-        "question": "Kolik párů žeber má člověk?",
-        "answer": 12
-    },
-    {
-        "id": 47,
-        "question": "Kolik procent povrchu Měsíce je stále ve tmě?",
-        "answer": 41
-    },
-    {
-        "id": 48,
-        "question": "Kolik procent Země tvoří pevnina?",
-        "answer": 29
-    },
-    {
-        "id": 49,
-        "question": "Kolik planet má Neptun?",
-        "answer": 0
-    },
-    {
-        "id": 50,
-        "question": "Kolik písmen má anglická abeceda?",
-        "answer": 26
-    },
-    {
-        "id": 51,
-        "question": "Kolik obratlů má lidská páteř?",
-        "answer": 33
-    },
-    {
-        "id": 52,
-        "question": "Kolik hlav má římská hydra?",
-        "answer": 9
-    },
-    {
-        "id": 53,
-        "question": "Kolik dní trvá oběh Země kolem Slunce?",
-        "answer": 365
-    },
-    {
-        "id": 54,
-        "question": "Kolik je 2 na desátou?",
-        "answer": 1024
-    },
-    {
-        "id": 55,
-        "question": "Kolik prstů má kočka na předních tlapách?",
-        "answer": 5
-    },
-    {
-        "id": 56,
-        "question": "Kolik slonů je v Africe (v milionech, přibližně)?",
-        "answer": 0.4
-    },
-    {
-        "id": 57,
-        "question": "Kolik měsíců má Uran?",
-        "answer": 27
-    },
-    {
-        "id": 58,
-        "question": "Kolik je v jedné dekádě let?",
-        "answer": 10
-    },
-    {
-        "id": 59,
-        "question": "Kolik základních stavů hmoty známe?",
-        "answer": 4
-    },
-    {
-        "id": 60,
-        "question": "Kolik písmen má ruská azbuka?",
-        "answer": 33
-    },
-    {
-        "id": 61,
-        "question": "Kolik hlavních směrů je na kompasu?",
-        "answer": 4
-    },
-    {
-        "id": 62,
-        "question": "Kolik not je v chromatické stupnici?",
-        "answer": 12
-    },
-    {
-        "id": 63,
-        "question": "Kolik lidí žije v České republice (v milionech, přibližně)?",
-        "answer": 10.7
-    },
-    {
-        "id": 64,
-        "question": "Kolik dní trvá lunární měsíc?",
-        "answer": 29.5
-    },
-    {
-        "id": 65,
-        "question": "Kolik protonů má atom kyslíku?",
-        "answer": 8
-    },
-    {
-        "id": 66,
-        "question": "Kolik hráčů má ragbyový tým na hřišti?",
-        "answer": 15
-    },
-    {
-        "id": 67,
-        "question": "Kolik čajových lžiček je v polévkové lžíci?",
-        "answer": 3
-    },
-    {
-        "id": 68,
-        "question": "Kolik bitů má bajt?",
-        "answer": 8
-    },
-    {
-        "id": 69,
-        "question": "Kolik šachových figur má každý hráč na začátku hry?",
-        "answer": 16
-    },
-    {
-        "id": 70,
-        "question": "Kolik let trvá oběh Halleyovy komety kolem Slunce?",
-        "answer": 76
-    },
-    {
-        "id": 71,
-        "question": "Kolik procent zemské atmosféry tvoří oxid uhličitý?",
-        "answer": 0.04
-    },
-    {
-        "id": 72,
-        "question": "Kolik kilometrů je obvod Země?",
-        "answer": 40075
-    },
-    {
-        "id": 73,
-        "question": "Kolik hráčů je v týmu vodního póla?",
-        "answer": 7
-    },
-    {
-        "id": 74,
-        "question": "Kolik voltů má běžná tužková baterie?",
-        "answer": 1.5
-    },
-    {
-        "id": 75,
-        "question": "Kolik procent mořské vody tvoří sůl?",
-        "answer": 3.5
-    },
+  { "id": 0,  "question": "Kolik Řeků zemřelo v bitvě u Maratónu?", "answer": 192, "category": "historie" },
+  { "id": 1,  "question": "Kolik planet má sluneční soustava?", "answer": 8, "category": "vedy" },
+  { "id": 2,  "question": "Kolik dní má přestupný rok?", "answer": 366, "category": "vedy" },
+  { "id": 3,  "question": "Kolik kostí má lidské tělo?", "answer": 206, "category": "vedy" },
+  { "id": 4,  "question": "V kterém roce začala první světová válka?", "answer": 1914, "category": "historie" },
+  { "id": 5,  "question": "Kolik členů měla v nejslavnějším složení skupina The Beatles?", "answer": 4, "category": "kultura" },
+  { "id": 6,  "question": "Kolik procent zemského povrchu pokrývá voda?", "answer": 71, "category": "geografie" },
+  { "id": 7,  "question": "Kolik hráčů má fotbalový tým na hřišti?", "answer": 11, "category": "sport" },
+  { "id": 8,  "question": "Kolik sekund má jedna hodina?", "answer": 3600, "category": "vedy" },
+  { "id": 9,  "question": "Kolik hráčů má basketbalový tým na hřišti?", "answer": 5, "category": "sport" },
+  { "id": 10, "question": "Kolik gramů má kilogram?", "answer": 1000, "category": "vedy" },
+  { "id": 11, "question": "Kolik je 7 na druhou?", "answer": 49, "category": "vedy" },
+  { "id": 12, "question": "Kolik dní má únor v přestupném roce?", "answer": 29, "category": "vedy" },
+  { "id": 13, "question": "Kolik hráčů je v hokejovém týmu na ledě (bez brankáře)?", "answer": 5, "category": "sport" },
+  { "id": 14, "question": "Kolik kilometrů je v jedné míli?", "answer": 1.609, "category": "vedy" },
+  { "id": 15, "question": "Kolik měsíců má rok?", "answer": 12, "category": "vedy" },
+  { "id": 16, "question": "Kolik minut má jedna hodina?", "answer": 60, "category": "vedy" },
+  { "id": 17, "question": "Kolik noh má pavouk?", "answer": 8, "category": "vedy" },
+  { "id": 18, "question": "Kolik hráčů má volejbalový tým?", "answer": 6, "category": "sport" },
+  { "id": 19, "question": "Kolik je 9 na druhou?", "answer": 81, "category": "vedy" },
+  { "id": 20, "question": "Kolik států má Evropská unie?", "answer": 27, "category": "politika" },
+  { "id": 21, "question": "Kolik je 3 faktoriál (3!)?", "answer": 6, "category": "vedy" },
+  { "id": 22, "question": "Kolik noh má krab?", "answer": 10, "category": "vedy" },
+  { "id": 23, "question": "Kolik prstů má člověk na jedné ruce?", "answer": 5, "category": "vedy" },
+  { "id": 24, "question": "Kolik gramů je v tuně?", "answer": 1000000, "category": "vedy" },
+  { "id": 25, "question": "Kolik sekund má den?", "answer": 86400, "category": "vedy" },
+  { "id": 26, "question": "Kolik procent dusíku je v atmosféře?", "answer": 78, "category": "vedy" },
+  { "id": 27, "question": "Kolik let trvá jeden rok na Marsu (v pozemských letech)?", "answer": 1.88, "category": "vedy" },
+  { "id": 28, "question": "Kolik je 5 faktoriál (5!)?", "answer": 120, "category": "vedy" },
+  { "id": 29, "question": "Kolik světelných let je v jedné parseku?", "answer": 3.26, "category": "vedy" },
+  { "id": 30, "question": "Kolik planet má Saturn?", "answer": 0, "category": "vedy" },
+  { "id": 31, "question": "Kolik písmen má česká abeceda (včetně ch)?", "answer": 42, "category": "literatura" },
+  { "id": 32, "question": "Kolik nohou má stonožka?", "answer": 100, "category": "vedy" },
+  { "id": 33, "question": "Kolik lidí žije na Zemi (v miliardách, přibližně)?", "answer": 8, "category": "geografie" },
+  { "id": 34, "question": "Kolik zemí má Afrika?", "answer": 54, "category": "geografie" },
+  { "id": 35, "question": "Kolik měsíců má Jupiter?", "answer": 79, "category": "vedy" },
+  { "id": 36, "question": "Kolik hodin je v týdnu?", "answer": 168, "category": "vedy" },
+  { "id": 37, "question": "Kolik váží jeden litr vody (v kg)?", "answer": 1, "category": "vedy" },
+  { "id": 38, "question": "Kolik procent lidského těla tvoří voda?", "answer": 60, "category": "vedy" },
+  { "id": 39, "question": "Kolik let trvala druhá světová válka?", "answer": 6, "category": "historie" },
+  { "id": 40, "question": "Kolik procent kyslíku obsahuje atmosféra?", "answer": 21, "category": "vedy" },
+  { "id": 41, "question": "Kolik hráčů má baseballový tým na hřišti?", "answer": 9, "category": "sport" },
+  { "id": 42, "question": "Kolik kilometrů má maraton?", "answer": 42.195, "category": "sport" },
+  { "id": 43, "question": "Kolik elektronů má atom uhlíku?", "answer": 6, "category": "vedy" },
+  { "id": 44, "question": "Kolik hran má krychle?", "answer": 12, "category": "vedy" },
+  { "id": 45, "question": "Kolik základních chutí rozlišuje člověk?", "answer": 5, "category": "vedy" },
+  { "id": 46, "question": "Kolik párů žeber má člověk?", "answer": 12, "category": "vedy" },
+  { "id": 47, "question": "Kolik procent povrchu Měsíce je stále ve tmě?", "answer": 41, "category": "vedy" },
+  { "id": 48, "question": "Kolik procent Země tvoří pevnina?", "answer": 29, "category": "geografie" },
+  { "id": 49, "question": "Kolik planet má Neptun?", "answer": 0, "category": "vedy" },
+  { "id": 50, "question": "Kolik písmen má anglická abeceda?", "answer": 26, "category": "literatura" },
+  { "id": 51, "question": "Kolik obratlů má lidská páteř?", "answer": 33, "category": "vedy" },
+  { "id": 52, "question": "Kolik hlav má římská hydra?", "answer": 9, "category": "kultura" },
+  { "id": 53, "question": "Kolik dní trvá oběh Země kolem Slunce?", "answer": 365, "category": "vedy" },
+  { "id": 54, "question": "Kolik je 2 na desátou?", "answer": 1024, "category": "technologie" },
+  { "id": 55, "question": "Kolik prstů má kočka na předních tlapách?", "answer": 5, "category": "vedy" },
+  { "id": 56, "question": "Kolik slonů je v Africe (v milionech, přibližně)?", "answer": 0.4, "category": "geografie" },
+  { "id": 57, "question": "Kolik měsíců má Uran?", "answer": 27, "category": "vedy" },
+  { "id": 58, "question": "Kolik je v jedné dekádě let?", "answer": 10, "category": "vedy" },
+  { "id": 59, "question": "Kolik základních stavů hmoty známe?", "answer": 4, "category": "vedy" },
+  { "id": 60, "question": "Kolik písmen má ruská azbuka?", "answer": 33, "category": "literatura" },
+  { "id": 61, "question": "Kolik hlavních směrů je na kompasu?", "answer": 4, "category": "geografie" },
+  { "id": 62, "question": "Kolik not je v chromatické stupnici?", "answer": 12, "category": "kultura" },
+  { "id": 63, "question": "Kolik lidí žije v České republice (v milionech, přibližně)?", "answer": 10.7, "category": "geografie" },
+  { "id": 64, "question": "Kolik dní trvá lunární měsíc?", "answer": 29.5, "category": "vedy" },
+  { "id": 65, "question": "Kolik protonů má atom kyslíku?", "answer": 8, "category": "vedy" },
+  { "id": 66, "question": "Kolik hráčů má ragbyový tým na hřišti?", "answer": 15, "category": "sport" },
+  { "id": 67, "question": "Kolik čajových lžiček je v polévkové lžíci?", "answer": 3, "category": "kultura" },
+  { "id": 68, "question": "Kolik bitů má bajt?", "answer": 8, "category": "technologie" },
+  { "id": 69, "question": "Kolik šachových figur má každý hráč na začátku hry?", "answer": 16, "category": "sport" },
+  { "id": 70, "question": "Kolik let trvá oběh Halleyovy komety kolem Slunce?", "answer": 76, "category": "vedy" },
+  { "id": 71, "question": "Kolik procent zemské atmosféry tvoří oxid uhličitý?", "answer": 0.04, "category": "vedy" },
+  { "id": 72, "question": "Kolik kilometrů je obvod Země?", "answer": 40075, "category": "geografie" },
+  { "id": 73, "question": "Kolik hráčů je v týmu vodního póla?", "answer": 7, "category": "sport" },
+  { "id": 74, "question": "Kolik voltů má běžná tužková baterie?", "answer": 1.5, "category": "technologie" },
+  { "id": 75, "question": "Kolik procent mořské vody tvoří sůl?", "answer": 3.5, "category": "vedy" },
 
-    
-
-
-
-    
-        {
-            "id": 76,
-            "question": "V kterém roce vyšel román *1984* od George Orwella?",
-            "answer": 1949
-        },
-        {
-            "id": 77,
-            "question": "Kolik knih obsahuje cyklus *Hledání ztraceného času* od Marcela Prousta?",
-            "answer": 7
-        },
-        {
-            "id": 78,
-            "question": "Kolik veršů má Danteho *Božská komedie*?",
-            "answer": 14233
-        },
-        {
-            "id": 79,
-            "question": "Ve kterém roce získal Gabriel García Márquez Nobelovu cenu za literaturu?",
-            "answer": 1982
-        },
-        {
-            "id": 80,
-            "question": "Kolik dní podle názvu trvá cesta v *Dekameronu* Giovanniho Boccaccia?",
-            "answer": 10
-        },
-        {
-            "id": 81,
-            "question": "Kolik kapitol má román *Zločin a trest* od Dostojevského?",
-            "answer": 38
-        },
-        {
-            "id": 82,
-            "question": "Kolik let trvala Odysseova cesta domů podle Homérova eposu?",
-            "answer": 10
-        },
-        {
-            "id": 83,
-            "question": "Kolik Nobelových cen za literaturu bylo uděleno ženám do roku 2023?",
-            "answer": 17
-        },
-        {
-            "id": 84,
-            "question": "Kolik dějství má *Hamlet* od Williama Shakespeara?",
-            "answer": 5
-        },
-        {
-            "id": 85,
-            "question": "V kolika letech zemřel Franz Kafka?",
-            "answer": 40
-        },
-        {
-            "id": 86,
-            "question": "Ve kterém roce byl publikován román *Lolita* od Vladimira Nabokova?",
-            "answer": 1955
-        },
-        {
-            "id": 87,
-            "question": "Kolik básní obsahuje sbírka *Kvílení a jiné básně* Allena Ginsberga?",
-            "answer": 3
-        },
-        {
-            "id": 88,
-            "question": "V kterém roce byla vydána *Pýcha a předsudek* od Jane Austenové?",
-            "answer": 1813
-        },
-        {
-            "id": 89,
-            "question": "Kolik dílů má trilogie *Pán prstenů*?",
-            "answer": 3
-        },
-        {
-            "id": 90,
-            "question": "Ve kterém roce vyšel *Mechanický pomeranč* od Anthonyho Burgesse?",
-            "answer": 1962
-        },
-        {
-            "id": 91,
-            "question": "Kolik let měl Raskolnikov ve *Zločinu a trestu*?",
-            "answer": 23
-        },
-        {
-            "id": 92,
-            "question": "Kolik jazyků je použitých v *Jménu růže* od Umberta Eca?",
-            "answer": 4
-        },
-        {
-            "id": 93,
-            "question": "V kolika letech získal Rudyard Kipling Nobelovu cenu za literaturu (nejmladší držitel)?",
-            "answer": 41
-        },
-        {
-            "id": 94,
-            "question": "Kolik slov má závěrečná věta románu *Odysseus* od Jamese Joyce?",
-            "answer": 439
-        },
-        {
-            "id": 95,
-            "question": "V kterém roce vyšel román *Slepota* od José Saramaga?",
-            "answer": 1995
-        },
-
-
-
-
-
-
-
-
-        {
-    "id": 96,
-    "category": "kultura",
-    "question": "Kdo získal Nobelovu cenu za literaturu v roce 1954?",
-    "options": ["Ernest Hemingway", "Albert Camus", "William Faulkner", "Thomas Mann"],
-    "correct": 0
-  },
-  {
-    "id": 97,
-    "category": "kultura",
-    "question": "Který francouzský existencialista získal Nobelovu cenu za literaturu, ale odmítl ji převzít?",
-    "options": ["Jean-Paul Sartre", "Albert Camus", "Simone de Beauvoir", "André Gide"],
-    "correct": 0
-  },
-  {
-    "id": 98,
-    "category": "kultura",
-    "question": "Kdo získal Nobelovu cenu za literaturu v roce 1957?",
-    "options": ["Albert Camus", "Jean-Paul Sartre", "Francois Mauriac", "Claude Simon"],
-    "correct": 0
-  },
-  {
-    "id": 99,
-    "category": "kultura",
-    "question": "Který americký spisovatel, autor knihy „Hrozny hněvu“, obdržel Nobelovu cenu v roce 1962?",
-    "options": ["John Steinbeck", "William Faulkner", "Ernest Hemingway", "Toni Morrison"],
-    "correct": 0
-  },
-  {
-    "id": 100,
-    "category": "kultura",
-    "question": "Kdo jako první Afričan získal Nobelovu cenu za literaturu (1986)?",
-    "options": ["Wole Soyinka", "Chinua Achebe", "Ngũgĩ wa Thiong’o", "Ben Okri"],
-    "correct": 0
-  },
-  {
-    "id": 101,
-    "category": "kultura",
-    "question": "Jaký britský autor získal Nobelovu cenu v roce 1983 za dílo „Lord of the Flies“?",
-    "options": ["William Golding", "Harold Pinter", "Kazuo Ishiguro", "Graham Greene"],
-    "correct": 0
-  },
-  {
-    "id": 102,
-    "category": "kultura",
-    "question": "Kdo byl v roce 1991 oceněn Nobelovou cenou za literaturu jako první Jihoafričanka?",
-    "options": ["Nadine Gordimer", "Doris Lessing", "J.M. Coetzee", "Toni Morrison"],
-    "correct": 0
-  },
-  {
-    "id": 103,
-    "category": "kultura",
-    "question": "Který japonský spisovatel získal Nobelovu cenu za literaturu v roce 1968?",
-    "options": ["Yasunari Kawabata", "Kenzaburō Ōe", "Haruki Murakami", "Ryūnosuke Akutagawa"],
-    "correct": 0
-  },
-  {
-    "id": 104,
-    "category": "kultura",
-    "question": "Kdo byl oceněn Nobelovou cenou za literaturu v roce 1970 za román „Souostroví Gulag“?",
-    "options": ["Alexandr Solženicyn", "Boris Pasternak", "Mihail Bulgakov", "Vladimir Nabokov"],
-    "correct": 0
-  },
-  {
-    "id": 105,
-    "category": "kultura",
-    "question": "Který kolumbijský autor získal Nobelovu cenu za literaturu v roce 1982?",
-    "options": ["Gabriel García Márquez", "Mario Vargas Llosa", "Julio Cortázar", "Carlos Fuentes"],
-    "correct": 0
-  },
-  {
-    "id": 106,
-    "category": "kultura",
-    "question": "Který polský básník a esejista obdržel Nobelovu cenu za literaturu v roce 1980?",
-    "options": ["Czesław Miłosz", "Wisława Szymborska", "Zbigniew Herbert", "Adam Zagajewski"],
-    "correct": 0
-  },
-  {
-    "id": 107,
-    "category": "kultura",
-    "question": "Kdo získal Nobelovu cenu za literaturu v roce 1994 za román „Čekání na bárbara“?",
-    "options": ["J.M. Coetzee", "Nadine Gordimer", "V.S. Naipaul", "José Saramago"],
-    "correct": 0
-  },
-  {
-    "id": 108,
-    "category": "kultura",
-    "question": "Jaký portugalský spisovatel byl oceněn Nobelovou cenou v roce 1998?",
-    "options": ["José Saramago", "Fernando Pessoa", "Eça de Queirós", "Lídia Jorge"],
-    "correct": 0
-  },
-  {
-    "id": 109,
-    "category": "kultura",
-    "question": "Která americká autorka získala Nobelovu cenu za literaturu v roce 1993?",
-    "options": ["Toni Morrison", "Maya Angelou", "Joyce Carol Oates", "Alice Walker"],
-    "correct": 0
-  },
-  {
-    "id": 110,
-    "category": "kultura",
-    "question": "Kdo získal Nobelovu cenu za literaturu v roce 2006 jako první turecký autor?",
-    "options": ["Orhan Pamuk", "Elif Shafak", "Yaşar Kemal", "Nâzım Hikmet"],
-    "correct": 0
-  },
-  {
-    "id": 111,
-    "category": "kultura",
-    "question": "Jaký britský dramatik a scenárista obdržel Nobelovu cenu za literaturu v roce 2005?",
-    "options": ["Harold Pinter", "Tom Stoppard", "Alan Bennett", "Peter Shaffer"],
-    "correct": 0
-  },
-  {
-    "id": 112,
-    "category": "kultura",
-    "question": "Který francouzský autor získal Nobelovu cenu za literaturu v roce 2014?",
-    "options": ["Patrick Modiano", "Michel Houellebecq", "Jean-Marie Gustave Le Clézio", "Annie Ernaux"],
-    "correct": 0
-  },
-  {
-    "id": 113,
-    "category": "kultura",
-    "question": "Jaká švédská básnířka byla oceněna Nobelovou cenou za literaturu v roce 2011?",
-    "options": ["Tomas Tranströmer", "Lars Norén", "Pär Lagerkvist", "Karin Boye"],
-    "correct": 0
-  },
-  {
-    "id": 114,
-    "category": "kultura",
-    "question": "Který písničkář získal Nobelovu cenu za literaturu v roce 2016?",
-    "options": ["Bob Dylan", "Leonard Cohen", "Paul Simon", "Bruce Springsteen"],
-    "correct": 0
-  },
-  {
-    "id": 115,
-    "category": "kultura",
-    "question": "Kdo byl oceněn Nobelovou cenou za literaturu v roce 2022 za „inovativní romány prolínající vzpomínky a historii kolonialismu“?",
-    "options": ["Abdulrazak Gurnah", "Annie Ernaux", "Kazuo Ishiguro", "Olga Tokarczuk"],
-    "correct": 1
-  }
-        
+  { "id": 76, "question": "V kterém roce vyšel román *1984* od George Orwella?", "answer": 1949, "category": "literatura" },
+  { "id": 77, "question": "Kolik knih obsahuje cyklus *Hledání ztraceného času* od Marcela Prousta?", "answer": 7, "category": "literatura" },
+  { "id": 78, "question": "Kolik veršů má Danteho *Božská komedie*?", "answer": 14233, "category": "literatura" },
+  { "id": 79, "question": "Ve kterém roce získal Gabriel García Márquez Nobelovu cenu za literaturu?", "answer": 1982, "category": "literatura" },
+  { "id": 80, "question": "Kolik dní podle názvu trvá cesta v *Dekameronu* Giovanniho Boccaccia?", "answer": 10, "category": "literatura" },
+  { "id": 81, "question": "Kolik kapitol má román *Zločin a trest* od Dostojevského?", "answer": 38, "category": "literatura" },
+  { "id": 82, "question": "Kolik let trvala Odysseova cesta domů podle Homérova eposu?", "answer": 10, "category": "literatura" },
+  { "id": 83, "question": "Kolik Nobelových cen za literaturu bylo uděleno ženám do roku 2023?", "answer": 17, "category": "literatura" },
+  { "id": 84, "question": "Kolik dějství má *Hamlet* od Williama Shakespeara?", "answer": 5, "category": "literatura" },
+  { "id": 85, "question": "V kolika letech zemřel Franz Kafka?", "answer": 40, "category": "literatura" },
+  { "id": 86, "question": "Ve kterém roce byl publikován román *Lolita* od Vladimira Nabokova?", "answer": 1955, "category": "literatura" },
+  { "id": 87, "question": "Kolik básní obsahuje sbírka *Kvílení a jiné básně* Allena Ginsberga?", "answer": 3, "category": "literatura" },
+  { "id": 88, "question": "V kterém roce byla vydána *Pýcha a předsudek* od Jane Austenové?", "answer": 1813, "category": "literatura" },
+  { "id": 89, "question": "Kolik dílů má trilogie *Pán prstenů*?", "answer": 3, "category": "literatura" },
+  { "id": 90, "question": "Ve kterém roce vyšel *Mechanický pomeranč* od Anthonyho Burgesse?", "answer": 1962, "category": "literatura" },
+  { "id": 91, "question": "Kolik let měl Raskolnikov ve *Zločinu a trestu*?", "answer": 23, "category": "literatura" },
+  { "id": 92, "question": "Kolik jazyků je použitých v *Jménu růže* od Umberta Eca?", "answer": 4, "category": "literatura" },
+  { "id": 93, "question": "V kolika letech získal Rudyard Kipling Nobelovu cenu za literaturu (nejmladší držitel)?", "answer": 41, "category": "literatura" },
+  { "id": 94, "question": "Kolik slov má závěrečná věta románu *Odysseus* od Jamese Joyce?", "answer": 439, "category": "literatura" },
+  { "id": 95, "question": "V kterém roce vyšel román *Slepota* od José Saramaga?", "answer": 1995, "category": "literatura" }
 ]
