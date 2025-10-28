@@ -438,6 +438,7 @@
     "category": "kultura",
     "question": "Jak se jmenuje Joeyho slavná hláška?",
     "options": ["How’s it going?", "You alright?", "How you doin’?", "Sup girl?"],
+    "correct": 2
 
 
   },
