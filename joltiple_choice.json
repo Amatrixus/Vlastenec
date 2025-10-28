@@ -1,0 +1,1306 @@
+[
+  {
+    "id": 116,
+    "category": "literatura",
+    "question": "Kdo napsal román „Velký Gatsby“?",
+    "options": ["Ernest Hemingway", "F. Scott Fitzgerald", "John Steinbeck", "Truman Capote"],
+    "correct": 1
+  },
+  {
+    "id": 117,
+    "category": "literatura",
+    "question": "Jaký román napsal George Orwell kromě „1984“?",
+    "options": ["Na cestě", "Kdo chytá v žitě", "Farma zvířat", "Cizinec"],
+    "correct": 2
+  },
+  {
+    "id": 118,
+    "category": "literatura",
+    "question": "Kdo je autorem románu „Na západní frontě klid“?",
+    "options": ["John Steinbeck", "Erich Maria Remarque", "William Faulkner", "Joseph Heller"],
+    "correct": 1
+  },
+  {
+    "id": 119,
+    "category": "literatura",
+    "question": "Kdo napsal román „Huckleberry Finn“?",
+    "options": ["Mark Twain", "Jack London", "Edgar Allan Poe", "Nathaniel Hawthorne"],
+    "correct": 0
+  },
+  {
+    "id": 120,
+    "category": "literatura",
+    "question": "Které dílo napsala Mary Shelleyová?",
+    "options": ["Dracula", "Frankenstein", "Rebecca", "Jane Eyrová"],
+    "correct": 1
+  },
+  {
+    "id": 121,
+    "category": "literatura",
+    "question": "Jaký román napsal Herman Melville?",
+    "options": ["Bílá velryba", "Ostrov pokladů", "Jatka č. 5", "Velký Gatsby"],
+    "correct": 0
+  },
+  {
+    "id": 122,
+    "category": "literatura",
+    "question": "Kdo napsal básnickou sbírku „Listy trávy“?",
+    "options": ["Robert Frost", "Emily Dickinsonová", "Walt Whitman", "Edgar Allan Poe"],
+    "correct": 2
+  },
+  {
+    "id": 123,
+    "category": "literatura",
+    "question": "Kdo napsal tragédii „Král Lear“?",
+    "options": ["Christopher Marlowe", "Ben Jonson", "William Shakespeare", "John Milton"],
+    "correct": 2
+  },
+  {
+    "id": 124,
+    "category": "literatura",
+    "question": "Jaké dílo napsal Oscar Wilde?",
+    "options": ["Portrét Doriana Graye", "Oliver Twist", "Velké naděje", "Pýcha a předsudek"],
+    "correct": 0
+  },
+  {
+    "id": 125,
+    "category": "literatura",
+    "question": "Kdo je autorem románu „Na východ od ráje“?",
+    "options": ["Ernest Hemingway", "John Steinbeck", "William Faulkner", "F. Scott Fitzgerald"],
+    "correct": 1
+  },
+  {
+    "id": 126,
+    "category": "literatura",
+    "question": "Kdo napsal hororové povídky jako „Havran“ a „Zánik domu Usherů“?",
+    "options": ["H.P. Lovecraft", "Edgar Allan Poe", "Bram Stoker", "Nathaniel Hawthorne"],
+    "correct": 1
+  },
+  {
+    "id": 127,
+    "category": "literatura",
+    "question": "Jaký americký autor napsal protiválečný román „Hlava XXII“?",
+    "options": ["Kurt Vonnegut", "Joseph Heller", "John Updike", "Norman Mailer"],
+    "correct": 1
+  },
+  {
+    "id": 128,
+    "category": "literatura",
+    "question": "Kdo je autorem hry „Pygmalion“?",
+    "options": ["Noël Coward", "Harold Pinter", "George Bernard Shaw", "Tennessee Williams"],
+    "correct": 2
+  },
+  {
+    "id": 129,
+    "category": "literatura",
+    "question": "Jaký román napsal J.D. Salinger?",
+    "options": ["Kdo chytá v žitě", "Na cestě", "Jatka č. 5", "Velký Gatsby"],
+    "correct": 0
+  },
+  {
+    "id": 130,
+    "category": "literatura",
+    "question": "Kdo je autorem knihy „Stařec a moře“?",
+    "options": ["John Steinbeck", "Ernest Hemingway", "William Faulkner", "Mark Twain"],
+    "correct": 1
+  },
+  {
+    "id": 131,
+    "category": "literatura",
+    "question": "Která britská autorka napsala sérii o Harrym Potterovi?",
+    "options": ["Suzanne Collins", "J.K. Rowlingová", "Philip Pullman", "C.S. Lewis"],
+    "correct": 1
+  },
+  {
+    "id": 132,
+    "category": "literatura",
+    "question": "Kdo napsal román „1984“?",
+    "options": ["Aldous Huxley", "Ray Bradbury", "George Orwell", "Anthony Burgess"],
+    "correct": 2
+  },
+  {
+    "id": 133,
+    "category": "literatura",
+    "question": "Kdo napsal dystopický román „Krásný nový svět“?",
+    "options": ["George Orwell", "Aldous Huxley", "Ray Bradbury", "Philip K. Dick"],
+    "correct": 1
+  },
+  {
+    "id": 134,
+    "category": "literatura",
+    "question": "Jaký autor napsal román „Jatka č. 5“?",
+    "options": ["Joseph Heller", "Kurt Vonnegut", "Norman Mailer", "John Updike"],
+    "correct": 1
+  },
+  {
+    "id": 135,
+    "category": "literatura",
+    "question": "Který americký autor napsal román „Na cestě“?",
+    "options": ["Allen Ginsberg", "William Burroughs", "Jack Kerouac", "Ken Kesey"],
+    "correct": 2
+  },
+  {
+    "id": 136,
+    "category": "literatura",
+    "question": "Kdo napsal román „Válka a mír“?",
+    "options": ["Fjodor Dostojevskij", "Lev Tolstoj", "Anton Čechov", "Ivan Turgeněv"],
+    "correct": 1
+  },
+  {
+    "id": 137,
+    "category": "literatura",
+    "question": "Jaký autor napsal epos „Ilias“?",
+    "options": ["Vergilius", "Homer", "Ovidius", "Aristoteles"],
+    "correct": 1
+  },
+  {
+    "id": 138,
+    "category": "literatura",
+    "question": "Kdo je autorem tragédie „Antigona“?",
+    "options": ["Aischylos", "Sofoklés", "Euripidés", "Aristofanés"],
+    "correct": 1
+  },
+  {
+    "id": 139,
+    "category": "literatura",
+    "question": "Kdo napsal román „Don Quijote“?",
+    "options": ["Lope de Vega", "Miguel de Cervantes", "Garcilaso de la Vega", "Luis de Góngora"],
+    "correct": 1
+  },
+  {
+    "id": 140,
+    "category": "literatura",
+    "question": "Jaké dílo napsal Johann Wolfgang von Goethe?",
+    "options": ["Faust", "Werther", "Obojí je správně", "Žádné z uvedených"],
+    "correct": 2
+  },
+  {
+    "id": 141,
+    "category": "literatura",
+    "question": "Kdo je autorem románu „Madame Bovaryová“?",
+    "options": ["Honoré de Balzac", "Émile Zola", "Gustave Flaubert", "Guy de Maupassant"],
+    "correct": 2
+  },
+  {
+    "id": 142,
+    "category": "literatura",
+    "question": "Jaký francouzský autor napsal „Bídníky“?",
+    "options": ["Émile Zola", "Victor Hugo", "Gustave Flaubert", "Alexandre Dumas"],
+    "correct": 1
+  },
+  {
+    "id": 143,
+    "category": "literatura",
+    "question": "Kdo je autorem románu „Bratři Karamazovi“?",
+    "options": ["Lev Tolstoj", "Fjodor Michajlovič Dostojevskij", "Nikolaj Gogol", "Ivan Turgeněv"],
+    "correct": 1
+  },
+  {
+    "id": 144,
+    "category": "literatura",
+    "question": "Jak se jmenuje hlavní postava románu „Zločin a trest“?",
+    "options": ["Ivan Karamazov", "Raskolnikov", "Pierre Bezuchov", "Anna Kareninová"],
+    "correct": 1
+  },
+  {
+    "id": 145,
+    "category": "literatura",
+    "question": "Který anglický spisovatel napsal „Oliver Twist“?",
+    "options": ["Charles Dickens", "Thomas Hardy", "George Eliotová", "William Thackeray"],
+    "correct": 0
+  },
+  {
+    "id": 146,
+    "category": "literatura",
+    "question": "Kdo je autorem románu „Anna Kareninová“?",
+    "options": ["Fjodor Dostojevskij", "Lev Tolstoj", "Ivan Gončarov", "Maxim Gorkij"],
+    "correct": 1
+  },
+  {
+    "id": 147,
+    "category": "literatura",
+    "question": "Jaký autor napsal alegorický román „Malý princ“?",
+    "options": ["Antoine de Saint-Exupéry", "Albert Camus", "Jean-Paul Sartre", "Romain Gary"],
+    "correct": 0
+  },
+  {
+    "id": 148,
+    "category": "literatura",
+    "question": "Kdo napsal román „Červený a černý“?",
+    "options": ["Honoré de Balzac", "Stendhal", "Émile Zola", "Guy de Maupassant"],
+    "correct": 1
+  },
+  {
+    "id": 149,
+    "category": "literatura",
+    "question": "Který román napsal Alexandre Dumas starší?",
+    "options": ["Tři mušketýři", "Hrabě Monte Cristo", "Oba uvedené", "Ani jeden"],
+    "correct": 2
+  },
+  {
+    "id": 150,
+    "category": "literatura",
+    "question": "Jaký americký autor napsal román „Pláň andělů“ a „Hrozny hněvu“?",
+    "options": ["Ernest Hemingway", "John Steinbeck", "William Faulkner", "Truman Capote"],
+    "correct": 1
+  },
+  {
+    "id": 151,
+    "category": "literatura",
+    "question": "Kdo napsal epos „Božská komedie“?",
+    "options": ["Dante Alighieri", "Francesco Petrarca", "Giovanni Boccaccio", "Torquato Tasso"],
+    "correct": 0
+  },
+  {
+    "id": 152,
+    "category": "literatura",
+    "question": "Které dílo je považováno za první moderní román?",
+    "options": ["Dekameron", "Don Quijote", "Robinson Crusoe", "Gulliverovy cesty"],
+    "correct": 1
+  },
+  {
+    "id": 153,
+    "category": "literatura",
+    "question": "Jaký román napsal Thomas Mann?",
+    "options": ["Kouzelný vrch", "Doktor Faustus", "Oba uvedené", "Buddenbrookovi"],
+    "correct": 2
+  },
+  {
+    "id": 154,
+    "category": "literatura",
+    "question": "Kdo napsal román „Sto roků samoty“?",
+    "options": ["Julio Cortázar", "Gabriel García Márquez", "Mario Vargas Llosa", "Carlos Fuentes"],
+    "correct": 1
+  },
+  {
+    "id": 155,
+    "category": "literatura",
+    "question": "Který norský dramatik napsal hru „Peer Gynt“?",
+    "options": ["Henrik Ibsen", "August Strindberg", "Knut Hamsun", "Bjørnstjerne Bjørnson"],
+    "correct": 0
+  },
+  {
+    "id": 156,
+    "category": "kultura",
+    "question": "Jak se jmenuje kavárna, kde se Přátelé nejčastěji scházejí?",
+    "options": ["Central Perk", "Coffee Spot", "Central Café", "Perk & Co."],
+    "correct": 0
+  },
+  {
+    "id": 157,
+    "category": "kultura",
+    "question": "Jak se jmenuje herečka, která hrála Rachel Greenovou?",
+    "options": ["Courteney Cox", "Jennifer Aniston", "Lisa Kudrow", "Reese Witherspoon"],
+    "correct": 1
+  },
+  {
+    "id": 158,
+    "category": "kultura",
+    "question": "Jak se jmenuje postava, kterou hraje Matthew Perry?",
+    "options": ["Ross Geller", "Joey Tribbiani", "Chandler Bing", "Gunther"],
+    "correct": 2
+  },
+  {
+    "id": 159,
+    "category": "kultura",
+    "question": "Kdo je starší – Ross nebo Monica?",
+    "options": ["Ross", "Monica", "Jsou dvojčata", "Není známo"],
+    "correct": 0
+  },
+  {
+    "id": 160,
+    "category": "kultura",
+    "question": "Jaké je celé jméno Joeyho?",
+    "options": ["Joseph Tribbiani", "Joey Tribianni", "Joseph Tribiani", "Joseph Tribbian"],
+    "correct": 0
+  },
+  {
+    "id": 161,
+    "category": "kultura",
+    "question": "Jaké je povolání Chandlera?",
+    "options": ["Účetní", "Statistik", "Analytik dat", "Transponster"],
+    "correct": 2
+  },
+  {
+    "id": 162,
+    "category": "kultura",
+    "question": "Kdo hrál postavu Phoebe Buffayové?",
+    "options": ["Lisa Kudrow", "Jennifer Aniston", "Courteney Cox", "Maggie Wheeler"],
+    "correct": 0
+  },
+  {
+    "id": 163,
+    "category": "kultura",
+    "question": "Jak se jmenuje dvojče Phoebe?",
+    "options": ["Regina Phalange", "Ursula Buffay", "Mindy Buffay", "Amy Green"],
+    "correct": 1
+  },
+  {
+    "id": 164,
+    "category": "kultura",
+    "question": "Jak se jmenuje bývalá manželka Rosse, která se zamiluje do ženy?",
+    "options": ["Carol", "Susan", "Emily", "Julie"],
+    "correct": 0
+  },
+  {
+    "id": 165,
+    "category": "kultura",
+    "question": "Jak se jmenuje dcera Rosse a Carol?",
+    "options": ["Emma", "Erica", "Ben", "Rachel"],
+    "correct": 2
+  },
+  {
+    "id": 166,
+    "category": "kultura",
+    "question": "Kdo byl Chandlerův spolubydlící před Joeym?",
+    "options": ["Eddie", "Kip", "Mike", "Gunther"],
+    "correct": 1
+  },
+  {
+    "id": 167,
+    "category": "kultura",
+    "question": "Jak se jmenuje písnička, kterou Phoebe často zpívá?",
+    "options": ["Crazy Cat", "Smelly Cat", "Funny Cat", "Happy Cat"],
+    "correct": 1
+  },
+  {
+    "id": 168,
+    "category": "kultura",
+    "question": "Jaké zvíře měli Joey a Chandler jako mazlíčka?",
+    "options": ["Kočku a psa", "Kachnu a kuře", "Papouška a želvu", "Myš a rybičku"],
+    "correct": 1
+  },
+  {
+    "id": 169,
+    "category": "kultura",
+    "question": "Kde pracovala Rachel na začátku seriálu?",
+    "options": ["Central Perk", "Bloomingdale’s", "Ralph Lauren", "Byla číšnicí"],
+    "correct": 0
+  },
+  {
+    "id": 170,
+    "category": "kultura",
+    "question": "Kdo se nakonec oženil s Monicou?",
+    "options": ["Ross", "Chandler", "Joey", "Gunther"],
+    "correct": 1
+  },
+  {
+    "id": 171,
+    "category": "kultura",
+    "question": "Jak se jmenuje syn Monicy a Chandlera, kterého adoptují?",
+    "options": ["Ben", "Jack", "Eric", "Chad"],
+    "correct": 1
+  },
+  {
+    "id": 172,
+    "category": "kultura",
+    "question": "Kde se Ross a Rachel poprvé políbí?",
+    "options": ["V Central Perku", "Na balkoně", "V prádelně", "Na letišti"],
+    "correct": 2
+  },
+  {
+    "id": 173,
+    "category": "kultura",
+    "question": "Jak se jmenovala opice Rosse?",
+    "options": ["George", "Marcel", "Albert", "Max"],
+    "correct": 1
+  },
+  {
+    "id": 174,
+    "category": "kultura",
+    "question": "Kdo hrál postavu Janice?",
+    "options": ["Christina Pickles", "Maggie Wheeler", "Aisha Tyler", "Paget Brewster"],
+    "correct": 1
+  },
+  {
+    "id": 175,
+    "category": "kultura",
+    "question": "Kdo řekl slavnou repliku „We were on a break!“?",
+    "options": ["Joey", "Chandler", "Ross", "Rachel"],
+    "correct": 2
+  },
+  {
+    "id": 176,
+    "category": "kultura",
+    "question": "Jak se jmenuje herec, který hrál Rosse?",
+    "options": ["David Schwimmer", "Matthew Perry", "Matt LeBlanc", "Paul Rudd"],
+    "correct": 0
+  },
+  {
+    "id": 177,
+    "category": "kultura",
+    "question": "Která postava má dvojče?",
+    "options": ["Rachel", "Monica", "Phoebe", "Janice"],
+    "correct": 2
+  },
+  {
+    "id": 178,
+    "category": "kultura",
+    "question": "Jak se jmenuje Joeyho slavná hláška?",
+    "options": ["How’s it going?", "You alright?", "How you doin’?", "Sup girl?"],
+
+
+  },
+  {
+    "id": 186,
+    "category": "geografie",
+    "question": "Která řeka protéká Brnem?",
+    "options": ["Svratka", "Svitava", "Morava", "Dyje"],
+    "correct": 0
+  },
+  {
+    "id": 187,
+    "category": "geografie",
+    "question": "Jak se jmenuje slavný brněnský hrad, který sloužil i jako vězení?",
+    "options": ["Veveří", "Bítov", "Špilberk", "Buchlov"],
+    "correct": 2
+  },
+  {
+    "id": 188,
+    "category": "geografie",
+    "question": "Jak se jmenuje univerzita v Brně, pojmenovaná po významném přírodovědci?",
+    "options": ["Masarykova univerzita", "Mendelova univerzita", "VUT Brno", "Janáčkova akademie"],
+    "correct": 1
+  },
+  {
+    "id": 189,
+    "category": "geografie",
+    "question": "Která dominanta se nachází na vrchu Petrov v Brně?",
+    "options": ["Katedrála sv. Petra a Pavla", "Kapucínský klášter", "Kostel sv. Jakuba", "Reduta"],
+    "correct": 0
+  },
+  {
+    "id": 190,
+    "category": "geografie",
+    "question": "Jaké slavné motoristické závody se konají u Brna?",
+    "options": ["Závod Formule 1", "Brno Grand Prix", "MotoGP", "Dakar Rallye"],
+    "correct": 2
+  },
+  {
+    "id": 191,
+    "category": "geografie",
+    "question": "Jak se jmenuje hlavní vlakové nádraží v Brně?",
+    "options": ["Brno hlavní nádraží", "Brno-centrum", "Brno-město", "Brno dolní nádraží"],
+    "correct": 0
+  },
+  {
+    "id": 192,
+    "category": "geografie",
+    "question": "Jaké zvíře je symbolem Brna?",
+    "options": ["Drak", "Medvěd", "Lev", "Orel"],
+    "correct": 0
+  },
+  {
+    "id": 193,
+    "category": "geografie",
+    "question": "Kde v Brně najdeš tzv. „brněnské kolo“?",
+    "options": ["Na věži Staré radnice", "Na Petrově", "Na Špilberku", "U Kapucínů"],
+    "correct": 0
+  },
+  {
+    "id": 194,
+    "category": "geografie",
+    "question": "Jak se jmenuje hlavní univerzita v Olomouci?",
+    "options": ["Karlova univerzita", "Palackého univerzita", "Masarykova univerzita", "Slezská univerzita"],
+    "correct": 1
+  },
+  {
+    "id": 195,
+    "category": "geografie",
+    "question": "Jak se nazývá hlavní náměstí v Olomouci?",
+    "options": ["Horní náměstí", "Dolní náměstí", "Masarykovo náměstí", "Svatováclavské náměstí"],
+    "correct": 0
+  },
+  {
+    "id": 196,
+    "category": "geografie",
+    "question": "Jaká významná památka UNESCO se nachází v Olomouci?",
+    "options": ["Sloup Nejsvětější Trojice", "Katedrála sv. Václava", "Arcibiskupský palác", "Terezská brána"],
+    "correct": 0
+  },
+  {
+    "id": 197,
+    "category": "geografie",
+    "question": "Který známý sýr pochází z Olomouce?",
+    "options": ["Hermelín", "Olomoucké tvarůžky", "Blaťácké zlato", "Niva"],
+    "correct": 1
+  },
+  {
+    "id": 198,
+    "category": "geografie",
+    "question": "Který kostel je dominantou olomouckého návrší sv. Václava?",
+    "options": ["Katedrála sv. Václava", "Kostel sv. Mořice", "Kostel sv. Michala", "Bazilika Navštívení Panny Marie"],
+    "correct": 0
+  },
+  {
+    "id": 199,
+    "category": "geografie",
+    "question": "Jak se jmenuje největší park v Olomouci?",
+    "options": ["Smetanovy sady", "Komenského sady", "Bezručovy sady", "Čechovy sady"],
+    "correct": 0
+  },
+  {
+    "id": 200,
+    "category": "geografie",
+    "question": "Jak se jmenuje slavný barokní sloup na Horním náměstí v Olomouci?",
+    "options": ["Sloup Nejsvětější Trojice", "Mariánský sloup", "Morový sloup", "Svatováclavský sloup"],
+    "correct": 0
+  },
+  {
+    "id": 201,
+    "category": "geografie",
+    "question": "Jak se nazývá známé olomoucké letní kulturní festivaly?",
+    "options": ["Flora Olomouc", "Letní slavnosti", "Olomoucké noci", "Hanácké léto"],
+    "correct": 0
+  },
+  {
+    "id": 202,
+    "category": "geografie",
+    "question": "Jak se jmenuje hlavní řeka protékající Ostravou?",
+    "options": ["Ostravice", "Morava", "Opava", "Olše"],
+    "correct": 0
+  },
+  {
+    "id": 203,
+    "category": "geografie",
+    "question": "Jaký symbolický přídomek se často používá pro Ostravu?",
+    "options": ["Ocelové srdce republiky", "Černé město", "Město uhlí a železa", "Průmyslový kolos"],
+    "correct": 0
+  },
+  {
+    "id": 204,
+    "category": "geografie",
+    "question": "Jak se jmenuje hlavní náměstí v Ostravě?",
+    "options": ["Masarykovo náměstí", "Husovo náměstí", "Hornické náměstí", "Republiky náměstí"],
+    "correct": 0
+  },
+  {
+    "id": 205,
+    "category": "geografie",
+    "question": "Jak se jmenuje známý ostravský hudební festival?",
+    "options": ["Rock for People", "Colours of Ostrava", "Beats for Love", "Ostrava Open Air"],
+    "correct": 1
+  },
+  {
+    "id": 206,
+    "category": "geografie",
+    "question": "Jak se jmenuje areál bývalých dolů, který je dnes kulturní památkou v Ostravě?",
+    "options": ["Dolní Vítkovice", "Karolina Park", "Landek Park", "Michálkovice Mines"],
+    "correct": 0
+  },
+  {
+    "id": 207,
+    "category": "geografie",
+    "question": "Jaký slavný astronom se narodil v Ostravě?",
+    "options": ["Johannes Kepler", "Leoš Janáček", "Jiří Grygar", "Nikdo z uvedených – Grygar pochází z Přerova"],
+    "correct": 3
+  },
+  {
+    "id": 208,
+    "category": "geografie",
+    "question": "Jak se jmenuje nejvyšší budova v Ostravě?",
+    "options": ["City Tower", "T-Mobile Tower", "Bolt Tower", "Ostravská věž"],
+    "correct": 2
+  },
+  {
+    "id": 209,
+    "category": "geografie",
+    "question": "Jak se jmenuje nejznámější zoologická zahrada v Ostravě?",
+    "options": ["ZOO Poruba", "ZOO Slezská", "ZOO Ostrava", "Landek ZOO"],
+    "correct": 2
+  },
+  {
+    "id": 210,
+    "category": "geografie",
+    "question": "Které město je sídlem Moravskoslezského kraje?",
+    "options": ["Opava", "Ostrava", "Karviná", "Frýdek-Místek"],
+    "correct": 1
+  },
+  {
+    "id": 211,
+    "category": "geografie",
+    "question": "Který renesanční zámek se nachází v Bučovicích?",
+    "options": ["Bučovický zámek", "Slavkovský zámek", "Vyškovský zámek", "Buchlovický zámek"],
+    "correct": 0
+  },
+  {
+    "id": 212,
+    "category": "geografie",
+    "question": "Ve kterém kraji leží Bučovice?",
+    "options": ["Jihomoravský", "Zlínský", "Olomoucký", "Vysočina"],
+    "correct": 0
+  },
+  {
+    "id": 213,
+    "category": "geografie",
+    "question": "Jaký stavební sloh převládá na zámku v Bučovicích?",
+    "options": ["Gotika", "Renesance", "Baroko", "Empír"],
+    "correct": 1
+  },
+  {
+    "id": 214,
+    "category": "geografie",
+    "question": "Jak se nazývá město, které leží nejblíže Bučovicím?",
+    "options": ["Vyškov", "Slavkov u Brna", "Uherské Hradiště", "Kroměříž"],
+    "correct": 0
+  },
+  {
+    "id": 215,
+    "category": "geografie",
+    "question": "Který známý architekt se podílel na výstavbě bučovického zámku?",
+    "options": ["Domenico Martinelli", "Jacopo Strada", "Antonio Vlach", "Giovanni de Rossi"],
+    "correct": 1
+  },
+  {
+    "id": 216,
+    "category": "geografie",
+    "question": "Jaký rod vlastnil bučovický zámek po jeho dostavbě?",
+    "options": ["Žerotínové", "Dietrichsteinové", "Lichtenštejnové", "Bučovští z Bučovic"],
+    "correct": 1
+  },
+  {
+    "id": 217,
+    "category": "geografie",
+    "question": "Jaká významná dopravní trať prochází Bučovicemi?",
+    "options": ["Brno–Uherské Hradiště", "Brno–Vyškov–Olomouc", "Brno–Břeclav", "Brno–Znojmo"],
+    "correct": 1
+  },
+  {
+    "id": 218,
+    "category": "kultura",
+    "question": "Kdo je autorem skladby „Imagine“?",
+    "options": ["Paul McCartney", "Elton John", "John Lennon", "George Harrison"],
+    "correct": 2
+  },
+  {
+    "id": 219,
+    "category": "kultura",
+    "question": "Která zpěvačka nazpívala hit „Like a Prayer“?",
+    "options": ["Whitney Houston", "Madonna", "Cyndi Lauper", "Cher"],
+    "correct": 1
+  },
+  {
+    "id": 220,
+    "category": "kultura",
+    "question": "Jaká skupina složila píseň „Bohemian Rhapsody“?",
+    "options": ["Queen", "The Beatles", "Pink Floyd", "Led Zeppelin"],
+    "correct": 0
+  },
+  {
+    "id": 221,
+    "category": "kultura",
+    "question": "Kdo je známý jako „Král popu“?",
+    "options": ["Elvis Presley", "Prince", "Michael Jackson", "Justin Timberlake"],
+    "correct": 2
+  },
+  {
+    "id": 222,
+    "category": "kultura",
+    "question": "Který skladatel napsal operu „Don Giovanni“?",
+    "options": ["Ludwig van Beethoven", "Wolfgang Amadeus Mozart", "Giuseppe Verdi", "Richard Wagner"],
+    "correct": 1
+  },
+  {
+    "id": 223,
+    "category": "kultura",
+    "question": "Která kapela nahrála album „Abbey Road“?",
+    "options": ["The Beatles", "The Rolling Stones", "The Who", "Pink Floyd"],
+    "correct": 0
+  },
+  {
+    "id": 224,
+    "category": "kultura",
+    "question": "Jaký americký zpěvák je autorem hitu „Heartbreak Hotel“?",
+    "options": ["Elvis Presley", "Johnny Cash", "Buddy Holly", "Roy Orbison"],
+    "correct": 0
+  },
+  {
+    "id": 225,
+    "category": "kultura",
+    "question": "Kdo složil symfonii „Osudová“?",
+    "options": ["Joseph Haydn", "Wolfgang Amadeus Mozart", "Ludwig van Beethoven", "Johannes Brahms"],
+    "correct": 2
+  },
+  {
+    "id": 226,
+    "category": "kultura",
+    "question": "Která britská kapela napsala píseň „Stairway to Heaven“?",
+    "options": ["The Rolling Stones", "Led Zeppelin", "The Who", "Deep Purple"],
+    "correct": 1
+  },
+  {
+    "id": 227,
+    "category": "kultura",
+    "question": "Kdo složil slavný balet „Labutí jezero“?",
+    "options": ["Igor Stravinskij", "Petr Iljič Čajkovskij", "Sergej Prokofjev", "Dmitrij Šostakovič"],
+    "correct": 1
+  },
+  {
+    "id": 228,
+    "category": "kultura",
+    "question": "Kdo zpívá píseň „Shape of You“?",
+    "options": ["Ed Sheeran", "Sam Smith", "Shawn Mendes", "Harry Styles"],
+    "correct": 0
+  },
+  {
+    "id": 229,
+    "category": "kultura",
+    "question": "Kdo je autorem písně „Smells Like Teen Spirit“?",
+    "options": ["Kurt Cobain", "Chris Cornell", "Eddie Vedder", "Dave Grohl"],
+    "correct": 0
+  },
+  {
+    "id": 230,
+    "category": "kultura",
+    "question": "Jaká zpěvačka je známá svým alter egem „Sasha Fierce“?",
+    "options": ["Beyoncé", "Rihanna", "Alicia Keys", "Nicki Minaj"],
+    "correct": 0
+  },
+  {
+    "id": 231,
+    "category": "kultura",
+    "question": "Který hudebník složil soundtrack k filmu „Gladiátor“?",
+    "options": ["Hans Zimmer", "John Williams", "James Horner", "Ennio Morricone"],
+    "correct": 0
+  },
+  {
+    "id": 232,
+    "category": "kultura",
+    "question": "Kdo je autorem písně „Hallelujah“, později proslavené Jeffem Buckleym?",
+    "options": ["Leonard Cohen", "Bob Dylan", "Paul Simon", "Bruce Springsteen"],
+    "correct": 0
+  },
+  {
+    "id": 233,
+    "category": "kultura",
+    "question": "Která kapela napsala píseň „Hotel California“?",
+    "options": ["The Doors", "Eagles", "Fleetwood Mac", "America"],
+    "correct": 1
+  },
+  {
+    "id": 234,
+    "category": "kultura",
+    "question": "Kdo je autorem hitu „Rolling in the Deep“?",
+    "options": ["Adele", "Amy Winehouse", "Lana Del Rey", "Dido"],
+    "correct": 0
+  },
+  {
+    "id": 235,
+    "category": "kultura",
+    "question": "Kdo je autorem opery „Carmen“?",
+    "options": ["Giuseppe Verdi", "Georges Bizet", "Giacomo Puccini", "Richard Wagner"],
+    "correct": 1
+  },
+  {
+    "id": 236,
+    "category": "kultura",
+    "question": "Jaká kapela napsala píseň „Another Brick in the Wall“?",
+    "options": ["Pink Floyd", "Genesis", "The Who", "Yes"],
+    "correct": 0
+  },
+  {
+    "id": 237,
+    "category": "kultura",
+    "question": "Kdo složil „Čtyři roční období“?",
+    "options": ["Antonio Vivaldi", "Johann Sebastian Bach", "Georg Friedrich Händel", "Franz Schubert"],
+    "correct": 0
+  },
+  {
+    "id": 238,
+    "category": "kultura",
+    "question": "Kdo zpívá hit „Billie Jean“?",
+    "options": ["Prince", "Michael Jackson", "Lionel Richie", "Stevie Wonder"],
+    "correct": 1
+  },
+  {
+    "id": 239,
+    "category": "kultura",
+    "question": "Jaký slavný skladatel byl hluchý na konci života?",
+    "options": ["Beethoven", "Mozart", "Bach", "Haydn"],
+    "correct": 0
+  },
+  {
+    "id": 240,
+    "category": "kultura",
+    "question": "Kdo složil hudbu k filmům „Star Wars“ a „Harry Potter“?",
+    "options": ["Hans Zimmer", "John Williams", "James Newton Howard", "Alan Silvestri"],
+    "correct": 1
+  },
+  {
+    "id": 241,
+    "category": "kultura",
+    "question": "Který americký zpěvák napsal píseň „Blowin’ in the Wind“?",
+    "options": ["Bob Dylan", "Bruce Springsteen", "Johnny Cash", "Neil Young"],
+    "correct": 0
+  },
+  {
+    "id": 242,
+    "category": "kultura",
+    "question": "Jaká skupina je známá hity „Waterloo“ a „Dancing Queen“?",
+    "options": ["Boney M.", "ABBA", "Bee Gees", "Carpenters"],
+    "correct": 1
+  },
+  {
+    "id": 243,
+    "category": "kultura",
+    "question": "Kdo je autorem písně „Yesterday“?",
+    "options": ["John Lennon", "Paul McCartney", "George Harrison", "Ringo Starr"],
+    "correct": 1
+  },
+  {
+    "id": 244,
+    "category": "kultura",
+    "question": "Který český dirigent byl známý spoluprací s Českou filharmonií a propagací Dvořáka?",
+    "options": ["Václav Talich", "Jiří Bělohlávek", "Rafael Kubelík", "Libor Pešek"],
+    "correct": 1
+  },
+  {
+    "id": 245,
+    "category": "kultura",
+    "question": "Jak se jmenuje největší hudební festival v Británii?",
+    "options": ["Glastonbury", "Reading", "Isle of Wight", "Download"],
+    "correct": 0
+  },
+  {
+    "id": 246,
+    "category": "kultura",
+    "question": "Jaká rocková skupina vydala album „The Dark Side of the Moon“?",
+    "options": ["Pink Floyd", "Queen", "Deep Purple", "U2"],
+    "correct": 0
+  },
+  {
+    "id": 247,
+    "category": "kultura",
+    "question": "Kdo je považován za „krále reggae“?",
+    "options": ["Jimmy Cliff", "Bob Marley", "Peter Tosh", "Bunny Wailer"],
+    "correct": 1
+  },
+
+
+
+
+
+  {
+    "id": 248,
+    "category": "jazyk",
+    "question": "Co znamená v brněnském slangu slovo „šalina“?",
+    "options": ["Trolejbus", "Tramvaj", "Autobus", "Vlak"],
+    "correct": 1
+  },
+  {
+    "id": 249,
+    "category": "jazyk",
+    "question": "Co znamená v Brně slovo „rohlík s párkem“ známé jako „rohlík s rohlíkem“?",
+    "options": ["Hot dog", "Sendvič", "Bageta", "Toast"],
+    "correct": 0
+  },
+  {
+    "id": 250,
+    "category": "jazyk",
+    "question": "Jak Brňané říkají „poklopu u kalhot“?",
+    "options": ["Zips", "Punt", "Klapka", "Lajna"],
+    "correct": 1
+  },
+  {
+    "id": 251,
+    "category": "jazyk",
+    "question": "Co znamená v brněnském slangu výraz „hantec“?",
+    "options": ["Brněnský dialekt", "Zmrzlina", "Hudební žánr", "Tramvajenka"],
+    "correct": 0
+  },
+  {
+    "id": 252,
+    "category": "jazyk",
+    "question": "Když Brňan řekne „šalinu chytnu u orloja“, kde je?",
+    "options": ["Na Mendláku", "Na České", "Na Náměstí Svobody", "U Hlavního nádraží"],
+    "correct": 2
+  },
+  {
+    "id": 253,
+    "category": "jazyk",
+    "question": "Co znamená v brněnském hantecu výraz „šalina jede na křenku“?",
+    "options": ["Tramvaj jede do centra", "Tramvaj jede na Královo Pole", "Tramvaj jede k nádraží", "Tramvaj jede do Komárova"],
+    "correct": 1
+  },
+  {
+    "id": 254,
+    "category": "jazyk",
+    "question": "Když Brňan řekne „deš na rolu?“, kam tě zve?",
+    "options": ["Na pivo", "Na diskotéku", "Na divadlo", "Na fotbal"],
+    "correct": 0
+  },
+  {
+    "id": 255,
+    "category": "jazyk",
+    "question": "Co znamená v brněnském slangu „zazobaný“?",
+    "options": ["Namazaný", "Bohatý", "Unavený", "Opilý"],
+    "correct": 1
+  },
+  {
+    "id": 256,
+    "category": "jazyk",
+    "question": "Když Brňan řekne „mám škopek“, co tím myslí?",
+    "options": ["Mám pivo", "Mám hlavu", "Mám kýbl", "Mám kolo"],
+    "correct": 0
+  },
+  {
+    "id": 257,
+    "category": "jazyk",
+    "question": "Co znamená v Brně slovo „gule“ ve větě „To máš gule!“?",
+    "options": ["Nervy / odvahu", "Náhradní díly", "Zmatek", "Míčky"],
+    "correct": 0
+  },
+  {
+    "id": 258,
+    "category": "jazyk",
+    "question": "Když Ostravák řekne „jdu do roboty“, kam jde?",
+    "options": ["Do školy", "Do práce", "Na pivo", "Na vlak"],
+    "correct": 1
+  },
+  {
+    "id": 259,
+    "category": "jazyk",
+    "question": "Co znamená v ostravském slangu „cyp“?",
+    "options": ["Kámoš", "Hlupák", "Dobrý člověk", "Šéf"],
+    "correct": 1
+  },
+  {
+    "id": 260,
+    "category": "jazyk",
+    "question": "Když Ostravák řekne „kaj iděš?“, co tím myslí?",
+    "options": ["Kam jdeš?", "Kdy přijdeš?", "Kde jsi?", "Jak se máš?"],
+    "correct": 0
+  },
+  {
+    "id": 261,
+    "category": "jazyk",
+    "question": "Jak se v Ostravě řekne „přítelkyně“?",
+    "options": ["Frajerka", "Koc", "Borka", "Holka"],
+    "correct": 0
+  },
+  {
+    "id": 262,
+    "category": "jazyk",
+    "question": "Co znamená ostravské slovo „fest“?",
+    "options": ["Hodně / fakt moc", "Pěkně", "Pomalu", "Zle"],
+    "correct": 0
+  },
+  {
+    "id": 263,
+    "category": "jazyk",
+    "question": "Když Ostravák řekne „je tam ryja jak sviňa“, co tím myslí?",
+    "options": ["Je tam zima", "Je tam horko", "Je tam nuda", "Je tam zmatek"],
+    "correct": 1
+  },
+  {
+    "id": 264,
+    "category": "jazyk",
+    "question": "Co znamená v ostravském slangu „mít šichtu“?",
+    "options": ["Mít směnu v práci", "Mít oslavu", "Mít schůzku", "Mít dovolenou"],
+    "correct": 0
+  },
+  {
+    "id": 265,
+    "category": "jazyk",
+    "question": "Když Ostravák řekne „mám hlad jak cyp“, co tím říká?",
+    "options": ["Mám trochu hlad", "Jsem strašně hladový", "Nemám hlad vůbec", "Mám kocovinu"],
+    "correct": 1
+  },
+  {
+    "id": 266,
+    "category": "jazyk",
+    "question": "Co znamená „kajsi“ v ostravském slangu?",
+    "options": ["Kde jsi", "Proč", "Jak", "Kolik"],
+    "correct": 0
+  },
+  {
+    "id": 267,
+    "category": "jazyk",
+    "question": "Když Ostravák řekne „du chrápat“, co jde dělat?",
+    "options": ["Spát", "Jíst", "Pracovat", "Hrát karty"],
+    "correct": 0
+  },
+  {
+    "id": 268,
+    "category": "jazyk",
+    "question": "Co znamená v ostravském slangu „špinavý jak prase“?",
+    "options": ["Velmi špinavý", "Trochu unavený", "Zraněný", "Zaneprázdněný"],
+    "correct": 0
+  },
+  {
+    "id": 269,
+    "category": "jazyk",
+    "question": "Jak Ostravák řekne „auto“?",
+    "options": ["Kára", "Vozejk", "Fórek", "Plechovka"],
+    "correct": 0
+  },
+  {
+    "id": 270,
+    "category": "jazyk",
+    "question": "Když Ostravák řekne „to je maso“, co tím myslí?",
+    "options": ["Je to těžké nebo šílené", "Je to jídlo", "Je to hloupé", "Je to silné auto"],
+    "correct": 0
+  },
+  {
+    "id": 271,
+    "category": "jazyk",
+    "question": "Co znamená brněnské slovo „cajzl“?",
+    "options": ["Pražák", "Kolega", "Policajt", "Nešika"],
+    "correct": 0
+  },
+  {
+    "id": 272,
+    "category": "jazyk",
+    "question": "Když Brňan řekne „to je v cajku“, co tím myslí?",
+    "options": ["Je to v pohodě", "Je to špatné", "Je to drahé", "Je to tajné"],
+    "correct": 0
+  },
+  {
+    "id": 273,
+    "category": "jazyk",
+    "question": "Co znamená v Brně slovo „kérka“?",
+    "options": ["Tetování", "Káva", "Pusa", "Zpěvák"],
+    "correct": 0
+  },
+  {
+    "id": 274,
+    "category": "jazyk",
+    "question": "Když Brňan řekne „deš na škopek?“, co tě zve dělat?",
+    "options": ["Jít na pivo", "Jít na ryby", "Jít do školy", "Jít na koncert"],
+    "correct": 0
+  },
+  {
+    "id": 275,
+    "category": "jazyk",
+    "question": "Jak Ostravák označí někoho, kdo je legrační nebo přehání?",
+    "options": ["Tatar", "Cyp", "Magor", "Šašek"],
+    "correct": 1
+  },
+  {
+    "id": 276,
+    "category": "jazyk",
+    "question": "Když Brňan řekne „vokno“, co tím může myslet?",
+    "options": ["Okno nebo zapomenutí", "Výkladní skříň", "Díru ve zdi", "Vstupenku"],
+    "correct": 0
+  },
+  {
+    "id": 277,
+    "category": "jazyk",
+    "question": "Jak Ostravák označí kamaráda?",
+    "options": ["Parťák", "Kámoš", "Týpek", "Cypík"],
+    "correct": 1
+  },
+
+
+
+  {
+    "id": 308,
+    "category": "kultura",
+    "question": "Kdo režíroval film „Titanic“?",
+    "options": ["Steven Spielberg", "James Cameron", "Ridley Scott", "Robert Zemeckis"],
+    "correct": 1
+  },
+  {
+    "id": 309,
+    "category": "kultura",
+    "question": "Kdo ztvárnil hlavní roli ve filmu „Forrest Gump“?",
+    "options": ["Tom Cruise", "Tom Hanks", "Brad Pitt", "Matt Damon"],
+    "correct": 1
+  },
+  {
+    "id": 310,
+    "category": "kultura",
+    "question": "Který film získal Oscara za nejlepší film v roce 1994?",
+    "options": ["Forrest Gump", "Pulp Fiction", "Statečné srdce", "Schindlerův seznam"],
+    "correct": 0
+  },
+  {
+    "id": 311,
+    "category": "kultura",
+    "question": "Kdo hrál Jacka Sparrowa ve filmu „Piráti z Karibiku“?",
+    "options": ["Johnny Depp", "Orlando Bloom", "Hugh Jackman", "Leonardo DiCaprio"],
+    "correct": 0
+  },
+  {
+    "id": 312,
+    "category": "kultura",
+    "question": "Kdo režíroval trilogii „Pán prstenů“?",
+    "options": ["Peter Jackson", "Christopher Nolan", "James Cameron", "David Fincher"],
+    "correct": 0
+  },
+  {
+    "id": 313,
+    "category": "kultura",
+    "question": "Kdo hrál hlavní roli ve filmu „Matrix“?",
+    "options": ["Keanu Reeves", "Tom Cruise", "Will Smith", "Brad Pitt"],
+    "correct": 0
+  },
+  {
+    "id": 314,
+    "category": "kultura",
+    "question": "Který film obsahuje hlášku „May the Force be with you“?",
+    "options": ["Star Wars", "Star Trek", "Avatar", "Blade Runner"],
+    "correct": 0
+  },
+  {
+    "id": 315,
+    "category": "kultura",
+    "question": "Kdo režíroval film „Schindlerův seznam“?",
+    "options": ["Steven Spielberg", "Ridley Scott", "Martin Scorsese", "James Cameron"],
+    "correct": 0
+  },
+  {
+    "id": 316,
+    "category": "kultura",
+    "question": "Který herec ztvárnil Wolverina v sérii X-Men?",
+    "options": ["Hugh Jackman", "Robert Downey Jr.", "Chris Evans", "Christian Bale"],
+    "correct": 0
+  },
+  {
+    "id": 317,
+    "category": "kultura",
+    "question": "Jak se jmenuje planeta ve filmu „Avatar“?",
+    "options": ["Pandora", "Arrakis", "Krypton", "Ego"],
+    "correct": 0
+  },
+  {
+    "id": 318,
+    "category": "kultura",
+    "question": "Který film získal Oscara za nejlepší film v roce 2020?",
+    "options": ["1917", "Parasite", "Joker", "Once Upon a Time in Hollywood"],
+    "correct": 1
+  },
+  {
+    "id": 319,
+    "category": "kultura",
+    "question": "Kdo ztvárnil roli Iron Mana v Marvel filmech?",
+    "options": ["Robert Downey Jr.", "Chris Hemsworth", "Chris Evans", "Mark Ruffalo"],
+    "correct": 0
+  },
+  {
+    "id": 320,
+    "category": "kultura",
+    "question": "Který film obsahuje větu „I’m gonna make him an offer he can’t refuse“?",
+    "options": ["Mafiáni", "Kmotr", "Casino", "Scarface"],
+    "correct": 1
+  },
+  {
+    "id": 321,
+    "category": "kultura",
+    "question": "Kdo režíroval film „Inception“?",
+    "options": ["Christopher Nolan", "Ridley Scott", "David Fincher", "James Cameron"],
+    "correct": 0
+  },
+  {
+    "id": 322,
+    "category": "kultura",
+    "question": "Jak se jmenuje hlavní postava z filmu „Gladiátor“?",
+    "options": ["Maximus", "Spartakus", "Commodus", "Marcus"],
+    "correct": 0
+  },
+  {
+    "id": 323,
+    "category": "kultura",
+    "question": "Kdo hrál hlavní roli ve filmu „Joker“ z roku 2019?",
+    "options": ["Heath Ledger", "Joaquin Phoenix", "Jared Leto", "Christian Bale"],
+    "correct": 1
+  },
+  {
+    "id": 324,
+    "category": "kultura",
+    "question": "Jak se jmenuje režisér filmů „Kill Bill“ a „Pulp Fiction“?",
+    "options": ["Quentin Tarantino", "Martin Scorsese", "Robert Rodriguez", "Guy Ritchie"],
+    "correct": 0
+  },
+  {
+    "id": 325,
+    "category": "kultura",
+    "question": "Který herec hrál Jamese Bonda ve filmech „Skyfall“ a „Spectre“?",
+    "options": ["Sean Connery", "Pierce Brosnan", "Daniel Craig", "Roger Moore"],
+    "correct": 2
+  },
+  {
+    "id": 326,
+    "category": "kultura",
+    "question": "Kdo ztvárnil Laru Croft ve filmech z roku 2001 a 2003?",
+    "options": ["Angelina Jolie", "Charlize Theron", "Kate Beckinsale", "Milla Jovovich"],
+    "correct": 0
+  },
+  {
+    "id": 327,
+    "category": "kultura",
+    "question": "Který film byl prvním, který získal 11 Oscarů?",
+    "options": ["Titanic", "Ben Hur", "Pán prstenů: Návrat krále", "West Side Story"],
+    "correct": 1
+  },
+  {
+    "id": 328,
+    "category": "kultura",
+    "question": "Kdo složil hudbu k filmu „Star Wars“?",
+    "options": ["Hans Zimmer", "John Williams", "Ennio Morricone", "Howard Shore"],
+    "correct": 1
+  },
+  {
+    "id": 329,
+    "category": "kultura",
+    "question": "Který film obsahuje větu „Here’s looking at you, kid“?",
+    "options": ["Casablanca", "Občan Kane", "Někdo to rád horké", "Gone with the Wind"],
+    "correct": 0
+  },
+  {
+    "id": 330,
+    "category": "kultura",
+    "question": "Kdo hrál hlavní roli ve filmu „Mlčení jehňátek“?",
+    "options": ["Meryl Streep", "Jodie Foster", "Nicole Kidman", "Gillian Anderson"],
+    "correct": 1
+  },
+  {
+    "id": 331,
+    "category": "kultura",
+    "question": "Který animovaný film vyhrál Oscara v roce 2002 jako první svého druhu?",
+    "options": ["Shrek", "Toy Story", "Hledá se Nemo", "Král lev"],
+    "correct": 0
+  },
+  {
+    "id": 332,
+    "category": "kultura",
+    "question": "Kdo režíroval film „Blade Runner“?",
+    "options": ["Ridley Scott", "James Cameron", "Christopher Nolan", "David Fincher"],
+    "correct": 0
+  },
+  {
+    "id": 333,
+    "category": "kultura",
+    "question": "Kdo hrál hlavní roli ve filmu „Zelená míle“?",
+    "options": ["Tom Cruise", "Tom Hanks", "Morgan Freeman", "Kevin Spacey"],
+    "correct": 1
+  },
+  {
+    "id": 334,
+    "category": "kultura",
+    "question": "Který film režíroval Francis Ford Coppola?",
+    "options": ["Kmotr", "Tenkrát na Západě", "Taxi Driver", "Apokalypsa"],
+    "correct": 0
+  },
+  {
+    "id": 335,
+    "category": "kultura",
+    "question": "Který film režíroval Stanley Kubrick?",
+    "options": ["Mechanický pomeranč", "Blade Runner", "Vetřelec", "Brazil"],
+    "correct": 0
+  },
+  {
+    "id": 336,
+    "category": "kultura",
+    "question": "Kdo hrál hlavní roli ve filmu „Titanic“ po boku Kate Winslet?",
+    "options": ["Leonardo DiCaprio", "Brad Pitt", "Matt Damon", "Tom Cruise"],
+    "correct": 0
+  },
+  {
+    "id": 337,
+    "category": "kultura",
+    "question": "Který film z roku 1999 režírovali sourozenci Wachowští?",
+    "options": ["Matrix", "Fight Club", "Americká krása", "Šestý smysl"],
+    "correct": 0
+  }
+]

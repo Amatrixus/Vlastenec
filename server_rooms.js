@@ -522,12 +522,12 @@ function delay(ms) {
 // OTÁZKY
 
 
-const questionsPath = path.join(__dirname, 'multiple_choice_questions.json');
+const questionsPath = path.join(__dirname, 'joltiple_choice.json');
 const questions = JSON.parse(fs.readFileSync(questionsPath, 'utf8'));
 
 
 // --- Numeric Qs (CJS) ---
-const numericQuestionsPath = path.join(__dirname, 'numeric_questions.json');
+const numericQuestionsPath = path.join(__dirname, 'jolumeric_questions.json');
 const numericQuestions = JSON.parse(fs.readFileSync(numericQuestionsPath, 'utf8'));
 
 

@@ -1,0 +1,337 @@
+[
+  { "id": 278, "category": "jazyk", "question": "Co znamená slangový výraz „bejt v klidu“?", "options": ["Být nemocný", "Být v pohodě", "Být tichý", "Být unavený"], "correct": 1 },
+  { "id": 279, "category": "jazyk", "question": "Co znamená „mít nervy“?", "options": ["Být podrážděný", "Mít odvahu", "Mít štěstí", "Být smutný"], "correct": 0 },
+  { "id": 280, "category": "jazyk", "question": "Když někdo řekne „v poho“, co tím myslí?", "options": ["V pohodě", "V pohybu", "V pohovce", "V pohádce"], "correct": 0 },
+  { "id": 281, "category": "jazyk", "question": "Co znamená „na pohodu“?", "options": ["Klidně, v pohodě", "Rychle", "Hlasitě", "Zmatečně"], "correct": 0 },
+  { "id": 282, "category": "jazyk", "question": "Když někdo řekne „je to pecka“, co tím myslí?", "options": ["Je to špatné", "Je to super", "Je to nudné", "Je to těžké"], "correct": 1 },
+  { "id": 283, "category": "jazyk", "question": "Co znamená „dělat machra“?", "options": ["Předvádět se", "Pracovat tvrdě", "Pomáhat ostatním", "Hrát divadlo"], "correct": 0 },
+  { "id": 284, "category": "jazyk", "question": "Když někdo řekne „jsem vyřízenej“, co tím myslí?", "options": ["Jsem unavený", "Jsem spokojený", "Jsem rychlý", "Jsem šťastný"], "correct": 0 },
+  { "id": 285, "category": "jazyk", "question": "Co znamená výraz „mít filipa“?", "options": ["Být chytrý", "Mít kamaráda", "Být naštvaný", "Být smutný"], "correct": 0 },
+  { "id": 286, "category": "jazyk", "question": "Když někdo řekne „mám kocovinu“, co tím myslí?", "options": ["Mám kočku", "Mám po večírku bolest hlavy", "Mám smutek", "Mám strach"], "correct": 1 },
+  { "id": 287, "category": "jazyk", "question": "Co znamená „to je fakt hustý“?", "options": ["To je trapné", "To je neuvěřitelné", "To je slabé", "To je tiché"], "correct": 1 },
+  { "id": 288, "category": "jazyk", "question": "Co znamená „mít bobky“?", "options": ["Mít strach", "Mít hlad", "Mít peníze", "Mít štěstí"], "correct": 0 },
+  { "id": 289, "category": "jazyk", "question": "Když někdo řekne „mazec“, co tím myslí?", "options": ["Zmatek nebo úžasná událost", "Ticho", "Klid", "Nudu"], "correct": 0 },
+  { "id": 290, "category": "jazyk", "question": "Co znamená „šrotit“?", "options": ["Učit se", "Jíst", "Tančit", "Hrát fotbal"], "correct": 0 },
+  { "id": 291, "category": "jazyk", "question": "Když někdo řekne „mám depku“, co tím říká?", "options": ["Mám radost", "Mám depresi / smutek", "Mám dovolenou", "Mám nervy"], "correct": 1 },
+  { "id": 292, "category": "jazyk", "question": "Co znamená „bejt na mizině“?", "options": ["Být bez peněz", "Být na dovolené", "Být v problémech", "Být smutný"], "correct": 0 },
+  { "id": 293, "category": "jazyk", "question": "Když někdo řekne „děsnej cajk“, co tím myslí?", "options": ["Naprosto v pořádku", "Hrozně drahé", "Velký problém", "Hloupé"], "correct": 0 },
+  { "id": 294, "category": "jazyk", "question": "Co znamená „bejt mimo“?", "options": ["Nerozumět situaci", "Být venku", "Být unavený", "Být v pohodě"], "correct": 0 },
+  { "id": 295, "category": "jazyk", "question": "Co znamená „bejvák“?", "options": ["Byt, domov", "Zahrada", "Auto", "Přístřešek na táboře"], "correct": 0 },
+  { "id": 296, "category": "jazyk", "question": "Když někdo řekne „mám zaracha“, co tím říká?", "options": ["Mám domácí trest", "Mám peníze", "Mám hlad", "Mám dovolenou"], "correct": 0 },
+  { "id": 297, "category": "jazyk", "question": "Co znamená „vochmel“?", "options": ["Opilost", "Zmatek", "Pohoda", "Hádka"], "correct": 0 },
+  { "id": 298, "category": "jazyk", "question": "Když někdo řekne „vohoz“, co tím myslí?", "options": ["Oblečení", "Účes", "Způsob mluvy", "Jídlo"], "correct": 0 },
+  { "id": 299, "category": "jazyk", "question": "Co znamená „fofr“?", "options": ["Spěch", "Odpočinek", "Zmatek", "Úspěch"], "correct": 0 },
+  { "id": 300, "category": "jazyk", "question": "Když někdo řekne „žrádlo“, co tím myslí?", "options": ["Výborné jídlo", "Zvířecí krmivo", "Peníze", "Zlato"], "correct": 0 },
+  { "id": 301, "category": "jazyk", "question": "Co znamená „drb“?", "options": ["Pomluva nebo klep", "Zranění", "Hudební rytmus", "Sníh"], "correct": 0 },
+  { "id": 302, "category": "jazyk", "question": "Když někdo řekne „bejvák“ v Praze, co tím myslí?", "options": ["Byt", "Auto", "Obchod", "Zahradu"], "correct": 0 },
+  { "id": 303, "category": "jazyk", "question": "Co znamená „šílený rachot“?", "options": ["Velký hluk", "Tanec", "Zmatek", "Bouře"], "correct": 0 },
+  { "id": 304, "category": "jazyk", "question": "Když někdo řekne „je to v háji“, co tím myslí?", "options": ["Je to ztracené", "Je to v pořádku", "Je to daleko", "Je to drahé"], "correct": 0 },
+  { "id": 305, "category": "jazyk", "question": "Co znamená „kalba“?", "options": ["Oslava nebo večírek", "Problém", "Trest", "Zkouška"], "correct": 0 },
+  { "id": 306, "category": "jazyk", "question": "Co znamená „švára“?", "options": ["Švagr", "Bratr", "Kamarád", "Policista"], "correct": 0 },
+  { "id": 307, "category": "jazyk", "question": "Když někdo řekne „to je mazec“, co tím myslí?", "options": ["Je to husté / šílené", "Je to nuda", "Je to levné", "Je to tiché"], "correct": 0 },
+  
+  
+  {
+    "id": 338,
+    "category": "kultura",
+    "question": "V kterém roce měl premiéru film „Titanic“?",
+    "answer": 1997
+  },
+  {
+    "id": 339,
+    "category": "kultura",
+    "question": "Kolik Oscarů získal film „Titanic“?",
+    "answer": 11
+  },
+  {
+    "id": 340,
+    "category": "kultura",
+    "question": "V kterém roce vyšel první film o Harrym Potterovi?",
+    "answer": 2001
+  },
+  {
+    "id": 341,
+    "category": "kultura",
+    "question": "Kolik filmů tvoří trilogii „Pán prstenů“?",
+    "answer": 3
+  },
+  {
+    "id": 342,
+    "category": "kultura",
+    "question": "V kterém roce měl premiéru první film „Star Wars“?",
+    "answer": 1977
+  },
+  {
+    "id": 343,
+    "category": "kultura",
+    "question": "Kolik dílů má filmová série „Matrix“ (včetně čtvrtého z roku 2021)?",
+    "answer": 4
+  },
+  {
+    "id": 344,
+    "category": "kultura",
+    "question": "Kolik Oscarů získal film „Pán prstenů: Návrat krále“?",
+    "answer": 11
+  },
+  {
+    "id": 345,
+    "category": "kultura",
+    "question": "V kterém roce vyšel film „Forrest Gump“?",
+    "answer": 1994
+  },
+  {
+    "id": 346,
+    "category": "kultura",
+    "question": "Kolik Oscarů získal film „Schindlerův seznam“?",
+    "answer": 7
+  },
+  {
+    "id": 347,
+    "category": "kultura",
+    "question": "Kolik filmů natočil režisér Alfred Hitchcock?",
+    "answer": 53
+  },
+  {
+    "id": 348,
+    "category": "kultura",
+    "question": "V kterém roce vyšel první animovaný film „Sněhurka a sedm trpaslíků“?",
+    "answer": 1937
+  },
+  {
+    "id": 349,
+    "category": "kultura",
+    "question": "Kolik Oscarů získal film „Ben Hur“?",
+    "answer": 11
+  },
+  {
+    "id": 350,
+    "category": "kultura",
+    "question": "Kolik let bylo Leonardu DiCapriovi, když získal svého prvního Oscara?",
+    "answer": 41
+  },
+  {
+    "id": 351,
+    "category": "kultura",
+    "question": "V kterém roce vyšel film „Avatar“?",
+    "answer": 2009
+  },
+  {
+    "id": 352,
+    "category": "kultura",
+    "question": "Kolik minut trvá film „Titanic“ (přibližně)?",
+    "answer": 195
+  },
+  {
+    "id": 353,
+    "category": "kultura",
+    "question": "Kolik dílů má filmová série „Rychle a zběsile“ (Fast & Furious) do roku 2025?",
+    "answer": 10
+  },
+  {
+    "id": 354,
+    "category": "kultura",
+    "question": "Kolik filmů natočil Christopher Nolan do roku 2024?",
+    "answer": 12
+  },
+  {
+    "id": 355,
+    "category": "kultura",
+    "question": "Kolik Oscarů získal film „Parazit“ (2019)?",
+    "answer": 4
+  },
+  {
+    "id": 356,
+    "category": "kultura",
+    "question": "Kolik pokračování má film „Jurský park“ (včetně Jurského světa)?",
+    "answer": 6
+  },
+  {
+    "id": 357,
+    "category": "kultura",
+    "question": "V kterém roce měl premiéru první film o Jamesi Bondovi?",
+    "answer": 1962
+  },
+
+  
+  {
+    "id": 358,
+    "category": "kultura",
+    "question": "V kterém roce vznikla skupina The Beatles?",
+    "answer": 1960
+  },
+  {
+    "id": 359,
+    "category": "kultura",
+    "question": "Kolik členů měla skupina The Beatles?",
+    "answer": 4
+  },
+  {
+    "id": 360,
+    "category": "kultura",
+    "question": "V kterém roce zemřel Elvis Presley?",
+    "answer": 1977
+  },
+  {
+    "id": 361,
+    "category": "kultura",
+    "question": "Kolik let bylo Michaelu Jacksonovi, když vydal album „Thriller“?",
+    "answer": 24
+  },
+  {
+    "id": 362,
+    "category": "kultura",
+    "question": "V kterém roce vydala Madonna svůj debutový album?",
+    "answer": 1983
+  },
+  {
+    "id": 363,
+    "category": "kultura",
+    "question": "Kolik Oscarů získal Elton John za filmové písně?",
+    "answer": 2
+  },
+  {
+    "id": 364,
+    "category": "kultura",
+    "question": "V kterém roce zemřel Freddie Mercury?",
+    "answer": 1991
+  },
+  {
+    "id": 365,
+    "category": "kultura",
+    "question": "Kolik studiových alb vydala skupina Queen?",
+    "answer": 15
+  },
+  {
+    "id": 366,
+    "category": "kultura",
+    "question": "Kolik Grammy Awards získal Michael Jackson během své kariéry?",
+    "answer": 13
+  },
+  {
+    "id": 367,
+    "category": "kultura",
+    "question": "V kterém roce vyšlo album „The Dark Side of the Moon“ od Pink Floyd?",
+    "answer": 1973
+  },
+  {
+    "id": 368,
+    "category": "kultura",
+    "question": "Kolik členů má kapela ABBA?",
+    "answer": 4
+  },
+  {
+    "id": 369,
+    "category": "kultura",
+    "question": "V kterém roce se konal první ročník festivalu Woodstock?",
+    "answer": 1969
+  },
+  {
+    "id": 370,
+    "category": "kultura",
+    "question": "Kolik symfonií složil Ludwig van Beethoven?",
+    "answer": 9
+  },
+  {
+    "id": 371,
+    "category": "kultura",
+    "question": "V kterém roce se narodil Wolfgang Amadeus Mozart?",
+    "answer": 1756
+  },
+  {
+    "id": 372,
+    "category": "kultura",
+    "question": "Kolik let trvalo psaní Beethovenovy 9. symfonie?",
+    "answer": 10
+  },
+  {
+    "id": 373,
+    "category": "kultura",
+    "question": "V kterém roce vznikla skupina Nirvana?",
+    "answer": 1987
+  },
+  {
+    "id": 374,
+    "category": "kultura",
+    "question": "Kolik let bylo Kurtu Cobainovi, když zemřel?",
+    "answer": 27
+  },
+  {
+    "id": 375,
+    "category": "kultura",
+    "question": "V kterém roce vydal Bob Dylan píseň „Like a Rolling Stone“?",
+    "answer": 1965
+  },
+  {
+    "id": 376,
+    "category": "kultura",
+    "question": "Kolik členů má skupina The Rolling Stones?",
+    "answer": 4
+  },
+  {
+    "id": 377,
+    "category": "kultura",
+    "question": "V kterém roce zemřel Johann Sebastian Bach?",
+    "answer": 1750
+  },
+  {
+    "id": 378,
+    "category": "kultura",
+    "question": "Kolik písní je na albu „Thriller“?",
+    "answer": 9
+  },
+  {
+    "id": 379,
+    "category": "kultura",
+    "question": "V kterém roce zemřel David Bowie?",
+    "answer": 2016
+  },
+  {
+    "id": 380,
+    "category": "kultura",
+    "question": "Kolik Grammy získala Adele do roku 2023?",
+    "answer": 16
+  },
+  {
+    "id": 381,
+    "category": "kultura",
+    "question": "V kterém roce se konal první ročník soutěže Eurovision Song Contest?",
+    "answer": 1956
+  },
+  {
+    "id": 382,
+    "category": "kultura",
+    "question": "Kolik minut trvá skladba „Bohemian Rhapsody“?",
+    "answer": 6
+  },
+  {
+    "id": 383,
+    "category": "kultura",
+    "question": "V kterém roce vyšlo album „Back in Black“ od AC/DC?",
+    "answer": 1980
+  },
+  {
+    "id": 384,
+    "category": "kultura",
+    "question": "Kolik studiových alb vydal Ed Sheeran do roku 2024?",
+    "answer": 6
+  },
+  {
+    "id": 385,
+    "category": "kultura",
+    "question": "V kterém roce vyšlo album „Nevermind“ od Nirvany?",
+    "answer": 1991
+  },
+  {
+    "id": 386,
+    "category": "kultura",
+    "question": "Kolik hudebních nástrojů údajně ovládal Mozart?",
+    "answer": 6
+  },
+  {
+    "id": 387,
+    "category": "kultura",
+    "question": "V kterém roce zemřel Ennio Morricone?",
+    "answer": 2020
+  }
+]
+
