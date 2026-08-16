@@ -2070,3 +2070,57 @@ fill: white;
   opacity: 0.85;
   margin-left: 4px;
 }
+
+/* =========================================================
+   VLASTENEC – map interaction & layer fix (2026-08-16)
+   Decorative elements must never intercept map pointer input.
+   Layer order: map < base/value labels < attack pins < questions.
+   ========================================================= */
+
+/* Region values are purely visual and must never block hover/click. */
+.region-value {
+  z-index: 10 !important;
+  pointer-events: none !important;
+}
+
+/* All three base visuals are decorative overlays.  Apply the rule to
+   the SVG root AND all of its descendants so paths inside the SVG can
+   never become pointer targets. */
+#player1basevisual,
+#player2basevisual,
+#player3basevisual,
+#player1basevisual *,
+#player2basevisual *,
+#player3basevisual * {
+  pointer-events: none !important;
+}
+
+#player1basevisual,
+#player2basevisual,
+#player3basevisual {
+  z-index: 10 !important;
+}
+
+/* These labels are often opacity:0, but an invisible element can still
+   intercept the mouse unless pointer-events is explicitly disabled. */
+#player1basename,
+#player2basename,
+#player3basename,
+.player-name {
+  pointer-events: none !important;
+  z-index: 10 !important;
+}
+
+/* Attack/selection pins must visually sit above bases and region values,
+   while remaining transparent to pointer input themselves. */
+.pin-marker {
+  z-index: 20 !important;
+  pointer-events: none !important;
+}
+
+/* Question overlays must always cover the pins.  Child z-index values
+   continue to work inside this stacking context. */
+#question,
+#numquestion {
+  z-index: 100 !important;
+}
