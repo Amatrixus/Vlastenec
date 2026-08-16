@@ -5059,39 +5059,79 @@ function startCountdownTile(secondsAmount) {
 
 
                 //Čekání na kliknutí
-                function waitForClick(selector) {
+                function waitForClick(selector, validRegions = null) {
                     return new Promise(resolve => {
+                        const elements = Array.from(document.querySelectorAll(selector));
+                        const restrictedSelection = Array.isArray(validRegions);
+
+                        function cleanupSelectionUI() {
+                            document.querySelectorAll(".region").forEach(region => {
+                                region.classList.remove("unavailable");
+                                region.classList.remove("battle-selectable");
+                                region.style.filter = "";
+                                region.onmouseenter = null;
+                                region.onmouseleave = null;
+                                region.style.cursor = "";
+                            });
+
+                            elements.forEach(el => el.removeEventListener("click", handleClick));
+                            elements.forEach(el => el.removeEventListener("mouseover", highlightRegion));
+                            elements.forEach(el => el.removeEventListener("mouseout", resetRegion));
+                        }
+
                         function handleClick(event) {
-                            let clickedRegion = event.target;
+                            let clickedRegion = event.currentTarget;
+
+                            // V bitvě přijmeme opravdu jen region, který poslal server.
+                            if (restrictedSelection && !validRegions.includes(clickedRegion.id)) {
+                                return;
+                            }
+
                             console.log(`🎯 Kliknuto na: ${clickedRegion.id}`);
 
-                            // ✅ Skrytí hodin
                             let tileClockContainer = document.getElementById("tileclockcontainer");
                             if (tileClockContainer) {
                                 tileClockContainer.style.display = "none";
                             }
 
-                            // ✅ Zastavení zvuku tikání
                             stopTickSound();
-
-                           
-                            // ✅ Odstraníme "unavailable" ze všech regionů
-                            document.querySelectorAll(".region").forEach(region => {
-                                region.classList.remove("unavailable");
-                                region.classList.remove("battle-selectable");
-                                region.style.filter = "";
-                            });
-
-                            // ✅ Odebrání listenerů
-                            document.querySelectorAll(selector).forEach(el => el.removeEventListener("click", handleClick));
-                            document.querySelectorAll(selector).forEach(el => el.removeEventListener("mouseover", highlightRegion));
-                            document.querySelectorAll(selector).forEach(el => el.removeEventListener("mouseout", resetRegion));
-
-                            // ✅ Vracíme vybraný region
+                            cleanupSelectionUI();
                             resolve(clickedRegion);
                         }
 
-                        document.querySelectorAll(selector).forEach(el => el.addEventListener("click", handleClick));
+                        elements.forEach(el => {
+                            if (restrictedSelection) {
+                                const isValid = validRegions.includes(el.id);
+
+                                el.style.filter = "";
+                                el.onmouseenter = null;
+                                el.onmouseleave = null;
+
+                                if (isValid) {
+                                    el.classList.remove("unavailable");
+                                    el.style.pointerEvents = "auto";
+                                    el.style.cursor = "pointer";
+
+                                    // Battle hover je navázaný přímo na stejný seznam,
+                                    // který omezuje kliknutí.
+                                    el.onmouseenter = () => {
+                                        el.style.filter = "brightness(120%)";
+                                    };
+                                    el.onmouseleave = () => {
+                                        el.style.filter = "";
+                                    };
+                                } else {
+                                    el.classList.add("unavailable");
+                                    el.style.pointerEvents = "none";
+                                    el.style.cursor = "default";
+                                }
+                            }
+
+                            // U omezeného výběru listener přidáme pouze platným cílům.
+                            if (!restrictedSelection || validRegions.includes(el.id)) {
+                                el.addEventListener("click", handleClick);
+                            }
+                        });
                     });
                 }
 
@@ -6180,27 +6220,40 @@ document.querySelectorAll(".region").forEach(region => {
 
 socket.on("battleAvailableRegions", ({ regions }) => {
     console.log("🟢 Dostupná nepřátelská políčka:", regions);
+    console.log("🧪 BATTLE HOVER v2 aktivní");
 
-    // Bitva: server je jediný zdroj pravdy pro to, na co lze zaútočit.
-    // Hover proto vážeme přímo na seznam `regions`, ne na staré JS listenery.
+    // Server je jediný zdroj pravdy pro platné cíle útoku.
+    // Hover řešíme přímo v JS stejně jako ve fázi rozšiřování,
+    // takže není závislý na načtení / cache CSS pravidla.
     document.querySelectorAll(".region").forEach(el => {
-        // Odstraníme případný vizuální stav z předchozího tahu.
+        // Kompletní reset stavu z předchozího tahu.
         el.style.filter = "";
         el.classList.remove("battle-selectable");
+        el.onmouseenter = null;
+        el.onmouseleave = null;
+        el.style.cursor = "default";
 
         if (regions.includes(el.id)) {
-            // Pouze skutečně dostupná nepřátelská území jsou interaktivní.
+            // Jen serverem povolené cíle jsou aktivní a reagují na hover.
             el.classList.remove("unavailable");
-            el.classList.add("battle-selectable");
             el.style.pointerEvents = "auto";
+            el.style.cursor = "pointer";
+
+            el.onmouseenter = () => {
+                el.style.filter = "brightness(120%)";
+            };
+
+            el.onmouseleave = () => {
+                el.style.filter = "";
+            };
         } else {
-            // Vlastní a serverem nepovolená území nereagují na myš.
+            // Vlastní a nepovolená území zůstávají ztmavená a nereagují.
             el.classList.add("unavailable");
             el.style.pointerEvents = "none";
         }
     });
 
-    enableBattleSelection(regions); // Spuštění výběru pro bitvy
+    enableBattleSelection(regions);
 });
 
 
