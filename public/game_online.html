@@ -5058,80 +5058,59 @@ function startCountdownTile(secondsAmount) {
 
 
 
-                //Čekání na kliknutí
+                // Čekání na kliknutí – jedna aktivní volba regionu v daný okamžik.
+                // validRegions je volitelné pole ID; pokud je zadané, listener dostanou jen platné cíle.
                 function waitForClick(selector, validRegions = null) {
+                    // Zruš případný starý waiter (typicky po serverovém timeoutu v předchozím tahu).
+                    if (typeof window.__regionSelectionCleanup === "function") {
+                        window.__regionSelectionCleanup();
+                    }
+
                     return new Promise(resolve => {
-                        const elements = Array.from(document.querySelectorAll(selector));
-                        const restrictedSelection = Array.isArray(validRegions);
+                        const validSet = Array.isArray(validRegions) ? new Set(validRegions) : null;
+                        const elements = Array.from(document.querySelectorAll(selector))
+                            .filter(el => !validSet || validSet.has(el.id));
 
-                        function cleanupSelectionUI() {
-                            document.querySelectorAll(".region").forEach(region => {
-                                region.classList.remove("unavailable");
-                                region.classList.remove("battle-selectable");
-                                region.style.filter = "";
-                                region.onmouseenter = null;
-                                region.onmouseleave = null;
-                                region.style.cursor = "";
-                            });
+                        let finished = false;
 
+                        function cleanup() {
                             elements.forEach(el => el.removeEventListener("click", handleClick));
-                            elements.forEach(el => el.removeEventListener("mouseover", highlightRegion));
-                            elements.forEach(el => el.removeEventListener("mouseout", resetRegion));
+                            if (window.__regionSelectionCleanup === cleanup) {
+                                window.__regionSelectionCleanup = null;
+                            }
                         }
 
                         function handleClick(event) {
-                            let clickedRegion = event.currentTarget;
-
-                            // V bitvě přijmeme opravdu jen region, který poslal server.
-                            if (restrictedSelection && !validRegions.includes(clickedRegion.id)) {
-                                return;
-                            }
+                            const clickedRegion = event.currentTarget;
+                            if (!clickedRegion || (validSet && !validSet.has(clickedRegion.id))) return;
 
                             console.log(`🎯 Kliknuto na: ${clickedRegion.id}`);
+                            if (finished) return;
+                            finished = true;
+                            cleanup();
 
-                            let tileClockContainer = document.getElementById("tileclockcontainer");
-                            if (tileClockContainer) {
-                                tileClockContainer.style.display = "none";
-                            }
-
+                            const tileClockContainer = document.getElementById("tileclockcontainer");
+                            if (tileClockContainer) tileClockContainer.style.display = "none";
                             stopTickSound();
-                            cleanupSelectionUI();
+
+                            // UI reset. Delegovaný battle-hover se vypne globálním příznakem.
+                            window.__battleSelectionActive = false;
+                            window.__battleTargetIds = new Set();
+                            document.querySelectorAll(".region").forEach(region => {
+                                region.classList.remove("unavailable");
+                                region.classList.remove("battle-selectable");
+                                region.style.removeProperty("filter");
+                                region.style.removeProperty("opacity");
+                                region.style.cursor = "";
+                                region.style.pointerEvents = "";
+                                delete region.dataset.battleHover;
+                            });
+
                             resolve(clickedRegion);
                         }
 
-                        elements.forEach(el => {
-                            if (restrictedSelection) {
-                                const isValid = validRegions.includes(el.id);
-
-                                el.style.filter = "";
-                                el.onmouseenter = null;
-                                el.onmouseleave = null;
-
-                                if (isValid) {
-                                    el.classList.remove("unavailable");
-                                    el.style.pointerEvents = "auto";
-                                    el.style.cursor = "pointer";
-
-                                    // Battle hover je navázaný přímo na stejný seznam,
-                                    // který omezuje kliknutí.
-                                    el.onmouseenter = () => {
-                                        el.style.filter = "brightness(120%)";
-                                    };
-                                    el.onmouseleave = () => {
-                                        el.style.filter = "";
-                                    };
-                                } else {
-                                    el.classList.add("unavailable");
-                                    el.style.pointerEvents = "none";
-                                    el.style.cursor = "default";
-                                }
-                            }
-
-                            // U omezeného výběru listener přidáme pouze platným cílům.
-                            if (!restrictedSelection || validRegions.includes(el.id)) {
-                                el.addEventListener("click", handleClick);
-                            }
-                        });
+                        elements.forEach(el => el.addEventListener("click", handleClick));
+                        window.__regionSelectionCleanup = cleanup;
                     });
                 }
 
@@ -6218,42 +6197,72 @@ document.querySelectorAll(".region").forEach(region => {
 
 
 
+// Bitevní hover je delegovaný na SVG mapu. Regiony se v jiných částech klienta
+// nahrazují přes cloneNode(true), což maže listenery přidané přímo na <path>.
+// Listener na rodičovské <svg id="map"> ale přežije a vždy pracuje s aktuálním elementem.
+window.__battleTargetIds = window.__battleTargetIds || new Set();
+window.__battleSelectionActive = false;
+
+function installBattleHoverDelegation() {
+    const map = document.getElementById("map");
+    if (!map || map.dataset.battleHoverDelegated === "1") return;
+    map.dataset.battleHoverDelegated = "1";
+
+    map.addEventListener("pointerover", (event) => {
+        const target = event.target instanceof Element ? event.target.closest(".region") : null;
+        if (!target || !window.__battleSelectionActive || !window.__battleTargetIds.has(target.id)) return;
+
+        // pointerover bublá; při skutečném vstupu do regionu zvýrazníme aktuální SVG path.
+        if (event.relatedTarget instanceof Node && target.contains(event.relatedTarget)) return;
+        target.style.setProperty("filter", "brightness(140%) saturate(115%)", "important");
+        target.style.setProperty("opacity", "1", "important");
+        target.dataset.battleHover = "1";
+        console.log(`✨ Battle hover ON: ${target.id}`);
+    });
+
+    map.addEventListener("pointerout", (event) => {
+        const target = event.target instanceof Element ? event.target.closest(".region") : null;
+        if (!target || target.dataset.battleHover !== "1") return;
+        if (event.relatedTarget instanceof Node && target.contains(event.relatedTarget)) return;
+
+        target.style.removeProperty("filter");
+        target.style.removeProperty("opacity");
+        delete target.dataset.battleHover;
+        console.log(`↩️ Battle hover OFF: ${target.id}`);
+    });
+}
+
+installBattleHoverDelegation();
+
 socket.on("battleAvailableRegions", ({ regions }) => {
     console.log("🟢 Dostupná nepřátelská políčka:", regions);
-    console.log("🧪 BATTLE HOVER v2 aktivní");
+    console.log("🧪 BATTLE HOVER v3 (delegated) aktivní");
 
-    // Server je jediný zdroj pravdy pro platné cíle útoku.
-    // Hover řešíme přímo v JS stejně jako ve fázi rozšiřování,
-    // takže není závislý na načtení / cache CSS pravidla.
+    const validRegions = Array.isArray(regions) ? regions : [];
+    window.__battleTargetIds = new Set(validRegions);
+    window.__battleSelectionActive = true;
+    installBattleHoverDelegation();
+
     document.querySelectorAll(".region").forEach(el => {
-        // Kompletní reset stavu z předchozího tahu.
-        el.style.filter = "";
+        // Reset pouze battle-specific inline stavu; barvu (fill) regionu neměníme.
+        el.style.removeProperty("filter");
+        el.style.removeProperty("opacity");
+        delete el.dataset.battleHover;
         el.classList.remove("battle-selectable");
-        el.onmouseenter = null;
-        el.onmouseleave = null;
-        el.style.cursor = "default";
 
-        if (regions.includes(el.id)) {
-            // Jen serverem povolené cíle jsou aktivní a reagují na hover.
+        if (window.__battleTargetIds.has(el.id)) {
             el.classList.remove("unavailable");
+            el.classList.add("battle-selectable");
             el.style.pointerEvents = "auto";
             el.style.cursor = "pointer";
-
-            el.onmouseenter = () => {
-                el.style.filter = "brightness(120%)";
-            };
-
-            el.onmouseleave = () => {
-                el.style.filter = "";
-            };
         } else {
-            // Vlastní a nepovolená území zůstávají ztmavená a nereagují.
             el.classList.add("unavailable");
             el.style.pointerEvents = "none";
+            el.style.cursor = "default";
         }
     });
 
-    enableBattleSelection(regions);
+    enableBattleSelection(validRegions);
 });
 
 
@@ -6619,10 +6628,24 @@ socket.on("availableRegions", ({ regions }) => {
     socket.on("playerSelectedRegion", ({ player, region }) => {
         console.log(`📍 Hráč ${player} vybral region: ${region}`);
 
-        addPinToRegion(region, player); // Tvoje existující funkce na vykreslení špendlíku
+        // Server tímto potvrzuje konec výběru (i když vybral náhodně po timeoutu).
+        // Zrušíme proto případný lokální waiter, aby se listenery nehromadily do dalších tahů.
+        if (typeof window.__regionSelectionCleanup === "function") {
+            window.__regionSelectionCleanup();
+        }
+        window.__battleSelectionActive = false;
+        window.__battleTargetIds = new Set();
+
+        addPinToRegion(region, player);
 
         document.querySelectorAll(".region").forEach(regionEl => {
             regionEl.classList.remove("unavailable");
+            regionEl.classList.remove("battle-selectable");
+            regionEl.style.removeProperty("filter");
+            regionEl.style.removeProperty("opacity");
+            regionEl.style.pointerEvents = "";
+            regionEl.style.cursor = "";
+            delete regionEl.dataset.battleHover;
         });
        
     });
