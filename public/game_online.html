@@ -5078,6 +5078,8 @@ function startCountdownTile(secondsAmount) {
                             // ✅ Odstraníme "unavailable" ze všech regionů
                             document.querySelectorAll(".region").forEach(region => {
                                 region.classList.remove("unavailable");
+                                region.classList.remove("battle-selectable");
+                                region.style.filter = "";
                             });
 
                             // ✅ Odebrání listenerů
@@ -6179,22 +6181,20 @@ document.querySelectorAll(".region").forEach(region => {
 socket.on("battleAvailableRegions", ({ regions }) => {
     console.log("🟢 Dostupná nepřátelská políčka:", regions);
 
-    // ✅ Reset filtrů a listenerů (aby nezůstaly staré efekty z minulých kol)
+    // Bitva: server je jediný zdroj pravdy pro to, na co lze zaútočit.
+    // Hover proto vážeme přímo na seznam `regions`, ne na staré JS listenery.
     document.querySelectorAll(".region").forEach(el => {
+        // Odstraníme případný vizuální stav z předchozího tahu.
         el.style.filter = "";
-        el.replaceWith(el.cloneNode(true)); // kompletně odstraní staré event listenery
-    });
+        el.classList.remove("battle-selectable");
 
-    // ✅ Nastav dostupnost
-    document.querySelectorAll(".region").forEach(el => {
         if (regions.includes(el.id)) {
-            // Dostupná nepřátelská pole → zvýraznit a povolit klik
+            // Pouze skutečně dostupná nepřátelská území jsou interaktivní.
             el.classList.remove("unavailable");
+            el.classList.add("battle-selectable");
             el.style.pointerEvents = "auto";
-            el.addEventListener("mouseover", highlightRegion);
-            el.addEventListener("mouseout", resetRegion);
         } else {
-            // Všechno ostatní (včetně vlastních polí) → ztmavit a zablokovat klik
+            // Vlastní a serverem nepovolená území nereagují na myš.
             el.classList.add("unavailable");
             el.style.pointerEvents = "none";
         }

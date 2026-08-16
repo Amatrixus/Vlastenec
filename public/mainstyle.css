@@ -142,6 +142,15 @@ pointer-events: none;
 filter: brightness(20%);
 }
 
+/* Bitvy: hover pouze na serverem povolených cílech útoku. */
+.region.battle-selectable {
+  transition: filter 120ms ease;
+}
+
+.region.battle-selectable:hover {
+  filter: brightness(120%) !important;
+}
+
 
 
 
