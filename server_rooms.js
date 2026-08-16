@@ -16,7 +16,10 @@ const io = new Server(server, { cors: { origin: "*" } }); // (později si omezí
 
 
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, '0.0.0.0', () => console.log('Server běží na', PORT));
+server.listen(PORT, '0.0.0.0', () => {
+  console.log('Server běží na', PORT);
+  console.log('🧪 VLASTENEC BUILD: 2026-08-16-region-fix-v3');
+});
 
 
 
@@ -428,6 +431,54 @@ const defaultRegionValues = {
   Omega: 0
 };
 
+// Jediný autoritativní seznam skutečných polí mapy.
+// Nikdy neodvozujeme počet regionů z room.regionValues, protože dynamický
+// klíč (např. "undefined") by se jinak mohl začít tvářit jako další pole.
+const REGION_IDS = Object.freeze(Object.keys(defaultRegionValues));
+const REGION_ID_SET = new Set(REGION_IDS);
+
+// Opraví/ověří mapový stav místnosti. Tohle je obranná pojistka:
+// i kdyby se do regionValues nebo seznamu vlastněných polí dostal technický
+// klíč (např. "undefined"), před herní fází ho odstraníme.
+function sanitizeRoomRegionState(room, roomId = '') {
+  if (!room) return;
+
+  room.regionValues = room.regionValues || {};
+
+  for (const key of Object.keys(room.regionValues)) {
+    if (!REGION_ID_SET.has(key)) {
+      console.warn(`🧹 [${roomId || 'room'}] Odstraňuji neplatný region z regionValues: ${key}`);
+      delete room.regionValues[key];
+    }
+  }
+
+  for (const region of REGION_IDS) {
+    if (typeof room.regionValues[region] !== 'number') {
+      room.regionValues[region] = 0;
+    }
+  }
+
+  room.regions = room.regions || {};
+  for (let seat = 1; seat <= 3; seat++) {
+    const key = `Player${seat}regions`;
+    const current = Array.isArray(room.regions[key]) ? room.regions[key] : [];
+    const cleaned = [...new Set(current.filter(region => REGION_ID_SET.has(region)))];
+    if (cleaned.length !== current.length) {
+      console.warn(`🧹 [${roomId || 'room'}] Čistím neplatné regiony hráče ${seat}:`, current, '→', cleaned);
+    }
+    room.regions[key] = cleaned;
+  }
+
+  if (room.bases) {
+    for (let seat = 1; seat <= 3; seat++) {
+      if (room.bases[seat] != null && !REGION_ID_SET.has(room.bases[seat])) {
+        console.warn(`🧹 [${roomId || 'room'}] Mažu neplatnou základnu Player${seat}: ${String(room.bases[seat])}`);
+        delete room.bases[seat];
+      }
+    }
+  }
+}
+
 const adjacencyInfo = {
   Alpha: ['Sigma', 'Zeta', 'Epsilon', 'Pi', 'Omicron', 'Nu', 'Mu', 'Eta'],
   Delta: ['Theta', 'Eta', 'Mu', 'Omicron'],
@@ -519,7 +570,7 @@ function getFreeRegions(room) {
     ...room.regions.Player3regions
   ]);
 
-  return Object.keys(room.regionValues).filter(region => !occupied.has(region));
+  return REGION_IDS.filter(region => !occupied.has(region));
 }
 
 // Pomocná delay funkce
@@ -897,6 +948,7 @@ async function runGameScenario(roomId) {
   const room = rooms[roomId];
   if (!room) return;
 
+  sanitizeRoomRegionState(room, roomId);
 
   room.phase = "settle";
   room.round = 0;
@@ -962,7 +1014,7 @@ async function runExpansionPhase(roomId) {
     if (!room || !isRoomAlive(roomId)) return; // 🔴 NEW
 
 
-  const totalRegions = Object.keys(room.regionValues).length;
+  const totalRegions = REGION_IDS.length;
   const expansionTarget = Math.max(0, totalRegions - 2); // poslední 2 pole necháváme pro dobývání
 
   for (let round = 1; round <= 6; round++) {
@@ -1642,7 +1694,7 @@ function transferBase(roomId, room, attacker, defender, baseRegion) {
 
 
 function isAnyoneWinning(room) {
-  const totalRegions = Object.keys(room.regionValues).length;
+  const totalRegions = REGION_IDS.length;
   return (
     room.regions.Player1regions.length === totalRegions ||
     room.regions.Player2regions.length === totalRegions ||
@@ -1719,7 +1771,7 @@ async function runPlayerTurns(roomId, round, order) {
 
 
 function getAvailableRegions(room, player) {
-  const allRegions = Object.keys(room.regionValues);
+  const allRegions = REGION_IDS;
 
   const occupied = [
     ...room.regions.Player1regions,
@@ -1973,30 +2025,46 @@ io.on('connection', socket => {
   console.log(`✅ ${socket.id} connected`);
 
 
-  socket.on("baseSettled", ({ playerNumber }) => {
-    for (const roomId in rooms) {
-      const room = rooms[roomId];
-      if (!room) continue;
-  
-      const regionKey = `Player${playerNumber}regions`;
-      const baseRegion = room.bases[playerNumber];
-  
-      room.regionValues[baseRegion] = 1000;
-  
-      // Přesvědč se, že základna je ve správném seznamu
-      if (!room.regions[regionKey].includes(baseRegion)) {
-        room.regions[regionKey].push(baseRegion);
-      }
-  
-      // Aktualizuj skóre
-      room.scores = calculateScores(room.regions, room.regionValues, room.defenseBonuses);
-  
-      // Pošli aktualizaci
-      io.to(roomId).emit("updateScores", { scores: room.scores });
-      console.log(`✅ Hráč ${playerNumber} obsadil ${baseRegion} (1000 bodů)`);
-      console.log("🧮 Nové skóre:", room.scores);
-      console.log("🎯 Hodnoty regionů:", room.regionValues);
+  socket.on("baseSettled", ({ playerNumber } = {}) => {
+    // baseSettled smí měnit pouze místnost, ke které patří tento socket.
+    // Původní verze procházela VŠECHNY rooms, takže event z jiné rozehrané
+    // hry mohl v lobby jiné room vytvořit room.regionValues[undefined] = 1000.
+    const roomId = socket.data?.joinedRoom || socket.data?.roomId;
+    const room = roomId ? rooms[roomId] : null;
+    if (!room || !isRoomAlive(roomId)) {
+      console.warn(`⚠️ baseSettled ignorován – socket ${socket.id} není v aktivní místnosti.`);
+      return;
     }
+
+    const seat = Number(playerNumber);
+    if (![1, 2, 3].includes(seat)) {
+      console.warn(`⚠️ baseSettled ignorován – neplatné číslo hráče: ${playerNumber}`);
+      return;
+    }
+
+    sanitizeRoomRegionState(room, roomId);
+
+    const regionKey = `Player${seat}regions`;
+    const baseRegion = room.bases?.[seat];
+
+    // Kritická validace: na mapu se nesmí zapsat undefined ani jiný cizí klíč.
+    if (!REGION_ID_SET.has(baseRegion)) {
+      console.warn(`⚠️ baseSettled ignorován v ${roomId} – Player${seat} nemá platnou základnu (${String(baseRegion)}).`);
+      return;
+    }
+
+    room.regionValues[baseRegion] = 1000;
+
+    if (!Array.isArray(room.regions[regionKey])) room.regions[regionKey] = [];
+    if (!room.regions[regionKey].includes(baseRegion)) {
+      room.regions[regionKey].push(baseRegion);
+    }
+
+    room.scores = calculateScores(room.regions, room.regionValues, room.defenseBonuses);
+
+    io.to(roomId).emit("updateScores", { scores: room.scores });
+    console.log(`✅ ${roomId}: Hráč ${seat} usadil základnu ${baseRegion} (1000 bodů)`);
+    console.log("🧮 Nové skóre:", room.scores);
   });
 
 
