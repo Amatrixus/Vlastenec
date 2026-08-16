@@ -501,14 +501,25 @@ function generateBattlePlan() {
 }
 
 
-//Funkce na počítání obsazených polí
-
+// Funkce na počítání obsazených polí
 function countOccupiedRegions(room) {
   return (
     room.regions.Player1regions.length +
     room.regions.Player2regions.length +
     room.regions.Player3regions.length
   );
+}
+
+// Autoritativní seznam skutečně volných polí.
+// Konec fází odvozujeme od mapy, ne od pomocného počítadla.
+function getFreeRegions(room) {
+  const occupied = new Set([
+    ...room.regions.Player1regions,
+    ...room.regions.Player2regions,
+    ...room.regions.Player3regions
+  ]);
+
+  return Object.keys(room.regionValues).filter(region => !occupied.has(region));
 }
 
 // Pomocná delay funkce
@@ -951,7 +962,19 @@ async function runExpansionPhase(roomId) {
     if (!room || !isRoomAlive(roomId)) return; // 🔴 NEW
 
 
+  const totalRegions = Object.keys(room.regionValues).length;
+  const expansionTarget = Math.max(0, totalRegions - 2); // poslední 2 pole necháváme pro dobývání
+
   for (let round = 1; round <= 6; round++) {
+    // Nezakládej další kolo, pokud už je cíl rozšiřování splněn
+    // nebo na mapě nezbylo žádné volné pole.
+    const occupiedBeforeRound = countOccupiedRegions(room);
+    const freeBeforeRound = getFreeRegions(room);
+    if (occupiedBeforeRound >= expansionTarget || freeBeforeRound.length === 0) {
+      console.log(`🛑 Další kolo rozšiřování se nespouští – obsazeno ${occupiedBeforeRound}/${totalRegions}, volných ${freeBeforeRound.length}.`);
+      break;
+    }
+
     room.round = round; // ⬅️ DOPLNIT
 
 
@@ -1001,8 +1024,10 @@ async function runExpansionPhase(roomId) {
 
     console.log(`✅ Kolo ${round} dokončeno`);
 
-    if (countOccupiedRegions(room) > 12) {
-        console.log(`🛑 Fáze rozšiřování ukončena – obsazeno ${countOccupiedRegions(room)} polí.`);
+    const occupiedAfterRound = countOccupiedRegions(room);
+    const freeAfterRound = getFreeRegions(room);
+    if (occupiedAfterRound >= expansionTarget || freeAfterRound.length === 0) {
+        console.log(`🛑 Fáze rozšiřování ukončena – obsazeno ${occupiedAfterRound}/${totalRegions}, volných ${freeAfterRound.length}.`);
         break;
     }
   }
@@ -1030,16 +1055,18 @@ async function runConquestPhase(roomId) {
   io.to(roomId).emit("phaseChange", { phase: "conquest" });
 
 
-  let takenTiles = countOccupiedRegions(room);
   let round = 1;
 
-  while (takenTiles < Object.keys(room.regionValues).length) {
+  // Vždy vycházej ze skutečně volných polí, ne z lokálního počítadla,
+  // které se může se stavem mapy rozejít.
+  while (getFreeRegions(room).length > 0) {
     room.round = round; // ⬅️ DOPLNIT
 
 
     if (!isRoomAlive(roomId)) return; // 🔴 NEW
 
-    console.log(`⚔️ Dobývání – ${round}. kolo (obsazeno: ${takenTiles})`);
+    const occupiedNow = countOccupiedRegions(room);
+    console.log(`⚔️ Dobývání – ${round}. kolo (obsazeno: ${occupiedNow}, volných: ${getFreeRegions(room).length})`);
 
     // 1️⃣ Intro pro klienty – animace a název kola
     io.to(roomId).emit("conquestIntro", {
@@ -1061,6 +1088,14 @@ async function runConquestPhase(roomId) {
 
       // 4️⃣ Získej dostupné regiony pro vítěze
       const available = getAvailableRegionsConquest(room);
+
+      // Mapa mohla být mezitím doplněna; v takovém případě už
+      // vítěze nenecháváme čekat 10 sekund na neexistující volbu.
+      if (available.length === 0) {
+        console.log("🛑 Dobývání končí – na mapě už není žádné volné pole.");
+        break;
+      }
+
       const winRec = room.players[winner - 1];
       const playerSocketId = winRec && winRec.id;
       if (playerSocketId) {
@@ -1103,7 +1138,6 @@ async function runConquestPhase(roomId) {
 
         io.to(roomId).emit("updateScores", { scores: room.scores });
 
-        takenTiles++;
       }
     } else {
       console.log("⏳ Nikdo neodpověděl správně – kolo bez změny");
@@ -1629,6 +1663,17 @@ async function runPlayerTurns(roomId, round, order) {
   room.lastSelections = {}; // ✅ Reset pro aktuální kolo
 
   for (const player of order) {
+    const availableRegions = getAvailableRegions(room, player);
+
+    // Pokud předchozí hráči v tomto kole zabrali/rezervovali všechna
+    // zbývající pole, další hráč už nemá co vybírat. Nečekáme timeout.
+    if (availableRegions.length === 0) {
+      room.selections[player] = null;
+      room.lastSelections[player] = null;
+      console.log(`🛑 Hráč ${player} nemá v kole ${round} žádný volný region – tah přeskočen.`);
+      continue;
+    }
+
     io.to(roomId).emit("playerTurn", {
       player,
       round,
@@ -1639,13 +1684,13 @@ async function runPlayerTurns(roomId, round, order) {
       const playerSocketId = playerRec && playerRec.id;
       if (playerSocketId) {
         io.to(playerSocketId).emit("availableRegions", {
-          regions: getAvailableRegions(room, player)
+          regions: availableRegions
         });
       }
 
     console.log(`🎯 Hráč ${player} je na tahu (kolo ${round})`);
 
-    const selectedRegion = await waitForPlayerSelection(roomId, player, 10000);
+    const selectedRegion = await waitForPlayerSelection(roomId, player, 10000, availableRegions);
 
     room.selections[player] = selectedRegion;
     room.lastSelections[player] = selectedRegion; // ✅ Uložíme i pro pozdější vyhodnocení
@@ -1705,20 +1750,7 @@ function getAvailableRegions(room, player) {
 
 
 function getAvailableRegionsConquest(room) {
-  const allRegions = Object.keys(room.regionValues);
-
-  const occupied = [
-    ...room.regions.Player1regions,
-    ...room.regions.Player2regions,
-    ...room.regions.Player3regions
-  ];
-
- 
-
-  // Vrátí všechna volná a neclaimnutá políčka
-  return allRegions.filter(region => 
-    !occupied.includes(region)
-  );
+  return getFreeRegions(room);
 }
 
 
