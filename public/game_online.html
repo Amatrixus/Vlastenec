@@ -6321,6 +6321,10 @@ socket.on("destroyTower", ({ defender, remainingLives }) => {
 
     const baseMini = document.getElementById("basevisualmini");
 
+    // Během animace věže nesmí spectator overlay zakrývat dění.
+    abortTemporarilyHidden = true;
+    syncAbortVisibility();
+
     console.log(`💥 Ničím věž hráče ${defender}, zbývá životů: ${remainingLives}`);
 
     console.log("DESTROY TOWER - Otevírám okno")
@@ -6429,6 +6433,11 @@ socket.on("destroyTower", ({ defender, remainingLives }) => {
             console.log("DESTROY TOWER - Zavírám okno")
 
             question.style.display = 'none';
+
+            // Animace skončila. Pokud tento klient stále patří třetímu,
+            // nehrajícímu hráči, obnovíme jeho abort overlay pro další zobrazení otázky.
+            abortTemporarilyHidden = false;
+            syncAbortVisibility();
 
     }, 6000);
 
@@ -6686,6 +6695,18 @@ socket.on("multipleChoiceResults", (data) => {
 
 let myAnswer = ""; // Uložení mojí odpovědi
 
+// Stav ikony abort pro nehrajícího hráče v aktuálním souboji.
+// Díky oddělenému dočasnému potlačení ji můžeme skrýt během animace ničení věže
+// a poté ji vrátit pouze tehdy, pokud hráč stále není účastníkem souboje.
+let abortShouldBeVisible = false;
+let abortTemporarilyHidden = false;
+
+function syncAbortVisibility() {
+    const abortEl = document.getElementById("abort");
+    if (!abortEl) return;
+    abortEl.style.display = (abortShouldBeVisible && !abortTemporarilyHidden) ? "block" : "none";
+}
+
 function showMultipleChoice(qText, options, timeLimit, attacker, defender, attackerName, defenderName, canAnswer = true) {
     myAnswer = "";
 
@@ -6720,12 +6741,11 @@ function showMultipleChoice(qText, options, timeLimit, attacker, defender, attac
         qplayers.style.display = "none";
     }
 
-    // ✅ Pokud hráč nehraje (není účastníkem), zobraz "abort"
-    if (!canAnswer) {
-        abort.style.display = "block";
-    } else {
-        abort.style.display = "none";
-    }
+    // ✅ Pokud hráč nehraje (není účastníkem), zobraz "abort".
+    // Stav si pamatujeme i pro případ krátké animace ničení věže.
+    abortShouldBeVisible = !canAnswer;
+    abortTemporarilyHidden = false;
+    syncAbortVisibility();
 
     // ✅ Nastavení základních panelů
     question.style.display = "block";

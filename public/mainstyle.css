@@ -486,11 +486,16 @@ filter: brightness(20%);
 
 #abort{
   position: absolute;
-  top: 60%;
+  /* Řádek 1 končí na 73 %, řádek 2 začíná na 76 %.
+     Střed mezery je tedy přesně 74.5 %. */
+  top: 74.5%;
+  left: 50%;
   width: 9%;
-  left: 45.5%;
-  z-index: 6;
+  height: auto;
+  transform: translate(-50%, -50%);
+  z-index: 7;
   display: none;
+  pointer-events: none;
 
 }
 
