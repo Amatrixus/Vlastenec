@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#09131f" />
+  <title>VLASTENEC — Žebříčky</title>
+  <link rel="stylesheet" href="leaderboards.css" />
+  <script src="auth-client.js"></script>
+</head>
+<body>
+  <div class="lb-backdrop" aria-hidden="true">
+    <div class="lb-lion"></div>
+    <div class="lb-glow lb-glow-a"></div>
+    <div class="lb-glow lb-glow-b"></div>
+    <div class="lb-grid"></div>
+  </div>
+
+  <header class="site-header">
+    <a class="site-brand" href="homepage.html" aria-label="Vlastenec — hlavní stránka">
+      <img src="logo.svg" alt="Vlastenec" />
+      <span class="brand-divider"></span>
+      <span class="brand-caption">Vědomostní strategie</span>
+    </a>
+
+    <nav class="site-actions" aria-label="Uživatelská nabídka">
+      <div class="online-chip" title="Aktuálně připojení klienti">
+        <span class="online-dot" aria-hidden="true"></span>
+        <strong id="online-count">—</strong>
+        <span>online</span>
+      </div>
+      <a class="utility-link active" href="leaderboards.html">Žebříčky</a>
+      <a class="utility-link" href="settings.html">Nastavení</a>
+      <button id="profile-chip" class="profile-chip" type="button">
+        <span class="profile-copy">
+          <strong id="profile-name">Přihlásit se</strong>
+          <small id="profile-meta">Ukládej postup a výsledky</small>
+        </span>
+        <img src="avatar.png" alt="" />
+      </button>
+    </nav>
+  </header>
+
+  <main class="leaderboard-page">
+    <section class="hero">
+      <div class="hero-copy">
+        <div class="eyebrow"><span></span> ŽEBŘÍČKY · ČESKÁ REPUBLIKA</div>
+        <h1>Kdo vládne <em>Vlastenci?</em></h1>
+        <p>Porovnej výsledky v běžném matchmakingu, sleduj ligovou špičku a zjisti, kdo nejlépe ovládá jednotlivé okruhy.</p>
+      </div>
+
+      <div class="scope-switch" role="tablist" aria-label="Typ žebříčku">
+        <button class="scope-tab is-active" data-scope="normal" type="button">
+          <small>BĚŽNÝ MATCHMAKING</small>
+          <strong>Normální hra</strong>
+        </button>
+        <button class="scope-tab" data-scope="league" type="button">
+          <small>SEZÓNNÍ SOUTĚŽ</small>
+          <strong>Liga</strong>
+        </button>
+      </div>
+    </section>
+
+    <section class="control-bar">
+      <div class="view-tabs" role="tablist" aria-label="Pohled na žebříček">
+        <button class="view-tab is-active" data-view="overall" type="button">Celkově</button>
+        <button class="view-tab" data-view="categories" type="button">Kategorie</button>
+        <button class="view-tab" data-view="numeric" type="button">Numerické</button>
+        <button class="view-tab" data-view="records" type="button">Rekordy</button>
+      </div>
+      <div id="period-controls" class="period-tabs" aria-label="Časové období">
+        <button data-period="7d" type="button">7 dní</button>
+        <button class="is-active" data-period="30d" type="button">30 dní</button>
+        <button data-period="90d" type="button">90 dní</button>
+        <button data-period="all" type="button">Celkem</button>
+      </div>
+      <div id="period-caption" class="period-caption" hidden></div>
+    </section>
+
+    <section id="status-banner" class="status-banner" hidden></section>
+
+    <section id="overall-view" class="view-panel">
+      <div class="overview-grid">
+        <article id="my-position-card" class="my-card"></article>
+        <div id="podium" class="podium"></div>
+      </div>
+
+      <article class="table-card">
+        <div class="section-head">
+          <div>
+            <span class="section-kicker" id="table-kicker">NORMÁLNÍ HRA</span>
+            <h2 id="table-title">Nejlepší hráči</h2>
+          </div>
+          <div id="table-count" class="table-count">—</div>
+        </div>
+        <div class="table-wrap">
+          <table class="ranking-table">
+            <thead id="ranking-head"></thead>
+            <tbody id="ranking-body"></tbody>
+          </table>
+        </div>
+        <div id="ranking-empty" class="empty-state" hidden></div>
+      </article>
+
+      <article id="nearby-card" class="nearby-card" hidden>
+        <div class="section-head compact">
+          <div>
+            <span class="section-kicker">KOLEM MĚ</span>
+            <h2>Tvoje bezprostřední konkurence</h2>
+          </div>
+        </div>
+        <div id="nearby-list" class="nearby-list"></div>
+      </article>
+    </section>
+
+    <section id="categories-view" class="view-panel" hidden>
+      <article class="category-shell">
+        <div class="section-head category-head">
+          <div>
+            <span class="section-kicker">SPECIALISTÉ</span>
+            <h2>Nejlepší podle okruhu</h2>
+            <p>Do pořadí se započítají hráči s alespoň 30 odpověďmi v dané kategorii.</p>
+          </div>
+          <div id="category-period-note" class="period-caption">Celková statistika</div>
+        </div>
+        <div id="category-grid" class="category-grid"></div>
+      </article>
+
+      <div class="category-results-grid">
+        <article id="category-me" class="my-card"></article>
+        <article class="table-card">
+          <div class="section-head compact">
+            <div>
+              <span class="section-kicker" id="category-kicker">KATEGORIE</span>
+              <h2 id="category-title">Historie</h2>
+            </div>
+            <div id="category-count" class="table-count">—</div>
+          </div>
+          <div class="table-wrap">
+            <table class="ranking-table">
+              <thead>
+                <tr><th>#</th><th>Hráč</th><th>Úspěšnost</th><th>Správně</th><th>Otázek</th></tr>
+              </thead>
+              <tbody id="category-body"></tbody>
+            </table>
+          </div>
+          <div id="category-empty" class="empty-state" hidden></div>
+        </article>
+      </div>
+    </section>
+
+    <section id="numeric-view" class="view-panel" hidden>
+      <article class="coming-card">
+        <div class="coming-icon">±</div>
+        <span class="section-kicker">NUMERICKÉ OTÁZKY</span>
+        <h2>Přesnost odhadu dostane vlastní disciplínu</h2>
+        <p>Budeme porovnávat medián procentuální odchylky, dlouhodobou přesnost a přesné zásahy. Současná databáze zatím numerickou chybu po jednotlivých odpovědích neukládá, takže tu nevystavujeme vymyšlená data.</p>
+        <div class="coming-metrics">
+          <span><b>MEDIÁN ODCHYLKY</b><small>odolný proti jednomu extrémnímu odhadu</small></span>
+          <span><b>PŘESNOST</b><small>100 % − medián odchylky</small></span>
+          <span><b>PŘESNÝ ZÁSAH</b><small>počet naprosto přesných odpovědí</small></span>
+        </div>
+      </article>
+    </section>
+
+    <section id="records-view" class="view-panel" hidden>
+      <div class="records-head">
+        <div>
+          <span class="section-kicker">REKORDY</span>
+          <h2>Výjimečné výkony</h2>
+          <p id="records-description">Rekordy z rychlé hry s náhodnými soupeři.</p>
+        </div>
+      </div>
+      <div id="records-grid" class="records-grid"></div>
+    </section>
+  </main>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="leaderboards-client.js"></script>
+</body>
+</html>

@@ -1,4 +1,4 @@
-console.log('🧪 VLASTENEC BUILD: 2026-08-17-league-matchmaking-v1');
+console.log('🧪 VLASTENEC BUILD: 2026-08-17-leaderboards-v1');
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
@@ -7,6 +7,7 @@ const fs = require('fs');
 const db = require('./db');
 const { mountAuthRoutes, sessionUser } = require('./auth');
 const { mountProfileRoutes } = require('./player-profile');
+const { mountLeaderboardRoutes } = require('./leaderboards');
 const {
   mountLeagueRoutes, leagueEntryForSocketRequest, createReadyMatch, cancelLeagueMatch,
   activateLeagueMatch, activeLeagueMatchForUser, leagueMatchForUser, leagueMatchPlayers, finalizeLeagueMatch,
@@ -22,6 +23,7 @@ app.use(express.json({ limit: '64kb' }));
 mountAuthRoutes(app);
 mountProfileRoutes(app);
 mountLeagueRoutes(app);
+mountLeaderboardRoutes(app);
 app.use(express.static('public')); // servíruje index.html a další soubory
 
 const server = http.createServer(app);
@@ -35,7 +37,7 @@ const PORT = process.env.PORT || 3000;
   if (db.getStatus().ready) await recoverInterruptedLeagueMatches().catch(err => console.error('league boot recovery:', err));
   server.listen(PORT, '0.0.0.0', () => {
     console.log('Server běží na', PORT);
-    console.log('🧪 VLASTENEC BUILD: 2026-08-17-league-matchmaking-v1');
+    console.log('🧪 VLASTENEC BUILD: 2026-08-17-leaderboards-v1');
   });
 })();
 
