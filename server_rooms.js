@@ -1,5 +1,5 @@
 const express = require('express');
-console.log('🧪 VLASTENEC BUILD: 2026-08-17-lobby-modes-v1');
+console.log('🧪 VLASTENEC BUILD: 2026-08-17-random-hub-v2');
 const http = require('http');
 const { Server } = require('socket.io');
 const path = require('path');
@@ -19,7 +19,7 @@ const io = new Server(server, { cors: { origin: "*" } }); // (později si omezí
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, '0.0.0.0', () => {
   console.log('Server běží na', PORT);
-  console.log('🧪 VLASTENEC BUILD: 2026-08-17-lobby-v2-invites');
+  console.log('🧪 VLASTENEC BUILD: 2026-08-17-random-hub-v2');
 });
 
 
@@ -161,6 +161,8 @@ function buildRoomSnapshot(room, roomId) {
     battlePlan: room.battlePlan || null,
     chat: room.chat || [],
     settings: room.settings || {},
+    matchKind: room.matchKind || null,
+    publicRoom: !!room.publicRoom,
     ready: room.ready || { 1: false, 2: false, 3: false }
   };
 }
@@ -197,7 +199,10 @@ function makeEmptyRoom(roomId, mode = 'random') {
     chat: [],
     settings: {},           // volitelné – můžeš sem ukládat cats/catNames
     ready: { 1: false, 2: false, 3: false },
-
+    matchKind: null,         // random: 'quick' | 'custom'
+    publicRoom: false,
+    createdAt: Date.now(),
+    skillRating: null,
 
 
      // 🔽 NOVÉ:
@@ -237,12 +242,15 @@ function buildLobbyState(room, roomId) {
 
   const canStart = (
     (room.mode === 'friends' && !room.hasStarted && allConnected && allReady) ||
-    (room.mode === 'bots' && !room.hasStarted && !!players[0]?.connected)
+    (room.mode === 'bots' && !room.hasStarted && !!players[0]?.connected) ||
+    (room.mode === 'random' && room.matchKind === 'custom' && !room.hasStarted && allConnected)
   );
 
   return {
     roomId,
     mode: room.mode,
+    matchKind: room.matchKind || null,
+    publicRoom: !!room.publicRoom,
     players,
     hostSeat: 1,
     settings: room.settings || {},
@@ -256,6 +264,54 @@ function broadcastLobbyState(roomId) {
   const room = rooms[roomId];
   if (!room) return;
   io.to(roomId).emit('lobby:state', buildLobbyState(room, roomId));
+}
+
+function connectedHumanCount(room) {
+  return (room?.players || []).filter(p => p && p.id).length;
+}
+
+function randomRoomSummary(roomId, room) {
+  const players = (room.players || []).filter(p => p && p.id);
+  const host = room.players?.[0]?.name || 'Hostitel';
+  return {
+    roomId,
+    code: String(roomId || '').replace(/^room_/i, ''),
+    host,
+    occupancy: players.length,
+    capacity: MAX_PLAYERS_PER_ROOM,
+    cats: Array.isArray(room.settings?.cats) && room.settings.cats.length ? room.settings.cats : [1,2,3,4,5,6,7,8,9],
+    createdAt: room.createdAt || Date.now()
+  };
+}
+
+function listPublicRandomRooms() {
+  return Object.entries(rooms)
+    .filter(([roomId, room]) => room && !room.__closed && room.mode === 'random' && room.matchKind === 'custom' && room.publicRoom && !room.hasStarted && connectedHumanCount(room) < MAX_PLAYERS_PER_ROOM && !!room.players?.[0]?.id)
+    .map(([roomId, room]) => randomRoomSummary(roomId, room))
+    .sort((a,b) => a.createdAt - b.createdAt);
+}
+
+function broadcastPublicRandomRooms() {
+  io.emit('random:custom:rooms', listPublicRandomRooms());
+}
+
+function pickQuickMatchRoom(rating = null) {
+  const candidates = Object.entries(rooms)
+    .filter(([roomId, room]) => room && !room.__closed && room.mode === 'random' && room.matchKind === 'quick' && !room.hasStarted && connectedHumanCount(room) < MAX_PLAYERS_PER_ROOM)
+    .map(([roomId, room]) => ({ roomId, room }));
+
+  if (!candidates.length) return null;
+  const r = Number.isFinite(Number(rating)) ? Number(rating) : null;
+  candidates.sort((a,b) => {
+    if (r != null) {
+      const ar = Number.isFinite(Number(a.room.skillRating)) ? Number(a.room.skillRating) : r;
+      const br = Number.isFinite(Number(b.room.skillRating)) ? Number(b.room.skillRating) : r;
+      const ad = Math.abs(ar-r), bd = Math.abs(br-r);
+      if (ad !== bd) return ad-bd;
+    }
+    return (a.room.createdAt || 0) - (b.room.createdAt || 0);
+  });
+  return candidates[0];
 }
 
 function startRoomGame(roomId) {
@@ -417,9 +473,10 @@ function roomAddPlayerAndBroadcast(roomId, socket, name) {
     // BOTI: zobraz lobby se dvěma připravenými roboty; startuje hráč ručně.
     broadcastLobbyState(roomId);
   } else if (!room.hasStarted && room.mode === 'random') {
-    // RANDOM: lobby slouží jako živá fronta. Po třetím hráči start automaticky.
     broadcastLobbyState(roomId);
-    if (occupiedSeatCount(room) >= MAX_PLAYERS_PER_ROOM) startRoomGame(roomId);
+    // Rychlý matchmaking odstartuje automaticky. Custom room čeká na hostitele.
+    if (room.matchKind !== 'custom' && connectedHumanCount(room) >= MAX_PLAYERS_PER_ROOM) startRoomGame(roomId);
+    if (room.matchKind === 'custom') broadcastPublicRandomRooms();
   } else if (room.hasStarted) {
     if (typeof buildRoomSnapshot === 'function') {
       socket.emit("stateSync", { myNumber, snapshot: buildRoomSnapshot(room, roomId) });
@@ -2004,8 +2061,13 @@ io.on('connection', socket => {
 
     const seat = getSeatNumber(room, socket.id);
 
-    // RANDOM má nastavení uzamčené matchmakingem; po zařazení do fronty se nemění.
-    if (room.mode === 'random') {
+    // RANDOM quick má nastavení uzamčené; RANDOM custom může měnit pouze hostitel.
+    if (room.mode === 'random' && room.matchKind !== 'custom') {
+      socket.emit('settings:applied', { settings: room.settings || {} });
+      return;
+    }
+
+    if (room.mode === 'random' && room.matchKind === 'custom' && (!seat || seat !== 1 || room.hasStarted)) {
       socket.emit('settings:applied', { settings: room.settings || {} });
       return;
     }
@@ -2027,6 +2089,10 @@ io.on('connection', socket => {
 
     io.to(roomId).emit('settings:applied', { settings: room.settings });
     if (['friends','bots'].includes(room.mode) && !room.hasStarted) broadcastLobbyState(roomId);
+    if (room.mode === 'random' && room.matchKind === 'custom' && !room.hasStarted) {
+      broadcastLobbyState(roomId);
+      broadcastPublicRandomRooms();
+    }
 
     console.log('🧩 settings:update', roomId, room.settings);
   });
@@ -2045,7 +2111,9 @@ io.on('connection', socket => {
 
   socket.on('lobby:start', ({ roomId } = {}) => {
     const room = rooms[roomId];
-    if (!room || !['friends','bots'].includes(room.mode) || room.hasStarted) return;
+    if (!room || room.hasStarted) return;
+    const allowedStart = ['friends','bots'].includes(room.mode) || (room.mode === 'random' && room.matchKind === 'custom');
+    if (!allowedStart) return;
     const seat = getSeatNumber(room, socket.id);
     if (seat !== 1) return;
 
@@ -2054,7 +2122,7 @@ io.on('connection', socket => {
       socket.emit('lobby:error', {
         message: room.mode === 'friends'
           ? 'Všichni tři hráči musí být připojeni a připraveni.'
-          : 'Trénink zatím není připraven.'
+          : (room.mode === 'random' ? 'Custom místnost potřebuje tři připojené hráče.' : 'Trénink zatím není připraven.')
       });
       broadcastLobbyState(roomId);
       return;
@@ -2079,9 +2147,10 @@ io.on('connection', socket => {
   });
 
 
-  socket.on("resume", ({ roomId, token }) => {
+  socket.on("resume", ({ roomId, token, expectedMode } = {}) => {
     const room = rooms[roomId];
     if (!room) return socket.emit("resume:error", { message: "room not found" });
+    if (expectedMode && room.mode !== expectedMode) return socket.emit("resume:error", { message: "room mode mismatch" });
 
     const entry = Object.entries(room.playerTokens).find(([seat, t]) => t === token);
     if (!entry) return socket.emit("resume:error", { message: "player not recognized" });
@@ -2277,48 +2346,81 @@ socket.on("joinRoom", ({ room, settings }) => {
 
 
 
-  socket.on("submitName", payload => {
-    // Už je socket v nějaké room? Nezařazuj ho znovu.
+  function joinQuickRandom(payload = {}) {
     if (socket.data?.joinedRoom) return;
+    const name = String(payload?.name || payload || '').trim() || 'Hráč';
+    const ratingRaw = payload && typeof payload === 'object' ? Number(payload.rating) : NaN;
+    const rating = Number.isFinite(ratingRaw) ? ratingRaw : null;
 
-    const isObject = payload && typeof payload === 'object';
-    const name = String(isObject ? payload.name : payload || '').trim() || 'Hráč';
-    const incomingSettings = sanitizeSettings(isObject ? (payload.settings || {}) : {});
-    incomingSettings.mode = 'random';
-
-    const normalizeCats = settings => {
-      const raw = Array.isArray(settings?.cats) && settings.cats.length
-        ? settings.cats
-        : [1,2,3,4,5,6,7,8,9];
-      return [...new Set(raw.map(Number).filter(n => n >= 1 && n <= 9))].sort((a,b) => a-b);
-    };
-    const wantedCats = normalizeCats(incomingSettings);
-    const wantedKey = wantedCats.join(',');
-    incomingSettings.cats = wantedCats;
-
-    // Vezmi první čekající RANDOM room se STEJNOU sadou kategorií.
-    let roomId = Object.keys(rooms).find(id => {
-      const room = rooms[id];
-      if (!room || room.mode !== 'random' || room.hasStarted) return false;
-      if (occupiedSeatCount(room) >= MAX_PLAYERS_PER_ROOM) return false;
-      return normalizeCats(room.settings || {}).join(',') === wantedKey;
-    });
-
-    // Žádná kompatibilní fronta? Založ novou.
-    if (!roomId) {
-      roomId = `room_${Date.now()}`;
-      const room = makeEmptyRoom(roomId, 'random');
-      room.settings = { ...incomingSettings, mode: 'random' };
+    let picked = pickQuickMatchRoom(rating);
+    let roomId, room;
+    if (picked) {
+      ({ roomId, room } = picked);
+    } else {
+      roomId = makeFriendsRoomId();
+      room = makeEmptyRoom(roomId, 'random');
+      room.matchKind = 'quick';
+      room.publicRoom = false;
+      room.settings = { mode: 'random', cats: [1,2,3,4,5,6,7,8,9] };
+      room.skillRating = rating;
     }
 
     socket.data = socket.data || {};
     socket.data.joinedRoom = roomId;
     socket.data.name = name;
-
     roomAddPlayerAndBroadcast(roomId, socket, name);
-    console.log(`🎮 RANDOM: ${name} joined ${roomId} [cats=${wantedKey}]`);
+    console.log(`⚡ QUICK FIFO: ${name} joined ${roomId} (${connectedHumanCount(room)}/3)`);
+  }
+
+  socket.on('random:quick:join', payload => joinQuickRandom(payload));
+  // zpětná kompatibilita se staršími klienty
+  socket.on('submitName', payload => joinQuickRandom(payload));
+
+  socket.on('random:custom:create', ({ name, settings } = {}) => {
+    if (socket.data?.joinedRoom) return;
+    const safeName = String(name || 'Hostitel').trim() || 'Hostitel';
+    const roomId = makeFriendsRoomId();
+    const room = makeEmptyRoom(roomId, 'random');
+    room.matchKind = 'custom';
+    room.publicRoom = true;
+    room.settings = sanitizeSettings({ ...(settings || {}), mode: 'random' });
+    if (!Array.isArray(room.settings.cats) || !room.settings.cats.length) room.settings.cats = [1,2,3,4,5,6,7,8,9];
+
+    socket.data = socket.data || {};
+    socket.data.joinedRoom = roomId;
+    socket.data.name = safeName;
+    roomAddPlayerAndBroadcast(roomId, socket, safeName);
+    socket.emit('random:custom:created', { roomId, code: roomId.replace(/^room_/i,'') });
+    broadcastPublicRandomRooms();
+    console.log(`🛠️ CUSTOM RANDOM: ${safeName} created ${roomId}`);
   });
 
+  socket.on('random:custom:join', ({ roomId, name } = {}) => {
+    if (socket.data?.joinedRoom) return;
+    const safeId = sanitizeRoomId(roomId);
+    const room = safeId ? rooms[safeId] : null;
+    if (!room || room.__closed || room.mode !== 'random' || room.matchKind !== 'custom' || room.hasStarted || !room.publicRoom) {
+      socket.emit('random:custom:error', { message: 'Místnost už není dostupná.' });
+      broadcastPublicRandomRooms();
+      return;
+    }
+    if (connectedHumanCount(room) >= MAX_PLAYERS_PER_ROOM) {
+      socket.emit('random:custom:error', { message: 'Místnost je plná.' });
+      broadcastPublicRandomRooms();
+      return;
+    }
+    const safeName = String(name || 'Hráč').trim() || 'Hráč';
+    socket.data = socket.data || {};
+    socket.data.joinedRoom = safeId;
+    socket.data.name = safeName;
+    roomAddPlayerAndBroadcast(safeId, socket, safeName);
+    broadcastPublicRandomRooms();
+    console.log(`🚪 CUSTOM RANDOM: ${safeName} joined ${safeId}`);
+  });
+
+  socket.on('random:custom:list', () => {
+    socket.emit('random:custom:rooms', listPublicRandomRooms());
+  });
 
 
 
@@ -2338,6 +2440,33 @@ socket.on("disconnect", () => {
 
   const seat = ix + 1;
   const name = room.players[ix]?.name || `Player${seat}`;
+
+  // RANDOM před startem: hráč opravdu opouští frontu/místnost.
+  // Nikdy z něj nevytvářej bota a nenechávej po něm stale seat – to dříve
+  // způsobovalo přeskočení prvního čekajícího hráče v matchmakingu.
+  if (room.mode === 'random' && !room.hasStarted) {
+    const wasHost = seat === 1;
+    room.players[ix] = undefined;
+    room.ready[seat] = false;
+    room.seatControllers[seat] = 'human';
+    if (room.playerTokens) delete room.playerTokens[seat];
+    socket.leave(roomId);
+
+    if (room.matchKind === 'custom' && wasHost) {
+      markRoomClosed(roomId);
+      delete rooms[roomId];
+      console.log(`🧹 CUSTOM RANDOM ${roomId} zrušena – hostitel odešel.`);
+    } else if (connectedHumanCount(room) === 0) {
+      markRoomClosed(roomId);
+      delete rooms[roomId];
+      console.log(`🧹 RANDOM ${roomId} odstraněna – fronta je prázdná.`);
+    } else {
+      broadcastLobbyState(roomId);
+      console.log(`↩️ ${name} opustil RANDOM ${roomId}; místo je znovu volné.`);
+    }
+    broadcastPublicRandomRooms();
+    return;
+  }
 
   // Před startem friends hry zůstává sedadlo jen offline; bot ho nepřebírá.
   if (room.mode === 'friends' && !room.hasStarted) {

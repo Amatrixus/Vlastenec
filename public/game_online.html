@@ -253,7 +253,23 @@
 
     // --- Jediná inicializace socketu ---
     const socket = io();
-    console.log('🧪 VLASTENEC CLIENT: lobby-modes-v1');
+    console.log('🧪 VLASTENEC CLIENT: random-hub-v2');
+
+    function showRandomHub() {
+      if (gameMode !== 'random') return;
+      const hub = document.getElementById('random_hub');
+      const lobbyWin = document.getElementById('lobby_window');
+      hub?.classList.add('is-visible');
+      if (lobbyWin) lobbyWin.style.display = 'none';
+    }
+
+    function showRandomLobby() {
+      if (gameMode !== 'random') return;
+      const hub = document.getElementById('random_hub');
+      const lobbyWin = document.getElementById('lobby_window');
+      hub?.classList.remove('is-visible');
+      if (lobbyWin) lobbyWin.style.display = '';
+    }
 
 
 
@@ -597,10 +613,18 @@ window.addEventListener('gameStartedAfterAnimation', () => {
     // - random  → jen submitName (NEposílat create/join)
     socket.on('connect', () => {
         DBG('socket connect');
-        const savedRoom  = sessionStorage.getItem('vl_room');
+        let savedRoom  = sessionStorage.getItem('vl_room');
         const savedToken = sessionStorage.getItem('vl_token');
         const savedName  = sessionStorage.getItem('vl_name');
+        const savedMode  = sessionStorage.getItem('vl_mode');
         const explicitRoomFromUrl = roomCodeFromUrl;
+
+        // Room z jiného herního režimu nikdy nesmí ovlivnit nový vstup.
+        if (savedMode && savedMode !== gameMode && !explicitRoomFromUrl) {
+          sessionStorage.removeItem('vl_room');
+          sessionStorage.removeItem('vl_seat');
+          savedRoom = null;
+        }
         DBG('friends connect decision', {
           mode: gameMode,
           explicitRoomFromUrl,
@@ -636,7 +660,7 @@ window.addEventListener('gameStartedAfterAnimation', () => {
 
           if (sameSavedRoom && savedToken) {
             DBG('friends: resuming explicit lobby', { room: explicitRoomFromUrl, name: myName });
-            socket.emit('resume', { roomId: explicitRoomFromUrl, token: savedToken });
+            socket.emit('resume', { roomId: explicitRoomFromUrl, token: savedToken, expectedMode: gameMode });
           } else {
             DBG('friends: joining explicit lobby', { room: explicitRoomFromUrl, name: myName });
             socket.emit('joinRoom', {
@@ -653,7 +677,7 @@ window.addEventListener('gameStartedAfterAnimation', () => {
         if (savedName && sameSavedRoom) myName = savedName;
 
         if (targetRoom && savedToken && sameSavedRoom) {
-            socket.emit('resume', { roomId: targetRoom, token: savedToken });
+            socket.emit('resume', { roomId: targetRoom, token: savedToken, expectedMode: gameMode });
             return;
         }
         if (targetRoom) {
@@ -663,14 +687,11 @@ window.addEventListener('gameStartedAfterAnimation', () => {
         }
         if (gameMode === 'bots') {
             socket.emit('createRoom', { settings: { ...settings, name: myName } });
-        } else {
-            // RANDOM: server dostane i zvolenou sadu kategorií a páruje jen hráče
-            // se stejným nastavením. Díky tomu lobby nikdy nepřebírá nastavení
-            // náhodně od posledního připojeného hráče.
-            socket.emit('submitName', {
-              name: myName,
-              settings: { ...settings, mode: 'random', name: myName }
-            });
+        } else if (gameMode === 'random') {
+            // RANDOM už hráče nezařazuje do fronty automaticky. Nejprve se zobrazí
+            // rozcestník Rychlá hra / Custom / Veřejné místnosti.
+            showRandomHub();
+            socket.emit('random:custom:list');
         }
     });
 
@@ -680,10 +701,16 @@ window.addEventListener('gameStartedAfterAnimation', () => {
     let resumeJoinFallbackUsed = false;
     socket.on('resume:error', ({ message } = {}) => {
       DBG('resume:error', message);
+      if (gameMode === 'random') {
+        currentRoomId = null;
+        sessionStorage.removeItem('vl_room');
+        sessionStorage.removeItem('vl_seat');
+        showRandomHub();
+        socket.emit('random:custom:list');
+        return;
+      }
       if (resumeJoinFallbackUsed || gameMode !== 'friends' || !currentRoomId) return;
       resumeJoinFallbackUsed = true;
-      // Refresh/pozvánka může mít starý token. Když resume selže, připoj se do
-      // stejné explicitní lobby normálně pod právě známým jménem.
       socket.emit('joinRoom', {
         room: currentRoomId,
         settings: { ...settings, mode: 'friends', name: myName }
@@ -713,6 +740,7 @@ window.addEventListener('gameStartedAfterAnimation', () => {
     // --- Tvé stávající listenery ---
     socket.on("assignPlayerNumber", ({ number, allNames, scores, roomId }) => {
       DBG('assignPlayerNumber', { number, roomId, allNames, scores });
+      if (gameMode === 'random') showRandomLobby();
       myPlayerNumber = number;
       currentRoomId = roomId;
       playerControlledByUser[number] = true;
@@ -747,6 +775,7 @@ window.addEventListener('gameStartedAfterAnimation', () => {
          sessionStorage.setItem('vl_room', currentRoomId);
         sessionStorage.setItem('vl_name', myName);
         sessionStorage.setItem('vl_seat', String(myPlayerNumber));
+        sessionStorage.setItem('vl_mode', gameMode);
 
         syncNameTeamMap(allNames);
 
@@ -1505,6 +1534,48 @@ if (regionValues && typeof regionValues === 'object') {
 
 
       <div id="lobby_container">
+        <section id="random_hub" class="random-hub" aria-label="Náhodní soupeři">
+          <header class="random-hub-head">
+            <div class="random-hub-brand">
+              <img src="logo.svg" alt="Vlastenec" class="lobby-logo">
+              <div>
+                <div class="lobby-eyebrow">NÁHODNÍ SOUPEŘI</div>
+                <h1>Jak chcete hrát?</h1>
+              </div>
+            </div>
+            <a href="homepage.html" class="random-hub-back">Zpět na hlavní stránku</a>
+          </header>
+
+          <div class="random-hub-options">
+            <article class="random-mode-card random-mode-card-primary">
+              <span class="random-card-kicker">RYCHLÁ HRA</span>
+              <h2>Najít soupeře</h2>
+              <p>Zařadíme vás do fronty a spojíme s dalšími dvěma hráči. Po zavedení profilů bude matchmaking zohledňovat i vaši úroveň.</p>
+              <button id="random_quick_btn" class="lobby-btn lobby-btn-primary" type="button">Spustit matchmaking</button>
+            </article>
+
+            <article class="random-mode-card">
+              <span class="random-card-kicker">CUSTOM HRA</span>
+              <h2>Vytvořit místnost</h2>
+              <p>Budete hostitelem veřejné místnosti. Vyberete okruhy a zápas spustíte, až se připojí další dva hráči.</p>
+              <button id="random_create_btn" class="lobby-btn lobby-btn-secondary" type="button">Vytvořit místnost</button>
+            </article>
+          </div>
+
+          <section class="random-browser">
+            <div class="random-browser-head">
+              <div>
+                <span class="lobby-section-kicker">VEŘEJNÉ MÍSTNOSTI</span>
+                <h2>Připojit se k čekající hře</h2>
+              </div>
+              <button id="random_refresh_rooms" class="random-refresh-btn" type="button">Obnovit</button>
+            </div>
+            <div id="random_room_list" class="random-room-list">
+              <div class="random-room-empty">Načítáme čekající místnosti…</div>
+            </div>
+          </section>
+        </section>
+
         <div id="lobby_window" class="lobby-shell lobby-shell-v2">
           <header class="lobby-head lobby-head-v2">
             <div class="lobby-brand-block">
@@ -2774,7 +2845,7 @@ if (regionValues && typeof regionValues === 'object') {
               bot.textContent = 'BOT';
               side.appendChild(bot);
             }
-            if (p.host && gameMode === 'friends') {
+            if (p.host && (gameMode === 'friends' || (gameMode === 'random' && lobbyState?.matchKind === 'custom'))) {
               const host = document.createElement('span');
               host.className = 'lobby-host-badge';
               host.textContent = 'HOST';
@@ -2811,14 +2882,17 @@ if (regionValues && typeof regionValues === 'object') {
         function setCategoryAccess() {
           const isFriends = gameMode === 'friends';
           const isBots = gameMode === 'bots';
-          const canEdit = (isFriends || isBots) && Number(myPlayerNumber) === 1;
+          const isRandomCustom = gameMode === 'random' && lobbyState?.matchKind === 'custom';
+          const canEdit = (isFriends || isBots || isRandomCustom) && Number(myPlayerNumber) === 1;
           document.querySelectorAll('#lobby_category_tiles input[type="checkbox"]').forEach(input => {
             input.disabled = !canEdit;
           });
           const hint = document.getElementById('lobby_category_hint');
           if (hint) {
-            if (gameMode === 'random') {
-              hint.textContent = 'Okruhy jsou pro tuto frontu zamknuté.';
+            if (gameMode === 'random' && lobbyState?.matchKind !== 'custom') {
+              hint.textContent = 'Rychlá hra používá všechny okruhy.';
+            } else if (isRandomCustom) {
+              hint.textContent = canEdit ? 'Jako hostitel můžete okruhy libovolně změnit.' : 'Okruhy nastavuje hostitel.';
             } else if (isBots) {
               hint.textContent = canEdit ? 'Kliknutím kategorie zapneš nebo vypneš.' : 'Vyber okruhy pro trénink.';
             } else {
@@ -2830,6 +2904,23 @@ if (regionValues && typeof regionValues === 'object') {
         function renderLobby(state) {
           if (!state) return;
           lobbyState = state;
+          if (gameMode === 'random') {
+            const modeTitle = document.getElementById('lobby_mode_title');
+            const infoKicker = document.getElementById('lobby_mode_info_kicker');
+            const infoTitle = document.getElementById('lobby_mode_info_title');
+            const infoText = document.getElementById('lobby_mode_info_text');
+            if (state.matchKind === 'custom') {
+              if (modeTitle) modeTitle.textContent = 'Veřejná místnost';
+              if (infoKicker) infoKicker.textContent = 'CUSTOM HRA';
+              if (infoTitle) infoTitle.textContent = 'Hostitel řídí nastavení';
+              if (infoText) infoText.textContent = 'Místnost je veřejná a zobrazuje se ostatním hráčům, dokud není plná nebo nezačne.';
+            } else {
+              if (modeTitle) modeTitle.textContent = 'Hledáme protihráče';
+              if (infoKicker) infoKicker.textContent = 'RYCHLÁ HRA';
+              if (infoTitle) infoTitle.textContent = 'Automatický matchmaking';
+              if (infoText) infoText.textContent = 'Párujeme hráče ve správném pořadí. Po zavedení profilů přidáme i zohlednění úrovně.';
+            }
+          }
           setRoomCode(state.roomId || currentRoomId);
           renderPlayerSlots(state.players);
           applyLobbySettings(state.settings || {});
@@ -2847,15 +2938,33 @@ if (regionValues && typeof regionValues === 'object') {
 
           if (gameMode === 'random') {
             if (readyBtn) readyBtn.style.display = 'none';
-            if (startBtn) startBtn.style.display = 'none';
-            showLobbyMessage(`${connected}/3 nalezeni`, connected >= 2 ? 'ready' : 'waiting');
-            if (title) title.textContent = connected >= 3 ? 'Soupeři nalezeni' : 'Hledáme soupeře';
-            if (note) note.textContent = connected >= 3
-              ? 'Zápas se právě spouští.'
-              : 'Jakmile bude trojice kompletní, hra začne automaticky.';
-            if (infoState) infoState.textContent = connected <= 1
-              ? 'Ve frontě jsi zatím sám.'
-              : `Ve frontě jsou ${connected} z 3 hráčů.`;
+            const isCustom = state.matchKind === 'custom';
+            if (startBtn) {
+              startBtn.style.display = (isCustom && isHost) ? '' : 'none';
+              startBtn.disabled = isCustom ? !state.canStart : true;
+              startBtn.textContent = 'Spustit hru';
+            }
+
+            if (isCustom) {
+              showLobbyMessage(`${connected}/3 připojeni`, connected >= 3 ? 'ready' : 'waiting');
+              if (title) title.textContent = connected >= 3 ? 'Místnost je plná' : 'Čekáme na další hráče';
+              if (note) note.textContent = connected >= 3
+                ? (isHost ? 'Můžete spustit zápas.' : 'Hostitel může spustit zápas.')
+                : 'Místnost je viditelná v seznamu veřejných her.';
+              if (infoState) infoState.textContent = isHost
+                ? 'Jste hostitel. Kategorie můžete změnit až do startu.'
+                : 'Připojili jste se do veřejné místnosti.';
+            } else {
+              if (startBtn) startBtn.style.display = 'none';
+              showLobbyMessage(`${connected}/3 nalezeni`, connected >= 2 ? 'ready' : 'waiting');
+              if (title) title.textContent = connected >= 3 ? 'Soupeři nalezeni' : 'Hledáme soupeře';
+              if (note) note.textContent = connected >= 3
+                ? 'Zápas se právě spouští.'
+                : 'Jakmile bude trojice kompletní, hra začne automaticky.';
+              if (infoState) infoState.textContent = connected <= 1
+                ? 'Jste první ve frontě. Čekáme na další hráče.'
+                : `Ve frontě jsou ${connected} z 3 hráčů.`;
+            }
             return;
           }
 
@@ -2914,7 +3023,8 @@ if (regionValues && typeof regionValues === 'object') {
         }
 
         function emitCategorySettings(changedInput) {
-          if (!['friends','bots'].includes(gameMode) || Number(myPlayerNumber) !== 1 || !currentRoomId) return;
+          const canManageRandomCustom = gameMode === 'random' && lobbyState?.matchKind === 'custom';
+          if ((!['friends','bots'].includes(gameMode) && !canManageRandomCustom) || Number(myPlayerNumber) !== 1 || !currentRoomId) return;
           let cats = selectedCategories();
           if (!cats.length) {
             changedInput.checked = true;
@@ -3150,6 +3260,7 @@ if (regionValues && typeof regionValues === 'object') {
             socket.emit('chat:history:get', { roomId: snapshot.roomId || currentRoomId });
           }
           if (!snapshot.hasStarted && snapshot.roomId) {
+            if (gameMode === 'random') showRandomLobby();
             // server po resume pošle i lobby:state; fallback mezitím zobrazuje jména
             window.renderLobbyFallback(snapshot.allNames || {});
           }
@@ -3180,6 +3291,90 @@ if (regionValues && typeof regionValues === 'object') {
         if (socket.connected) socket.emit('community:chat:history:get');
         socket.on('connect', () => socket.emit('community:chat:history:get'));
 
+        // ===== RANDOM HUB =====
+        const randomHub = document.getElementById('random_hub');
+        const lobbyWindow = document.getElementById('lobby_window');
+        const CATEGORY_NAMES = ['Přírodní vědy','Literatura','Technologie','Geografie','Historie','Kultura','Sport','Osobnosti','Politika'];
+
+        function renderRandomRoomList(list = []) {
+          const wrap = document.getElementById('random_room_list');
+          if (!wrap) return;
+          wrap.innerHTML = '';
+          if (!Array.isArray(list) || !list.length) {
+            const empty = document.createElement('div');
+            empty.className = 'random-room-empty';
+            empty.textContent = 'Momentálně tu není žádná veřejná místnost. Můžete založit první.';
+            wrap.appendChild(empty);
+            return;
+          }
+          list.forEach(room => {
+            const card = document.createElement('article');
+            card.className = 'random-room-card';
+            const info = document.createElement('div');
+            info.className = 'random-room-main';
+            const top = document.createElement('div');
+            top.className = 'random-room-title-row';
+            const host = document.createElement('strong');
+            host.textContent = room.host || 'Hostitel';
+            const occupancy = document.createElement('span');
+            occupancy.className = 'random-room-occupancy';
+            occupancy.textContent = `${room.occupancy || 1}/${room.capacity || 3}`;
+            top.append(host, occupancy);
+
+            const cats = document.createElement('div');
+            cats.className = 'random-room-cats';
+            const ids = Array.isArray(room.cats) ? room.cats : [];
+            ids.slice(0,5).forEach(id => {
+              const chip = document.createElement('span');
+              chip.textContent = CATEGORY_NAMES[Number(id)-1] || `Kategorie ${id}`;
+              cats.appendChild(chip);
+            });
+            if (ids.length > 5) {
+              const more = document.createElement('span');
+              more.textContent = `+${ids.length-5}`;
+              cats.appendChild(more);
+            }
+            info.append(top, cats);
+
+            const join = document.createElement('button');
+            join.type = 'button';
+            join.className = 'lobby-btn lobby-btn-secondary random-room-join';
+            join.textContent = 'Připojit';
+            join.addEventListener('click', () => {
+              join.disabled = true;
+              socket.emit('random:custom:join', { roomId: room.roomId || room.code, name: myName });
+            });
+            card.append(info, join);
+            wrap.appendChild(card);
+          });
+        }
+
+        document.getElementById('random_quick_btn')?.addEventListener('click', () => {
+          showRandomLobby();
+          showLobbyMessage('Zařazujeme do fronty…', 'waiting');
+          socket.emit('random:quick:join', { name: myName, rating: null });
+        });
+
+        document.getElementById('random_create_btn')?.addEventListener('click', () => {
+          showRandomLobby();
+          socket.emit('random:custom:create', {
+            name: myName,
+            settings: { mode: 'random', cats: [1,2,3,4,5,6,7,8,9] }
+          });
+        });
+
+        document.getElementById('random_refresh_rooms')?.addEventListener('click', () => socket.emit('random:custom:list'));
+        socket.on('random:custom:rooms', renderRandomRoomList);
+        socket.on('random:custom:error', ({ message } = {}) => {
+          showRandomHub();
+          socket.emit('random:custom:list');
+          alert(message || 'Místnost není dostupná.');
+        });
+        socket.on('random:custom:created', ({ roomId } = {}) => {
+          currentRoomId = roomId || currentRoomId;
+          showRandomLobby();
+        });
+
         // ===== MODE-SPECIFIC LOBBY CHROME =====
         const modeEyebrow = document.getElementById('lobby_mode_eyebrow');
         const modeTitle = document.getElementById('lobby_mode_title');
@@ -3195,12 +3390,12 @@ if (regionValues && typeof regionValues === 'object') {
 
         if (gameMode === 'random') {
           if (modeEyebrow) modeEyebrow.textContent = 'NÁHODNÍ SOUPEŘI';
-          if (modeTitle) modeTitle.textContent = 'Hledáme protihráče';
+          if (modeTitle) modeTitle.textContent = 'Náhodní soupeři';
           inviteSection?.classList.add('lobby-hidden');
           modeInfoSection?.classList.remove('lobby-hidden');
           if (infoKicker) infoKicker.textContent = 'MATCHMAKING';
-          if (infoTitle) infoTitle.textContent = 'Automatická fronta';
-          if (infoText) infoText.textContent = 'Spojujeme tě pouze s hráči se stejným výběrem kategorií. Jakmile se najdou tři, zápas začne automaticky.';
+          if (infoTitle) infoTitle.textContent = 'Režim zápasu';
+          if (infoText) infoText.textContent = 'Rychlá hra startuje automaticky. Veřejnou custom místnost spouští hostitel.';
         } else if (gameMode === 'bots') {
           if (modeEyebrow) modeEyebrow.textContent = 'HRA S BOTY';
           if (modeTitle) modeTitle.textContent = 'Nastavte trénink';
@@ -3220,6 +3415,7 @@ if (regionValues && typeof regionValues === 'object') {
           modeInfoSection?.classList.add('lobby-hidden');
         }
 
+        if (gameMode === 'random' && !currentRoomId) showRandomHub();
         setRoomCode(currentRoomId);
         setCategoryAccess();
         syncChatUI();
