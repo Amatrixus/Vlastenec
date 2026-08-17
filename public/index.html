@@ -3,48 +3,114 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#1a100b" />
   <title>VLASTENEC</title>
-  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="home.css">
+  <link rel="stylesheet" href="home.css" />
+  <script>
+    (() => {
+      const params = new URLSearchParams(window.location.search);
+      const forceIntro = params.get('intro') === '1';
+      const hasSeenIntro = localStorage.getItem('vlastenec_intro_seen') === '1';
+      if (hasSeenIntro && !forceIntro) {
+        window.location.replace('modalternative.html');
+      }
+    })();
+  </script>
 </head>
 <body>
-  <div id="background-layer"></div>
-  <div id="cover"></div>
-  <div class="glow-behind"></div>
-
- 
-
-
-
-  <div id="wrapper">
-    <main id="main-layout">
-
-       <div id="logintile">
-            <img id="loginavatar" src="avatar.png">
-            <div id="logintext">Přihlásit se</div>
-        
-
-      </div>
-      
-      <div class="left-column">
-        <h1>VLASTENEC</h1>
-        <p class="tagline">Ovládni mapu. Braň svou základnu. Vědomostmi.</p>
-        <p class="intro-text">Vlastenecká vědomostní hra, ve které bráníš svou základnu pomocí znalostí o České republice. Vyber si téma, vyhraj souboj a získej území!</p>
-        <button class="play-button" onclick="window.location.href='modalternative.html'">HRÁT</button>
-      </div>
-
-      <div class="right-column">
-        
-        
-          <img src="map.svg" width="100%">
-       
-      </div>
-    </main>
-
-   
-
-
-    
+  <div class="intro-backdrop" aria-hidden="true">
+    <div class="intro-lion"></div>
+    <div class="intro-glow intro-glow-a"></div>
+    <div class="intro-glow intro-glow-b"></div>
+    <div class="intro-grain"></div>
   </div>
+
+  <main class="intro-stage">
+    <section class="intro-shell" aria-labelledby="intro-title">
+      <header class="intro-topbar">
+        <div class="intro-topbar-brand">
+          <span class="intro-brand-mark"></span>
+          <span>Česká vědomostní strategie</span>
+        </div>
+        <div class="intro-topbar-meta">
+          <span>ZNALOSTI</span>
+          <i></i>
+          <span>STRATEGIE</span>
+          <i></i>
+          <span>SOUBOJ</span>
+        </div>
+      </header>
+
+      <div class="intro-content">
+        <div class="intro-copy">
+          <div class="intro-kicker">OVLÁDNI ČESKO</div>
+
+          <img class="intro-logo" src="logo.svg" alt="Vlastenec" id="intro-title" />
+
+          <h1>Území se nezískává silou.<br><span>Získává se znalostmi.</span></h1>
+
+          <p class="intro-lead">
+            Vědomostní strategická hra, ve které obsazuješ české regiony,
+            bráníš svou základnu a soupeříš s ostatními hráči o vládu nad mapou.
+          </p>
+
+          <div class="intro-points" aria-label="Hlavní prvky hry">
+            <div class="intro-point">
+              <strong>01</strong>
+              <span>Vyber území</span>
+            </div>
+            <div class="intro-point">
+              <strong>02</strong>
+              <span>Odpověz správně</span>
+            </div>
+            <div class="intro-point">
+              <strong>03</strong>
+              <span>Ovládni mapu</span>
+            </div>
+          </div>
+
+          <div class="intro-actions">
+            <button id="intro-play" class="intro-play" type="button">
+              <span>HRÁT</span>
+              <span class="intro-play-arrow" aria-hidden="true">→</span>
+            </button>
+            <span class="intro-action-note">Vstup do Vlastence</span>
+          </div>
+        </div>
+
+        <div class="intro-map-area" aria-hidden="true">
+          <div class="intro-map-label">
+            <span class="intro-map-dot"></span>
+            <span>BOJIŠTĚ</span>
+          </div>
+
+          <div class="intro-map-frame">
+            <div class="intro-map-halo"></div>
+            <img class="intro-map" src="map.svg" alt="" />
+            <div class="intro-map-shine"></div>
+          </div>
+
+          <div class="intro-map-caption">
+            <span>15 regionů</span>
+            <span class="intro-caption-line"></span>
+            <span>1 vítěz</span>
+          </div>
+        </div>
+      </div>
+
+      <footer class="intro-footer">
+        <span>VLASTENEC</span>
+        <span class="intro-footer-line"></span>
+        <span>Vědomostní hra o České republice</span>
+      </footer>
+    </section>
+  </main>
+
+  <script>
+    document.getElementById('intro-play')?.addEventListener('click', () => {
+      localStorage.setItem('vlastenec_intro_seen', '1');
+      window.location.href = 'modalternative.html';
+    });
+  </script>
 </body>
 </html>
