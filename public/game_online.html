@@ -599,36 +599,68 @@ window.addEventListener('gameStartedAfterAnimation', () => {
         const savedRoom  = sessionStorage.getItem('vl_room');
         const savedToken = sessionStorage.getItem('vl_token');
         const savedName  = sessionStorage.getItem('vl_name');
-        DBG('resume check', { savedRoom, hasToken: !!savedToken, savedName });
-
-
-
-        
-        const targetRoom = currentRoomId || savedRoom;
         const explicitRoomFromUrl = roomCodeFromUrl;
-        const sameSavedRoom = !explicitRoomFromUrl || explicitRoomFromUrl === savedRoom;
+        DBG('friends connect decision', {
+          mode: gameMode,
+          explicitRoomFromUrl,
+          savedRoom,
+          hasToken: !!savedToken,
+          enteredName: myName
+        });
 
-        // Jméno ze staré session použij jen při skutečném reconnectu do stejné místnosti.
-        // Při otevření pozvánky do JINÉ room zůstává jméno, které uživatel právě zadal.
-        if (savedName && sameSavedRoom) myName = savedName;
         if (!myName?.trim()) myName = `Player_${Math.random().toString(36).slice(2,6)}`;
 
-        // 1) resume jen tehdy, pokud token patří ke stejné room.
-        // Tím starý reconnect token nemůže zablokovat vstup přes nový pozvánkový odkaz.
+        // FRIENDS má dva zcela odlišné vstupy:
+        // A) bez ?room=...  => uživatel právě klikl na „Hra s přáteli“ a VŽDY zakládá NOVOU lobby
+        // B) s  ?room=...  => pozvánkový link / refresh konkrétní lobby; join nebo reconnect
+        // Starý vl_room proto nikdy nesmí při vstupu A) zabránit vytvoření nové místnosti.
+        if (gameMode === 'friends') {
+          if (!explicitRoomFromUrl) {
+            currentRoomId = null;
+            // Staré room/seat údaje patří předchozí session. Token může zůstat a po assignu
+            // se bezpečně přiřadí k nové room.
+            sessionStorage.removeItem('vl_room');
+            sessionStorage.removeItem('vl_seat');
+            DBG('friends: creating NEW lobby', { name: myName });
+            socket.emit('createRoom', { settings: { ...settings, mode: 'friends', name: myName } });
+            return;
+          }
+
+          currentRoomId = explicitRoomFromUrl;
+          const sameSavedRoom = savedRoom === explicitRoomFromUrl;
+
+          // Při refreshi stejné lobby můžeme zachovat jméno z reconnect session.
+          // Při otevření cizí pozvánky zůstává jméno právě zadané uživatelem.
+          if (sameSavedRoom && savedName) myName = savedName;
+
+          if (sameSavedRoom && savedToken) {
+            DBG('friends: resuming explicit lobby', { room: explicitRoomFromUrl, name: myName });
+            socket.emit('resume', { roomId: explicitRoomFromUrl, token: savedToken });
+          } else {
+            DBG('friends: joining explicit lobby', { room: explicitRoomFromUrl, name: myName });
+            socket.emit('joinRoom', {
+              room: explicitRoomFromUrl,
+              settings: { ...settings, mode: 'friends', name: myName }
+            });
+          }
+          return;
+        }
+
+        // Ostatní režimy ponecháváme beze změny.
+        const targetRoom = currentRoomId || savedRoom;
+        const sameSavedRoom = !explicitRoomFromUrl || explicitRoomFromUrl === savedRoom;
+        if (savedName && sameSavedRoom) myName = savedName;
+
         if (targetRoom && savedToken && sameSavedRoom) {
             socket.emit('resume', { roomId: targetRoom, token: savedToken });
             return;
         }
-
-        // 2) room v URL / uložená room bez použitelného tokenu → normální joinRoom.
         if (targetRoom) {
             currentRoomId = targetRoom;
             socket.emit('joinRoom', { room: targetRoom, settings: { ...settings, name: myName } });
             return;
         }
-
-        // 3) fallback: založ friends, nebo dej mě do random
-        if (gameMode === 'friends' || gameMode === 'bots') {
+        if (gameMode === 'bots') {
             socket.emit('createRoom', { settings: { ...settings, name: myName } });
         } else {
             socket.emit('submitName', myName);
@@ -643,8 +675,12 @@ window.addEventListener('gameStartedAfterAnimation', () => {
       DBG('resume:error', message);
       if (resumeJoinFallbackUsed || gameMode !== 'friends' || !currentRoomId) return;
       resumeJoinFallbackUsed = true;
-      // Pozvánkový link má přednost před starou reconnect identitou.
-      socket.emit('joinRoom', { room: currentRoomId, settings: { ...settings, name: myName } });
+      // Refresh/pozvánka může mít starý token. Když resume selže, připoj se do
+      // stejné explicitní lobby normálně pod právě známým jménem.
+      socket.emit('joinRoom', {
+        room: currentRoomId,
+        settings: { ...settings, mode: 'friends', name: myName }
+      });
     });
 
 
@@ -653,13 +689,18 @@ window.addEventListener('gameStartedAfterAnimation', () => {
     socket.on('roomReady', ({ room }) => {
       if (gameMode !== 'friends') return; // jen friends sjednocujeme URL
       currentRoomId = room;
+      DBG('friends roomReady', { room: currentRoomId, name: myName });
+
       const url = new URL(location.href);
       url.searchParams.set('mode', 'friends');
       url.searchParams.set('room', String(room || '').replace(/^room_/i, ''));
       history.replaceState(null, '', url.toString());
+
+      // Kód ukaž hned; nemusíme čekat na následující lobby:state.
+      if (typeof setRoomCode === 'function') setRoomCode(currentRoomId);
+
       // po vytvoření friends místnosti rovnou pošli nastavení
       socket.emit('settings:update', { roomId: currentRoomId, settings: { mode: gameMode, cats: catIds, catNames } });
-
     });
 
     // --- Tvé stávající listenery ---

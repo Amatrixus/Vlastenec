@@ -1,4 +1,5 @@
 const express = require('express');
+console.log('🧪 VLASTENEC BUILD: 2026-08-17-friends-flow-v3');
 const http = require('http');
 const { Server } = require('socket.io');
 const path = require('path');
