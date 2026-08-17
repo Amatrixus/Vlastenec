@@ -1,4 +1,4 @@
-console.log('🧪 VLASTENEC BUILD: 2026-08-18-region-wave-v5-numeric-flow');
+console.log('🧪 VLASTENEC BUILD: 2026-08-18-region-wave-v5.1-battle-result-timing');
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
@@ -38,7 +38,7 @@ const PORT = process.env.PORT || 3000;
   if (db.getStatus().ready) await recoverInterruptedLeagueMatches().catch(err => console.error('league boot recovery:', err));
   server.listen(PORT, '0.0.0.0', () => {
     console.log('Server běží na', PORT);
-    console.log('🧪 VLASTENEC BUILD: 2026-08-18-region-wave-v5-numeric-flow');
+    console.log('🧪 VLASTENEC BUILD: 2026-08-18-region-wave-v5.1-battle-result-timing');
   });
 })();
 
@@ -2042,13 +2042,20 @@ async function runBattleOnRegion(roomId, attacker, defender, region) {
     await delay(5000);
 
     let winner = null;
+    let resolvedByNumeric = false;
 
     if (correctPlayers.length === 1) {
       winner = correctPlayers[0];
     } else if (correctPlayers.length > 1) {
       await delay(2000);
       winner = await runNumericQuestionForTwo(roomId, [attacker, defender]);
-      await delay(3000);
+      resolvedByNumeric = true;
+
+      // Klient zobrazuje výsledky numerického duelu 6 s. Výsledek bitvy
+      // proto neaplikujeme dřív, než numerické okno stihne zmizet.
+      // Krátká rezerva zabrání tomu, aby se změna regionu vykreslila
+      // ve stejném okamžiku jako zavření otázky.
+      await delay(6300);
     }
 
     if (winner === attacker) {
@@ -2084,8 +2091,9 @@ async function runBattleOnRegion(roomId, attacker, defender, region) {
 
     }
 
-    // Aktualizace a konec
-    await delay(2000);
+    // Aktualizace a konec. Po numerickém duelu už jsme počkali na zavření
+    // výsledkového okna, takže stačí krátká dramaturgická pauza.
+    await delay(resolvedByNumeric ? 800 : 2000);
     room.scores = calculateScores(room.regions, room.regionValues, room.defenseBonuses);
     io.to(roomId).emit("updateRegions", {
       regions: room.regions,
