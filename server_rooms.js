@@ -18,7 +18,7 @@ const io = new Server(server, { cors: { origin: "*" } }); // (později si omezí
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, '0.0.0.0', () => {
   console.log('Server běží na', PORT);
-  console.log('🧪 VLASTENEC BUILD: 2026-08-17-portal-v3');
+  console.log('🧪 VLASTENEC BUILD: 2026-08-17-lobby-v2-invites');
 });
 
 
@@ -1984,17 +1984,6 @@ function waitForPlayerSelection(roomId, player, timeout, forcedAvailableRegions 
 
 io.on('connection', socket => {
 
-  // Portal presence: počet aktuálních Socket.IO spojení.
-  // Zatím jde o spojení (ne unikátní účty); po zavedení účtů lze metriku zpřesnit.
-  const broadcastPortalOnlineCount = () => {
-    io.emit('portal:onlineCount', { count: io.engine.clientsCount });
-  };
-  broadcastPortalOnlineCount();
-  socket.on('disconnect', () => {
-    setTimeout(broadcastPortalOnlineCount, 0);
-  });
-
-
 
 
 
@@ -2375,6 +2364,17 @@ socket.on("disconnect", () => {
 
 
 
+
+
+// ===== POZVÁNKY UŽIVATELŮ – BUDOUCÍ API KONTRAKT =====
+// Odkaz/kód fungují už teď. Tento event je připravený pro budoucí databázi účtů.
+socket.on('invite:player', ({ roomId, targetUserId } = {}) => {
+  socket.emit('invite:unavailable', {
+    roomId: sanitizeRoomId(roomId),
+    targetUserId: targetUserId || null,
+    reason: 'accounts_not_enabled'
+  });
+});
 
 // ===== KOMUNITNÍ CHAT =====
 socket.on('community:chat:send', ({ text } = {}) => {

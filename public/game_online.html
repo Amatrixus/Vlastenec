@@ -605,17 +605,22 @@ window.addEventListener('gameStartedAfterAnimation', () => {
 
         
         const targetRoom = currentRoomId || savedRoom;
+        const explicitRoomFromUrl = roomCodeFromUrl;
+        const sameSavedRoom = !explicitRoomFromUrl || explicitRoomFromUrl === savedRoom;
 
-        if (savedName) myName = savedName;
+        // Jméno ze staré session použij jen při skutečném reconnectu do stejné místnosti.
+        // Při otevření pozvánky do JINÉ room zůstává jméno, které uživatel právě zadal.
+        if (savedName && sameSavedRoom) myName = savedName;
         if (!myName?.trim()) myName = `Player_${Math.random().toString(36).slice(2,6)}`;
 
-        // 1) zkus resume (friends i random)
-        if (targetRoom && savedToken) {
+        // 1) resume jen tehdy, pokud token patří ke stejné room.
+        // Tím starý reconnect token nemůže zablokovat vstup přes nový pozvánkový odkaz.
+        if (targetRoom && savedToken && sameSavedRoom) {
             socket.emit('resume', { roomId: targetRoom, token: savedToken });
             return;
         }
 
-        // 2) pokud je v URL room, ale nemám token → JSEM NOVÝ HOST → joinRoom
+        // 2) room v URL / uložená room bez použitelného tokenu → normální joinRoom.
         if (targetRoom) {
             currentRoomId = targetRoom;
             socket.emit('joinRoom', { room: targetRoom, settings: { ...settings, name: myName } });
@@ -633,6 +638,14 @@ window.addEventListener('gameStartedAfterAnimation', () => {
 
     socket.on("connect_error", (e) => DBG("connect_error:", e?.message || e));
 
+    let resumeJoinFallbackUsed = false;
+    socket.on('resume:error', ({ message } = {}) => {
+      DBG('resume:error', message);
+      if (resumeJoinFallbackUsed || gameMode !== 'friends' || !currentRoomId) return;
+      resumeJoinFallbackUsed = true;
+      // Pozvánkový link má přednost před starou reconnect identitou.
+      socket.emit('joinRoom', { room: currentRoomId, settings: { ...settings, name: myName } });
+    });
 
 
 
@@ -641,7 +654,8 @@ window.addEventListener('gameStartedAfterAnimation', () => {
       if (gameMode !== 'friends') return; // jen friends sjednocujeme URL
       currentRoomId = room;
       const url = new URL(location.href);
-      url.searchParams.set('room', room);
+      url.searchParams.set('mode', 'friends');
+      url.searchParams.set('room', String(room || '').replace(/^room_/i, ''));
       history.replaceState(null, '', url.toString());
       // po vytvoření friends místnosti rovnou pošli nastavení
       socket.emit('settings:update', { roomId: currentRoomId, settings: { mode: gameMode, cats: catIds, catNames } });
@@ -1441,8 +1455,8 @@ if (regionValues && typeof regionValues === 'object') {
 
 
       <div id="lobby_container">
-        <div id="lobby_window" class="lobby-shell">
-          <header class="lobby-head">
+        <div id="lobby_window" class="lobby-shell lobby-shell-v2">
+          <header class="lobby-head lobby-head-v2">
             <div class="lobby-brand-block">
               <img src="logo.svg" alt="Vlastenec" class="lobby-logo">
               <div>
@@ -1450,27 +1464,52 @@ if (regionValues && typeof regionValues === 'object') {
                 <div class="lobby-title">Připravte bojiště</div>
               </div>
             </div>
-            <div class="lobby-room-block">
-              <span class="lobby-room-label">Místnost</span>
-              <strong id="lobby_room_code">------</strong>
-              <button id="lobby_copy_link" type="button" class="lobby-copy-btn">Kopírovat pozvánku</button>
+            <div class="lobby-head-status">
+              <span class="lobby-head-status-dot"></span>
+              <span id="lobby_head_status_text">Soukromá místnost</span>
             </div>
           </header>
 
-          <div class="lobby-layout">
-            <main class="lobby-main">
-              <section class="lobby-section lobby-players-section">
-                <div class="lobby-section-head">
+          <div class="lobby-layout lobby-layout-v2">
+            <aside class="lobby-left-column">
+              <section class="lobby-section lobby-players-section lobby-players-v2">
+                <div class="lobby-section-head compact">
                   <div>
                     <span class="lobby-section-kicker">HRÁČI</span>
-                    <h2>3 místa. Jeden vítěz.</h2>
+                    <h2>Vaše sestava</h2>
                   </div>
                   <div id="lobby_status" class="lobby-status-pill">Čekáme na hráče…</div>
                 </div>
-                <div id="lobby_list" class="lobby-player-grid"></div>
+                <div id="lobby_list" class="lobby-player-grid lobby-player-list-v2"></div>
               </section>
 
-              <section class="lobby-section lobby-categories-section">
+              <section class="lobby-section lobby-invite-section">
+                <div class="lobby-section-head compact invite-heading">
+                  <div>
+                    <span class="lobby-section-kicker">POZVÁNKA</span>
+                    <h2>Přiveďte spoluhráče</h2>
+                  </div>
+                </div>
+
+                <div class="lobby-room-code-card">
+                  <div>
+                    <span class="lobby-room-label">KÓD MÍSTNOSTI</span>
+                    <strong id="lobby_room_code">------</strong>
+                  </div>
+                  <button id="lobby_copy_code" type="button" class="lobby-icon-btn" title="Kopírovat kód">Kopírovat</button>
+                </div>
+
+                <div class="lobby-invite-actions">
+                  <button id="lobby_invite_open" type="button" class="lobby-btn lobby-btn-primary lobby-invite-main">+ Pozvat hráče</button>
+                  <button id="lobby_copy_link" type="button" class="lobby-btn lobby-btn-secondary">Kopírovat odkaz</button>
+                </div>
+
+                <p class="lobby-invite-note">Odkaz i kód fungují bez účtu. Pozvánky přihlášeným hráčům jsou připravené pro budoucí profily.</p>
+              </section>
+            </aside>
+
+            <main class="lobby-center-column">
+              <section class="lobby-section lobby-categories-section lobby-categories-v2">
                 <div class="lobby-section-head compact">
                   <div>
                     <span class="lobby-section-kicker">KATEGORIE</span>
@@ -1479,7 +1518,7 @@ if (regionValues && typeof regionValues === 'object') {
                   <span id="lobby_category_hint" class="lobby-muted">Kategorie nastavuje hostitel.</span>
                 </div>
 
-                <div id="lobby_category_tiles" class="lobby-category-grid">
+                <div id="lobby_category_tiles" class="lobby-category-grid lobby-category-grid-v2">
                   <label class="lobby-cat-tile" data-cat="1" title="Přírodní vědy">
                     <input type="checkbox" value="1" checked>
                     <img src="tiles/tile1.png" alt="Přírodní vědy">
@@ -1528,7 +1567,7 @@ if (regionValues && typeof regionValues === 'object') {
                 </div>
               </section>
 
-              <footer class="lobby-actions">
+              <footer class="lobby-actions lobby-actions-v2">
                 <div class="lobby-ready-copy">
                   <strong id="lobby_action_title">Připrav se na hru</strong>
                   <span id="lobby_action_note">Až budeš hotový, potvrď připravenost.</span>
@@ -1540,7 +1579,7 @@ if (regionValues && typeof regionValues === 'object') {
               </footer>
             </main>
 
-            <aside class="lobby-chat-panel">
+            <aside class="lobby-chat-panel lobby-chat-panel-v2">
               <div class="chat-panel-head">
                 <div>
                   <span class="lobby-section-kicker">CHAT</span>
@@ -1560,9 +1599,50 @@ if (regionValues && typeof regionValues === 'object') {
             </aside>
           </div>
         </div>
+
+        <div id="lobby_invite_overlay" class="invite-overlay" aria-hidden="true">
+          <section class="invite-drawer" role="dialog" aria-modal="true" aria-labelledby="invite_title">
+            <header class="invite-drawer-head">
+              <div>
+                <span class="lobby-section-kicker">POZVAT DO HRY</span>
+                <h2 id="invite_title">Přidejte dalšího hráče</h2>
+              </div>
+              <button id="lobby_invite_close" type="button" class="invite-close" aria-label="Zavřít">×</button>
+            </header>
+
+            <div class="invite-account-block">
+              <label for="invite_user_search">Hledat hráče</label>
+              <div class="invite-search-shell">
+                <span>⌕</span>
+                <input id="invite_user_search" type="search" placeholder="Jméno hráče…" autocomplete="off" disabled>
+              </div>
+              <div class="invite-user-tabs">
+                <button type="button" class="invite-user-tab active" data-invite-tab="friends">Přátelé</button>
+                <button type="button" class="invite-user-tab" data-invite-tab="online">Online</button>
+              </div>
+              <div class="invite-future-state">
+                <div class="invite-future-icon">◎</div>
+                <strong>Pozvánky hráčům připravujeme</strong>
+                <p>Po zavedení účtů se zde zobrazí přátelé a právě online hráči. Struktura lobby už s touto funkcí počítá.</p>
+              </div>
+            </div>
+
+            <div class="invite-divider"><span>nebo pozvěte bez účtu</span></div>
+
+            <div class="invite-share-card">
+              <div class="invite-code-row">
+                <div>
+                  <span>KÓD MÍSTNOSTI</span>
+                  <strong id="invite_room_code">------</strong>
+                </div>
+                <button id="invite_copy_code" type="button">Kopírovat kód</button>
+              </div>
+              <button id="invite_copy_link" type="button" class="invite-share-primary">Kopírovat odkaz</button>
+              <button id="invite_native_share" type="button" class="invite-share-secondary">Sdílet…</button>
+            </div>
+          </section>
+        </div>
       </div>
-
-
 
 
 
@@ -2555,9 +2635,40 @@ if (regionValues && typeof regionValues === 'object') {
           return String(roomId || '').replace(/^room_/i, '');
         }
 
+
+        function buildFriendsInviteUrl() {
+          const url = new URL('game_online.html', location.href);
+          url.search = '';
+          url.searchParams.set('mode', 'friends');
+          const code = stripRoomPrefix(currentRoomId);
+          if (code) url.searchParams.set('room', code);
+          return url.toString();
+        }
+
+        async function copyLobbyText(text, button, successText = 'Zkopírováno') {
+          const original = button?.textContent;
+          try {
+            await navigator.clipboard.writeText(text);
+          } catch {
+            prompt('Zkopíruj:', text);
+          }
+          if (button) {
+            button.textContent = successText;
+            setTimeout(() => { button.textContent = original; }, 1400);
+          }
+        }
+
+        function syncInviteRoomCode(roomId = currentRoomId) {
+          const code = stripRoomPrefix(roomId) || '------';
+          const modalCode = document.getElementById('invite_room_code');
+          if (modalCode) modalCode.textContent = code;
+        }
+
         function setRoomCode(roomId) {
           const el = document.getElementById('lobby_room_code');
-          if (el) el.textContent = stripRoomPrefix(roomId) || '------';
+          const code = stripRoomPrefix(roomId) || '------';
+          if (el) el.textContent = code;
+          syncInviteRoomCode(roomId);
         }
 
         function showLobbyMessage(text, tone = '') {
@@ -2608,6 +2719,14 @@ if (regionValues && typeof regionValues === 'object') {
               host.className = 'lobby-host-badge';
               host.textContent = 'HOST';
               side.appendChild(host);
+            }
+            if (!p.name && gameMode === 'friends') {
+              const invite = document.createElement('button');
+              invite.type = 'button';
+              invite.className = 'lobby-slot-invite';
+              invite.textContent = 'Pozvat';
+              invite.addEventListener('click', () => openInvitePanel());
+              side.appendChild(invite);
             }
             const dot = document.createElement('span');
             dot.className = 'lobby-presence-dot';
@@ -2670,6 +2789,8 @@ if (regionValues && typeof regionValues === 'object') {
 
           const connected = (state.players || []).filter(p => p.name && p.connected).length;
           const ready = (state.players || []).filter(p => p.name && p.connected && p.ready).length;
+          const headStatus = document.getElementById('lobby_head_status_text');
+          if (headStatus) headStatus.textContent = `${connected}/3 hráči připojeni`;
           if (state.canStart) {
             showLobbyMessage('Všichni připraveni', 'ready');
             if (title) title.textContent = isHost ? 'Všichni jsou připraveni' : 'Čekáme na hostitele';
@@ -2731,20 +2852,66 @@ if (regionValues && typeof regionValues === 'object') {
           if (currentRoomId) socket.emit('lobby:start', { roomId: currentRoomId });
         });
 
-        document.getElementById('lobby_copy_link')?.addEventListener('click', async () => {
-          const url = new URL(location.href);
-          if (currentRoomId) url.searchParams.set('room', stripRoomPrefix(currentRoomId));
-          try {
-            await navigator.clipboard.writeText(url.toString());
-            const btn = document.getElementById('lobby_copy_link');
-            if (btn) {
-              const old = btn.textContent;
-              btn.textContent = 'Zkopírováno';
-              setTimeout(() => btn.textContent = old, 1400);
+        function openInvitePanel() {
+          syncInviteRoomCode();
+          const overlay = document.getElementById('lobby_invite_overlay');
+          if (!overlay) return;
+          overlay.classList.add('open');
+          overlay.setAttribute('aria-hidden', 'false');
+        }
+
+        function closeInvitePanel() {
+          const overlay = document.getElementById('lobby_invite_overlay');
+          if (!overlay) return;
+          overlay.classList.remove('open');
+          overlay.setAttribute('aria-hidden', 'true');
+        }
+        window.openInvitePanel = openInvitePanel;
+
+        document.getElementById('lobby_invite_open')?.addEventListener('click', openInvitePanel);
+        document.getElementById('lobby_invite_close')?.addEventListener('click', closeInvitePanel);
+        document.getElementById('lobby_invite_overlay')?.addEventListener('click', (event) => {
+          if (event.target?.id === 'lobby_invite_overlay') closeInvitePanel();
+        });
+        document.addEventListener('keydown', (event) => {
+          if (event.key === 'Escape') closeInvitePanel();
+        });
+
+        document.getElementById('lobby_copy_code')?.addEventListener('click', (event) => {
+          const code = stripRoomPrefix(currentRoomId);
+          if (code) copyLobbyText(code, event.currentTarget, 'Kód zkopírován');
+        });
+
+        document.getElementById('lobby_copy_link')?.addEventListener('click', (event) => {
+          copyLobbyText(buildFriendsInviteUrl(), event.currentTarget, 'Odkaz zkopírován');
+        });
+
+        document.getElementById('invite_copy_code')?.addEventListener('click', (event) => {
+          const code = stripRoomPrefix(currentRoomId);
+          if (code) copyLobbyText(code, event.currentTarget, 'Kód zkopírován');
+        });
+
+        document.getElementById('invite_copy_link')?.addEventListener('click', (event) => {
+          copyLobbyText(buildFriendsInviteUrl(), event.currentTarget, 'Odkaz zkopírován');
+        });
+
+        document.getElementById('invite_native_share')?.addEventListener('click', async (event) => {
+          const url = buildFriendsInviteUrl();
+          if (navigator.share) {
+            try {
+              await navigator.share({ title: 'Vlastenec – hra s přáteli', text: 'Připoj se do mé místnosti ve Vlastenci.', url });
+              return;
+            } catch (err) {
+              if (err?.name === 'AbortError') return;
             }
-          } catch {
-            prompt('Zkopíruj odkaz na místnost:', url.toString());
           }
+          copyLobbyText(url, event.currentTarget, 'Odkaz zkopírován');
+        });
+
+        document.querySelectorAll('.invite-user-tab').forEach(tab => {
+          tab.addEventListener('click', () => {
+            document.querySelectorAll('.invite-user-tab').forEach(x => x.classList.toggle('active', x === tab));
+          });
         });
 
         // ===== CHAT: dva kanály, jedna datová vrstva =====
