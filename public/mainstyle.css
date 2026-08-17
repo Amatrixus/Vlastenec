@@ -3159,3 +3159,61 @@ body.is-game-started #game_chat_drawer .modern-chat-empty {
   top: 7px;
   right: 7px;
 }
+
+/* =========================================================
+   MODE-AWARE LOBBY: RANDOM + BOTS
+   ========================================================= */
+.lobby-mode-info-section {
+  min-height: 0;
+}
+
+.lobby-mode-info-copy {
+  margin: 0;
+  color: rgba(255,255,255,.62);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.lobby-mode-info-state {
+  margin-top: 14px;
+  padding: 12px 14px;
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 12px;
+  background: rgba(255,255,255,.035);
+  color: rgba(255,255,255,.82);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.lobby-bot-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 34px;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: 7px;
+  border: 1px solid rgba(255,148,31,.22);
+  background: rgba(255,148,31,.09);
+  color: #ff941f;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: .12em;
+}
+
+body.lobby-mode-random .lobby-player-card,
+body.lobby-mode-bots .lobby-player-card {
+  min-height: 62px;
+}
+
+body.lobby-mode-random .lobby-categories-v2 .lobby-cat-tile {
+  cursor: default;
+}
+
+body.lobby-mode-random .lobby-categories-v2 .lobby-cat-tile:hover {
+  transform: none;
+}
+
+body.lobby-mode-bots .lobby-chat-panel .chat-tabs {
+  grid-template-columns: 1fr;
+}

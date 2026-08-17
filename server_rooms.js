@@ -1,5 +1,5 @@
 const express = require('express');
-console.log('🧪 VLASTENEC BUILD: 2026-08-17-friends-flow-v3');
+console.log('🧪 VLASTENEC BUILD: 2026-08-17-lobby-modes-v1');
 const http = require('http');
 const { Server } = require('socket.io');
 const path = require('path');
@@ -235,6 +235,11 @@ function buildLobbyState(room, roomId) {
   const allConnected = players.every(p => p.name && p.connected);
   const allReady = players.every(p => p.name && p.connected && p.ready);
 
+  const canStart = (
+    (room.mode === 'friends' && !room.hasStarted && allConnected && allReady) ||
+    (room.mode === 'bots' && !room.hasStarted && !!players[0]?.connected)
+  );
+
   return {
     roomId,
     mode: room.mode,
@@ -243,7 +248,7 @@ function buildLobbyState(room, roomId) {
     settings: room.settings || {},
     allConnected,
     allReady,
-    canStart: room.mode === 'friends' && !room.hasStarted && allConnected && allReady
+    canStart
   };
 }
 
@@ -403,14 +408,18 @@ function roomAddPlayerAndBroadcast(roomId, socket, name) {
   io.to(roomId).emit("updatePlayers", { allNames, displayNames, seatControllers: room.seatControllers });
   io.to(roomId).emit("updateScores", { scores: room.scores });
 
-  // FRIENDS mají skutečnou lobby: po připojení třetího hráče se hra sama nespouští.
-  if (room.mode === 'friends' && !room.hasStarted) {
+  if (!room.hasStarted && room.mode === 'friends') {
+    // FRIENDS: skutečná ready lobby, startuje hostitel ručně.
     room.ready = room.ready || { 1: false, 2: false, 3: false };
     room.ready[myNumber] = false;
     broadcastLobbyState(roomId);
-  } else if (room.players.filter(Boolean).length === MAX_PLAYERS_PER_ROOM && !room.hasStarted) {
-    // RANDOM + BOTI zachovávají původní automatický start.
-    startRoomGame(roomId);
+  } else if (!room.hasStarted && room.mode === 'bots') {
+    // BOTI: zobraz lobby se dvěma připravenými roboty; startuje hráč ručně.
+    broadcastLobbyState(roomId);
+  } else if (!room.hasStarted && room.mode === 'random') {
+    // RANDOM: lobby slouží jako živá fronta. Po třetím hráči start automaticky.
+    broadcastLobbyState(roomId);
+    if (occupiedSeatCount(room) >= MAX_PLAYERS_PER_ROOM) startRoomGame(roomId);
   } else if (room.hasStarted) {
     if (typeof buildRoomSnapshot === 'function') {
       socket.emit("stateSync", { myNumber, snapshot: buildRoomSnapshot(room, roomId) });
@@ -1994,8 +2003,15 @@ io.on('connection', socket => {
     if (!room) return;
 
     const seat = getSeatNumber(room, socket.id);
-    // Ve friends lobby smí kategorie měnit hostitel (seat 1). Po startu už se nemění.
-    if (room.mode === 'friends' && (!seat || seat !== 1 || room.hasStarted)) {
+
+    // RANDOM má nastavení uzamčené matchmakingem; po zařazení do fronty se nemění.
+    if (room.mode === 'random') {
+      socket.emit('settings:applied', { settings: room.settings || {} });
+      return;
+    }
+
+    // FRIENDS i BOTI: nastavení může před startem měnit pouze seat 1.
+    if (['friends','bots'].includes(room.mode) && (!seat || seat !== 1 || room.hasStarted)) {
       socket.emit('settings:applied', { settings: room.settings || {} });
       return;
     }
@@ -2010,7 +2026,7 @@ io.on('connection', socket => {
     }
 
     io.to(roomId).emit('settings:applied', { settings: room.settings });
-    if (room.mode === 'friends' && !room.hasStarted) broadcastLobbyState(roomId);
+    if (['friends','bots'].includes(room.mode) && !room.hasStarted) broadcastLobbyState(roomId);
 
     console.log('🧩 settings:update', roomId, room.settings);
   });
@@ -2029,13 +2045,17 @@ io.on('connection', socket => {
 
   socket.on('lobby:start', ({ roomId } = {}) => {
     const room = rooms[roomId];
-    if (!room || room.mode !== 'friends' || room.hasStarted) return;
+    if (!room || !['friends','bots'].includes(room.mode) || room.hasStarted) return;
     const seat = getSeatNumber(room, socket.id);
     if (seat !== 1) return;
 
     const state = buildLobbyState(room, roomId);
     if (!state.canStart) {
-      socket.emit('lobby:error', { message: 'Všichni tři hráči musí být připojeni a připraveni.' });
+      socket.emit('lobby:error', {
+        message: room.mode === 'friends'
+          ? 'Všichni tři hráči musí být připojeni a připraveni.'
+          : 'Trénink zatím není připraven.'
+      });
       broadcastLobbyState(roomId);
       return;
     }
@@ -2257,19 +2277,38 @@ socket.on("joinRoom", ({ room, settings }) => {
 
 
 
-  socket.on("submitName", name => {
-    // ✅ už je socket v nějaké room (friends)? ignoruj random přihlášku
+  socket.on("submitName", payload => {
+    // Už je socket v nějaké room? Nezařazuj ho znovu.
     if (socket.data?.joinedRoom) return;
 
-    // ✅ vezmi první NEplnou room, která je opravdu random
-    let roomId = Object.keys(rooms).find(id =>
-      rooms[id].mode === 'random' && occupiedSeatCount(rooms[id]) < MAX_PLAYERS_PER_ROOM
-    );
+    const isObject = payload && typeof payload === 'object';
+    const name = String(isObject ? payload.name : payload || '').trim() || 'Hráč';
+    const incomingSettings = sanitizeSettings(isObject ? (payload.settings || {}) : {});
+    incomingSettings.mode = 'random';
 
-    // žádná random room? vytvoř novou
+    const normalizeCats = settings => {
+      const raw = Array.isArray(settings?.cats) && settings.cats.length
+        ? settings.cats
+        : [1,2,3,4,5,6,7,8,9];
+      return [...new Set(raw.map(Number).filter(n => n >= 1 && n <= 9))].sort((a,b) => a-b);
+    };
+    const wantedCats = normalizeCats(incomingSettings);
+    const wantedKey = wantedCats.join(',');
+    incomingSettings.cats = wantedCats;
+
+    // Vezmi první čekající RANDOM room se STEJNOU sadou kategorií.
+    let roomId = Object.keys(rooms).find(id => {
+      const room = rooms[id];
+      if (!room || room.mode !== 'random' || room.hasStarted) return false;
+      if (occupiedSeatCount(room) >= MAX_PLAYERS_PER_ROOM) return false;
+      return normalizeCats(room.settings || {}).join(',') === wantedKey;
+    });
+
+    // Žádná kompatibilní fronta? Založ novou.
     if (!roomId) {
       roomId = `room_${Date.now()}`;
-      makeEmptyRoom(roomId, 'random');
+      const room = makeEmptyRoom(roomId, 'random');
+      room.settings = { ...incomingSettings, mode: 'random' };
     }
 
     socket.data = socket.data || {};
@@ -2277,12 +2316,8 @@ socket.on("joinRoom", ({ room, settings }) => {
     socket.data.name = name;
 
     roomAddPlayerAndBroadcast(roomId, socket, name);
-
-    console.log(`🎮 ${name} joined ${roomId}`);
+    console.log(`🎮 RANDOM: ${name} joined ${roomId} [cats=${wantedKey}]`);
   });
-
-
-
 
 
 

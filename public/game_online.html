@@ -253,6 +253,7 @@
 
     // --- Jediná inicializace socketu ---
     const socket = io();
+    console.log('🧪 VLASTENEC CLIENT: lobby-modes-v1');
 
 
 
@@ -663,7 +664,13 @@ window.addEventListener('gameStartedAfterAnimation', () => {
         if (gameMode === 'bots') {
             socket.emit('createRoom', { settings: { ...settings, name: myName } });
         } else {
-            socket.emit('submitName', myName);
+            // RANDOM: server dostane i zvolenou sadu kategorií a páruje jen hráče
+            // se stejným nastavením. Díky tomu lobby nikdy nepřebírá nastavení
+            // náhodně od posledního připojeného hráče.
+            socket.emit('submitName', {
+              name: myName,
+              settings: { ...settings, mode: 'random', name: myName }
+            });
         }
     });
 
@@ -716,7 +723,9 @@ window.addEventListener('gameStartedAfterAnimation', () => {
 
         // Nastavení friends lobby autoritativně spravuje hostitel (seat 1).
         // U random/bots se chováme stejně jako dřív.
-        if (gameMode !== 'friends' || number === 1) {
+        // FRIENDS: nastavuje hostitel. BOTI: nastavuje jediný lidský hráč.
+        // RANDOM: nastavení je zamknuté už matchmakingem na serveru.
+        if ((gameMode === 'friends' && number === 1) || gameMode === 'bots') {
           socket.emit('settings:update', {
              roomId: currentRoomId,
              settings: { mode: gameMode, cats: catIds, catNames }
@@ -1501,8 +1510,8 @@ if (regionValues && typeof regionValues === 'object') {
             <div class="lobby-brand-block">
               <img src="logo.svg" alt="Vlastenec" class="lobby-logo">
               <div>
-                <div class="lobby-eyebrow">HRA S PŘÁTELI</div>
-                <div class="lobby-title">Připravte bojiště</div>
+                <div id="lobby_mode_eyebrow" class="lobby-eyebrow">HRA S PŘÁTELI</div>
+                <div id="lobby_mode_title" class="lobby-title">Připravte bojiště</div>
               </div>
             </div>
 
@@ -1521,7 +1530,7 @@ if (regionValues && typeof regionValues === 'object') {
                 <div id="lobby_list" class="lobby-player-grid lobby-player-list-v2"></div>
               </section>
 
-              <section class="lobby-section lobby-invite-section">
+              <section id="lobby_invite_section" class="lobby-section lobby-invite-section">
                 <div class="lobby-section-head compact invite-heading">
                   <div>
                     <span class="lobby-section-kicker">POZVÁNKA</span>
@@ -1543,6 +1552,17 @@ if (regionValues && typeof regionValues === 'object') {
                 </div>
 
                 <p class="lobby-invite-note">Odkaz i kód fungují bez účtu. Pozvánky přihlášeným hráčům jsou připravené pro budoucí profily.</p>
+              </section>
+
+              <section id="lobby_mode_info_section" class="lobby-section lobby-mode-info-section lobby-hidden">
+                <div class="lobby-section-head compact">
+                  <div>
+                    <span id="lobby_mode_info_kicker" class="lobby-section-kicker">MATCHMAKING</span>
+                    <h2 id="lobby_mode_info_title">Hledání soupeřů</h2>
+                  </div>
+                </div>
+                <p id="lobby_mode_info_text" class="lobby-mode-info-copy"></p>
+                <div id="lobby_mode_info_state" class="lobby-mode-info-state"></div>
               </section>
             </aside>
 
@@ -1626,8 +1646,8 @@ if (regionValues && typeof regionValues === 'object') {
                 <span class="chat-online-dot" title="Připojeno"></span>
               </div>
               <div class="chat-tabs" role="tablist">
-                <button class="chat-channel-tab active" data-channel="session" type="button">Místnost</button>
-                <button class="chat-channel-tab" data-channel="community" type="button">Komunita</button>
+                <button id="lobby_chat_session_tab" class="chat-channel-tab active" data-channel="session" type="button">Místnost</button>
+                <button id="lobby_chat_community_tab" class="chat-channel-tab" data-channel="community" type="button">Komunita</button>
               </div>
               <div id="lobby_chat_messages" class="modern-chat-messages"></div>
               <div class="modern-chat-compose">
@@ -2748,7 +2768,13 @@ if (regionValues && typeof regionValues === 'object') {
 
             const side = document.createElement('div');
             side.className = 'lobby-player-side';
-            if (p.host) {
+            if (p.controller === 'bot') {
+              const bot = document.createElement('span');
+              bot.className = 'lobby-bot-badge';
+              bot.textContent = 'BOT';
+              side.appendChild(bot);
+            }
+            if (p.host && gameMode === 'friends') {
               const host = document.createElement('span');
               host.className = 'lobby-host-badge';
               host.textContent = 'HOST';
@@ -2784,15 +2810,20 @@ if (regionValues && typeof regionValues === 'object') {
 
         function setCategoryAccess() {
           const isFriends = gameMode === 'friends';
-          const isHost = isFriends && Number(myPlayerNumber) === 1;
+          const isBots = gameMode === 'bots';
+          const canEdit = (isFriends || isBots) && Number(myPlayerNumber) === 1;
           document.querySelectorAll('#lobby_category_tiles input[type="checkbox"]').forEach(input => {
-            input.disabled = !isHost;
+            input.disabled = !canEdit;
           });
           const hint = document.getElementById('lobby_category_hint');
           if (hint) {
-            hint.textContent = !isFriends
-              ? 'Kategorie byly zvoleny před vstupem do hry.'
-              : (isHost ? 'Kliknutím kategorie zapneš nebo vypneš.' : 'Kategorie nastavuje hostitel.');
+            if (gameMode === 'random') {
+              hint.textContent = 'Okruhy jsou pro tuto frontu zamknuté.';
+            } else if (isBots) {
+              hint.textContent = canEdit ? 'Kliknutím kategorie zapneš nebo vypneš.' : 'Vyber okruhy pro trénink.';
+            } else {
+              hint.textContent = canEdit ? 'Kliknutím kategorie zapneš nebo vypneš.' : 'Kategorie nastavuje hostitel.';
+            }
           }
         }
 
@@ -2809,9 +2840,42 @@ if (regionValues && typeof regionValues === 'object') {
           const startBtn = document.getElementById('lobby_start_btn');
           const title = document.getElementById('lobby_action_title');
           const note = document.getElementById('lobby_action_note');
+          const infoState = document.getElementById('lobby_mode_info_state');
           const isHost = Number(myPlayerNumber) === Number(state.hostSeat || 1);
+          const connected = (state.players || []).filter(p => p.name && p.connected).length;
+          const ready = (state.players || []).filter(p => p.name && p.connected && p.ready).length;
 
+          if (gameMode === 'random') {
+            if (readyBtn) readyBtn.style.display = 'none';
+            if (startBtn) startBtn.style.display = 'none';
+            showLobbyMessage(`${connected}/3 nalezeni`, connected >= 2 ? 'ready' : 'waiting');
+            if (title) title.textContent = connected >= 3 ? 'Soupeři nalezeni' : 'Hledáme soupeře';
+            if (note) note.textContent = connected >= 3
+              ? 'Zápas se právě spouští.'
+              : 'Jakmile bude trojice kompletní, hra začne automaticky.';
+            if (infoState) infoState.textContent = connected <= 1
+              ? 'Ve frontě jsi zatím sám.'
+              : `Ve frontě jsou ${connected} z 3 hráčů.`;
+            return;
+          }
+
+          if (gameMode === 'bots') {
+            if (readyBtn) readyBtn.style.display = 'none';
+            if (startBtn) {
+              startBtn.style.display = isHost ? '' : 'none';
+              startBtn.disabled = !state.canStart;
+              startBtn.textContent = 'Spustit hru';
+            }
+            showLobbyMessage('2 boti připraveni', 'ready');
+            if (title) title.textContent = 'Trénink je připraven';
+            if (note) note.textContent = 'Vyber okruhy a spusť zápas, až budeš chtít.';
+            if (infoState) infoState.textContent = 'Robot Emil a Robot Jirka čekají na start.';
+            return;
+          }
+
+          // FRIENDS
           if (readyBtn) {
+            readyBtn.style.display = '';
             readyBtn.disabled = !me?.connected;
             readyBtn.classList.toggle('is-ready', !!me?.ready);
             readyBtn.textContent = me?.ready ? 'Zrušit připravenost' : 'Jsem připraven';
@@ -2821,8 +2885,6 @@ if (regionValues && typeof regionValues === 'object') {
             startBtn.disabled = !state.canStart;
           }
 
-          const connected = (state.players || []).filter(p => p.name && p.connected).length;
-          const ready = (state.players || []).filter(p => p.name && p.connected && p.ready).length;
           if (state.canStart) {
             showLobbyMessage('Všichni připraveni', 'ready');
             if (title) title.textContent = isHost ? 'Všichni jsou připraveni' : 'Čekáme na hostitele';
@@ -2852,7 +2914,7 @@ if (regionValues && typeof regionValues === 'object') {
         }
 
         function emitCategorySettings(changedInput) {
-          if (gameMode !== 'friends' || Number(myPlayerNumber) !== 1 || !currentRoomId) return;
+          if (!['friends','bots'].includes(gameMode) || Number(myPlayerNumber) !== 1 || !currentRoomId) return;
           let cats = selectedCategories();
           if (!cats.length) {
             changedInput.checked = true;
@@ -3118,14 +3180,46 @@ if (regionValues && typeof regionValues === 'object') {
         if (socket.connected) socket.emit('community:chat:history:get');
         socket.on('connect', () => socket.emit('community:chat:history:get'));
 
-        if (gameMode !== 'friends') {
-          document.getElementById('lobby_ready_btn')?.classList.add('lobby-hidden');
-          document.getElementById('lobby_start_btn')?.classList.add('lobby-hidden');
-          const actionTitle = document.getElementById('lobby_action_title');
-          const actionNote = document.getElementById('lobby_action_note');
-          if (actionTitle) actionTitle.textContent = 'Hledáme soupeře';
-          if (actionNote) actionNote.textContent = 'Hra se spustí automaticky, jakmile bude připravena.';
+        // ===== MODE-SPECIFIC LOBBY CHROME =====
+        const modeEyebrow = document.getElementById('lobby_mode_eyebrow');
+        const modeTitle = document.getElementById('lobby_mode_title');
+        const inviteSection = document.getElementById('lobby_invite_section');
+        const modeInfoSection = document.getElementById('lobby_mode_info_section');
+        const infoKicker = document.getElementById('lobby_mode_info_kicker');
+        const infoTitle = document.getElementById('lobby_mode_info_title');
+        const infoText = document.getElementById('lobby_mode_info_text');
+        const sessionTab = document.getElementById('lobby_chat_session_tab');
+        const communityTab = document.getElementById('lobby_chat_community_tab');
+
+        document.body.classList.add(`lobby-mode-${gameMode}`);
+
+        if (gameMode === 'random') {
+          if (modeEyebrow) modeEyebrow.textContent = 'NÁHODNÍ SOUPEŘI';
+          if (modeTitle) modeTitle.textContent = 'Hledáme protihráče';
+          inviteSection?.classList.add('lobby-hidden');
+          modeInfoSection?.classList.remove('lobby-hidden');
+          if (infoKicker) infoKicker.textContent = 'MATCHMAKING';
+          if (infoTitle) infoTitle.textContent = 'Automatická fronta';
+          if (infoText) infoText.textContent = 'Spojujeme tě pouze s hráči se stejným výběrem kategorií. Jakmile se najdou tři, zápas začne automaticky.';
+        } else if (gameMode === 'bots') {
+          if (modeEyebrow) modeEyebrow.textContent = 'HRA S BOTY';
+          if (modeTitle) modeTitle.textContent = 'Nastavte trénink';
+          inviteSection?.classList.add('lobby-hidden');
+          modeInfoSection?.classList.remove('lobby-hidden');
+          if (infoKicker) infoKicker.textContent = 'TRÉNINK';
+          if (infoTitle) infoTitle.textContent = 'Dva soupeři jsou připraveni';
+          if (infoText) infoText.textContent = 'Vyber si okruhy otázek a spusť zápas, až budeš chtít. Boti nečekají na další hráče.';
+          // V lobby proti botům nemá místnostní chat praktický smysl – zobraz komunitu.
+          activeChatChannel = 'community';
+          sessionTab?.classList.add('lobby-hidden');
+          communityTab?.classList.add('active');
+        } else {
+          if (modeEyebrow) modeEyebrow.textContent = 'HRA S PŘÁTELI';
+          if (modeTitle) modeTitle.textContent = 'Připravte bojiště';
+          inviteSection?.classList.remove('lobby-hidden');
+          modeInfoSection?.classList.add('lobby-hidden');
         }
+
         setRoomCode(currentRoomId);
         setCategoryAccess();
         syncChatUI();
