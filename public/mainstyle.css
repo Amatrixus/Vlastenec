@@ -1409,16 +1409,15 @@ fill: white;
 
 
 .highlighted_stick{
-  /* Aktivní hráč: kolík zůstává ve své barvě, lehce vystoupí a rozsvítí se. */
+  /* Aktivní hráč: jen jemné zvětšení a decentní záře, bez posunu. */
   z-index: 8;
   opacity: 1 !important;
-  transform: translateY(-6px) scale(1.45) skew(-15deg, -15deg) !important;
+  transform: scale(1.12) skew(-15deg, -15deg) !important;
   filter:
-    brightness(1.55)
-    saturate(1.2)
-    drop-shadow(0 0 3px var(--stick-glow, rgba(255,255,255,.95)))
-    drop-shadow(0 0 8px var(--stick-glow, rgba(255,255,255,.78)));
-  box-shadow: 0 0 8px 2px var(--stick-glow, rgba(255,255,255,.78));
+    brightness(1.18)
+    saturate(1.06)
+    drop-shadow(0 0 4px var(--stick-glow, rgba(255,255,255,.45)));
+  box-shadow: 0 0 4px 1px var(--stick-glow, rgba(255,255,255,.28));
 }
 
 
@@ -4437,4 +4436,4 @@ body.is-game-started #game_chat_drawer,
   z-index: 9999 !important;
 }
 
-/* 🧪 VLASTENEC FIX: chat-turn-stick-v1 */
+/* 🧪 VLASTENEC FIX: chat-turn-stick-v2 */
