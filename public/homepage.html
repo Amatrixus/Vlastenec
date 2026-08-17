@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#16100c" />
+  <title>VLASTENEC — Hlavní stránka</title>
+  <link rel="stylesheet" href="homepage.css" />
+</head>
+<body>
+  <div class="portal-backdrop" aria-hidden="true">
+    <div class="portal-lion"></div>
+    <div class="portal-glow glow-left"></div>
+    <div class="portal-glow glow-right"></div>
+    <div class="portal-grid"></div>
+  </div>
+
+  <main class="portal-stage">
+    <section class="portal-shell" aria-label="Hlavní nabídka Vlastence">
+      <header class="portal-header">
+        <a class="portal-brand" href="homepage.html" aria-label="Vlastenec — hlavní stránka">
+          <img src="logo.svg" alt="Vlastenec" />
+          <span class="portal-brand-divider"></span>
+          <span class="portal-brand-caption">Vědomostní strategie</span>
+        </a>
+
+        <nav class="portal-actions" aria-label="Uživatelská nabídka">
+          <a class="utility-link" href="settings.html">Nastavení</a>
+          <button class="profile-chip" type="button" title="Přihlášení bude doplněno později">
+            <span class="profile-copy">
+              <strong>Přihlásit se</strong>
+              <small>Ukládej postup a výsledky</small>
+            </span>
+            <img src="avatar.png" alt="" />
+          </button>
+        </nav>
+      </header>
+
+      <div class="portal-main">
+        <div class="portal-heading">
+          <div>
+            <p class="eyebrow"><span></span> HLAVNÍ PORTÁL</p>
+            <h1>Jak chceš dnes <em>bojovat o mapu?</em></h1>
+          </div>
+          <p class="portal-lead">Vyber si režim. Pravidla zůstávají stejná — mění se jen soupeři a cesta k vítězství.</p>
+        </div>
+
+        <section class="mode-grid" aria-label="Herní režimy">
+          <a class="mode-card random" href="altersettings.html?mode=random">
+            <img class="mode-art" src="random.png" alt="" />
+            <span class="mode-vignette"></span>
+            <span class="mode-number">01</span>
+            <div class="mode-content">
+              <span class="mode-kicker">RYCHLÁ HRA</span>
+              <h2>Náhodní soupeři</h2>
+              <p>Najdeme ti dva soupeře a můžeš rovnou bojovat o mapu.</p>
+              <span class="mode-cta">Najít soupeře <b>→</b></span>
+            </div>
+          </a>
+
+          <a class="mode-card friends" href="altersettings.html?mode=friends">
+            <img class="mode-art" src="friends.png" alt="" />
+            <span class="mode-vignette"></span>
+            <span class="mode-number">02</span>
+            <div class="mode-content">
+              <span class="mode-kicker">SOUKROMÁ HRA</span>
+              <h2>Hra s přáteli</h2>
+              <p>Vytvoř místnost, pozvi dva přátele a připravte si vlastní partii.</p>
+              <span class="mode-cta">Vytvořit místnost <b>→</b></span>
+            </div>
+          </a>
+
+          <a class="mode-card bots" href="altersettings.html?mode=bots">
+            <img class="mode-art" src="bots.png" alt="" />
+            <span class="mode-vignette"></span>
+            <span class="mode-number">03</span>
+            <div class="mode-content">
+              <span class="mode-kicker">TRÉNINK</span>
+              <h2>Hra s boty</h2>
+              <p>Hraj vlastním tempem, zkoušej taktiku a piluj slabé kategorie.</p>
+              <span class="mode-cta">Spustit trénink <b>→</b></span>
+            </div>
+          </a>
+
+          <a class="mode-card league" href="altersettings.html?mode=liga">
+            <img class="mode-art" src="liga.png" alt="" />
+            <span class="mode-vignette"></span>
+            <span class="mode-number">04</span>
+            <div class="mode-content">
+              <span class="mode-kicker">SOUTĚŽ</span>
+              <h2>Liga</h2>
+              <p>Buduj dlouhodobý profil, stoupej divizemi a porovnávej se s nejlepšími.</p>
+              <span class="mode-cta">Otevřít ligu <b>→</b></span>
+            </div>
+          </a>
+        </section>
+      </div>
+
+      <footer class="portal-footer">
+        <div class="portal-status">
+          <span class="status-dot"></span>
+          <span>VLASTENEC</span>
+          <i></i>
+          <span>4 herní režimy</span>
+          <i></i>
+          <span>3 hráči · 15 regionů · 1 vítěz</span>
+        </div>
+        <button class="footer-community" type="button" title="Komunitní část připravujeme">
+          <span class="community-dot"></span>
+          Komunita
+          <small>brzy</small>
+        </button>
+      </footer>
+    </section>
+  </main>
+
+  <script>
+    // Pokud uživatel otevře homepage přímo, bereme intro jako dokončené.
+    try { localStorage.setItem('vlastenec_intro_seen', '1'); } catch (_) {}
+  </script>
+</body>
+</html>

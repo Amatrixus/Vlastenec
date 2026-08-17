@@ -12,7 +12,7 @@
       const forceIntro = params.get('intro') === '1';
       const hasSeenIntro = localStorage.getItem('vlastenec_intro_seen') === '1';
       if (hasSeenIntro && !forceIntro) {
-        window.location.replace('modalternative.html');
+        window.location.replace('homepage.html');
       }
     })();
   </script>
@@ -109,7 +109,7 @@
   <script>
     document.getElementById('intro-play')?.addEventListener('click', () => {
       localStorage.setItem('vlastenec_intro_seen', '1');
-      window.location.href = 'modalternative.html';
+      window.location.href = 'homepage.html';
     });
   </script>
 </body>
