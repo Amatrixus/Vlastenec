@@ -1,5 +1,5 @@
 const express = require('express');
-console.log('🧪 VLASTENEC BUILD: 2026-08-17-lobby-bot-start-v1');
+console.log('🧪 VLASTENEC BUILD: 2026-08-17-guest-name-v1');
 const http = require('http');
 const { Server } = require('socket.io');
 const path = require('path');
@@ -19,7 +19,7 @@ const io = new Server(server, { cors: { origin: "*" } }); // (později si omezí
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, '0.0.0.0', () => {
   console.log('Server běží na', PORT);
-  console.log('🧪 VLASTENEC BUILD: 2026-08-17-lobby-bot-start-v1');
+  console.log('🧪 VLASTENEC BUILD: 2026-08-17-guest-name-v1');
 });
 
 
@@ -220,6 +220,21 @@ function makeEmptyRoom(roomId, mode = 'random') {
   return rooms[roomId];
 }
 
+
+function sanitizePlayerName(value) {
+  return String(value || '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, 24);
+}
+
+function isPlayerNameTaken(room, name, exceptSeat = null) {
+  const normalized = String(name || '').toLocaleLowerCase('cs-CZ');
+  return (room?.players || []).some((p, index) => {
+    if (!p?.name || (exceptSeat && index + 1 === Number(exceptSeat))) return false;
+    return String(p.name).toLocaleLowerCase('cs-CZ') === normalized;
+  });
+}
 
 // ===== LOBBY =====
 function buildLobbyState(room, roomId) {
@@ -2090,6 +2105,54 @@ io.on('connection', socket => {
 
 
 
+  socket.on('lobby:rename', ({ roomId, name } = {}) => {
+    const boundRoomId = socket.data?.roomId || socket.data?.joinedRoom;
+    const safeRoomId = sanitizeRoomId(roomId || boundRoomId);
+    const room = safeRoomId ? rooms[safeRoomId] : null;
+
+    if (!room || safeRoomId !== boundRoomId || room.hasStarted) {
+      socket.emit('lobby:rename:error', { message: 'Jméno lze změnit pouze před začátkem hry.' });
+      return;
+    }
+
+    const seat = getSeatNumber(room, socket.id);
+    if (!seat || room.seatControllers?.[seat] === 'bot') {
+      socket.emit('lobby:rename:error', { message: 'Hráče se nepodařilo najít.' });
+      return;
+    }
+
+    const safeName = sanitizePlayerName(name);
+    if (safeName.length < 2) {
+      socket.emit('lobby:rename:error', { message: 'Jméno musí mít alespoň 2 znaky.' });
+      return;
+    }
+    if (isPlayerNameTaken(room, safeName, seat)) {
+      socket.emit('lobby:rename:error', { message: 'Toto jméno už v místnosti používá jiný hráč.' });
+      return;
+    }
+
+    room.players[seat - 1].name = safeName;
+    socket.data.name = safeName;
+
+    const allNames = {};
+    room.players.forEach((p, idx) => { if (p) allNames[idx + 1] = p.name; });
+    const displayNames = {
+      1: displayName(room, 1, true),
+      2: displayName(room, 2, true),
+      3: displayName(room, 3, true)
+    };
+
+    io.to(safeRoomId).emit('updatePlayers', { allNames, displayNames, seatControllers: room.seatControllers });
+    broadcastLobbyState(safeRoomId);
+    socket.emit('lobby:rename:ok', { name: safeName });
+
+    if (room.mode === 'random' && room.matchKind === 'custom') {
+      broadcastPublicRandomRooms();
+    }
+
+    console.log(`✏️ ${safeRoomId}: seat ${seat} renamed to ${safeName}`);
+  });
+
   socket.on('settings:update', ({ roomId, settings }) => {
     const room = rooms[roomId];
     if (!room) return;
@@ -2212,7 +2275,10 @@ io.on('connection', socket => {
 
     // rebinding hráče na nový socket.id
     const rec = room.players[seat - 1];
-    if (rec) rec.id = socket.id;
+    if (rec) {
+      rec.id = socket.id;
+      socket.data.name = rec.name;
+    }
 
     // když byl dočasně bot → vrať člověka k volantu
     room.seatControllers[seat] = "human";

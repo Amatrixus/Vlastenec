@@ -237,8 +237,38 @@
     
 
     
-    // --- Jméno (fallback na prompt jen když není v URL) ---
-    let myName = playerName || prompt("Zadej své jméno:") || "Host";
+    // --- Identita hráče ---
+    // Přihlášený profil může v budoucnu dodat jméno přes window.VLASTENEC_PROFILE.
+    // Bez profilu dostane každý browser tab stabilní hostovské jméno Host_1234.
+    function resolveProfilePlayerName() {
+      const profile = window.VLASTENEC_PROFILE;
+      const candidate = profile?.displayName || profile?.name || '';
+      return String(candidate || '').trim().slice(0, 24);
+    }
+
+    function createGuestPlayerName() {
+      let n;
+      try {
+        const buf = new Uint32Array(1);
+        crypto.getRandomValues(buf);
+        n = 1000 + (buf[0] % 9000);
+      } catch {
+        n = 1000 + Math.floor(Math.random() * 9000);
+      }
+      return `Host_${n}`;
+    }
+
+    function getGuestPlayerName() {
+      const existing = String(sessionStorage.getItem('vl_guest_name') || '').trim();
+      if (existing) return existing.slice(0, 24);
+      const generated = createGuestPlayerName();
+      sessionStorage.setItem('vl_guest_name', generated);
+      return generated;
+    }
+
+    const profilePlayerName = resolveProfilePlayerName();
+    const isGuestPlayer = !profilePlayerName;
+    let myName = profilePlayerName || playerName || getGuestPlayerName();
 
     // --- Fallback proměnné ještě před prvními listenery ---
     let player1 = 'Robot Emil';
@@ -253,7 +283,7 @@
 
     // --- Jediná inicializace socketu ---
     const socket = io();
-    console.log('🧪 VLASTENEC CLIENT: lobby-bot-start-v1');
+    console.log('🧪 VLASTENEC CLIENT: guest-name-v1');
 
     let randomSelectionMade = false;
 
@@ -562,6 +592,13 @@ function applySnapshotWhenReady(myNumber, snapshot, attempt = 0) {
 // === Socket: autoritativní stav od serveru ===
 socket.on("stateSync", ({ myNumber, snapshot }) => {
   DBG('stateSync RX', { myNumber, hasStarted: snapshot?.hasStarted, roomId: snapshot?.roomId });
+  const syncedName = snapshot?.allNames?.[myNumber];
+  if (syncedName) {
+    myName = String(syncedName);
+    settings.name = myName;
+    sessionStorage.setItem('vl_name', myName);
+    if (isGuestPlayer) sessionStorage.setItem('vl_guest_name', myName);
+  }
   applySnapshotWhenReady(myNumber, snapshot);
 
   window.seatControllers = snapshot.seatControllers || window.seatControllers;
@@ -788,7 +825,13 @@ window.addEventListener('gameStartedAfterAnimation', () => {
 
 
 
-         sessionStorage.setItem('vl_room', currentRoomId);
+        if (allNames && allNames[number]) {
+          myName = String(allNames[number]);
+          settings.name = myName;
+          if (isGuestPlayer) sessionStorage.setItem('vl_guest_name', myName);
+        }
+
+        sessionStorage.setItem('vl_room', currentRoomId);
         sessionStorage.setItem('vl_name', myName);
         sessionStorage.setItem('vl_seat', String(myPlayerNumber));
         sessionStorage.setItem('vl_mode', gameMode);
@@ -1060,7 +1103,10 @@ if (regionValues && typeof regionValues === 'object') {
             let lastSeatControllers = {};
 
             socket.on("updatePlayers", ({ allNames, displayNames, seatControllers }) => {
-                if (allNames) window.allNames = allNames;
+                if (allNames) {
+                    window.allNames = allNames;
+                    if (typeof window.syncNameTeamMap === 'function') window.syncNameTeamMap(allNames);
+                }
                 if (displayNames) window.displayNames = displayNames;
                 if (seatControllers) window.seatControllers = seatControllers;
 
@@ -1743,6 +1789,25 @@ if (regionValues && typeof regionValues === 'object') {
               </div>
             </aside>
           </div>
+        </div>
+
+        <div id="lobby_rename_overlay" class="lobby-rename-overlay" aria-hidden="true">
+          <section class="lobby-rename-dialog" role="dialog" aria-modal="true" aria-labelledby="lobby_rename_title">
+            <div class="lobby-rename-head">
+              <div>
+                <span class="lobby-section-kicker">JMÉNO HRÁČE</span>
+                <h2 id="lobby_rename_title">Změnit jméno</h2>
+              </div>
+              <button id="lobby_rename_close" type="button" class="invite-close" aria-label="Zavřít">×</button>
+            </div>
+            <p class="lobby-rename-copy">Toto jméno uvidí ostatní hráči během hry.</p>
+            <input id="lobby_rename_input" class="lobby-rename-input" type="text" minlength="2" maxlength="24" autocomplete="off" spellcheck="false">
+            <div id="lobby_rename_error" class="lobby-rename-error" aria-live="polite"></div>
+            <div class="lobby-rename-actions">
+              <button id="lobby_rename_cancel" type="button" class="lobby-btn lobby-btn-secondary">Zrušit</button>
+              <button id="lobby_rename_save" type="button" class="lobby-btn lobby-btn-primary">Uložit jméno</button>
+            </div>
+          </section>
         </div>
 
         <div id="lobby_invite_overlay" class="invite-overlay" aria-hidden="true">
@@ -2851,7 +2916,19 @@ if (regionValues && typeof regionValues === 'object') {
             else if (!p.connected) meta.textContent = 'Odpojen';
             else if (p.ready) meta.textContent = 'Připraven';
             else meta.textContent = 'V lobby';
-            info.append(name, meta);
+            info.appendChild(name);
+            const metaRow = document.createElement('div');
+            metaRow.className = 'lobby-player-meta-row';
+            metaRow.appendChild(meta);
+            if (isGuestPlayer && p.connected && p.controller !== 'bot' && Number(p.seat) === Number(myPlayerNumber)) {
+              const rename = document.createElement('button');
+              rename.type = 'button';
+              rename.className = 'lobby-rename-trigger';
+              rename.textContent = 'Změnit jméno';
+              rename.addEventListener('click', openRenameDialog);
+              metaRow.appendChild(rename);
+            }
+            info.appendChild(metaRow);
 
             const side = document.createElement('div');
             side.className = 'lobby-player-side';
@@ -3105,6 +3182,80 @@ if (regionValues && typeof regionValues === 'object') {
           if (currentRoomId) socket.emit('lobby:start', { roomId: currentRoomId });
         });
 
+        function openRenameDialog() {
+          if (!isGuestPlayer || !currentRoomId || !myPlayerNumber || document.body.classList.contains('is-game-started')) return;
+          const overlay = document.getElementById('lobby_rename_overlay');
+          const input = document.getElementById('lobby_rename_input');
+          const error = document.getElementById('lobby_rename_error');
+          const save = document.getElementById('lobby_rename_save');
+          if (!overlay || !input) return;
+          input.value = myName || '';
+          if (error) error.textContent = '';
+          if (save) save.disabled = false;
+          overlay.classList.add('open');
+          overlay.setAttribute('aria-hidden', 'false');
+          requestAnimationFrame(() => {
+            input.focus();
+            input.select();
+          });
+        }
+
+        function closeRenameDialog() {
+          const overlay = document.getElementById('lobby_rename_overlay');
+          if (!overlay) return;
+          overlay.classList.remove('open');
+          overlay.setAttribute('aria-hidden', 'true');
+        }
+
+        function submitRename() {
+          const input = document.getElementById('lobby_rename_input');
+          const error = document.getElementById('lobby_rename_error');
+          const save = document.getElementById('lobby_rename_save');
+          if (!input || !currentRoomId) return;
+          const value = String(input.value || '').replace(/\s+/g, ' ').trim();
+          if (value.length < 2) {
+            if (error) error.textContent = 'Jméno musí mít alespoň 2 znaky.';
+            input.focus();
+            return;
+          }
+          if (save) save.disabled = true;
+          if (error) error.textContent = '';
+          socket.emit('lobby:rename', { roomId: currentRoomId, name: value });
+        }
+
+        document.getElementById('lobby_rename_close')?.addEventListener('click', closeRenameDialog);
+        document.getElementById('lobby_rename_cancel')?.addEventListener('click', closeRenameDialog);
+        document.getElementById('lobby_rename_save')?.addEventListener('click', submitRename);
+        document.getElementById('lobby_rename_input')?.addEventListener('keydown', event => {
+          if (event.key === 'Enter') {
+            event.preventDefault();
+            submitRename();
+          }
+        });
+        document.getElementById('lobby_rename_overlay')?.addEventListener('click', event => {
+          if (event.target?.id === 'lobby_rename_overlay') closeRenameDialog();
+        });
+
+        socket.on('lobby:rename:ok', ({ name } = {}) => {
+          const safeName = String(name || '').trim();
+          if (safeName) {
+            myName = safeName;
+            settings.name = safeName;
+            sessionStorage.setItem('vl_name', safeName);
+            if (isGuestPlayer) sessionStorage.setItem('vl_guest_name', safeName);
+          }
+          const save = document.getElementById('lobby_rename_save');
+          if (save) save.disabled = false;
+          closeRenameDialog();
+        });
+
+        socket.on('lobby:rename:error', ({ message } = {}) => {
+          const error = document.getElementById('lobby_rename_error');
+          const save = document.getElementById('lobby_rename_save');
+          if (error) error.textContent = message || 'Jméno se nepodařilo změnit.';
+          if (save) save.disabled = false;
+        });
+
         function openInvitePanel() {
           syncInviteRoomCode();
           const overlay = document.getElementById('lobby_invite_overlay');
@@ -3127,7 +3278,10 @@ if (regionValues && typeof regionValues === 'object') {
           if (event.target?.id === 'lobby_invite_overlay') closeInvitePanel();
         });
         document.addEventListener('keydown', (event) => {
-          if (event.key === 'Escape') closeInvitePanel();
+          if (event.key === 'Escape') {
+            closeInvitePanel();
+            closeRenameDialog();
+          }
         });
 
         document.getElementById('lobby_copy_code')?.addEventListener('click', (event) => {
