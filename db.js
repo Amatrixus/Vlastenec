@@ -67,6 +67,32 @@ CREATE TABLE IF NOT EXISTS player_profiles (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+CREATE TABLE IF NOT EXISTS profile_matches (
+  id BIGSERIAL PRIMARY KEY,
+  user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  event_id VARCHAR(80) NOT NULL,
+  played_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  mode VARCHAR(16) NOT NULL,
+  placement SMALLINT NOT NULL,
+  score INTEGER NOT NULL DEFAULT 0,
+  xp INTEGER NOT NULL DEFAULT 0,
+  territories INTEGER NOT NULL DEFAULT 0,
+  question_wins INTEGER NOT NULL DEFAULT 0,
+  opponents JSONB NOT NULL DEFAULT '[]'::jsonb,
+  UNIQUE(user_id, event_id),
+  CHECK (placement BETWEEN 1 AND 3)
+);
+CREATE INDEX IF NOT EXISTS profile_matches_user_date_idx ON profile_matches(user_id, played_at DESC);
+
+CREATE TABLE IF NOT EXISTS profile_events (
+  user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  event_id VARCHAR(80) NOT NULL,
+  event_type VARCHAR(24) NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  PRIMARY KEY (user_id, event_id)
+);
+CREATE INDEX IF NOT EXISTS profile_events_created_idx ON profile_events(created_at);
+
 CREATE TABLE IF NOT EXISTS auth_sessions (
   token_hash CHAR(64) PRIMARY KEY,
   user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -149,7 +175,7 @@ CREATE TABLE IF NOT EXISTS league_rewards (
 );
 
 INSERT INTO schema_meta(key, value)
-VALUES ('schema_version', '1')
+VALUES ('schema_version', '2')
 ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = NOW();
 `;
 

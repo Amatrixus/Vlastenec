@@ -186,7 +186,7 @@
 
   function recordQuestion(category, success) {
     const slug = normalizeCategory(category);
-    return mutate(data => {
+    const data = mutate(data => {
       data.stats.questionsPlayed += 1;
       if (success) {
         data.stats.questionWins += 1;
@@ -200,6 +200,10 @@
         if (success) data.categories[slug].successes += 1;
       }
     });
+    sendServerEvent('/api/profile/event/question', {
+      eventId:newEventId('q'), category:slug, success:!!success
+    });
+    return data;
   }
 
   function xpForMatch({ placement=3, score=0, questionWins=0, territories=0 } = {}) {
@@ -242,7 +246,126 @@
       d.matches = d.matches.slice(0,20);
     });
     const after = levelInfo(data.xp);
+    sendServerEvent('/api/profile/event/match', {
+      eventId:newEventId('m'),
+      result:{ mode, placement, score, territories, questionWins, opponents:Array.isArray(result.opponents) ? result.opponents.slice(0,2).map(String) : [] }
+    });
     return { data, xpEarned, beforeLevel:before.level, afterLevel:after.level, leveledUp:after.level > before.level };
+  }
+
+  function hasMeaningfulActivity(data) {
+    if (!data) return false;
+    return (Number(data.xp)||0) > 0 || (Number(data.stats?.gamesPlayed)||0) > 0 ||
+      (Number(data.stats?.questionsPlayed)||0) > 0 || (Number(data.stats?.territoriesCaptured)||0) > 0;
+  }
+
+  function readForIdentity(identity) {
+    const raw = safeJson(localStorage.getItem(storageKey(identity)), null);
+    return normalizeData(raw, identity);
+  }
+
+  function guestIdentityFromStorage() {
+    const id = localStorage.getItem(GUEST_ID_KEY);
+    if (!id) return null;
+    const displayName = String(localStorage.getItem(GUEST_NAME_KEY) || sessionStorage.getItem(GUEST_NAME_KEY) || 'Host').trim().slice(0,24);
+    return { type:'guest', id:`guest:${id}`, displayName, external:null };
+  }
+
+  async function apiJson(url, options = {}) {
+    const response = await fetch(url, {
+      credentials:'same-origin',
+      cache:'no-store',
+      ...options,
+      headers:{ 'Content-Type':'application/json', ...(options.headers || {}) }
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      const err = new Error(data.message || `HTTP ${response.status}`);
+      err.status = response.status;
+      throw err;
+    }
+    return data;
+  }
+
+  function cacheServerProfile(profile) {
+    const identity = getProfileIdentity();
+    if (identity.type !== 'account') return normalizeData(profile, identity);
+    const clean = normalizeData(profile, identity);
+    clean.displayName = identity.displayName || clean.displayName;
+    clean.updatedAt = profile?.updatedAt || new Date().toISOString();
+    evaluateAchievements(clean);
+    localStorage.setItem(storageKey(identity), JSON.stringify(clean));
+    return clean;
+  }
+
+  let accountBootstrapPromise = null;
+  let accountBootstrapId = null;
+
+  async function bootstrapServerProfile({ force = false } = {}) {
+    try { if (window.VLASTENEC_AUTH_READY) await window.VLASTENEC_AUTH_READY; } catch (_) {}
+    const identity = getProfileIdentity();
+    if (identity.type !== 'account') return read();
+    if (!force && accountBootstrapPromise && accountBootstrapId === identity.id) return accountBootstrapPromise;
+
+    accountBootstrapId = identity.id;
+    accountBootstrapPromise = (async () => {
+      const accountLocal = readForIdentity(identity);
+      const guestIdentity = guestIdentityFromStorage();
+      const guestLocal = guestIdentity ? readForIdentity(guestIdentity) : null;
+      const candidate = hasMeaningfulActivity(accountLocal) ? accountLocal : (hasMeaningfulActivity(guestLocal) ? guestLocal : accountLocal);
+
+      try {
+        const imported = await apiJson('/api/profile/import-local', {
+          method:'POST',
+          body:JSON.stringify({ profile:candidate })
+        });
+        if (imported?.profile) return cacheServerProfile(imported.profile);
+      } catch (err) {
+        if (err.status === 401) return readForIdentity(identity);
+        console.warn('Profil: převod lokálních dat se nezdařil:', err.message);
+      }
+
+      try {
+        const current = await apiJson('/api/profile');
+        if (current?.profile) return cacheServerProfile(current.profile);
+      } catch (err) {
+        console.warn('Profil: serverový profil se nepodařilo načíst:', err.message);
+      }
+      return readForIdentity(identity);
+    })();
+    return accountBootstrapPromise;
+  }
+
+  async function syncFromServer() {
+    try { await bootstrapServerProfile(); } catch (_) {}
+    const identity = getProfileIdentity();
+    if (identity.type !== 'account') return read();
+    try {
+      const data = await apiJson('/api/profile');
+      return data?.profile ? cacheServerProfile(data.profile) : read();
+    } catch (err) {
+      console.warn('Profil: synchronizace se serverem selhala:', err.message);
+      return read();
+    }
+  }
+
+  function newEventId(prefix) {
+    let id;
+    try { id = crypto.randomUUID(); }
+    catch { id = `${Date.now()}-${Math.random().toString(36).slice(2,12)}`; }
+    return `${prefix}:${id}`;
+  }
+
+  async function sendServerEvent(path, payload) {
+    const identity = getProfileIdentity();
+    if (identity.type !== 'account') return null;
+    try {
+      await bootstrapServerProfile();
+      return await apiJson(path, { method:'POST', body:JSON.stringify(payload) });
+    } catch (err) {
+      console.warn(`Profil: událost ${path} se nepodařilo uložit:`, err.message);
+      return null;
+    }
   }
 
   function updateGuestName(name) {
@@ -269,6 +392,11 @@
     recordQuestion,
     recordMatch,
     xpForMatch,
-    updateGuestName
+    updateGuestName,
+    bootstrapServerProfile,
+    syncFromServer
   };
+
+  // Přihlášený účet se po načtení stránky automaticky propojí se serverovým profilem.
+  Promise.resolve(window.VLASTENEC_AUTH_READY).then(() => bootstrapServerProfile()).catch(() => {});
 })();
