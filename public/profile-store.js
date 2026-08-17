@@ -84,7 +84,8 @@
         random:{ games:0, wins:0 },
         custom:{ games:0, wins:0 },
         friends:{ games:0, wins:0 },
-        bots:{ games:0, wins:0 }
+        bots:{ games:0, wins:0 },
+        league:{ games:0, wins:0 }
       },
       categories: blankCategories(),
       achievements: {},
@@ -104,7 +105,8 @@
         random:{...base.modes.random, ...(data.modes?.random||{})},
         custom:{...base.modes.custom, ...(data.modes?.custom||{})},
         friends:{...base.modes.friends, ...(data.modes?.friends||{})},
-        bots:{...base.modes.bots, ...(data.modes?.bots||{})}
+        bots:{...base.modes.bots, ...(data.modes?.bots||{})},
+        league:{...base.modes.league, ...(data.modes?.league||{})}
       },
       categories: Object.fromEntries(CATEGORIES.map(c => [c.slug, { ...base.categories[c.slug], ...(data.categories?.[c.slug] || {}) }])),
       achievements: { ...(data.achievements || {}) },
@@ -215,7 +217,7 @@
   function recordMatch(result = {}) {
     const placement = Math.max(1, Math.min(3, Number(result.placement) || 3));
     const score = Math.max(0, Number(result.score) || 0);
-    const mode = ['random','custom','friends','bots'].includes(result.mode) ? result.mode : 'random';
+    const mode = ['random','custom','friends','bots','league','liga'].includes(result.mode) ? (result.mode === 'liga' ? 'league' : result.mode) : 'random';
     const territories = Math.max(0, Number(result.territories) || 0);
     const questionWins = Math.max(0, Number(result.questionWins) || 0);
     const xpEarned = xpForMatch({ placement, score, questionWins, territories });

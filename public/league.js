@@ -10,6 +10,15 @@
   let overview = null;
   let leaderboardMode = 'around';
   let countdownTimer = null;
+  let socket = null;
+
+  let matchmakingMode = 'idle'; // idle | queue | ready | launching
+  let queueWaitAnchor = 0;
+  let queueClockTimer = null;
+  let readyClockTimer = null;
+  let readyMatchId = null;
+  let readyDeadline = 0;
+  let readyPlayers = [];
 
   function levelInfo(xpValue) {
     const xp = Math.max(0, Number(xpValue) || 0);
@@ -144,17 +153,18 @@
     const root = $('recent-matches');
     const matches = overview?.recentMatches || [];
     if (!matches.length) {
-      root.innerHTML = '<div class="empty-state">Zatím tu nejsou žádné ligové zápasy.<br>Historie se začne plnit po spuštění ligového matchmakingu.</div>';
+      root.innerHTML = '<div class="empty-state">Zatím tu nejsou žádné ligové zápasy.</div>';
       return;
     }
     root.innerHTML = matches.map(match => {
+      const visible = match.ratingVisible !== false;
       const delta = Number(match.ratingDelta || 0);
-      const cls = delta > 0 ? 'positive' : delta < 0 ? 'negative' : '';
+      const cls = visible ? (delta > 0 ? 'positive' : delta < 0 ? 'negative' : '') : '';
       const date = match.finishedAt ? new Date(match.finishedAt).toLocaleDateString('cs-CZ',{day:'numeric',month:'short'}) : '—';
       return `<div class="recent-row">
         <span class="match-place${match.placement===1?' first':''}">${match.placement}. místo</span>
         <span class="match-opponents">${escapeHtml((match.opponents||[]).join(' · ') || 'Ligový zápas')}<small class="match-date">${date}</small></span>
-        <span class="match-rating ${cls}">${signed(delta)}</span>
+        <span class="match-rating ${cls}">${visible ? signed(delta) : '—'}</span>
         <span class="match-score">${fmt(match.score)} b.</span>
       </div>`;
     }).join('');
@@ -189,6 +199,181 @@
     }
   }
 
+  function showMatchmakingState(which) {
+    $('league-matchmaking').classList.remove('hidden');
+    $('queue-state').classList.toggle('hidden', which !== 'queue');
+    $('ready-state').classList.toggle('hidden', which !== 'ready');
+    $('matchmaking-message-state').classList.toggle('hidden', which !== 'message');
+  }
+
+  function hideMatchmaking() {
+    $('league-matchmaking').classList.add('hidden');
+  }
+
+  function formatClock(ms) {
+    const total = Math.max(0, Math.floor(ms / 1000));
+    const m = Math.floor(total / 60);
+    const s = total % 60;
+    return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  }
+
+  function updateQueueClock() {
+    if (!queueWaitAnchor) return;
+    $('queue-time').textContent = formatClock(Date.now() - queueWaitAnchor);
+  }
+
+  function startQueueClock(waitMs = 0) {
+    queueWaitAnchor = Date.now() - Math.max(0, Number(waitMs) || 0);
+    if (queueClockTimer) clearInterval(queueClockTimer);
+    updateQueueClock();
+    queueClockTimer = setInterval(updateQueueClock, 250);
+  }
+
+  function stopQueueClock() {
+    if (queueClockTimer) clearInterval(queueClockTimer);
+    queueClockTimer = null;
+  }
+
+  function queueRangeCopy(range) {
+    if (range == null) return 'Čekáš déle. Hledáme už mezi všemi dostupnými vhodnými hráči.';
+    if (range <= 100) return 'Začínáme úzkým ratingovým rozmezím ±100.';
+    if (range <= 200) return 'Hledání se rozšířilo na ±200 ratingu.';
+    return 'Hledání se rozšířilo na ±350 ratingu.';
+  }
+
+  function applyQueueStatus(data = {}) {
+    matchmakingMode = 'queue';
+    showMatchmakingState('queue');
+    startQueueClock(data.waitMs || 0);
+    $('queue-range').textContent = data.searchRange == null ? 'VOLNÉ' : `±${data.searchRange}`;
+    $('queue-position').textContent = fmt(data.position || 1);
+    $('queue-size').textContent = fmt(data.queueSize || 1);
+    $('queue-search-note').textContent = queueRangeCopy(data.searchRange);
+  }
+
+  function renderReadyPlayers(acceptedMap = new Map()) {
+    const meId = String(window.VlastenecAuth?.state?.user?.id || overview?.user?.id || '');
+    $('ready-players').innerHTML = readyPlayers.map(player => {
+      const accepted = acceptedMap.get(String(player.userId)) || false;
+      const meta = player.ranked ? `Rating ${fmt(player.rating)}` : 'Rozřazení';
+      return `<div class="ready-player${String(player.userId)===meId?' me':''}${accepted?' accepted':''}" data-user="${escapeHtml(player.userId)}">
+        <span class="ready-avatar">${escapeHtml(initials(player.displayName))}</span>
+        <span class="ready-name"><strong>${escapeHtml(player.displayName)}</strong><small>${meta}</small></span>
+        <span class="ready-mark">${accepted ? '✓' : '·'}</span>
+      </div>`;
+    }).join('');
+  }
+
+  function updateReadyClock() {
+    const left = Math.max(0, Math.ceil((readyDeadline - Date.now()) / 1000));
+    $('ready-seconds').textContent = String(left);
+  }
+
+  function startReadyClock() {
+    if (readyClockTimer) clearInterval(readyClockTimer);
+    updateReadyClock();
+    readyClockTimer = setInterval(updateReadyClock, 100);
+  }
+
+  function stopReadyClock() {
+    if (readyClockTimer) clearInterval(readyClockTimer);
+    readyClockTimer = null;
+  }
+
+  function showMessage(title, copy) {
+    matchmakingMode = 'idle';
+    stopQueueClock(); stopReadyClock();
+    $('matchmaking-message-title').textContent = title;
+    $('matchmaking-message-copy').textContent = copy;
+    showMatchmakingState('message');
+  }
+
+  function ensureLeagueSocket() {
+    if (socket) return socket;
+    socket = io({ autoConnect:false });
+
+    socket.on('connect', () => {
+      if (matchmakingMode === 'queue') socket.emit('league:queue:join');
+      else if (matchmakingMode === 'ready' && readyMatchId) socket.emit('league:ready:resume', { matchId:readyMatchId });
+    });
+
+    socket.on('league:queue:joined', applyQueueStatus);
+    socket.on('league:queue:status', applyQueueStatus);
+    socket.on('league:queue:left', () => {
+      matchmakingMode = 'idle'; stopQueueClock(); hideMatchmaking();
+    });
+    socket.on('league:queue:replaced', ({ message } = {}) => showMessage('Matchmaking přesunut', message || 'Fronta je otevřená v jiném okně.'));
+    socket.on('league:queue:error', ({ message, cooldownSeconds } = {}) => {
+      const suffix = cooldownSeconds ? ` Zkus to za ${cooldownSeconds} s.` : '';
+      showMessage('Do fronty se nepodařilo vstoupit', `${message || 'Matchmaking není dostupný.'}${suffix}`);
+    });
+
+    socket.on('league:ready:found', ({ matchId, deadline, players } = {}) => {
+      matchmakingMode = 'ready';
+      stopQueueClock();
+      readyMatchId = String(matchId || '');
+      readyDeadline = Number(deadline || (Date.now()+10000));
+      readyPlayers = Array.isArray(players) ? players : [];
+      $('ready-accept').classList.remove('is-accepted');
+      $('ready-accept').querySelector('span').textContent = 'POTVRDIT ZÁPAS';
+      renderReadyPlayers();
+      showMatchmakingState('ready');
+      startReadyClock();
+    });
+
+    socket.on('league:ready:update', ({ accepted, deadline } = {}) => {
+      if (deadline) readyDeadline = Number(deadline);
+      const map = new Map((accepted || []).map(x => [String(x.userId), !!x.accepted]));
+      renderReadyPlayers(map);
+      const meId = String(window.VlastenecAuth?.state?.user?.id || overview?.user?.id || '');
+      if (map.get(meId)) {
+        $('ready-accept').classList.add('is-accepted');
+        $('ready-accept').querySelector('span').textContent = 'POTVRZENO';
+      }
+    });
+
+    socket.on('league:ready:cancelled', ({ requeued, message, cooldownSeconds } = {}) => {
+      stopReadyClock(); readyMatchId = null;
+      if (requeued) {
+        matchmakingMode = 'queue';
+        showMatchmakingState('queue');
+        $('queue-copy').textContent = message || 'Vracíme tě do fronty se zachovanou prioritou.';
+      } else {
+        const suffix = cooldownSeconds ? ` Další hledání bude možné za ${cooldownSeconds} sekund.` : '';
+        showMessage('Zápas se nespustil', `${message || 'Ready check skončil.'}${suffix}`);
+      }
+    });
+    socket.on('league:ready:error', ({ message } = {}) => showMessage('Ready check skončil', message || 'Zápas už není dostupný.'));
+
+    socket.on('league:ready:launch', ({ url } = {}) => {
+      matchmakingMode = 'launching'; stopReadyClock();
+      $('matchmaking-message-title').textContent = 'Spouštíme zápas';
+      $('matchmaking-message-copy').textContent = 'Všichni tři hráči potvrdili. Připojujeme tě k herní mapě…';
+      showMatchmakingState('message');
+      $('matchmaking-message-close').classList.add('hidden');
+      setTimeout(() => { location.href = url || 'league.html'; }, 180);
+    });
+
+    socket.on('disconnect', () => {
+      if (matchmakingMode === 'queue') $('queue-copy').textContent = 'Obnovujeme spojení se serverem…';
+    });
+
+    return socket;
+  }
+
+  function startMatchmaking() {
+    if (!window.VlastenecAuth?.state?.authenticated || !overview?.authenticated) {
+      return window.VLASTENEC_OPEN_LOGIN?.(`${location.pathname}${location.search}${location.hash}`);
+    }
+    matchmakingMode = 'queue';
+    $('queue-copy').textContent = overview?.me?.ranked
+      ? 'Hledáme dva hráče přibližně na tvé úrovni.'
+      : 'Hledáme soupeře pro rozřazovací zápas.';
+    applyQueueStatus({ waitMs:0, searchRange:100, position:1, queueSize:1 });
+    const s = ensureLeagueSocket();
+    if (!s.connected) s.connect(); else s.emit('league:queue:join');
+  }
+
   $('tab-around').addEventListener('click', () => { leaderboardMode='around'; renderLeaderboard(); });
   $('tab-top').addEventListener('click', async () => {
     leaderboardMode='top';
@@ -204,13 +389,29 @@
     else window.VLASTENEC_OPEN_LOGIN?.(`${location.pathname}${location.search}${location.hash}`);
   });
   $('league-login').addEventListener('click', () => window.VLASTENEC_OPEN_LOGIN?.(`${location.pathname}${location.search}${location.hash}`));
-  $('league-play').addEventListener('click', () => $('league-modal').classList.remove('hidden'));
-  $('league-modal-close').addEventListener('click', () => $('league-modal').classList.add('hidden'));
-  $('league-modal').addEventListener('click', e => { if (e.target === $('league-modal')) $('league-modal').classList.add('hidden'); });
+  $('league-play').addEventListener('click', startMatchmaking);
+  $('queue-cancel').addEventListener('click', () => {
+    if (socket?.connected) socket.emit('league:queue:leave');
+    matchmakingMode = 'idle'; stopQueueClock(); hideMatchmaking();
+  });
+  $('ready-accept').addEventListener('click', () => {
+    if (!readyMatchId || !socket?.connected) return;
+    socket.emit('league:ready:accept', { matchId:readyMatchId });
+  });
+  $('ready-decline').addEventListener('click', () => {
+    if (!readyMatchId || !socket?.connected) return;
+    socket.emit('league:ready:decline', { matchId:readyMatchId });
+  });
+  $('matchmaking-message-close').addEventListener('click', async () => {
+    matchmakingMode='idle'; readyMatchId=null; hideMatchmaking();
+    $('matchmaking-message-close').classList.remove('hidden');
+    await loadOverview();
+  });
 
   (async () => {
     try { if (window.VLASTENEC_AUTH_READY) await window.VLASTENEC_AUTH_READY; } catch (_) {}
     renderIdentity();
     await loadOverview();
+    console.log('🧪 VLASTENEC LEAGUE CLIENT: league-matchmaking-v1');
   })();
 })();

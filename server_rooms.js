@@ -1,13 +1,17 @@
-console.log('🧪 VLASTENEC BUILD: 2026-08-17-league-hub-v1');
+console.log('🧪 VLASTENEC BUILD: 2026-08-17-league-matchmaking-v1');
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const path = require('path');
 const fs = require('fs');
 const db = require('./db');
-const { mountAuthRoutes } = require('./auth');
+const { mountAuthRoutes, sessionUser } = require('./auth');
 const { mountProfileRoutes } = require('./player-profile');
-const { mountLeagueRoutes } = require('./league');
+const {
+  mountLeagueRoutes, leagueEntryForSocketRequest, createReadyMatch, cancelLeagueMatch,
+  activateLeagueMatch, activeLeagueMatchForUser, leagueMatchForUser, leagueMatchPlayers, finalizeLeagueMatch,
+  recoverInterruptedLeagueMatches
+} = require('./league');
 
 
 
@@ -28,9 +32,10 @@ const io = new Server(server, { cors: { origin: "*" } }); // (později si omezí
 const PORT = process.env.PORT || 3000;
 (async () => {
   await db.initDatabase();
+  if (db.getStatus().ready) await recoverInterruptedLeagueMatches().catch(err => console.error('league boot recovery:', err));
   server.listen(PORT, '0.0.0.0', () => {
     console.log('Server běží na', PORT);
-    console.log('🧪 VLASTENEC BUILD: 2026-08-17-league-hub-v1');
+    console.log('🧪 VLASTENEC BUILD: 2026-08-17-league-matchmaking-v1');
   });
 })();
 
@@ -43,6 +48,13 @@ const MAX_PLAYERS_PER_ROOM = 3;
 const rooms = {}; // roomId -> { players, scores, bases, regions, regionValues, defenseBonuses }
 const communityChat = []; // globální komunitní chat; v RAM, max. 200 zpráv
 const regionValuesByRoom = {};
+
+// Liga: transientní fronta je v RAM; autoritativní nalezené zápasy jsou v PostgreSQL.
+const leagueQueue = new Map();             // userId -> queue entry
+const leagueReadyChecks = new Map();       // matchId -> ready state
+const leagueMatchRooms = new Map();        // matchId -> roomId
+const leagueCooldowns = new Map();          // userId -> timestamp
+let leagueMatchmakingBusy = false;
 
 
 
@@ -1448,13 +1460,7 @@ async function runBattlePhase(roomId) {
               .map(([player, score]) => ({ player: Number(player), score }))
               .sort((a, b) => b.score - a.score);
 
-            io.to(roomId).emit("gameOver", {
-              message: "Hra skončila!",
-              finalScores: ordered // obsahuje pole objektů: { player: 1, score: ... }, seřazeno
-            });
-
-  
-
+            await finishRoomGame(roomId, ordered);
 
         return;
       }
@@ -1483,11 +1489,7 @@ async function runBattlePhase(roomId) {
               .map(([player, score]) => ({ player: Number(player), score }))
               .sort((a, b) => b.score - a.score);
 
-            io.to(roomId).emit("gameOver", {
-              message: "Hra skončila!",
-              finalScores: ordered // obsahuje pole objektů: { player: 1, score: ... }, seřazeno
-  });
-
+            await finishRoomGame(roomId, ordered);
 
 
 
@@ -2114,13 +2116,494 @@ function waitForPlayerSelection(roomId, player, timeout, forcedAvailableRegions 
 
 
 
+
+// ===== LIGA: matchmaking / ready check / league room =====
+function leagueSearchRange(waitMs) {
+  const ms = Math.max(0, Number(waitMs) || 0);
+  if (ms < 30_000) return 100;
+  if (ms < 60_000) return 200;
+  if (ms < 90_000) return 350;
+  return Infinity;
+}
+
+function leagueRangeLabel(range) {
+  return Number.isFinite(range) ? `±${range}` : 'libovolný';
+}
+
+function leagueQueueEntriesSorted() {
+  return [...leagueQueue.values()]
+    .filter(entry => io.sockets.sockets.get(entry.socketId)?.connected)
+    .sort((a,b) => a.joinedAt - b.joinedAt || String(a.userId).localeCompare(String(b.userId)));
+}
+
+function leaguePairEligible(a, b, now = Date.now()) {
+  const diff = Math.abs(Number(a.rating) - Number(b.rating));
+  const allowed = Math.min(
+    leagueSearchRange(now - a.joinedAt),
+    leagueSearchRange(now - b.joinedAt)
+  );
+  return diff <= allowed;
+}
+
+function leagueCombinationScore(entries) {
+  let repeats = 0;
+  let spread = 0;
+  for (let i = 0; i < entries.length; i++) {
+    for (let j = i + 1; j < entries.length; j++) {
+      if (entries[i].recentOpponents?.has(String(entries[j].userId))) repeats += 1;
+      if (entries[j].recentOpponents?.has(String(entries[i].userId))) repeats += 1;
+      spread = Math.max(spread, Math.abs(Number(entries[i].rating) - Number(entries[j].rating)));
+    }
+  }
+  return { repeats, spread, joinedSum: entries.reduce((sum,e) => sum + Number(e.joinedAt || 0), 0) };
+}
+
+function leagueStatusPayload(entry, sorted, now = Date.now()) {
+  const position = Math.max(1, sorted.findIndex(e => String(e.userId) === String(entry.userId)) + 1);
+  const waitMs = Math.max(0, now - entry.joinedAt);
+  const range = leagueSearchRange(waitMs);
+  return {
+    position,
+    queueSize: sorted.length,
+    waitMs,
+    searchRange: Number.isFinite(range) ? range : null,
+    searchRangeLabel: leagueRangeLabel(range),
+    ratingVisible: Number(entry.player?.placement_games || 0) >= 5,
+    rating: Number(entry.rating || 1200),
+    seasonNumber: Number(entry.season?.season_number || 0)
+  };
+}
+
+function broadcastLeagueQueueStatuses() {
+  const sorted = leagueQueueEntriesSorted();
+  const now = Date.now();
+  for (const entry of sorted) {
+    io.to(entry.socketId).emit('league:queue:status', leagueStatusPayload(entry, sorted, now));
+  }
+}
+
+function removeLeagueQueueEntry(userId, socketId = null) {
+  const key = String(userId || '');
+  const entry = leagueQueue.get(key);
+  if (!entry) return false;
+  if (socketId && entry.socketId !== socketId) return false;
+  leagueQueue.delete(key);
+  return true;
+}
+
+async function cancelLeagueReadyCheck(matchId, reason = 'ready_timeout', explicitOffenderUserId = null) {
+  const state = leagueReadyChecks.get(matchId);
+  if (!state || state.cancelling) return;
+  state.cancelling = true;
+  if (state.timer) clearTimeout(state.timer);
+  leagueReadyChecks.delete(matchId);
+
+  const offenders = new Set();
+  if (explicitOffenderUserId != null) offenders.add(String(explicitOffenderUserId));
+  if (!offenders.size) {
+    for (const player of state.players) if (!player.accepted) offenders.add(String(player.userId));
+  }
+
+  await cancelLeagueMatch(matchId, reason, { offenders:[...offenders] }).catch(err => console.error('league cancel ready:', err));
+
+  const now = Date.now();
+  for (const player of state.players) {
+    const socket = io.sockets.sockets.get(player.socketId);
+    const offender = offenders.has(String(player.userId));
+    if (offender) leagueCooldowns.set(String(player.userId), now + 30_000);
+
+    if (socket?.connected && !offender) {
+      const requeued = { ...player.entry, socketId:socket.id, joinedAt:player.entry.joinedAt };
+      leagueQueue.set(String(player.userId), requeued);
+      socket.data.leagueQueueUserId = String(player.userId);
+      socket.data.leagueReadyMatchId = null;
+      socket.emit('league:ready:cancelled', {
+        matchId, requeued:true,
+        message:'Soupeř nepotvrdil zápas. Vracíme tě na původní místo ve frontě.'
+      });
+    } else if (socket?.connected) {
+      socket.data.leagueReadyMatchId = null;
+      socket.emit('league:ready:cancelled', {
+        matchId, requeued:false, cooldownSeconds:30,
+        message:'Zápas nebyl potvrzen. Do matchmakingu se můžeš vrátit za 30 sekund.'
+      });
+    }
+  }
+  broadcastLeagueQueueStatuses();
+  setTimeout(() => attemptLeagueMatchmaking().catch(err => console.error('league matchmaking after ready cancel:', err)), 20);
+}
+
+async function launchLeagueReadyMatch(matchId) {
+  const state = leagueReadyChecks.get(matchId);
+  if (!state || state.launching) return;
+  state.launching = true;
+  if (state.timer) clearTimeout(state.timer);
+
+  const allConnected = state.players.every(p => io.sockets.sockets.get(p.socketId)?.connected);
+  if (!allConnected) {
+    state.launching = false;
+    return cancelLeagueReadyCheck(matchId, 'ready_disconnect');
+  }
+
+  const roomId = `league_${String(matchId).replace(/-/g,'').slice(0,12)}`;
+  const room = makeEmptyRoom(roomId, 'liga');
+  room.matchKind = 'league';
+  room.publicRoom = false;
+  room.settings = { mode:'liga', cats:[1,2,3,4,5,6,7,8,9] };
+  room.leagueMatchId = matchId;
+  room.leagueUsers = {};
+  room.leagueDisconnectedTimers = new Map();
+  room.leagueForfeitSeat = null;
+  room.players = [undefined, undefined, undefined];
+  room.seatControllers = { 1:'human', 2:'human', 3:'human' };
+  room.ready = { 1:true, 2:true, 3:true };
+
+  state.players.forEach((p, index) => {
+    const seat = index + 1;
+    room.leagueUsers[seat] = String(p.userId);
+    room.players[seat - 1] = { id:null, name:p.entry.displayName };
+  });
+  leagueMatchRooms.set(matchId, roomId);
+  leagueReadyChecks.delete(matchId);
+
+  room.leagueJoinTimer = setTimeout(async () => {
+    const current = rooms[roomId];
+    if (!current || current.hasStarted) return;
+    await cancelLeagueMatch(matchId, 'game_join_timeout').catch(err => console.error('league join timeout cancel:', err));
+    io.to(roomId).emit('league:game:cancelled', { message:'Jeden z hráčů se nepřipojil do hry. Rating se nemění.' });
+    markRoomClosed(roomId);
+    delete rooms[roomId];
+    leagueMatchRooms.delete(matchId);
+  }, 25_000);
+  room.leagueJoinTimer.unref?.();
+
+  for (const player of state.players) {
+    const socket = io.sockets.sockets.get(player.socketId);
+    if (!socket?.connected) continue;
+    socket.data.leagueReadyMatchId = null;
+    socket.emit('league:ready:launch', {
+      matchId,
+      url:`game_online.html?mode=liga&match=${encodeURIComponent(matchId)}`
+    });
+  }
+  console.log(`🏁 LIGA ${matchId}: ready check potvrzen, přechod do ${roomId}`);
+}
+
+async function beginLeagueReadyCheck(entries) {
+  const matchId = await createReadyMatch(entries);
+  entries.forEach(entry => leagueQueue.delete(String(entry.userId)));
+  const deadline = Date.now() + 10_000;
+  const players = entries.map(entry => ({
+    userId:String(entry.userId), socketId:entry.socketId, accepted:false, entry
+  }));
+  const state = { matchId, deadline, players, timer:null, launching:false, cancelling:false };
+  leagueReadyChecks.set(matchId, state);
+
+  const publicPlayers = entries.map((entry,index) => ({
+    seat:index + 1,
+    userId:String(entry.userId),
+    displayName:entry.displayName,
+    ranked:Number(entry.player?.placement_games || 0) >= 5,
+    rating:Number(entry.rating || 1200)
+  }));
+  for (const player of players) {
+    const socket = io.sockets.sockets.get(player.socketId);
+    if (!socket?.connected) continue;
+    socket.data.leagueQueueUserId = null;
+    socket.data.leagueUserId = String(player.userId);
+    socket.data.leagueReadyMatchId = matchId;
+    socket.emit('league:ready:found', { matchId, deadline, players:publicPlayers });
+  }
+  state.timer = setTimeout(() => cancelLeagueReadyCheck(matchId, 'ready_timeout'), 10_100);
+  state.timer.unref?.();
+  console.log(`🎯 LIGA match found ${matchId}: ${entries.map(e => `${e.displayName}(${e.rating})`).join(' / ')}`);
+}
+
+async function attemptLeagueMatchmaking() {
+  if (leagueMatchmakingBusy) return;
+  leagueMatchmakingBusy = true;
+  try {
+    // Vyhoď odpojené sockety.
+    for (const [userId, entry] of leagueQueue) {
+      if (!io.sockets.sockets.get(entry.socketId)?.connected) leagueQueue.delete(userId);
+    }
+
+    while (true) {
+      const entries = leagueQueueEntriesSorted();
+      if (entries.length < 3) break;
+      const now = Date.now();
+      let best = null;
+
+      // FIFO: nejprve zkusíme nejstaršího hráče; pokud pro něj pár neexistuje,
+      // zkusí se další anchor, takže nevhodný rating nezablokuje celou frontu.
+      for (let a = 0; a < entries.length - 2 && !best; a++) {
+        const anchor = entries[a];
+        const candidates = [];
+        for (let b = a + 1; b < entries.length - 1; b++) {
+          for (let c = b + 1; c < entries.length; c++) {
+            const trio = [anchor, entries[b], entries[c]];
+            if (!trio.every(e => String(e.season.id) === String(anchor.season.id))) continue;
+            if (!leaguePairEligible(trio[0],trio[1],now) || !leaguePairEligible(trio[0],trio[2],now) || !leaguePairEligible(trio[1],trio[2],now)) continue;
+            candidates.push({ trio, score:leagueCombinationScore(trio) });
+          }
+        }
+        if (candidates.length) {
+          candidates.sort((x,y) =>
+            x.score.repeats - y.score.repeats ||
+            x.score.spread - y.score.spread ||
+            x.score.joinedSum - y.score.joinedSum
+          );
+          best = candidates[0].trio;
+        }
+      }
+      if (!best) break;
+      await beginLeagueReadyCheck(best);
+    }
+  } finally {
+    leagueMatchmakingBusy = false;
+    broadcastLeagueQueueStatuses();
+  }
+}
+
+async function joinLeagueQueue(socket) {
+  try {
+    const entryBase = await leagueEntryForSocketRequest(socket.request);
+    if (!entryBase) return socket.emit('league:queue:error', { code:'AUTH_REQUIRED', message:'Liga vyžaduje přihlášení.' });
+    const userId = String(entryBase.user.id);
+    socket.data.leagueUserId = userId;
+
+    // Pokud má tentýž účet už aktivní ready check (např. druhý tab / reconnect),
+    // nepřidávej ho znovu do fronty; převaž socket a obnov ready obrazovku.
+    for (const state of leagueReadyChecks.values()) {
+      const pending = state.players.find(p => String(p.userId) === userId);
+      if (!pending) continue;
+      pending.socketId = socket.id;
+      socket.data.leagueReadyMatchId = state.matchId;
+      const publicPlayers = state.players.map((p,index) => ({
+        seat:index+1,userId:String(p.userId),displayName:p.entry.displayName,
+        ranked:Number(p.entry.player?.placement_games || 0) >= 5,rating:Number(p.entry.rating || 1200)
+      }));
+      socket.emit('league:ready:found', { matchId:state.matchId, deadline:state.deadline, players:publicPlayers });
+      socket.emit('league:ready:update', {
+        matchId:state.matchId, deadline:state.deadline,
+        accepted:state.players.map(p => ({ userId:String(p.userId), accepted:!!p.accepted }))
+      });
+      return;
+    }
+
+    const activeMatch = await activeLeagueMatchForUser(userId);
+    if (activeMatch) {
+      return socket.emit('league:queue:error', {
+        code:'MATCH_IN_PROGRESS', matchId:String(activeMatch.id), state:activeMatch.state,
+        message:'Tento účet už má rozpracovaný ligový zápas. Dokonči ho před vstupem do další fronty.'
+      });
+    }
+
+    const cooldownUntil = Number(leagueCooldowns.get(userId) || 0);
+    if (cooldownUntil > Date.now()) {
+      return socket.emit('league:queue:error', {
+        code:'COOLDOWN', cooldownSeconds:Math.ceil((cooldownUntil-Date.now())/1000),
+        message:'Po nepotvrzeném zápase je matchmaking krátce pozastaven.'
+      });
+    }
+    leagueCooldowns.delete(userId);
+
+    // Jedna identita = jedna fronta. Novější tab převezme starší záznam.
+    const previous = leagueQueue.get(userId);
+    const joinedAt = previous?.joinedAt || Date.now();
+    if (previous && previous.socketId !== socket.id) {
+      io.to(previous.socketId).emit('league:queue:replaced', { message:'Matchmaking byl otevřen v jiném okně.' });
+    }
+
+    const entry = {
+      ...entryBase,
+      userId,
+      socketId:socket.id,
+      joinedAt,
+      displayName:entryBase.displayName
+    };
+    leagueQueue.set(userId, entry);
+    socket.data.leagueQueueUserId = userId;
+    socket.data.leagueReadyMatchId = null;
+    socket.emit('league:queue:joined', leagueStatusPayload(entry, leagueQueueEntriesSorted()));
+    broadcastLeagueQueueStatuses();
+    await attemptLeagueMatchmaking();
+  } catch (err) {
+    console.error('league queue join:', err);
+    socket.emit('league:queue:error', { message:'Do ligového matchmakingu se nepodařilo vstoupit.' });
+  }
+}
+
+async function joinLeagueGame(socket, matchId) {
+  try {
+    const user = await sessionUser(socket.request, { touch:false });
+    if (!user) return socket.emit('league:game:error', { message:'Pro ligovou hru se znovu přihlas.' });
+    const safeMatchId = String(matchId || '').trim();
+    if (!/^[0-9a-f-]{36}$/i.test(safeMatchId)) return socket.emit('league:game:error', { message:'Neplatný ligový zápas.' });
+
+    const dbMatch = await leagueMatchForUser(safeMatchId, user.id);
+    if (!dbMatch) return socket.emit('league:game:error', { message:'Tento ligový zápas ti nepatří.' });
+    if (dbMatch.state === 'cancelled') return socket.emit('league:game:error', { message:'Zápas byl zrušen bez změny ratingu.' });
+    if (dbMatch.state === 'finished') return socket.emit('league:game:error', { message:'Tento ligový zápas už skončil.' });
+
+    const roomId = leagueMatchRooms.get(safeMatchId);
+    const room = roomId ? rooms[roomId] : null;
+    if (!room || room.__closed) {
+      await cancelLeagueMatch(safeMatchId, 'room_missing').catch(() => {});
+      return socket.emit('league:game:error', { message:'Herní instance byla obnovena. Zápas byl bezpečně zrušen bez změny ratingu.' });
+    }
+
+    const seat = Number(dbMatch.seat);
+    if (String(room.leagueUsers?.[seat]) !== String(user.id)) return socket.emit('league:game:error', { message:'Nesouhlasí sedadlo ligového hráče.' });
+    if (room.leagueForfeitSeat === seat) return socket.emit('league:game:error', { message:'Limit pro návrat do tohoto zápasu už vypršel.' });
+
+    socket.join(roomId);
+    socket.data = socket.data || {};
+    socket.data.joinedRoom = roomId;
+    socket.data.roomId = roomId;
+    socket.data.seat = seat;
+    socket.data.name = user.displayName || user.username || room.players?.[seat-1]?.name || `Hráč ${seat}`;
+    socket.data.leagueUserId = String(user.id);
+    socket.data.leagueMatchId = safeMatchId;
+
+    room.players[seat - 1] = { id:socket.id, name:socket.data.name };
+    room.seatControllers[seat] = 'human';
+    const reconnectTimer = room.leagueDisconnectedTimers?.get(seat);
+    if (reconnectTimer) {
+      clearTimeout(reconnectTimer);
+      room.leagueDisconnectedTimers.delete(seat);
+    }
+
+    const allNames = {};
+    room.players.forEach((p,idx) => { allNames[idx+1] = p?.name || `Hráč ${idx+1}`; });
+    socket.emit('assignPlayerNumber', { number:seat, allNames, scores:room.scores, roomId });
+    io.to(roomId).emit('updatePlayers', {
+      allNames,
+      displayNames:{1:displayName(room,1,true),2:displayName(room,2,true),3:displayName(room,3,true)},
+      seatControllers:room.seatControllers
+    });
+    socket.emit('stateSync', { myNumber:seat, snapshot:buildRoomSnapshot(room,roomId) });
+
+    const connected = connectedHumanCount(room);
+    io.to(roomId).emit('league:game:status', { connected, total:3 });
+
+    if (!room.hasStarted && connected >= 3) {
+      if (room.leagueJoinTimer) clearTimeout(room.leagueJoinTimer);
+      const activated = await activateLeagueMatch(safeMatchId);
+      if (!activated && dbMatch.state !== 'active') {
+        await cancelLeagueMatch(safeMatchId, 'activation_failed').catch(() => {});
+        return io.to(roomId).emit('league:game:cancelled', { message:'Zápas se nepodařilo aktivovat. Rating se nemění.' });
+      }
+      startRoomGame(roomId);
+    }
+  } catch (err) {
+    console.error('league game join:', err);
+    socket.emit('league:game:error', { message:'Do ligového zápasu se nepodařilo připojit.' });
+  }
+}
+
+async function finishRoomGame(roomId, ordered) {
+  const room = rooms[roomId];
+  if (!room || room.__gameFinished) return;
+  room.__gameFinished = true;
+  room.phase = 'end';
+
+  let leagueResult = null;
+  if (room.mode === 'liga' && room.leagueMatchId) {
+    const seatScores = {};
+    for (const entry of ordered || []) seatScores[Number(entry.player)] = Number(entry.score || 0);
+    let lastError = null;
+    for (let attempt = 1; attempt <= 5; attempt++) {
+      try {
+        leagueResult = await finalizeLeagueMatch(room.leagueMatchId, seatScores, { forcedLastSeat:room.leagueForfeitSeat || null });
+        lastError = null;
+        break;
+      } catch (err) {
+        lastError = err;
+        console.error(`league finalize ${room.leagueMatchId} attempt ${attempt}:`, err);
+        await new Promise(r => setTimeout(r, 250 * attempt));
+      }
+    }
+    if (lastError) {
+      io.to(roomId).emit('league:rating:error', { message:'Výsledek hry je uložen, ale ligový rating se právě nepodařilo dopočítat. Nezavírej hru a zkus obnovit Ligu za chvíli.' });
+    }
+  }
+
+  io.to(roomId).emit('gameOver', { message:'Hra skončila!', finalScores:ordered });
+  if (leagueResult) io.to(roomId).emit('league:rating:result', leagueResult);
+}
+
+setInterval(() => {
+  broadcastLeagueQueueStatuses();
+  attemptLeagueMatchmaking().catch(err => console.error('league matchmaking tick:', err));
+}, 1000).unref?.();
+
+
 io.on('connection', socket => {
 
+  // ===== LIGA socket API =====
+  socket.on('league:queue:join', () => joinLeagueQueue(socket));
+
+  socket.on('league:queue:leave', () => {
+    const userId = String(socket.data?.leagueQueueUserId || socket.data?.leagueUserId || '');
+    if (userId) removeLeagueQueueEntry(userId, socket.id);
+    socket.data.leagueQueueUserId = null;
+    socket.emit('league:queue:left');
+    broadcastLeagueQueueStatuses();
+  });
+
+  socket.on('league:ready:accept', async ({ matchId } = {}) => {
+    const state = leagueReadyChecks.get(String(matchId || ''));
+    if (!state || state.cancelling || state.launching) return;
+    const player = state.players.find(p => p.socketId === socket.id || String(p.userId) === String(socket.data?.leagueUserId || ''));
+    if (!player) return socket.emit('league:ready:error', { message:'Ready check už není aktivní.' });
+    player.socketId = socket.id;
+    player.accepted = true;
+    socket.data.leagueUserId = String(player.userId);
+    socket.data.leagueReadyMatchId = state.matchId;
+    const accepted = state.players.map(p => ({ userId:String(p.userId), accepted:!!p.accepted }));
+    for (const p of state.players) io.to(p.socketId).emit('league:ready:update', { matchId:state.matchId, accepted, deadline:state.deadline });
+    if (state.players.every(p => p.accepted)) await launchLeagueReadyMatch(state.matchId);
+  });
+
+  socket.on('league:ready:decline', async ({ matchId } = {}) => {
+    const state = leagueReadyChecks.get(String(matchId || ''));
+    if (!state) return;
+    const player = state.players.find(p => p.socketId === socket.id || String(p.userId) === String(socket.data?.leagueUserId || ''));
+    if (!player) return;
+    await cancelLeagueReadyCheck(state.matchId, 'ready_declined', player.userId);
+  });
+
+  socket.on('league:ready:resume', async ({ matchId } = {}) => {
+    try {
+      const state = leagueReadyChecks.get(String(matchId || ''));
+      const user = await sessionUser(socket.request, { touch:false });
+      if (!state || !user) return socket.emit('league:ready:error', { message:'Ready check už skončil.' });
+      const player = state.players.find(p => String(p.userId) === String(user.id));
+      if (!player) return socket.emit('league:ready:error', { message:'Tento ready check ti nepatří.' });
+      player.socketId = socket.id;
+      socket.data.leagueUserId = String(user.id);
+      socket.data.leagueReadyMatchId = state.matchId;
+      const publicPlayers = state.players.map((p,index) => ({
+        seat:index+1,userId:String(p.userId),displayName:p.entry.displayName,
+        ranked:Number(p.entry.player?.placement_games || 0) >= 5,rating:Number(p.entry.rating || 1200)
+      }));
+      socket.emit('league:ready:found', { matchId:state.matchId, deadline:state.deadline, players:publicPlayers });
+      socket.emit('league:ready:update', {
+        matchId:state.matchId, deadline:state.deadline,
+        accepted:state.players.map(p => ({ userId:String(p.userId), accepted:!!p.accepted }))
+      });
+    } catch (err) {
+      console.error('league ready resume:', err);
+      socket.emit('league:ready:error', { message:'Ready check se nepodařilo obnovit.' });
+    }
+  });
+
+  socket.on('league:game:join', ({ matchId } = {}) => joinLeagueGame(socket, matchId));
 
 
-
-
-  socket.on('lobby:rename', ({ roomId, name } = {}) => {
+  socket.on('lobby:rename'
+, ({ roomId, name } = {}) => {
     const boundRoomId = socket.data?.roomId || socket.data?.joinedRoom;
     const safeRoomId = sanitizeRoomId(roomId || boundRoomId);
     const room = safeRoomId ? rooms[safeRoomId] : null;
@@ -2560,7 +3043,19 @@ socket.on("joinRoom", ({ room, settings }) => {
 
 
 
-socket.on("disconnect", () => {
+socket.on("disconnect", async () => {
+  const leagueQueueUserId = String(socket.data?.leagueQueueUserId || '');
+  if (leagueQueueUserId) {
+    removeLeagueQueueEntry(leagueQueueUserId, socket.id);
+    broadcastLeagueQueueStatuses();
+  }
+  const readyMatchId = String(socket.data?.leagueReadyMatchId || '');
+  if (readyMatchId && leagueReadyChecks.has(readyMatchId)) {
+    const state = leagueReadyChecks.get(readyMatchId);
+    const player = state?.players?.find(p => p.socketId === socket.id || String(p.userId) === String(socket.data?.leagueUserId || ''));
+    if (player) await cancelLeagueReadyCheck(readyMatchId, 'ready_disconnect', player.userId);
+  }
+
   const roomId = socket.data?.joinedRoom || socket.data?.roomId;
   if (!roomId || !rooms[roomId]) return;
 
@@ -2570,6 +3065,30 @@ socket.on("disconnect", () => {
 
   const seat = ix + 1;
   const name = room.players[ix]?.name || `Player${seat}`;
+
+  // LIGA: nikdy nepřevádíme odpojeného člověka na bota. Před startem ho
+  // hlídá join timeout. Po startu má 90 sekund na návrat, pak je označen jako odstoupivší.
+  if (room.mode === 'liga') {
+    room.players[ix].id = null;
+    room.seatControllers[seat] = 'human';
+    io.to(roomId).emit('league:game:status', { connected:connectedHumanCount(room), total:3 });
+
+    if (!room.hasStarted) return;
+
+    io.to(roomId).emit('league:player:disconnected', { seat, name, graceSeconds:90 });
+    if (room.leagueDisconnectedTimers?.get(seat)) clearTimeout(room.leagueDisconnectedTimers.get(seat));
+    const timer = setTimeout(() => {
+      const current = rooms[roomId];
+      if (!current || current.__closed || current.players?.[seat-1]?.id) return;
+      current.leagueForfeitSeat = current.leagueForfeitSeat || seat;
+      current.leagueDisconnectedTimers?.delete(seat);
+      io.to(roomId).emit('league:player:forfeit', { seat, name });
+      console.log(`⚠️ LIGA ${current.leagueMatchId}: ${name} překročil reconnect limit, seat ${seat} = forfeit`);
+    }, 90_000);
+    timer.unref?.();
+    room.leagueDisconnectedTimers?.set(seat, timer);
+    return;
+  }
 
   // RANDOM před startem: hráč opravdu opouští frontu/místnost.
   // Nikdy z něj nevytvářej bota a nenechávej po něm stale seat – to dříve

@@ -229,6 +229,7 @@
 
     const playerName = qp.get('name') || '';
     const gameMode   = qp.get('mode') || 'random'; // random výchozí
+    const leagueMatchId = String(qp.get('match') || '').trim();
     const catsCsv    = qp.get('cats') || '';
     const catIds     = catsCsv.split(',').filter(Boolean).map(n => parseInt(n, 10));
 
@@ -290,7 +291,7 @@
 
     // --- Jediná inicializace socketu ---
     const socket = io({ autoConnect: false });
-    console.log('🧪 VLASTENEC CLIENT: bots-recovery-v1');
+    console.log('🧪 VLASTENEC CLIENT: league-matchmaking-v1');
 
     // --- Profil hráče: lokální statistiky od této verze ---
     const profileStore = window.VlastenecProfileStore || null;
@@ -725,6 +726,55 @@ window.addEventListener('gameStartedAfterAnimation', () => {
     // Připojení:
     // - friends → joinRoom/createRoom (NEposílat submitName)
     // - random  → jen submitName (NEposílat create/join)
+
+    // ===== LIGA: přechod z matchmakingu do autoritativní herní room =====
+    function ensureLeagueGameOverlay() {
+      let overlay = document.getElementById('league_game_connect_overlay');
+      if (overlay) return overlay;
+      overlay = document.createElement('div');
+      overlay.id = 'league_game_connect_overlay';
+      overlay.className = 'league-game-connect-overlay';
+      overlay.innerHTML = `
+        <div class="league-game-connect-card">
+          <span>LIGOVÝ ZÁPAS</span>
+          <strong id="league_game_connect_title">Připojujeme soupeře</strong>
+          <div class="league-game-connect-dots"><i></i><i></i><i></i></div>
+          <small id="league_game_connect_copy">0 / 3 hráčů připojeno</small>
+        </div>`;
+      document.body.appendChild(overlay);
+      return overlay;
+    }
+
+    function showLeagueGameConnectOverlay(copy = 'Připojujeme tě k ligovému zápasu…') {
+      if (gameMode !== 'liga') return;
+      document.body.classList.add('lobby-mode-liga','league-game-connecting');
+      const overlay = ensureLeagueGameOverlay();
+      overlay.style.display = 'grid';
+      const copyEl = document.getElementById('league_game_connect_copy');
+      if (copyEl) copyEl.textContent = copy;
+    }
+
+    function hideLeagueGameConnectOverlay() {
+      document.body.classList.remove('league-game-connecting');
+      const overlay = document.getElementById('league_game_connect_overlay');
+      if (overlay) overlay.style.display = 'none';
+    }
+
+    function leagueGameMessage(text, danger = false) {
+      let toast = document.getElementById('league_game_toast');
+      if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'league_game_toast';
+        toast.className = 'league-game-toast';
+        document.body.appendChild(toast);
+      }
+      toast.classList.toggle('danger', !!danger);
+      toast.textContent = text;
+      toast.classList.add('show');
+      clearTimeout(window.__leagueToastTimer);
+      window.__leagueToastTimer = setTimeout(() => toast.classList.remove('show'), 5200);
+    }
+
     socket.on('connect', () => {
         DBG('socket connect');
         let savedRoom  = sessionStorage.getItem('vl_room');
@@ -761,6 +811,22 @@ window.addEventListener('gameStartedAfterAnimation', () => {
         });
 
         if (!myName?.trim()) myName = `Player_${Math.random().toString(36).slice(2,6)}`;
+
+        // LIGA nevstupuje přes klasickou lobby. Match už vytvořil League Hub a
+        // server podle přihlášeného účtu autoritativně přiřadí správné sedadlo.
+        if (gameMode === 'liga') {
+          currentRoomId = null;
+          sessionStorage.removeItem('vl_room');
+          sessionStorage.removeItem('vl_seat');
+          sessionStorage.setItem('vl_mode', 'liga');
+          if (!leagueMatchId) {
+            location.replace('league.html');
+            return;
+          }
+          showLeagueGameConnectOverlay('Připojujeme tě k ligovému zápasu…');
+          socket.emit('league:game:join', { matchId: leagueMatchId });
+          return;
+        }
 
         // FRIENDS má dva zcela odlišné vstupy:
         // A) bez ?room=...  => uživatel právě klikl na „Hra s přáteli“ a VŽDY zakládá NOVOU lobby
@@ -852,6 +918,31 @@ window.addEventListener('gameStartedAfterAnimation', () => {
 
 
     socket.on("connect_error", (e) => DBG("connect_error:", e?.message || e));
+
+    socket.on('league:game:status', ({ connected, total } = {}) => {
+      if (gameMode !== 'liga') return;
+      showLeagueGameConnectOverlay(`${Number(connected)||0} / ${Number(total)||3} hráčů připojeno`);
+    });
+    socket.on('league:game:error', ({ message } = {}) => {
+      if (gameMode !== 'liga') return;
+      showLeagueGameConnectOverlay(message || 'Ligový zápas není dostupný.');
+      const title = document.getElementById('league_game_connect_title');
+      if (title) title.textContent = 'Zápas se nespustil';
+      setTimeout(() => location.replace('league.html'), 2200);
+    });
+    socket.on('league:game:cancelled', ({ message } = {}) => {
+      if (gameMode !== 'liga') return;
+      showLeagueGameConnectOverlay(message || 'Zápas byl zrušen bez změny ratingu.');
+      const title = document.getElementById('league_game_connect_title');
+      if (title) title.textContent = 'Zápas zrušen';
+      setTimeout(() => location.replace('league.html'), 2400);
+    });
+    socket.on('league:player:disconnected', ({ name, graceSeconds } = {}) => {
+      if (gameMode === 'liga') leagueGameMessage(`${name || 'Soupeř'} se odpojil. Má ${Number(graceSeconds)||90} s na návrat.`);
+    });
+    socket.on('league:player:forfeit', ({ name } = {}) => {
+      if (gameMode === 'liga') leagueGameMessage(`${name || 'Soupeř'} se včas nevrátil a je veden jako odstoupivší.`, true);
+    });
 
     let resumeJoinFallbackUsed = false;
     socket.on('resume:error', ({ message } = {}) => {
@@ -993,6 +1084,7 @@ window.addEventListener('gameStartedAfterAnimation', () => {
     dumpFlags('after startGame set gameStarted=true');
 
     console.log("🎮 Hra spuštěna");
+    if (gameMode === 'liga') hideLeagueGameConnectOverlay();
 
     // --- ulož stavy pro animaci a re-render ---
     player1CurrentBase = bases[1];
@@ -3672,6 +3764,7 @@ if (regionValues && typeof regionValues === 'object') {
         socket.on('community:chat:new', msg => receiveMessage('community', msg));
 
         socket.on('startGame', () => {
+          if (gameMode === 'liga') hideLeagueGameConnectOverlay();
           document.body.classList.add('is-game-started');
           // Herní chat je vždy pouze pro aktuální session.
           setGameDrawer(true);
@@ -8074,6 +8167,25 @@ socket.on("numericQuestionResultsForTwo", ({ correctAnswer, answers, attacker, d
 
 
 
+socket.on('league:rating:result', (result = {}) => {
+  if (gameMode !== 'liga') return;
+  window.__leagueRatingResult = result;
+  const mine = (result.players || []).find(p => Number(p.seat) === Number(myPlayerNumber));
+  if (!mine) return;
+  const render = () => {
+    const box = document.getElementById('endgame_results');
+    if (!box || box.querySelector('.league-rating-summary')) return;
+    const block = document.createElement('div');
+    block.className = `league-rating-summary ${Number(mine.ratingDelta) >= 0 ? 'positive' : 'negative'}`;
+    block.innerHTML = mine.ratingVisible
+      ? `<span>LIGOVÝ RATING</span><strong>${Number(mine.ratingBefore)} → ${Number(mine.ratingAfter)}</strong><em>${Number(mine.ratingDelta) > 0 ? '+' : ''}${Number(mine.ratingDelta)}</em><small>${mine.division?.name || ''}</small>`
+      : `<span>ROZŘAZENÍ</span><strong>${Number(mine.placementGamesAfter)||0} / 5 zápasů</strong><em>RATING SKRYT</em><small>Odkryje se po 5. hře</small>`;
+    box.appendChild(block);
+  };
+  render();
+  setTimeout(render, 120);
+});
+
 socket.on("gameOver", ({ message, finalScores }) => {
   console.log(`🎮 ${message}`);
   console.log("🏆 Konečné pořadí:");
@@ -8109,6 +8221,14 @@ socket.on("gameOver", ({ message, finalScores }) => {
   const resultBox = document.getElementById("endgame_results");
   resultBox.innerHTML = `<div class="endtitle">${message}</div>`;
 
+  if (gameMode === 'liga') {
+    const ok = document.getElementById('endgameok');
+    if (ok) {
+      ok.textContent = 'ZPĚT DO LIGY';
+      ok.onclick = () => location.href = 'league.html';
+    }
+  }
+
   finalScores.forEach((entry, index) => {
   const name = allNames[entry.player] || `Hráč ${entry.player}`;
   console.log(`${index + 1}. ${name} – ${entry.score} bodů`);
@@ -8125,6 +8245,18 @@ socket.on("gameOver", ({ message, finalScores }) => {
   resultBox.appendChild(line);
 });
 
+
+  if (gameMode === 'liga' && window.__leagueRatingResult) {
+    const mine = (window.__leagueRatingResult.players || []).find(p => Number(p.seat) === Number(myPlayerNumber));
+    if (mine && !resultBox.querySelector('.league-rating-summary')) {
+      const block = document.createElement('div');
+      block.className = `league-rating-summary ${Number(mine.ratingDelta) >= 0 ? 'positive' : 'negative'}`;
+      block.innerHTML = mine.ratingVisible
+      ? `<span>LIGOVÝ RATING</span><strong>${Number(mine.ratingBefore)} → ${Number(mine.ratingAfter)}</strong><em>${Number(mine.ratingDelta) > 0 ? '+' : ''}${Number(mine.ratingDelta)}</em><small>${mine.division?.name || ''}</small>`
+      : `<span>ROZŘAZENÍ</span><strong>${Number(mine.placementGamesAfter)||0} / 5 zápasů</strong><em>RATING SKRYT</em><small>Odkryje se po 5. hře</small>`;
+      resultBox.appendChild(block);
+    }
+  }
 
   // Výchozí zobrazená tabulka
   showEndgameTab("results");

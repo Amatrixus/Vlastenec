@@ -9,7 +9,7 @@
   const initials = name => String(name||'?').trim().split(/\s+/).slice(0,2).map(x=>x[0]||'').join('').toUpperCase() || '?';
 
   const MODE_LABELS = {
-    random:'Rychlá hra', custom:'Custom hra', friends:'Hra s přáteli', bots:'Hra s boty'
+    random:'Rychlá hra', custom:'Custom hra', friends:'Hra s přáteli', bots:'Hra s boty', league:'Liga'
   };
 
   function render() {
@@ -42,7 +42,7 @@
     $('stat-best-score').textContent = fmt(s.bestScore);
     $('stat-average-score').textContent = `průměr ${fmt(s.gamesPlayed ? Math.round(s.totalScore/s.gamesPlayed) : 0)}`;
     $('stat-streak').textContent = fmt(s.maxStreak);
-    const online = (data.modes.random.games||0)+(data.modes.custom.games||0)+(data.modes.friends.games||0);
+    const online = (data.modes.random.games||0)+(data.modes.custom.games||0)+(data.modes.friends.games||0)+(data.modes.league?.games||0);
     $('stat-mode').textContent = `${fmt(online)} online · ${fmt(data.modes.bots.games||0)} s boty`;
 
     renderCategories(data);
@@ -99,7 +99,7 @@
   function renderModes(data) {
     const root = $('mode-list');
     root.innerHTML = '';
-    for (const mode of ['random','custom','friends','bots']) {
+    for (const mode of ['random','custom','friends','bots','league']) {
       const m = data.modes[mode] || {games:0,wins:0};
       const row = document.createElement('div');
       row.className = 'mode-row';

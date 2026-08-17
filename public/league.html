@@ -64,7 +64,7 @@
 
           <button id="league-play" class="league-play" type="button">
             <span>HRÁT LIGU</span>
-            <small id="league-play-note">Matchmaking bude další krok</small>
+            <small id="league-play-note">Soupeři podle ratingu</small>
           </button>
         </div>
 
@@ -173,15 +173,59 @@
     </footer>
   </main>
 
-  <div id="league-modal" class="league-modal hidden" role="dialog" aria-modal="true" aria-labelledby="league-modal-title">
-    <div class="league-modal-card">
-      <span class="section-kicker">DALŠÍ KROK</span>
-      <h2 id="league-modal-title">Ligový matchmaking</h2>
-      <p>League Hub a sezonní data už běží nad PostgreSQL. Další část napojí skutečnou frontu, ready check a serverově autoritativní rating.</p>
-      <button id="league-modal-close" type="button">Rozumím</button>
+  <div id="league-matchmaking" class="league-matchmaking hidden" role="dialog" aria-modal="true" aria-labelledby="matchmaking-title">
+    <div class="matchmaking-card">
+      <div class="matchmaking-noise" aria-hidden="true"></div>
+
+      <section id="queue-state" class="matchmaking-state">
+        <span class="section-kicker">LIGOVÝ MATCHMAKING</span>
+        <h2 id="matchmaking-title">Hledáme soupeře</h2>
+        <p id="queue-copy">Hledáme dva hráče přibližně na tvé úrovni.</p>
+
+        <div class="queue-orbit" aria-hidden="true">
+          <span class="queue-node me"><i></i></span>
+          <span class="queue-node"><i></i></span>
+          <span class="queue-node"><i></i></span>
+        </div>
+
+        <div class="queue-time" id="queue-time">00:00</div>
+        <div class="queue-facts">
+          <div><span>ROZMEZÍ</span><strong id="queue-range">±100</strong></div>
+          <div><span>POZICE VE FRONTĚ</span><strong id="queue-position">1</strong></div>
+          <div><span>HRÁČŮ VE FRONTĚ</span><strong id="queue-size">1</strong></div>
+        </div>
+        <div class="queue-search-note" id="queue-search-note">Začínáme úzkým ratingovým rozmezím.</div>
+        <button id="queue-cancel" class="matchmaking-secondary" type="button">Zrušit hledání</button>
+      </section>
+
+      <section id="ready-state" class="matchmaking-state hidden">
+        <span class="section-kicker">SOUPĚŘI NALEZENI</span>
+        <h2>Zápas je připraven</h2>
+        <p>Potvrď účast. Pokud někdo nepotvrdí včas, ostatní se vrátí na původní místo ve frontě.</p>
+
+        <div id="ready-players" class="ready-players"></div>
+
+        <div class="ready-countdown-wrap">
+          <div class="ready-countdown"><strong id="ready-seconds">10</strong><span>s</span></div>
+          <small>ČAS NA POTVRZENÍ</small>
+        </div>
+
+        <div class="ready-actions">
+          <button id="ready-accept" class="league-play ready-accept" type="button"><span>POTVRDIT ZÁPAS</span><small>Jsem připraven</small></button>
+          <button id="ready-decline" class="matchmaking-secondary" type="button">Odmítnout</button>
+        </div>
+      </section>
+
+      <section id="matchmaking-message-state" class="matchmaking-state hidden">
+        <span class="section-kicker">MATCHMAKING</span>
+        <h2 id="matchmaking-message-title">Čekej prosím</h2>
+        <p id="matchmaking-message-copy">Aktualizujeme stav fronty.</p>
+        <button id="matchmaking-message-close" class="matchmaking-secondary" type="button">Zpět do Ligy</button>
+      </section>
     </div>
   </div>
 
+  <script src="/socket.io/socket.io.js"></script>
   <script src="league.js"></script>
 </body>
 </html>
