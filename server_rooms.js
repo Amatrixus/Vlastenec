@@ -1,4 +1,4 @@
-console.log('🧪 VLASTENEC BUILD: 2026-08-17-endgame-stats-v1');
+console.log('🧪 VLASTENEC BUILD: 2026-08-17-region-wave-v4');
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
@@ -38,7 +38,7 @@ const PORT = process.env.PORT || 3000;
   if (db.getStatus().ready) await recoverInterruptedLeagueMatches().catch(err => console.error('league boot recovery:', err));
   server.listen(PORT, '0.0.0.0', () => {
     console.log('Server běží na', PORT);
-    console.log('🧪 VLASTENEC BUILD: 2026-08-17-endgame-stats-v1');
+    console.log('🧪 VLASTENEC BUILD: 2026-08-17-region-wave-v4');
   });
 })();
 
@@ -1599,7 +1599,9 @@ async function runExpansionPhase(roomId) {
       scores: room.scores
     });
 
-
+    // Nezačínej další tah dřív, než klienti stihnou dokončit vlnu zabarvení.
+    // 860 ms animace + malá vizuální pauza.
+    if (!await delayAlive(roomId, 1100)) return;
 
     console.log(`✅ Kolo ${round} dokončeno`);
 
@@ -2049,6 +2051,10 @@ async function runBattleOnRegion(roomId, attacker, defender, region) {
       scores: room.scores
     });
     io.to(roomId).emit("updateScores", { scores: room.scores });
+
+    // Při změně majitele trvá odbarvení + nové zabarvení cca 1,57 s.
+    // Další bitevní tah začne až po dokončení efektu a krátké pauze.
+    if (!await delayAlive(roomId, 1800)) return;
     return;
   }
 
@@ -2153,7 +2159,8 @@ async function runBattleOnRegion(roomId, attacker, defender, region) {
   });
   io.to(roomId).emit("updateScores", { scores: room.scores });
 
-  await delay(1000);
+  // Stejná ochranná pauza i po dobytí základny / hromadném převodu území.
+  if (!await delayAlive(roomId, 1800)) return;
 }
 
 

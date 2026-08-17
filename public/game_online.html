@@ -4546,6 +4546,7 @@ if (regionValues && typeof regionValues === 'object') {
             fillMs: 860,
             clearMs: 600,
             neutralPauseMs: 110,
+            interactionPauseMs: 200,
             radiusPadding: 1.08
         });
 
@@ -4633,7 +4634,14 @@ if (regionValues && typeof regionValues === 'object') {
             overlay.style.pointerEvents = 'none';
             overlay.style.cursor = 'default';
             overlay.style.filter = 'none';
-            overlay.style.opacity = '1';
+
+            // Dočasná vrstva musí vypadat úplně stejně jako už obarvený region.
+            // .region má vlastní opacity/fill-opacity; po odebrání třídy by jinak
+            // animační vlna působila výrazně jasněji než výsledná barva pole.
+            const regionComputed = getComputedStyle(regionEl);
+            overlay.style.opacity = regionComputed.opacity || '1';
+            overlay.style.fillOpacity = regionComputed.fillOpacity || '1';
+            overlay.style.strokeOpacity = regionComputed.strokeOpacity || '1';
             overlay.style.fill = fill;
             overlay.setAttribute('clip-path', `url(#${clipId})`);
             overlay.setAttribute('aria-hidden', 'true');
@@ -4683,6 +4691,30 @@ if (regionValues && typeof regionValues === 'object') {
                 }
             });
             return next;
+        }
+
+        window.__regionWaveBarrier = window.__regionWaveBarrier || Promise.resolve();
+
+        function trackRegionWaveBarrier(promise) {
+            const batch = Promise.resolve(promise)
+                .catch(err => {
+                    console.warn('⚠️ Region wave batch failed:', err);
+                })
+                .then(() => new Promise(resolve => setTimeout(resolve, REGION_WAVE.interactionPauseMs)));
+
+            const previous = window.__regionWaveBarrier || Promise.resolve();
+            const combined = Promise.allSettled([previous, batch]).then(() => {});
+            window.__regionWaveBarrier = combined;
+            return combined;
+        }
+
+        async function waitForRegionWaveIdle() {
+            // Pokud během čekání vznikne další animační dávka, počkáme i na ni.
+            while (true) {
+                const barrier = window.__regionWaveBarrier || Promise.resolve();
+                await barrier.catch(() => {});
+                if (barrier === window.__regionWaveBarrier) return;
+            }
         }
 
         async function waveFillRegion(regionEl, newFill) {
@@ -4788,7 +4820,7 @@ if (regionValues && typeof regionValues === 'object') {
             return Promise.allSettled(jobs);
         }
 
-        console.log('🧪 VLASTENEC FIX: region-color-wave-v3-slower-bases');
+        console.log('🧪 VLASTENEC FIX: region-color-wave-v4-polish');
 
         // Colorize bases
         // Úvodní základny používají stejnou vlnu jako pozdější rozšiřování.
@@ -7903,8 +7935,11 @@ function installBattleHoverDelegation() {
 
 installBattleHoverDelegation();
 
-socket.on("battleAvailableRegions", ({ regions }) => {
+socket.on("battleAvailableRegions", async ({ regions }) => {
     console.log("🟢 Dostupná nepřátelská políčka:", regions);
+
+    await waitForRegionWaveIdle();
+    console.log("🌊 Bitevní mapa je po animaci připravená pro další tah.");
     console.log("🧪 BATTLE HOVER v3 (delegated) aktivní");
 
     const validRegions = Array.isArray(regions) ? regions : [];
@@ -8172,7 +8207,7 @@ socket.on("removeAnswerOptions", () => {
         //FÁZE 1 - ROZDĚLENÍ ZÁKLADEN
         if (action === "basesSettle") {
             console.log("▶️ Spouštím fázi rozdělování základen");
-            basesSettle();
+            runBasesOnce();
         }
 
         if (action === "expansionintro") {
@@ -8205,9 +8240,9 @@ socket.on("removeAnswerOptions", () => {
         console.log(`🎯 Tah hráče ${player}`);
         highlightExpansionTurnStick(player, round);
         if (player === myPlayerNumber) {
-            console.log("✅ Jsi na tahu, čekám na dostupná políčka...");
-            startCountdownTile(10);
-            // čekáme na socket "availableRegions"
+            console.log("✅ Jsi na tahu, čekám na dokončení mapy a dostupná políčka...");
+            // Odpočet spustíme až ve chvíli, kdy jsou regiony skutečně klikatelné.
+            // Jinak by část desetisekundového limitu uběhla během animační vlny.
         }
     });
 
@@ -8226,8 +8261,11 @@ function resetRegion(e) {
 
 
 
-socket.on("availableRegions", ({ regions }) => {
+socket.on("availableRegions", async ({ regions }) => {
     console.log("🟢 Dostupná políčka:", regions);
+
+    await waitForRegionWaveIdle();
+    console.log("🌊 Mapa je po animaci připravená pro další tah.");
 
     // ✅ Reset filtrů a listenerů
     document.querySelectorAll(".region").forEach(el => {
@@ -8359,11 +8397,12 @@ socket.on("availableRegions", ({ regions }) => {
             }
 
             const wavePhase = currentPhase || window.currentPhase || '';
-            animateRegionOwnershipChanges(previousRegions, regions, wavePhase)
+            const waveBatch = animateRegionOwnershipChanges(previousRegions, regions, wavePhase)
                 .catch(err => {
                     console.warn('⚠️ Region wave animation failed, using direct paint:', err);
                     colorizeTiles();
                 });
+            trackRegionWaveBarrier(waveBatch);
             
     });
 
