@@ -3095,3 +3095,67 @@ body.is-game-started #game_chat_drawer .modern-chat-empty {
   }
 }
 
+
+/* ============================================================
+   VLASTENEC — CATEGORY ARTWORK FIT V5
+   Show the new 4:3 category artwork in full inside the existing
+   compact lobby tiles. Labels live in their own black footer.
+   ============================================================ */
+
+.lobby-category-grid-v2 .lobby-cat-tile {
+  display: grid !important;
+  grid-template-rows: minmax(0, 1fr) 21px;
+  background: #030405 !important;
+}
+
+.lobby-category-grid-v2 .lobby-cat-tile img {
+  width: 100% !important;
+  height: 100% !important;
+  min-width: 0;
+  min-height: 0;
+  box-sizing: border-box;
+  object-fit: contain !important;
+  object-position: center !important;
+  background: #020303;
+  padding: 2px 4px 0;
+  transform: none !important;
+}
+
+/* Keep the whole illustration visible even on hover. */
+.lobby-category-grid-v2 .lobby-cat-tile:not(:has(input:disabled)):hover img {
+  transform: none !important;
+}
+
+/* Give the category name a dedicated footer instead of overlaying artwork. */
+.lobby-category-grid-v2 .lobby-cat-name {
+  position: static !important;
+  left: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+  z-index: 3;
+  width: 100%;
+  height: 21px;
+  min-width: 0;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0 7px !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0 !important;
+  border-top: 1px solid rgba(255,255,255,.055);
+  background: #030405 !important;
+  backdrop-filter: none !important;
+  color: rgba(255,255,255,.92);
+  line-height: 1;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Keep the selection badge over the artwork area rather than the footer. */
+.lobby-category-grid-v2 .lobby-cat-check {
+  top: 7px;
+  right: 7px;
+}
