@@ -4760,6 +4760,7 @@ if (regionValues && typeof regionValues === 'object') {
 
                 // Rozšiřování / dobývání volného pole: jen barva ze středu ven.
                 if (!oldOwner && newOwner && (phase === 'expansion' || phase === 'conquest')) {
+                    console.log(`🌊 Region wave fill: ${id} → P${newOwner} (${phase})`);
                     animatedIds.add(id);
                     jobs.push(queueRegionWave(id, () => waveFillRegion(regionEl, newFill)));
                     return;
@@ -4768,6 +4769,7 @@ if (regionValues && typeof regionValues === 'object') {
                 // Bitva: pokud se mění vlastník, stará barva se nejdřív stáhne,
                 // potom se nová rozlije ven.
                 if (oldOwner && newOwner && oldOwner !== newOwner && phase === 'battle') {
+                    console.log(`🌊 Region wave transfer: ${id} P${oldOwner} → P${newOwner} (${phase})`);
                     animatedIds.add(id);
                     jobs.push(queueRegionWave(id, () => waveTransferRegion(regionEl, oldFill, newFill)));
                     return;
@@ -4785,7 +4787,7 @@ if (regionValues && typeof regionValues === 'object') {
             return Promise.allSettled(jobs);
         }
 
-        console.log('🧪 VLASTENEC FIX: region-color-wave-v1');
+        console.log('🧪 VLASTENEC FIX: region-color-wave-v2-phase-sync');
 
         //Colorize bases
         function colorizeBaseRegion(playerNumber) {
@@ -7788,6 +7790,7 @@ document.querySelectorAll(".region").forEach(region => {
 
     socket.on("phaseChange", (data) => {
         currentPhase = data.phase;
+        window.currentPhase = data.phase;
         console.log(`📢 Fáze změněna na: ${currentPhase}`);
         if (currentPhase !== 'expansion' && currentPhase !== 'battle') {
             clearActiveTurnStick();
@@ -7799,6 +7802,8 @@ document.querySelectorAll(".region").forEach(region => {
 
     socket.on("conquestIntro", (data) => {
         const { title } = data;
+        currentPhase = "conquest";
+        window.currentPhase = "conquest";
         console.log(`📢 ${title}`);
 
         // Zobraz na obrazovce – můžeš použít svůj existující panel
@@ -7826,6 +7831,8 @@ document.querySelectorAll(".region").forEach(region => {
 
 
     socket.on("battleIntro", ({ battlePlan, title }) => {
+        currentPhase = "battle";
+        window.currentPhase = "battle";
         console.log("⚔️ Fáze bitev začíná! Pořadí hráčů:", battlePlan);
         window.currentBattlePlan = battlePlan;
         clearActiveTurnStick();
@@ -8167,6 +8174,8 @@ socket.on("removeAnswerOptions", () => {
         }
 
         if (action === "expansionintro") {
+            currentPhase = "expansion";
+            window.currentPhase = "expansion";
             console.log("▶️ Spouštím fázi rozšiřování");
             console.log("🧭 Přijat expansionPlan:", expansionPlan);
             allowPaint = true;
