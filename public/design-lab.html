@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="cs" data-theme="portal">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Vlastenec — Design Lab</title>
+  <script>
+    try { document.documentElement.dataset.theme = localStorage.getItem('vlastenec-theme') || 'portal'; } catch (_) {}
+  </script>
+  <link rel="stylesheet" href="design-lab.css">
+</head>
+<body>
+  <div class="ambient lion-watermark" aria-hidden="true"></div>
+  <header class="lab-header">
+    <div class="brand-lockup">
+      <img src="logo.svg" alt="Vlastenec" class="brand-logo">
+      <span class="lab-badge">DESIGN LAB</span>
+    </div>
+
+    <nav class="page-tabs" aria-label="Náhled stránky">
+      <button class="page-tab is-active" data-page="home">Homepage</button>
+      <button class="page-tab" data-page="league">Liga</button>
+      <button class="page-tab" data-page="lobby">Lobby</button>
+      <button class="page-tab" data-page="settings">Nastavení</button>
+      <button class="page-tab" data-page="game">Hra</button>
+    </nav>
+
+    <div class="theme-picker" aria-label="Vizuální styl">
+      <button class="theme-trigger" id="themeTrigger" aria-expanded="false">
+        <span class="theme-dot"></span>
+        <span id="themeName">Portál</span>
+        <span class="chevron">⌄</span>
+      </button>
+      <div class="theme-menu" id="themeMenu">
+        <button data-theme-choice="portal">
+          <span class="theme-swatch swatch-portal"></span>
+          <span><strong>Portál</strong><small>Tmavé sklo · moderní</small></span>
+        </button>
+        <button data-theme-choice="heritage">
+          <span class="theme-swatch swatch-heritage"></span>
+          <span><strong>Heritage</strong><small>Lev · tradice · výraznost</small></span>
+        </button>
+        <button data-theme-choice="studio">
+          <span class="theme-swatch swatch-studio"></span>
+          <span><strong>Studio</strong><small>Světlé · čisté · prémiové</small></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="lab-shell">
+    <div class="lab-note">
+      <span class="note-dot"></span>
+      <span>Toto je vizuální prototyp. Přepínač stylu se ukládá a všechny náhledy používají stejný designový systém.</span>
+    </div>
+
+    <!-- HOMEPAGE -->
+    <section class="page-view is-active" data-view="home">
+      <div class="portal-topline">
+        <div>
+          <p class="eyebrow">HLAVNÍ PORTÁL</p>
+          <h1>Vítej zpět, <span>Amatrixus</span>.</h1>
+          <p class="lead">Jedna hra, čtyři způsoby soupeření. Vyber si, jak chceš dnes bojovat o mapu.</p>
+        </div>
+        <div class="profile-chip">
+          <div><strong>Amatrixus</strong><span>Zemská liga II · 742 LB</span></div>
+          <img src="avatar.png" alt="">
+        </div>
+      </div>
+
+      <section class="continue-card">
+        <div class="continue-copy">
+          <p class="eyebrow">POKRAČOVAT</p>
+          <h2>Zpátky do ligy?</h2>
+          <p>Poslední tři zápasy: 1. · 2. · 1. místo. Do postupu ti zbývá 258 bodů.</p>
+          <div class="mini-progress"><span style="width:74%"></span></div>
+        </div>
+        <button class="primary-button">HRÁT LIGU <span>→</span></button>
+      </section>
+
+      <div class="mode-grid">
+        <article class="mode-card mode-random">
+          <img src="random.png" alt="" class="mode-art">
+          <div class="mode-overlay"></div>
+          <div class="mode-content">
+            <span class="mode-index">01</span>
+            <p class="eyebrow">RYCHLÁ HRA</p>
+            <h3>Náhodní soupeři</h3>
+            <p>Najdeme ti dva hráče a hra může začít.</p>
+            <button class="card-action">Najít soupeře <span>→</span></button>
+          </div>
+        </article>
+        <article class="mode-card mode-friends">
+          <img src="friends.png" alt="" class="mode-art">
+          <div class="mode-overlay"></div>
+          <div class="mode-content">
+            <span class="mode-index">02</span>
+            <p class="eyebrow">SOUKROMÁ HRA</p>
+            <h3>Hra s přáteli</h3>
+            <p>Vytvoř místnost nebo se připoj pomocí kódu.</p>
+            <button class="card-action">Vytvořit místnost <span>→</span></button>
+          </div>
+        </article>
+        <article class="mode-card mode-bots">
+          <img src="bots.png" alt="" class="mode-art">
+          <div class="mode-overlay"></div>
+          <div class="mode-content">
+            <span class="mode-index">03</span>
+            <p class="eyebrow">TRÉNINK</p>
+            <h3>Hra s boty</h3>
+            <p>Hraj vlastním tempem a piluj slabé kategorie.</p>
+            <button class="card-action">Spustit hru <span>→</span></button>
+          </div>
+        </article>
+        <article class="mode-card mode-league">
+          <img src="liga.png" alt="" class="mode-art">
+          <div class="mode-overlay"></div>
+          <div class="mode-content">
+            <span class="mode-index">04</span>
+            <p class="eyebrow">SEZÓNA I</p>
+            <h3>Liga</h3>
+            <p>Stoupej divizemi, sleduj formu a buduj dlouhodobý profil.</p>
+            <button class="card-action">Otevřít ligu <span>→</span></button>
+          </div>
+        </article>
+      </div>
+
+      <div class="portal-footer-line">
+        <span>32 odehraných ligových zápasů</span>
+        <span>76 % správných odpovědí</span>
+        <button class="link-button">Nastavení</button>
+      </div>
+    </section>
+
+    <!-- LEAGUE -->
+    <section class="page-view" data-view="league">
+      <section class="league-hero">
+        <div class="league-copy">
+          <div class="hero-meta"><span class="status-pill">● SEZÓNA I</span><span>Zbývá 23 dní</span></div>
+          <p class="eyebrow">TVOJE AKTUÁLNÍ ÚROVEŇ</p>
+          <h1>Zemská liga <em>II</em></h1>
+          <p class="lead">Drž se mezi nejlepšími, sbírej ligové body a probojuj se do vyšší divize.</p>
+          <div class="rating-row"><strong>742 <small>LB</small></strong><span>1000 LB</span></div>
+          <div class="progress"><span style="width:74.2%"></span></div>
+          <div class="progress-caption"><span><strong>258</strong> bodů do Zemské ligy I</span><span>#23 v divizi</span></div>
+          <div class="button-row"><button class="primary-button">HRÁT LIGU <span>→</span></button><button class="secondary-button">Celý žebříček</button></div>
+        </div>
+        <div class="league-emblem">
+          <div class="shield"><span>✦</span><strong>II</strong><small>ZEMSKÁ</small></div>
+          <p>AKTUÁLNÍ DIVIZE</p>
+        </div>
+      </section>
+
+      <div class="dashboard-grid">
+        <article class="panel panel-wide">
+          <header class="panel-title"><div><p class="eyebrow">FORMA</p><h2>Poslední zápasy</h2></div><strong class="positive">+60 <small>LB</small></strong></header>
+          <div class="matches">
+            <div class="match gold"><span>1.</span><strong>+27</strong><small>LB</small></div>
+            <div class="match"><span>2.</span><strong>+10</strong><small>LB</small></div>
+            <div class="match gold"><span>1.</span><strong>+24</strong><small>LB</small></div>
+            <div class="match negative"><span>3.</span><strong>-9</strong><small>LB</small></div>
+            <div class="match"><span>2.</span><strong>+8</strong><small>LB</small></div>
+          </div>
+          <div class="summary-row"><span><small>Aktuální série</small><strong>3× TOP 2</strong></span><span><small>Sezónní bilance</small><strong>11–9–5</strong></span><span><small>Trend</small><strong class="positive">↑ 8 %</strong></span></div>
+        </article>
+
+        <article class="panel">
+          <header class="panel-title"><div><p class="eyebrow">ŽEBŘÍČEK</p><h2>Okolo tebe</h2></div><span class="tiny-pill">Moje liga</span></header>
+          <div class="ranking">
+            <div><span>#21</span><strong>Karel87</strong><b>812</b></div>
+            <div><span>#22</span><strong>Horymír</strong><b>798</b></div>
+            <div class="me"><span>#23</span><strong>Amatrixus <small>TY</small></strong><b>786</b></div>
+            <div><span>#24</span><strong>Pérák</strong><b>780</b></div>
+            <div><span>#25</span><strong>Jaromír</strong><b>761</b></div>
+          </div>
+        </article>
+
+        <article class="panel">
+          <header class="panel-title"><div><p class="eyebrow">TENTO TÝDEN</p><h2>Tři cíle</h2></div><span class="subtle">Reset za 3 dny</span></header>
+          <div class="goals">
+            <label><span>Odehraj 3 ligové zápasy <b>2/3</b></span><i><u style="width:66%"></u></i></label>
+            <label><span>Vyhraj 10 územních bitev <b>7/10</b></span><i><u style="width:70%"></u></i></label>
+            <label><span>Uspěj v 6 kategoriích <b>4/6</b></span><i><u style="width:66%"></u></i></label>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- LOBBY -->
+    <section class="page-view" data-view="lobby">
+      <div class="page-heading">
+        <div><p class="eyebrow">HRA S PŘÁTELI</p><h1>Připravte bojiště.</h1><p class="lead">Všechno důležité na jedné obrazovce, bez zbytečných kroků.</p></div>
+        <button class="secondary-button">← Zpět</button>
+      </div>
+
+      <div class="lobby-grid">
+        <article class="panel room-panel">
+          <p class="eyebrow">KÓD MÍSTNOSTI</p>
+          <div class="room-code"><strong>UFSB76</strong><button>⧉</button></div>
+          <p class="subtle">Sdílej kód nebo odkaz. Hra se spustí, až budou připraveni všichni tři hráči.</p>
+          <div class="players-list">
+            <div class="player-row ready"><span class="avatar-mini"><img src="avatar.png" alt=""></span><div><strong>Amatrixus</strong><small>Zakladatel</small></div><b>PŘIPRAVEN</b></div>
+            <div class="player-row ready"><span class="avatar-mini text-avatar">J</span><div><strong>Jarmila</strong><small>Hráč 2</small></div><b>PŘIPRAVEN</b></div>
+            <div class="player-row waiting"><span class="avatar-mini text-avatar">?</span><div><strong>Čekáme na hráče</strong><small>Hráč 3</small></div><b>ČEKÁM</b></div>
+          </div>
+          <button class="primary-button full">SPUSTIT HRU <span>→</span></button>
+        </article>
+
+        <article class="panel lobby-settings">
+          <header class="panel-title"><div><p class="eyebrow">PRAVIDLA</p><h2>Nastavení hry</h2></div><span class="tiny-pill">Zakladatel</span></header>
+          <div class="setting-line"><div><strong>Délka otázek</strong><span>Standardní tempo</span></div><div class="segmented"><button>10 s</button><button class="active">15 s</button><button>20 s</button></div></div>
+          <div class="setting-line stack"><div><strong>Kategorie</strong><span>Vyber, co se může objevit ve hře.</span></div>
+            <div class="category-chips"><button class="on">Vědy</button><button class="on">Literatura</button><button class="on">Technologie</button><button class="on">Geografie</button><button class="on">Historie</button><button class="on">Kultura</button><button>Sport</button><button class="on">Osobnosti</button><button>Politika</button></div>
+          </div>
+          <div class="setting-line"><div><strong>Náhodné pořadí</strong><span>Každé kolo jiné.</span></div><button class="toggle on"><i></i></button></div>
+          <div class="setting-line"><div><strong>Zvuky</strong><span>Efekty během partie.</span></div><button class="toggle on"><i></i></button></div>
+        </article>
+      </div>
+    </section>
+
+    <!-- SETTINGS -->
+    <section class="page-view" data-view="settings">
+      <div class="page-heading">
+        <div><p class="eyebrow">NASTAVENÍ</p><h1>Vlastenec podle tebe.</h1><p class="lead">Jen volby, které skutečně něco mění. Zbytek necháváme hře.</p></div>
+      </div>
+
+      <div class="settings-layout">
+        <aside class="settings-nav panel">
+          <button class="active">Obecné</button><button>Zvuk</button><button>Vzhled</button><button>Účet</button>
+        </aside>
+        <section class="panel settings-content">
+          <header class="panel-title"><div><p class="eyebrow">OBECNÉ</p><h2>Chování hry</h2></div></header>
+          <div class="setting-line"><div><strong>Animace mapy</strong><span>Plynulé přechody, piny a efekty.</span></div><button class="toggle on"><i></i></button></div>
+          <div class="setting-line"><div><strong>Automaticky skrýt chat</strong><span>Při otázce nechá plnou pozornost hře.</span></div><button class="toggle"><i></i></button></div>
+          <div class="setting-line"><div><strong>Hlasitost efektů</strong><span>Zvuky tahu, úspěchu a bitvy.</span></div><div class="volume"><i><u style="width:72%"></u></i><b>72</b></div></div>
+          <div class="setting-line stack"><div><strong>Výchozí kategorie</strong><span>Použijí se při vytváření vlastní hry.</span></div><div class="category-chips"><button class="on">Vědy</button><button class="on">Literatura</button><button class="on">Historie</button><button class="on">Geografie</button><button>Kultura</button><button>Sport</button></div></div>
+          <div class="settings-actions"><button class="secondary-button">Obnovit výchozí</button><button class="primary-button">ULOŽIT ZMĚNY</button></div>
+        </section>
+      </div>
+    </section>
+
+    <!-- GAME -->
+    <section class="page-view" data-view="game">
+      <div class="game-frame">
+        <div class="game-cover"></div>
+        <img src="map.svg" alt="Mapa" class="game-map">
+        <div class="game-topbar">
+          <div class="score-chip player-blue"><span class="score-dot"></span><div><small>TY</small><strong>Amatrixus</strong></div><b>2500</b></div>
+          <div class="phase-chip"><small>BITVY · KOLO 2</small><strong>Vyber území pro útok</strong></div>
+          <div class="score-chip player-red"><span class="score-dot"></span><div><small>SOUPĚŘ</small><strong>Jarmila</strong></div><b>1900</b></div>
+        </div>
+        <div class="map-pin pin-a"></div><div class="map-pin pin-b"></div><div class="map-pin pin-c"></div>
+        <div class="region-value-demo value-a">300</div><div class="region-value-demo value-b">200</div><div class="region-value-demo value-c">1000</div>
+        <div class="game-bottombar">
+          <span><i></i> Dostupné cíle jsou zvýrazněné</span>
+          <span>09 s</span>
+        </div>
+        <div class="question-demo">
+          <div class="question-head"><span>HISTORIE</span><b>08</b></div>
+          <h2>Která událost zahájila třicetiletou válku?</h2>
+          <div class="answer-grid"><button>Bitva na Bílé hoře</button><button>Pražská defenestrace</button><button>Vestfálský mír</button><button>Bitva u Lipan</button></div>
+        </div>
+      </div>
+      <p class="game-note">Herní náhled je pouze vizuální. Barvy hráčů, mapa a herní významové barvy zůstávají ve všech návrzích stejné; mění se pouze okolní UI a atmosféra.</p>
+    </section>
+  </main>
+
+  <script src="design-lab.js"></script>
+</body>
+</html>
