@@ -8393,7 +8393,18 @@ socket.on("gameOver", ({ message, finalScores, matchStats }) => {
 function showNumericResultsForTwo(correctAnswer, answers, attacker, defender) {
     console.log("📊 Výsledky numerické otázky (2 hráči):", answers);
 
-   
+    // ✅ Výsledek otázky vždy ukončí možnost odpovídat — i když hráč nic neodeslal.
+    if (window.__numericInputHideTimerTwo) {
+        clearTimeout(window.__numericInputHideTimerTwo);
+        window.__numericInputHideTimerTwo = null;
+    }
+    const numericInputTwo = document.getElementById("numinput2");
+    const numericSubmitTwo = document.getElementById("numsubmit2");
+    if (numericInputTwo) {
+        numericInputTwo.style.display = "none";
+        numericInputTwo.blur();
+    }
+    if (numericSubmitTwo) numericSubmitTwo.style.display = "none";
 
     num2answerarea.style.display = "block";
     ["num2answerbox1","num2answerbox2"].forEach(id=>{
@@ -8548,6 +8559,10 @@ function showNumericQuestionForTwo(questionText, timeLimit, attacker, defender, 
         // ✅ Skryj input
         document.getElementById("numinput2").style.display = "none";
         document.getElementById("numsubmit2").style.display = "none";
+        if (window.__numericInputHideTimerTwo) {
+            clearTimeout(window.__numericInputHideTimerTwo);
+            window.__numericInputHideTimerTwo = null;
+        }
     }
 
     document.getElementById("numsubmit2").onclick = submitNumericAnswerTwo;
@@ -8557,6 +8572,20 @@ function showNumericQuestionForTwo(questionText, timeLimit, attacker, defender, 
 
     // ✅ Spusť odpočet (použij stejnou funkci startCountdown)
     startCountdown(timeLimit);
+
+    // ✅ Jakmile vizuální odpočet doběhne na nulu, input i tlačítko zmizí
+    // i v případě, že hráč nic nenapsal a nic neodeslal.
+    if (window.__numericInputHideTimerTwo) clearTimeout(window.__numericInputHideTimerTwo);
+    window.__numericInputHideTimerTwo = setTimeout(() => {
+        const input = document.getElementById("numinput2");
+        const submit = document.getElementById("numsubmit2");
+        if (input) {
+            input.style.display = "none";
+            input.blur();
+        }
+        if (submit) submit.style.display = "none";
+        window.__numericInputHideTimerTwo = null;
+    }, Math.max(0, Number(timeLimit) || 0) * 1000);
 }
 
 
@@ -8631,6 +8660,10 @@ function showNumericQuestionForThree(questionText, timeLimit) {
         // ✅ Skryj input
         document.getElementById("numinput3").style.display = "none";
         document.getElementById("numsubmit3").style.display = "none";
+        if (window.__numericInputHideTimerThree) {
+            clearTimeout(window.__numericInputHideTimerThree);
+            window.__numericInputHideTimerThree = null;
+        }
     }
 
     document.getElementById("numsubmit3").onclick = submitNumericAnswer;
@@ -8640,6 +8673,19 @@ function showNumericQuestionForThree(questionText, timeLimit) {
 
     // ✅ Spusť odpočet (máš vlastní funkci startCountdown)
     startCountdown(timeLimit);
+
+    // ✅ Totéž pro otázku všech tří hráčů: po nule už nelze odpovídat.
+    if (window.__numericInputHideTimerThree) clearTimeout(window.__numericInputHideTimerThree);
+    window.__numericInputHideTimerThree = setTimeout(() => {
+        const input = document.getElementById("numinput3");
+        const submit = document.getElementById("numsubmit3");
+        if (input) {
+            input.style.display = "none";
+            input.blur();
+        }
+        if (submit) submit.style.display = "none";
+        window.__numericInputHideTimerThree = null;
+    }, Math.max(0, Number(timeLimit) || 0) * 1000);
 }
 
 
@@ -8647,8 +8693,14 @@ function showNumericQuestionForThree(questionText, timeLimit) {
 
 function showNumericResultsForThree(correctAnswer, answers) {
 
+    if (window.__numericInputHideTimerThree) {
+        clearTimeout(window.__numericInputHideTimerThree);
+        window.__numericInputHideTimerThree = null;
+    }
+
     // ✅ Skryj input
         document.getElementById("numinput3").style.display = "none";
+        document.getElementById("numinput3").blur();
         document.getElementById("numsubmit3").style.display = "none";
 
 
@@ -9413,7 +9465,8 @@ function showNumericResultsForThree(correctAnswer, answers) {
         </script>
 
 
-	</body>
+	<script>console.log("🧪 VLASTENEC FIX: numeric-timeout-input-v1");</script>
+</body>
 
 
 </html>
