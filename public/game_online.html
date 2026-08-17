@@ -4605,7 +4605,25 @@ if (regionValues && typeof regionValues === 'object') {
             return defs;
         }
 
-        function makeRegionWaveOverlay(regionEl, fill, initialRadius) {
+        function styleRegionWaveClone(clone, regionEl, fill) {
+            clone.removeAttribute('id');
+            clone.classList.remove('region', 'battle-selectable', 'unavailable');
+            clone.classList.add('region-wave-overlay');
+            clone.style.pointerEvents = 'none';
+            clone.style.cursor = 'default';
+            clone.style.filter = 'none';
+
+            const regionComputed = getComputedStyle(regionEl);
+            clone.style.opacity = regionComputed.opacity || '1';
+            clone.style.fillOpacity = regionComputed.fillOpacity || '1';
+            clone.style.strokeOpacity = regionComputed.strokeOpacity || '1';
+            clone.style.stroke = regionComputed.stroke || clone.style.stroke;
+            clone.style.strokeWidth = regionComputed.strokeWidth || clone.style.strokeWidth;
+            clone.style.fill = fill;
+            clone.setAttribute('aria-hidden', 'true');
+        }
+
+        function makeRegionWaveSplit(regionEl, innerFill, outerFill, initialRadius) {
             const defs = ensureRegionWaveDefs();
             if (!defs || !regionEl || !regionEl.parentNode) return null;
 
@@ -4614,48 +4632,71 @@ if (regionValues && typeof regionValues === 'object') {
             const cx = bbox.x + bbox.width / 2;
             const cy = bbox.y + bbox.height / 2;
             const maxRadius = Math.hypot(bbox.width / 2, bbox.height / 2) * REGION_WAVE.radiusPadding;
-            const clipId = `region-wave-${Date.now()}-${++window.__regionWaveSeq}`;
+            const uid = `${Date.now()}-${++window.__regionWaveSeq}`;
+            const clipId = `region-wave-inner-${uid}`;
+            const maskId = `region-wave-outer-${uid}`;
 
             const clip = document.createElementNS(svgNS, 'clipPath');
             clip.setAttribute('id', clipId);
             clip.setAttribute('clipPathUnits', 'userSpaceOnUse');
-
-            const circle = document.createElementNS(svgNS, 'circle');
-            circle.setAttribute('cx', String(cx));
-            circle.setAttribute('cy', String(cy));
-            circle.setAttribute('r', String(initialRadius));
-            clip.appendChild(circle);
+            const innerCircle = document.createElementNS(svgNS, 'circle');
+            innerCircle.setAttribute('cx', String(cx));
+            innerCircle.setAttribute('cy', String(cy));
+            innerCircle.setAttribute('r', String(initialRadius));
+            clip.appendChild(innerCircle);
             defs.appendChild(clip);
 
-            const overlay = regionEl.cloneNode(true);
-            overlay.removeAttribute('id');
-            overlay.classList.remove('region', 'battle-selectable', 'unavailable');
-            overlay.classList.add('region-wave-overlay');
-            overlay.style.pointerEvents = 'none';
-            overlay.style.cursor = 'default';
-            overlay.style.filter = 'none';
+            const mask = document.createElementNS(svgNS, 'mask');
+            mask.setAttribute('id', maskId);
+            mask.setAttribute('maskUnits', 'userSpaceOnUse');
+            const pad = maxRadius * 1.15;
+            mask.setAttribute('x', String(bbox.x - pad));
+            mask.setAttribute('y', String(bbox.y - pad));
+            mask.setAttribute('width', String(bbox.width + pad * 2));
+            mask.setAttribute('height', String(bbox.height + pad * 2));
 
-            // Dočasná vrstva musí vypadat úplně stejně jako už obarvený region.
-            // .region má vlastní opacity/fill-opacity; po odebrání třídy by jinak
-            // animační vlna působila výrazně jasněji než výsledná barva pole.
-            const regionComputed = getComputedStyle(regionEl);
-            overlay.style.opacity = regionComputed.opacity || '1';
-            overlay.style.fillOpacity = regionComputed.fillOpacity || '1';
-            overlay.style.strokeOpacity = regionComputed.strokeOpacity || '1';
-            overlay.style.fill = fill;
-            overlay.setAttribute('clip-path', `url(#${clipId})`);
-            overlay.setAttribute('aria-hidden', 'true');
+            const maskRect = document.createElementNS(svgNS, 'rect');
+            maskRect.setAttribute('x', String(bbox.x - pad));
+            maskRect.setAttribute('y', String(bbox.y - pad));
+            maskRect.setAttribute('width', String(bbox.width + pad * 2));
+            maskRect.setAttribute('height', String(bbox.height + pad * 2));
+            maskRect.setAttribute('fill', 'white');
+            mask.appendChild(maskRect);
 
-            // Bezprostředně nad daným regionem, ale pořád v jeho SVG vrstvě.
-            regionEl.parentNode.insertBefore(overlay, regionEl.nextSibling);
+            const outerHoleCircle = document.createElementNS(svgNS, 'circle');
+            outerHoleCircle.setAttribute('cx', String(cx));
+            outerHoleCircle.setAttribute('cy', String(cy));
+            outerHoleCircle.setAttribute('r', String(initialRadius));
+            outerHoleCircle.setAttribute('fill', 'black');
+            mask.appendChild(outerHoleCircle);
+            defs.appendChild(mask);
 
-            return { overlay, clip, circle, maxRadius };
+            const outerOverlay = regionEl.cloneNode(true);
+            styleRegionWaveClone(outerOverlay, regionEl, outerFill);
+            outerOverlay.setAttribute('mask', `url(#${maskId})`);
+
+            const innerOverlay = regionEl.cloneNode(true);
+            styleRegionWaveClone(innerOverlay, regionEl, innerFill);
+            innerOverlay.setAttribute('clip-path', `url(#${clipId})`);
+
+            const oldVisibility = regionEl.style.visibility;
+            regionEl.style.visibility = 'hidden';
+            regionEl.parentNode.insertBefore(outerOverlay, regionEl.nextSibling);
+            regionEl.parentNode.insertBefore(innerOverlay, outerOverlay.nextSibling);
+
+            return { regionEl, oldVisibility, innerOverlay, outerOverlay, clip, mask, innerCircle, outerHoleCircle, maxRadius };
         }
 
-        function removeRegionWaveOverlay(parts) {
+        function removeRegionWaveSplit(parts, finalFill) {
             if (!parts) return;
-            parts.overlay?.remove();
+            if (parts.regionEl) {
+                if (finalFill) setRegionVisualFill(parts.regionEl, finalFill);
+                parts.regionEl.style.visibility = parts.oldVisibility || '';
+            }
+            parts.innerOverlay?.remove();
+            parts.outerOverlay?.remove();
             parts.clip?.remove();
+            parts.mask?.remove();
         }
 
         function easeOutCubic(t) {
@@ -4666,13 +4707,17 @@ if (regionValues && typeof regionValues === 'object') {
             return t * t * t;
         }
 
-        function animateWaveRadius(circle, from, to, duration, easing) {
+        function animateWaveRadius(circleOrCircles, from, to, duration, easing) {
+            const circles = Array.isArray(circleOrCircles)
+                ? circleOrCircles.filter(Boolean)
+                : [circleOrCircles].filter(Boolean);
             return new Promise(resolve => {
                 const started = performance.now();
                 function frame(now) {
                     const raw = Math.min(1, (now - started) / Math.max(1, duration));
                     const k = easing ? easing(raw) : raw;
-                    circle.setAttribute('r', String(from + (to - from) * k));
+                    const radius = String(from + (to - from) * k);
+                    circles.forEach(circle => circle.setAttribute('r', radius));
                     if (raw < 1) requestAnimationFrame(frame);
                     else resolve();
                 }
@@ -4719,52 +4764,52 @@ if (regionValues && typeof regionValues === 'object') {
 
         async function waveFillRegion(regionEl, newFill) {
             if (!regionEl || !newFill) return;
-            const parts = makeRegionWaveOverlay(regionEl, newFill, 0);
+            const neutral = neutralRegionFill(regionEl);
+            const parts = makeRegionWaveSplit(regionEl, newFill, neutral, 0);
             if (!parts) {
                 setRegionVisualFill(regionEl, newFill);
                 return;
             }
 
             try {
-                await animateWaveRadius(parts.circle, 0, parts.maxRadius, REGION_WAVE.fillMs, easeOutCubic);
-                // availableRegions může během animace původní path nahradit cloneNode().
-                // Vždy proto dokončíme barvu na právě živém SVG elementu.
-                const liveRegion = regionEl.id ? document.getElementById(regionEl.id) : null;
-                setRegionVisualFill(liveRegion || regionEl, newFill);
+                await animateWaveRadius(
+                    [parts.innerCircle, parts.outerHoleCircle],
+                    0,
+                    parts.maxRadius,
+                    REGION_WAVE.fillMs,
+                    easeOutCubic
+                );
             } finally {
-                removeRegionWaveOverlay(parts);
+                removeRegionWaveSplit(parts, newFill);
             }
         }
 
         async function waveTransferRegion(regionEl, oldFill, newFill) {
             if (!regionEl || !oldFill || !newFill) return;
-
-            // 1) Pod starou barvou připravíme neutrální mapu.
             const neutral = neutralRegionFill(regionEl);
-            const oldParts = makeRegionWaveOverlay(regionEl, oldFill, 0);
+
+            const oldParts = makeRegionWaveSplit(regionEl, oldFill, neutral, 0);
             if (!oldParts) {
                 setRegionVisualFill(regionEl, neutral);
             } else {
-                // Nejprve zakryj celou plochu starou barvou, potom kruh stáhni.
-                oldParts.circle.setAttribute('r', String(oldParts.maxRadius));
-                setRegionVisualFill(regionEl, neutral);
+                oldParts.innerCircle.setAttribute('r', String(oldParts.maxRadius));
+                oldParts.outerHoleCircle.setAttribute('r', String(oldParts.maxRadius));
                 try {
                     await animateWaveRadius(
-                        oldParts.circle,
+                        [oldParts.innerCircle, oldParts.outerHoleCircle],
                         oldParts.maxRadius,
                         0,
                         REGION_WAVE.clearMs,
                         easeInCubic
                     );
                 } finally {
-                    removeRegionWaveOverlay(oldParts);
+                    removeRegionWaveSplit(oldParts, neutral);
                 }
             }
 
             await new Promise(resolve => setTimeout(resolve, REGION_WAVE.neutralPauseMs));
-
-            // 2) Nová barva se rozlije ze středu ven.
-            await waveFillRegion(regionEl, newFill);
+            const liveRegion = regionEl.id ? document.getElementById(regionEl.id) : regionEl;
+            await waveFillRegion(liveRegion || regionEl, newFill);
         }
 
         function paintRegionStateDirect(ownerMap, exceptIds = new Set()) {
@@ -4820,7 +4865,7 @@ if (regionValues && typeof regionValues === 'object') {
             return Promise.allSettled(jobs);
         }
 
-        console.log('🧪 VLASTENEC FIX: region-color-wave-v4-polish');
+        console.log('🧪 VLASTENEC FIX: region-color-wave-v5-exact-color-numeric-flow');
 
         // Colorize bases
         // Úvodní základny používají stejnou vlnu jako pozdější rozšiřování.
@@ -4940,49 +4985,39 @@ if (regionValues && typeof regionValues === 'object') {
 
               
                 // Function to start the countdown - questions
+                function stopQuestionCountdown() {
+                    if (window.__questionCountdownInterval) {
+                        clearInterval(window.__questionCountdownInterval);
+                        window.__questionCountdownInterval = null;
+                    }
+                    stopTickSound();
+                }
+
                 function startCountdown(secondsAmount) {
                     var countdownElement = document.getElementById('qcountdown');
                     var circle = document.getElementById('qtimer');
-                    var initial_seconds = secondsAmount; // Celkový počet sekund
-                    var seconds = secondsAmount; // Počítadlo zbývajících sekund
+                    var initial_seconds = secondsAmount;
+                    var seconds = secondsAmount;
 
-                    // ✅ Okamžité nastavení textu a kruhového indikátoru, aby se zobrazila správná hodnota ihned
+                    stopQuestionCountdown();
                     countdownElement.textContent = seconds;
                     circle.style.strokeDashoffset = (113 / initial_seconds) * (initial_seconds - seconds) + '%';
-
-                    // ✅ První tiknutí zvuku okamžitě
                     playTickSound();
 
-                    // ✅ Spuštění odpočtu hned bez 1sekundového zpoždění
-                    var countdownInterval = setInterval(function() {
-                        seconds--; // Snížení zbývajícího času
-
-                        // Aktualizace textového odpočtu
+                    window.__questionCountdownInterval = setInterval(function() {
+                        seconds--;
                         countdownElement.textContent = seconds;
-
-                        // ✅ Správný výpočet strokeDashoffset pro libovolný čas
                         circle.style.strokeDashoffset = (113 / initial_seconds) * (initial_seconds - seconds) + '%';
 
-                        // ✅ Přehrání tikání pouze pokud je zbývající čas větší než 0
-                        if (seconds > 0) {
-                            playTickSound();
-                        }
-
-                        // Pokud čas dosáhne nuly, zastavit odpočet
+                        if (seconds > 0) playTickSound();
                         if (seconds <= 0) {
-                            clearInterval(countdownInterval);
+                            clearInterval(window.__questionCountdownInterval);
+                            window.__questionCountdownInterval = null;
                             countdownElement.textContent = '0';
-
-                            // Zastavení zvuku tikání
                             stopTickSound();
                         }
-                    }, 1000); // Aktualizace každou sekundu
+                    }, 1000);
                 }
-
-
-
-
-
 
 
 
@@ -8421,6 +8456,7 @@ let lastQuestionOptions = [];
 
 // Přijme výsledky od serveru
 socket.on("multipleChoiceResults", (data) => {
+    stopQuestionCountdown();
     const { correctAnswer, answersByPlayer } = data;
     profileRecordQuestion(myAnswer !== "" && myAnswer === correctAnswer);
     showMultipleChoiceResults(correctAnswer, answersByPlayer, lastQuestionOptions);
@@ -8762,6 +8798,7 @@ socket.on("gameOver", ({ message, finalScores, matchStats }) => {
 
 
 function showNumericResultsForTwo(correctAnswer, answers, attacker, defender) {
+    stopQuestionCountdown();
     console.log("📊 Výsledky numerické otázky (2 hráči):", answers);
 
     // ✅ Výsledek otázky vždy ukončí možnost odpovídat — i když hráč nic neodeslal.
@@ -9063,6 +9100,7 @@ function showNumericQuestionForThree(questionText, timeLimit) {
 
 
 function showNumericResultsForThree(correctAnswer, answers) {
+    stopQuestionCountdown();
 
     if (window.__numericInputHideTimerThree) {
         clearTimeout(window.__numericInputHideTimerThree);

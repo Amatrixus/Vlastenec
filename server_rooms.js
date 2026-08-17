@@ -1,4 +1,4 @@
-console.log('🧪 VLASTENEC BUILD: 2026-08-17-region-wave-v4');
+console.log('🧪 VLASTENEC BUILD: 2026-08-18-region-wave-v5-numeric-flow');
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
@@ -38,7 +38,7 @@ const PORT = process.env.PORT || 3000;
   if (db.getStatus().ready) await recoverInterruptedLeagueMatches().catch(err => console.error('league boot recovery:', err));
   server.listen(PORT, '0.0.0.0', () => {
     console.log('Server běží na', PORT);
-    console.log('🧪 VLASTENEC BUILD: 2026-08-17-region-wave-v4');
+    console.log('🧪 VLASTENEC BUILD: 2026-08-18-region-wave-v5-numeric-flow');
   });
 })();
 
@@ -845,6 +845,32 @@ function randInt(a, b) { // včetně
   return a + Math.floor(Math.random() * (b - a + 1));
 }
 
+// Numerické otázky: bot obvykle odpovídá v lidském tempu, jen vzácně velmi rychle.
+function botNumericResponseDelayMs() {
+  const roll = Math.random();
+  if (roll < 0.04) return randInt(900, 1900);
+  if (roll < 0.24) return randInt(2600, 4400);
+  if (roll < 0.84) return randInt(4400, 7800);
+  if (roll < 0.97) return randInt(7800, 10800);
+  return randInt(10800, 13200);
+}
+
+function allNumericParticipantsAnswered(room) {
+  const participants = Array.isArray(room?.currentQuestionParticipants)
+    ? room.currentQuestionParticipants
+    : [];
+  return participants.length > 0 && participants.every(seat => !!room.numericAnswers?.[seat]);
+}
+
+function maybeFinishNumericQuestion(roomId) {
+  const room = rooms[roomId];
+  if (!room || room.currentQuestionType !== 'numeric') return false;
+  if (!allNumericParticipantsAnswered(room)) return false;
+  if (typeof room.numericFinalize !== 'function') return false;
+  room.numericFinalize('all_answered');
+  return true;
+}
+
 
 
 
@@ -1182,71 +1208,41 @@ function runNumericQuestionForTwo(roomId, [player1, player2]) {
     const questionEventBase = `q-${randomUUID()}`;
     console.log(`🔢 Numeric otázka z kategorie: ${nq.category}`);
 
-
     const correctAnswer = Number.isInteger(nq.answer) ? nq.answer : parseInt(nq.answer, 10);
+    const participants = [player1, player2];
 
     room.numericAnswers = {};
     room.numericStartTime = Date.now();
     room.currentQuestionType = 'numeric';
-    room.currentQuestionParticipants = [player1,player2];
+    room.currentQuestionParticipants = [...participants];
+    room.numericQuestionToken = questionEventBase;
 
-    io.to(roomId).emit("numericQuestionForTwo", {
-      question: nq.question,
-      time: 15,
-      attacker: player1,
-      defender: player2,
-      attackerName: displayName(room, player1, true),
-      defenderName: displayName(room, player2, true),
-      category: nq.category || null
-    });
+    let finished = false;
+    let timeoutHandle = null;
 
-    // BOT odpovědi
-    try {
-      const BOT_MIN_DELAY_MS = 700;
-      const BOT_MAX_DELAY_MS = 2400;
+    const finalize = (reason = 'timeout') => {
+      if (finished) return;
+      finished = true;
+      if (timeoutHandle) clearTimeout(timeoutHandle);
 
-      [player1, player2].forEach((seat) => {
-        if (!isBot(room, seat)) return;
-        const botDelay = randInt(BOT_MIN_DELAY_MS, BOT_MAX_DELAY_MS);
+      const liveRoom = rooms[roomId];
+      if (!liveRoom || !isRoomAlive(roomId) || liveRoom.numericQuestionToken !== questionEventBase) {
+        return resolve(null);
+      }
 
-        setTimeout(() => {
-          const r = rooms[roomId];
-          if (!r || !isRoomAlive(roomId)) return;
-          if (!isBot(r, seat)) return;
-          if (r.numericAnswers?.[seat]) return;
-
-          const noise = Math.round((Math.random() - 0.5) * 0.2 * Math.max(10, Math.abs(correctAnswer)));
-          const guess = correctAnswer + noise;
-
-          r.numericAnswers = r.numericAnswers || {};
-          r.numericAnswers[seat] = { num: guess, time: Date.now() - r.numericStartTime };
-          console.log(`🤖 BOT ${seat} odpověděl NUM (duel): ${guess}`);
-        }, botDelay);
-      });
-    } catch (e) { console.warn('BOT duel numeric error', e); }
-
-    // ⏲️ Timeout + vyhodnocení + resolve
-    setTimeout(() => {
-      if (!isRoomAlive(roomId)) return resolve(null);
-
-      const answeredSeats = new Set(Object.keys(room.numericAnswers || {}).map(Number));
-
-      // doplň chybějící odpovědi
-      [player1, player2].forEach(p => {
-        if (!room.numericAnswers[p]) {
-          room.numericAnswers[p] = { num: 0, time: 15000 };
+      const answeredSeats = new Set(Object.keys(liveRoom.numericAnswers || {}).map(Number));
+      participants.forEach(p => {
+        if (!liveRoom.numericAnswers[p]) {
+          liveRoom.numericAnswers[p] = { num: 0, time: 15000 };
           console.log(`⏳ Hráč ${p} nestihl → 0 (15 s)`);
         }
       });
 
-      const sorted = Object.entries(room.numericAnswers)
-        .map(([player, data]) => ({
-          player: Number(player),
-          num: parseInt(data.num, 10),
-          diff: Math.abs(parseInt(data.num, 10) - correctAnswer),
-          time: data.time
-        }))
-        .sort((a, b) => (a.diff !== b.diff ? a.diff - b.diff : a.time - b.time));
+      const sorted = participants.map(player => {
+        const data = liveRoom.numericAnswers[player];
+        const num = parseInt(data.num, 10);
+        return { player:Number(player), num, diff:Math.abs(num-correctAnswer), time:data.time };
+      }).sort((a,b) => (a.diff !== b.diff ? a.diff-b.diff : a.time-b.time));
 
       const winner = sorted[0].player;
       const profileDetails = {};
@@ -1261,29 +1257,68 @@ function runNumericQuestionForTwo(roomId, [player1, player2]) {
           exactHit:answered && item.diff === 0
         };
       });
-      queueQuestionProfileEvents(room,questionEventBase,nq.category,'numeric',[player1,player2],profileDetails);
+      queueQuestionProfileEvents(liveRoom,questionEventBase,nq.category,'numeric',participants,profileDetails);
 
       io.to(roomId).emit("numericQuestionResultsForTwo", {
         correctAnswer,
         attacker: player1,
         defender: player2,
         answers: sorted.map(a => ({
-          player: a.player,
-          num: a.num,
-          time: a.time,
-          name: room.players[a.player - 1].name
+          player:a.player,
+          num:a.num,
+          time:a.time,
+          name:liveRoom.players[a.player - 1]?.name || displayName(liveRoom,a.player,false)
         }))
       });
 
-      room.currentQuestionType = null;
-      room.currentQuestionParticipants = [];
+      if (reason === 'all_answered') {
+        console.log(`⚡ Numeric duel ${roomId}: oba hráči odpověděli, vyhodnocuji hned.`);
+      }
+
+      liveRoom.currentQuestionType = null;
+      liveRoom.currentQuestionParticipants = [];
+      liveRoom.numericFinalize = null;
+      liveRoom.numericQuestionTimer = null;
+      liveRoom.numericQuestionToken = null;
       resolve(winner);
-    }, 15000);
+    };
+
+    room.numericFinalize = finalize;
+
+    io.to(roomId).emit("numericQuestionForTwo", {
+      question: nq.question,
+      time: 15,
+      attacker: player1,
+      defender: player2,
+      attackerName: displayName(room, player1, true),
+      defenderName: displayName(room, player2, true),
+      category: nq.category || null
+    });
+
+    try {
+      participants.forEach((seat) => {
+        if (!isBot(room, seat)) return;
+        const botDelay = botNumericResponseDelayMs();
+        setTimeout(() => {
+          const r = rooms[roomId];
+          if (!r || !isRoomAlive(roomId)) return;
+          if (r.currentQuestionType !== 'numeric' || r.numericQuestionToken !== questionEventBase) return;
+          if (!isBot(r, seat) || r.numericAnswers?.[seat]) return;
+
+          const noise = Math.round((Math.random() - 0.5) * 0.2 * Math.max(10, Math.abs(correctAnswer)));
+          const guess = correctAnswer + noise;
+          r.numericAnswers = r.numericAnswers || {};
+          r.numericAnswers[seat] = { num:guess, time:Date.now()-r.numericStartTime };
+          console.log(`🤖 BOT ${seat} odpověděl NUM (duel): ${guess} po ${r.numericAnswers[seat].time} ms`);
+          maybeFinishNumericQuestion(roomId);
+        }, botDelay);
+      });
+    } catch (e) { console.warn('BOT duel numeric error', e); }
+
+    timeoutHandle = setTimeout(() => finalize('timeout'), 15000);
+    room.numericQuestionTimer = timeoutHandle;
   });
 }
-
-
-
 
 
 function runNumericQuestionForThree(roomId) {
@@ -1296,67 +1331,41 @@ function runNumericQuestionForThree(roomId) {
     const questionEventBase = `q-${randomUUID()}`;
     console.log(`🔢 Numeric (3p) otázka z kategorie: ${nq.category}`);
 
-
     const correctAnswer = Number.isInteger(nq.answer) ? nq.answer : parseInt(nq.answer, 10);
+    const participants = [1,2,3];
 
     room.numericAnswers = {};
     room.numericStartTime = Date.now();
     room.currentQuestionType = 'numeric';
-    room.currentQuestionParticipants = [1,2,3];
+    room.currentQuestionParticipants = [...participants];
+    room.numericQuestionToken = questionEventBase;
 
-    io.to(roomId).emit("numericQuestion", {
-      question: nq.question,
-      time: 15,
-      category: nq.category || null
-    });
+    let finished = false;
+    let timeoutHandle = null;
 
-    // BOT odpovědi
-    try {
-      const BOT_MIN_DELAY_MS = 700;
-      const BOT_MAX_DELAY_MS = 2400;
+    const finalize = (reason = 'timeout') => {
+      if (finished) return;
+      finished = true;
+      if (timeoutHandle) clearTimeout(timeoutHandle);
 
-      [1,2,3].forEach((seat) => {
-        if (!isBot(room, seat)) return;
-        const botDelay = randInt(BOT_MIN_DELAY_MS, BOT_MAX_DELAY_MS);
+      const liveRoom = rooms[roomId];
+      if (!liveRoom || !isRoomAlive(roomId) || liveRoom.numericQuestionToken !== questionEventBase) {
+        return resolve(null);
+      }
 
-        setTimeout(() => {
-          const r = rooms[roomId];
-          if (!r || !isRoomAlive(roomId)) return;
-          if (!isBot(r, seat)) return;
-          if (r.numericAnswers?.[seat]) return;
-
-          const noise = Math.round((Math.random() - 0.5) * 0.25 * Math.max(10, Math.abs(correctAnswer)));
-          const guess = correctAnswer + noise;
-
-          r.numericAnswers = r.numericAnswers || {};
-          r.numericAnswers[seat] = { num: guess, time: Date.now() - r.numericStartTime };
-          console.log(`🤖 BOT ${seat} odpověděl NUM (3): ${guess}`);
-        }, botDelay);
-      });
-    } catch (e) { console.warn('BOT 3p numeric error', e); }
-
-    // ⏲️ Timeout + vyhodnocení + resolve
-    setTimeout(() => {
-      if (!isRoomAlive(roomId)) return resolve(null);
-
-      const answeredSeats = new Set(Object.keys(room.numericAnswers || {}).map(Number));
-
-      // doplň chybějící
-      [1, 2, 3].forEach(player => {
-        if (!room.numericAnswers[player]) {
-          room.numericAnswers[player] = { num: 0, time: 15000 };
+      const answeredSeats = new Set(Object.keys(liveRoom.numericAnswers || {}).map(Number));
+      participants.forEach(player => {
+        if (!liveRoom.numericAnswers[player]) {
+          liveRoom.numericAnswers[player] = { num:0, time:15000 };
           console.log(`⏳ Hráč ${player} nestihl → 0 (15 s)`);
         }
       });
 
-      const sorted = Object.entries(room.numericAnswers)
-        .map(([player, data]) => ({
-          player: Number(player),
-          num: parseInt(data.num, 10),
-          diff: Math.abs(parseInt(data.num, 10) - correctAnswer),
-          time: data.time
-        }))
-        .sort((a, b) => (a.diff !== b.diff ? a.diff - b.diff : a.time - b.time));
+      const sorted = participants.map(player => {
+        const data = liveRoom.numericAnswers[player];
+        const num = parseInt(data.num,10);
+        return { player:Number(player), num, diff:Math.abs(num-correctAnswer), time:data.time };
+      }).sort((a,b) => (a.diff !== b.diff ? a.diff-b.diff : a.time-b.time));
 
       const winner = sorted[0].player;
       const profileDetails = {};
@@ -1371,21 +1380,54 @@ function runNumericQuestionForThree(roomId) {
           exactHit:answered && item.diff === 0
         };
       });
-      queueQuestionProfileEvents(room,questionEventBase,nq.category,'numeric',[1,2,3],profileDetails);
+      queueQuestionProfileEvents(liveRoom,questionEventBase,nq.category,'numeric',participants,profileDetails);
 
-      io.to(roomId).emit("numericQuestionResults", {
-        correctAnswer,
-        answers: sorted
-      });
+      io.to(roomId).emit("numericQuestionResults", { correctAnswer, answers:sorted });
 
-      room.currentQuestionType = null;
-      room.currentQuestionParticipants = [];
+      if (reason === 'all_answered') {
+        console.log(`⚡ Numeric 3p ${roomId}: všichni tři odpověděli, vyhodnocuji hned.`);
+      }
+
+      liveRoom.currentQuestionType = null;
+      liveRoom.currentQuestionParticipants = [];
+      liveRoom.numericFinalize = null;
+      liveRoom.numericQuestionTimer = null;
+      liveRoom.numericQuestionToken = null;
       resolve(winner);
-    }, 15000);
+    };
+
+    room.numericFinalize = finalize;
+
+    io.to(roomId).emit("numericQuestion", {
+      question:nq.question,
+      time:15,
+      category:nq.category || null
+    });
+
+    try {
+      participants.forEach((seat) => {
+        if (!isBot(room, seat)) return;
+        const botDelay = botNumericResponseDelayMs();
+        setTimeout(() => {
+          const r = rooms[roomId];
+          if (!r || !isRoomAlive(roomId)) return;
+          if (r.currentQuestionType !== 'numeric' || r.numericQuestionToken !== questionEventBase) return;
+          if (!isBot(r, seat) || r.numericAnswers?.[seat]) return;
+
+          const noise = Math.round((Math.random() - 0.5) * 0.25 * Math.max(10, Math.abs(correctAnswer)));
+          const guess = correctAnswer + noise;
+          r.numericAnswers = r.numericAnswers || {};
+          r.numericAnswers[seat] = { num:guess, time:Date.now()-r.numericStartTime };
+          console.log(`🤖 BOT ${seat} odpověděl NUM (3): ${guess} po ${r.numericAnswers[seat].time} ms`);
+          maybeFinishNumericQuestion(roomId);
+        }, botDelay);
+      });
+    } catch (e) { console.warn('BOT 3p numeric error', e); }
+
+    timeoutHandle = setTimeout(() => finalize('timeout'), 15000);
+    room.numericQuestionTimer = timeoutHandle;
   });
 }
-
-
 
 
 
@@ -3698,6 +3740,7 @@ socket.on("playerNumericAnswer", ({ room: requestedRoomId, player, answer }) => 
   if (!room.numericAnswers[seat]) {
     room.numericAnswers[seat] = { num:value, time:Date.now()-startTime };
     console.log(`✏️ Numerická odpověď: Hráč ${seat} v ${roomId} → ${value} (${room.numericAnswers[seat].time}ms)`);
+    maybeFinishNumericQuestion(roomId);
   }
 });
 
