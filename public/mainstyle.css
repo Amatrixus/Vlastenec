@@ -4392,3 +4392,40 @@ body.league-game-connecting .league-game-connect-overlay{display:grid}
     width: 100%;
   }
 }
+
+/* ============================================================
+   VLASTENEC — QUESTION FOCUS LAYERS V1 (2026-08-17)
+   Keep the map/game area blurred during questions, while the
+   session chat, bottom player cards, game phase/progress panel and
+   leave button remain sharp, visible and interactive above the question backdrop.
+   ============================================================ */
+
+/* The question itself stays above the map and normal game UI. */
+#question,
+#numquestion {
+  z-index: 100 !important;
+}
+
+/* Persistent controls deliberately sit above the full-screen
+   question backdrop, so backdrop-filter does not blur them and
+   the overlay cannot intercept their pointer input. */
+body.is-game-started #game_chat_drawer,
+#gameprogress,
+#myscore,
+#player2score,
+#player3score,
+#leave {
+  z-index: 130 !important;
+  pointer-events: auto !important;
+}
+
+/* Keep the exit affordance a touch above the other persistent UI. */
+#leave {
+  z-index: 135 !important;
+}
+
+/* The confirmation dialog must of course remain above everything,
+   including an active question. */
+#leavegamewindow {
+  z-index: 9999 !important;
+}
