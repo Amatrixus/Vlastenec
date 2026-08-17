@@ -3835,3 +3835,38 @@ body.is-game-started .player-identity-card {
   color: rgba(255,255,255,.22);
 }
 .player-identity-profile:hover { color: #fff; }
+
+
+/* ============================================================
+   VLASTENEC — SUBTLE LION BACKDROP FOR LOBBIES
+   Matches the restrained homepage lion treatment.
+   ============================================================ */
+#lobby_container::before {
+  content: "";
+  position: absolute;
+  top: -17vh;
+  right: -2vw;
+  width: min(58vw, 900px);
+  height: 128vh;
+  background: url("lionbw.svg") top right / contain no-repeat;
+  opacity: .075;
+  filter: brightness(2.3) sepia(1) saturate(.35);
+  transform: rotate(-2deg);
+  transform-origin: top right;
+  pointer-events: none;
+  z-index: 0;
+}
+
+#lobby_window,
+#random_hub {
+  position: relative;
+  z-index: 1;
+}
+
+@media (max-width: 760px) {
+  #lobby_container::before {
+    width: 95vw;
+    right: -30vw;
+    opacity: .055;
+  }
+}
