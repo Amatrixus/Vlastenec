@@ -18,7 +18,7 @@ const io = new Server(server, { cors: { origin: "*" } }); // (později si omezí
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, '0.0.0.0', () => {
   console.log('Server běží na', PORT);
-  console.log('🧪 VLASTENEC BUILD: 2026-08-17-lobby-v1');
+  console.log('🧪 VLASTENEC BUILD: 2026-08-17-portal-v3');
 });
 
 
@@ -1983,6 +1983,17 @@ function waitForPlayerSelection(roomId, player, timeout, forcedAvailableRegions 
 
 
 io.on('connection', socket => {
+
+  // Portal presence: počet aktuálních Socket.IO spojení.
+  // Zatím jde o spojení (ne unikátní účty); po zavedení účtů lze metriku zpřesnit.
+  const broadcastPortalOnlineCount = () => {
+    io.emit('portal:onlineCount', { count: io.engine.clientsCount });
+  };
+  broadcastPortalOnlineCount();
+  socket.on('disconnect', () => {
+    setTimeout(broadcastPortalOnlineCount, 0);
+  });
+
 
 
 

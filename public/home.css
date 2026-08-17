@@ -634,3 +634,49 @@ select {
   .intro-actions { width: 100%; }
   .intro-play { width: min(220px, 72vw); }
 }
+
+
+/* =========================================================
+   CLEAN INTRO V3 — mapa bez panelu + akční kroky
+   ========================================================= */
+.intro-map-area {
+  background: transparent !important;
+  overflow: visible;
+}
+.intro-map-area::before { display: none !important; }
+.intro-map-frame {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  overflow: visible;
+}
+.intro-map-halo {
+  width: 68%;
+  height: 54%;
+  opacity: .72;
+  filter: blur(34px);
+}
+.intro-map-shine { opacity: .45; }
+
+.intro-points {
+  background: transparent;
+  backdrop-filter: none;
+}
+.intro-point {
+  justify-content: center;
+  padding: 16px 12px;
+}
+.intro-point + .intro-point { padding-left: 12px; }
+.intro-point strong { display: none !important; }
+.intro-point span {
+  color: rgba(255,255,255,.76);
+  font-size: clamp(11px, .88vw, 13px);
+  font-weight: 780;
+  letter-spacing: .025em;
+  white-space: nowrap;
+}
+
+@media (max-width: 600px) {
+  .intro-point { justify-content: flex-start; padding: 13px 0; }
+  .intro-point + .intro-point { padding-left: 0; }
+}

@@ -563,3 +563,137 @@ a { color: inherit; }
   .portal-shell { width: 100%; height: auto; min-height: calc(100vh - 28px); grid-template-rows: auto auto; }
   .portal-main { padding: 24px 0; }
 }
+
+
+/* =========================================================
+   PORTAL V3 — menší karty, více vzduchu, živý status
+   ========================================================= */
+.portal-stage {
+  padding: clamp(28px, 3vw, 52px) clamp(34px, 4vw, 78px);
+}
+.portal-shell {
+  width: min(1500px, 94vw);
+  height: min(870px, 90vh);
+  grid-template-rows: 68px minmax(0,1fr);
+}
+.portal-main {
+  padding: clamp(30px, 4.5vh, 50px) 4px clamp(22px, 3vh, 34px);
+  gap: clamp(26px, 4vh, 42px);
+}
+.portal-heading {
+  grid-template-columns: minmax(0, 1.2fr) minmax(280px, .8fr);
+  gap: clamp(40px, 5vw, 86px);
+  align-items: end;
+}
+.portal-heading h1 {
+  font-size: clamp(27px, 2.55vw, 43px);
+  max-width: 760px;
+}
+.portal-lead {
+  max-width: 450px;
+  font-size: clamp(11px, .82vw, 13px);
+}
+
+.mode-grid {
+  width: 100%;
+  height: min(55vh, 520px);
+  min-height: 390px;
+  align-self: start;
+  gap: clamp(15px, 1.5vw, 24px);
+}
+.mode-card {
+  border-radius: 18px;
+  box-shadow: 0 16px 40px rgba(0,0,0,.16);
+}
+.mode-art {
+  inset: -7%;
+  width: 114%;
+  height: 114%;
+  object-position: center 42%;
+  transform: scale(1.01);
+  filter: saturate(.78) brightness(.72) contrast(1.03);
+  transition: opacity .22s ease, transform .38s ease, filter .38s ease;
+}
+.mode-art-default { opacity: 1; }
+.mode-art-hover { opacity: 0; }
+.mode-card:hover .mode-art-default { opacity: 0; }
+.mode-card:hover .mode-art-hover { opacity: 1; }
+.mode-card:hover .mode-art {
+  transform: scale(1.035);
+  filter: saturate(.92) brightness(.80) contrast(1.04);
+}
+.mode-content {
+  padding-left: clamp(17px, 1.35vw, 22px);
+  padding-right: clamp(17px, 1.35vw, 22px);
+  padding-bottom: clamp(18px, 2.2vh, 24px);
+}
+.mode-content h2 { font-size: clamp(19px,1.45vw,25px); }
+.mode-content p {
+  margin: 8px 0 12px;
+  font-size: clamp(9.5px,.72vw,12px);
+}
+.mode-number { top: 15px; right: 16px; }
+
+/* Glass přihlášení: lev zůstane vidět, ale text má klidný podklad. */
+.profile-chip {
+  border-color: rgba(255,255,255,.12);
+  background: rgba(22,16,12,.34);
+  backdrop-filter: blur(16px) saturate(125%);
+  -webkit-backdrop-filter: blur(16px) saturate(125%);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.06), 0 8px 24px rgba(0,0,0,.12);
+}
+.profile-chip:hover {
+  background: rgba(30,20,14,.46);
+  border-color: rgba(255,173,95,.22);
+}
+
+.online-chip {
+  height: 34px;
+  padding: 0 11px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid rgba(255,255,255,.075);
+  border-radius: 999px;
+  background: rgba(15,12,10,.22);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  color: rgba(255,255,255,.43);
+  font-size: 9px;
+  font-weight: 740;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+}
+.online-chip strong {
+  color: rgba(255,255,255,.82);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0;
+}
+.online-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #65c67a;
+  box-shadow: 0 0 0 3px rgba(101,198,122,.08), 0 0 13px rgba(101,198,122,.38);
+}
+
+@media (max-height: 790px) and (min-width: 901px) {
+  .portal-stage { padding-top: 20px; padding-bottom: 20px; }
+  .portal-shell { height: 94vh; grid-template-rows: 62px minmax(0,1fr); }
+  .portal-main { padding-top: 22px; gap: 20px; }
+  .mode-grid { height: min(57vh, 455px); min-height: 340px; }
+  .portal-heading h1 { font-size: clamp(25px, 2.35vw, 37px); }
+}
+
+@media (max-width: 1050px) {
+  .online-chip { display: none; }
+}
+
+@media (max-width: 900px) {
+  .portal-stage { padding: 18px; }
+  .portal-shell { width: 100%; height: auto; min-height: calc(100vh - 36px); }
+  .portal-main { padding-top: 28px; }
+  .mode-grid { height: auto; min-height: 0; }
+  .mode-card { min-height: 360px; }
+}
