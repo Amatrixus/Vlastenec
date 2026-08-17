@@ -253,7 +253,7 @@
 
     // --- Jediná inicializace socketu ---
     const socket = io();
-    console.log('🧪 VLASTENEC CLIENT: random-hub-v3-entry-flow');
+    console.log('🧪 VLASTENEC CLIENT: lobby-bot-start-v1');
 
     let randomSelectionMade = false;
 
@@ -1573,7 +1573,7 @@ if (regionValues && typeof regionValues === 'object') {
             <article class="random-mode-card">
               <span class="random-card-kicker">CUSTOM HRA</span>
               <h2>Vytvořit místnost</h2>
-              <p>Budete hostitelem veřejné místnosti. Vyberete okruhy a zápas spustíte, až se připojí další dva hráči.</p>
+              <p>Budete hostitelem veřejné místnosti. Vyberete okruhy a můžete začít už ve dvou — třetí místo případně doplní bot.</p>
               <button id="random_create_btn" class="lobby-btn lobby-btn-secondary" type="button">Vytvořit místnost</button>
             </article>
           </div>
@@ -2962,14 +2962,26 @@ if (regionValues && typeof regionValues === 'object') {
             }
 
             if (isCustom) {
-              showLobbyMessage(`${connected}/3 připojeni`, connected >= 3 ? 'ready' : 'waiting');
-              if (title) title.textContent = connected >= 3 ? 'Místnost je plná' : 'Čekáme na další hráče';
-              if (note) note.textContent = connected >= 3
-                ? (isHost ? 'Můžete spustit zápas.' : 'Hostitel může spustit zápas.')
-                : 'Místnost je viditelná v seznamu veřejných her.';
+              showLobbyMessage(`${connected}/3 připojeni`, connected >= 2 ? 'ready' : 'waiting');
+              if (title) {
+                title.textContent = connected >= 3
+                  ? 'Místnost je plná'
+                  : (connected === 2 ? 'Můžete začít i ve dvou' : 'Čekáme na další hráče');
+              }
+              if (note) {
+                note.textContent = connected >= 3
+                  ? (isHost ? 'Můžete spustit zápas.' : 'Hostitel může spustit zápas.')
+                  : (connected === 2
+                    ? (isHost ? 'Spusťte zápas hned, nebo počkejte — třetí místo případně doplní bot.' : 'Hostitel může spustit zápas; třetí místo případně doplní bot.')
+                    : 'Místnost je viditelná v seznamu veřejných her.');
+              }
               if (infoState) infoState.textContent = isHost
-                ? 'Jste hostitel. Kategorie můžete změnit až do startu.'
-                : 'Připojili jste se do veřejné místnosti.';
+                ? (connected >= 2
+                  ? 'Jste hostitel. Můžete spustit hru; chybějící třetí místo doplní bot.'
+                  : 'Jste hostitel. Kategorie můžete změnit až do startu.')
+                : (connected >= 2
+                  ? 'Jste v místnosti. Hostitel může spustit hru i bez třetího hráče.'
+                  : 'Připojili jste se do veřejné místnosti.');
             } else {
               if (startBtn) startBtn.style.display = 'none';
               showLobbyMessage(`${connected}/3 nalezeni`, connected >= 2 ? 'ready' : 'waiting');
@@ -3011,17 +3023,29 @@ if (regionValues && typeof regionValues === 'object') {
           }
 
           if (state.canStart) {
-            showLobbyMessage('Všichni připraveni', 'ready');
-            if (title) title.textContent = isHost ? 'Všichni jsou připraveni' : 'Čekáme na hostitele';
-            if (note) note.textContent = isHost ? 'Můžeš spustit zápas.' : 'Hostitel může spustit zápas.';
-          } else if (connected < 3) {
+            if (connected === 2) {
+              showLobbyMessage('2 hráči připraveni', 'ready');
+              if (title) title.textContent = isHost ? 'Můžeš spustit hru' : 'Čekáme na hostitele';
+              if (note) note.textContent = isHost
+                ? 'Třetí místo doplní bot, nebo můžeš ještě počkat na dalšího hráče.'
+                : 'Hostitel může spustit hru; třetí místo doplní bot.';
+            } else {
+              showLobbyMessage('Všichni připraveni', 'ready');
+              if (title) title.textContent = isHost ? 'Všichni jsou připraveni' : 'Čekáme na hostitele';
+              if (note) note.textContent = isHost ? 'Můžeš spustit zápas.' : 'Hostitel může spustit zápas.';
+            }
+          } else if (connected < 2) {
             showLobbyMessage(`${connected}/3 připojeni`, 'waiting');
-            if (title) title.textContent = 'Čekáme na další hráče';
-            if (note) note.textContent = 'Pošli ostatním odkaz na tuto místnost.';
+            if (title) title.textContent = 'Čekáme na dalšího hráče';
+            if (note) note.textContent = 'Ke startu stačí dva hráči; třetí místo může doplnit bot.';
+          } else if (connected === 2) {
+            showLobbyMessage(`${ready}/2 připraveni`, 'waiting');
+            if (title) title.textContent = 'Potvrďte připravenost';
+            if (note) note.textContent = 'Jakmile budete oba připraveni, hostitel může spustit hru a třetí místo doplní bot.';
           } else {
             showLobbyMessage(`${ready}/3 připraveni`, 'waiting');
             if (title) title.textContent = 'Potvrď připravenost';
-            if (note) note.textContent = 'Hra začne až po potvrzení všech tří hráčů.';
+            if (note) note.textContent = 'Hra začne po potvrzení všech připojených hráčů.';
           }
         }
 

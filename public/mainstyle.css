@@ -3164,7 +3164,12 @@ body.is-game-started #game_chat_drawer .modern-chat-empty {
    MODE-AWARE LOBBY: RANDOM + BOTS
    ========================================================= */
 .lobby-mode-info-section {
+  flex: 1 1 auto;
   min-height: 0;
+  box-sizing: border-box;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
 }
 
 .lobby-mode-info-copy {
@@ -3175,7 +3180,7 @@ body.is-game-started #game_chat_drawer .modern-chat-empty {
 }
 
 .lobby-mode-info-state {
-  margin-top: 14px;
+  margin-top: auto;
   padding: 12px 14px;
   border: 1px solid rgba(255,255,255,.08);
   border-radius: 12px;

@@ -1,5 +1,5 @@
 const express = require('express');
-console.log('🧪 VLASTENEC BUILD: 2026-08-17-random-hub-v2');
+console.log('🧪 VLASTENEC BUILD: 2026-08-17-lobby-bot-start-v1');
 const http = require('http');
 const { Server } = require('socket.io');
 const path = require('path');
@@ -19,7 +19,7 @@ const io = new Server(server, { cors: { origin: "*" } }); // (později si omezí
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, '0.0.0.0', () => {
   console.log('Server běží na', PORT);
-  console.log('🧪 VLASTENEC BUILD: 2026-08-17-random-hub-v2');
+  console.log('🧪 VLASTENEC BUILD: 2026-08-17-lobby-bot-start-v1');
 });
 
 
@@ -239,11 +239,16 @@ function buildLobbyState(room, roomId) {
 
   const allConnected = players.every(p => p.name && p.connected);
   const allReady = players.every(p => p.name && p.connected && p.ready);
+  const connectedHumans = players.filter(p => p.controller !== 'bot' && p.name && p.connected);
+  const connectedHumanReady = connectedHumans.every(p => p.ready);
 
   const canStart = (
-    (room.mode === 'friends' && !room.hasStarted && allConnected && allReady) ||
+    // FRIENDS: hostitel může spustit už ve dvou, pokud jsou oba lidé připraveni.
+    // Chybějící třetí sedadlo se při startu doplní botem.
+    (room.mode === 'friends' && !room.hasStarted && connectedHumans.length >= 2 && connectedHumanReady) ||
     (room.mode === 'bots' && !room.hasStarted && !!players[0]?.connected) ||
-    (room.mode === 'random' && room.matchKind === 'custom' && !room.hasStarted && allConnected)
+    // RANDOM CUSTOM: hostitel může spustit už se dvěma lidmi; třetí místo doplní bot.
+    (room.mode === 'random' && room.matchKind === 'custom' && !room.hasStarted && connectedHumans.length >= 2)
   );
 
   return {
@@ -312,6 +317,36 @@ function pickQuickMatchRoom(rating = null) {
     return (a.room.createdAt || 0) - (b.room.createdAt || 0);
   });
   return candidates[0];
+}
+
+function fillMissingLobbySeatsWithBots(roomId) {
+  const room = rooms[roomId];
+  if (!room || room.hasStarted) return;
+
+  room.seatControllers = room.seatControllers || { 1: 'human', 2: 'human', 3: 'human' };
+  room.ready = room.ready || { 1: false, 2: false, 3: false };
+  while (room.players.length < MAX_PLAYERS_PER_ROOM) room.players.push(undefined);
+
+  for (let seat = 1; seat <= MAX_PLAYERS_PER_ROOM; seat++) {
+    const rec = room.players[seat - 1];
+    const hasLiveHuman = !!rec?.id && room.seatControllers[seat] !== 'bot';
+    if (hasLiveHuman) continue;
+
+    room.players[seat - 1] = { id: null, name: ROBOT_NAMES[seat] || `Robot ${seat}` };
+    room.seatControllers[seat] = 'bot';
+    room.ready[seat] = true;
+  }
+
+  const allNames = {};
+  room.players.forEach((p, idx) => { if (p) allNames[idx + 1] = p.name; });
+  const displayNames = {
+    1: displayName(room, 1, true),
+    2: displayName(room, 2, true),
+    3: displayName(room, 3, true)
+  };
+
+  io.to(roomId).emit('updatePlayers', { allNames, displayNames, seatControllers: room.seatControllers });
+  broadcastLobbyState(roomId);
 }
 
 function startRoomGame(roomId) {
@@ -2121,13 +2156,24 @@ io.on('connection', socket => {
     if (!state.canStart) {
       socket.emit('lobby:error', {
         message: room.mode === 'friends'
-          ? 'Všichni tři hráči musí být připojeni a připraveni.'
-          : (room.mode === 'random' ? 'Custom místnost potřebuje tři připojené hráče.' : 'Trénink zatím není připraven.')
+          ? 'Ke startu jsou potřeba alespoň dva připojení a připravení hráči.'
+          : (room.mode === 'random' ? 'Custom místnost potřebuje alespoň dva připojené hráče.' : 'Trénink zatím není připraven.')
       });
       broadcastLobbyState(roomId);
       return;
     }
-    startRoomGame(roomId);
+
+    // Friends i veřejná custom hra mohou odstartovat ve dvou.
+    // Každé chybějící sedadlo se těsně před startem převede na bota.
+    if (room.mode === 'friends' || (room.mode === 'random' && room.matchKind === 'custom')) {
+      fillMissingLobbySeatsWithBots(roomId);
+    }
+
+    const started = startRoomGame(roomId);
+    if (started && room.mode === 'random' && room.matchKind === 'custom') {
+      // Po startu custom místnost okamžitě zmizí z veřejného browseru.
+      broadcastPublicRandomRooms();
+    }
   });
 
 
