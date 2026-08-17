@@ -1,4 +1,4 @@
-console.log('🧪 VLASTENEC BUILD: 2026-08-17-leaderboards-v2');
+console.log('🧪 VLASTENEC BUILD: 2026-08-17-leaderboards-v2.1-rating-eligibility');
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
@@ -38,7 +38,7 @@ const PORT = process.env.PORT || 3000;
   if (db.getStatus().ready) await recoverInterruptedLeagueMatches().catch(err => console.error('league boot recovery:', err));
   server.listen(PORT, '0.0.0.0', () => {
     console.log('Server běží na', PORT);
-    console.log('🧪 VLASTENEC BUILD: 2026-08-17-leaderboards-v2');
+    console.log('🧪 VLASTENEC BUILD: 2026-08-17-leaderboards-v2.1-rating-eligibility');
   });
 })();
 
@@ -329,9 +329,39 @@ function numericErrorPercent(answer, correct, answered = true) {
   return Math.min(1_000_000, Math.abs(a-c) / denominator * 100);
 }
 
+async function refreshRoomAccountIds(room) {
+  if (!room) return;
+  const waits = [];
+  for (const seat of [1,2,3]) {
+    const rec = room.players?.[seat - 1];
+    if (!rec) continue;
+    const liveSocket = rec.id ? io.sockets.sockets.get(rec.id) : null;
+    if (!liveSocket) continue;
+    const promise = liveSocket.data?.accountPromise;
+    if (promise && typeof promise.then === 'function') {
+      waits.push(Promise.resolve(promise).then(user => {
+        if (user?.id) {
+          liveSocket.data.accountUserId = String(user.id);
+          rec.userId = String(user.id);
+        }
+      }).catch(() => {}));
+    } else if (liveSocket.data?.accountUserId) {
+      rec.userId = String(liveSocket.data.accountUserId);
+    }
+  }
+  if (waits.length) await Promise.allSettled(waits);
+}
+
 async function finalizeAuthoritativeProfiles(roomId, ordered) {
   const room = rooms[roomId];
   if (!room || !Array.isArray(ordered)) return { normalRating:null };
+
+  // Socket authentication is asynchronous. A fast matchmaking join can happen
+  // before sessionUser() has finished. Before finalizing a rated quick match,
+  // explicitly wait for the account promises and persist the resolved user IDs
+  // into the room seats. This removes a race where a valid logged-in player
+  // could be treated as a guest at match end.
+  await refreshRoomAccountIds(room);
   try { await (room.profileWriteChain || Promise.resolve()); } catch (_) {}
 
   const mode = profileModeForRoom(room);
@@ -370,12 +400,27 @@ async function finalizeAuthoritativeProfiles(roomId, ordered) {
 
   let normalRating = null;
   if (room.mode === 'random' && room.matchKind === 'quick') {
-    const uniqueUsers = new Set(ratedPlayers.map(p=>p.userId));
+    const uniqueUsers = new Set(ratedPlayers.map(p=>String(p.userId)));
     const allHumanAtFinish = [1,2,3].every(seat => room.seatControllers?.[seat] === 'human');
+    const seatAuth = [1,2,3].map(seat => ({
+      seat,
+      name: room.players?.[seat-1]?.name || null,
+      userId: profileUserIdForSeat(room,seat),
+      controller: room.seatControllers?.[seat] || null
+    }));
+
+    console.log(`📈 NORMAL eligibility ${roomId}: ${seatAuth.map(x => `P${x.seat}=${x.name || '-'}:${x.userId || 'guest'}:${x.controller}`).join(' | ')}`);
+
     if (ratedPlayers.length === 3 && uniqueUsers.size === 3 && allHumanAtFinish) {
       normalRating = await finalizeNormalRatedMatch(matchId,ratedPlayers,roomId);
+      console.log(`📈 NORMAL rated ${roomId}: ${normalRating?.players?.map(p => `${p.displayName} ${p.ratingBefore}→${p.ratingAfter} (${p.ratingDelta >= 0 ? '+' : ''}${p.ratingDelta})`).join(' | ') || 'done'}`);
     } else {
-      normalRating = { rated:false, reason:allHumanAtFinish?'three_authenticated_players_required':'bot_or_disconnect_present' };
+      let reason = 'three_authenticated_players_required';
+      if (!allHumanAtFinish) reason = 'bot_or_disconnect_present';
+      else if (ratedPlayers.length !== 3) reason = 'one_or_more_guests';
+      else if (uniqueUsers.size !== 3) reason = 'duplicate_account';
+      normalRating = { rated:false, reason, seats:seatAuth };
+      console.log(`📈 NORMAL skipped ${roomId}: ${reason}`);
     }
   }
   return { normalRating };
