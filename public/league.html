@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="cs">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#100b08">
+  <title>Liga | VLASTENEC</title>
+  <link rel="stylesheet" href="league.css">
+  <script src="auth-client.js"></script>
+</head>
+<body>
+  <div class="league-bg" aria-hidden="true"></div>
+
+  <main class="league-page">
+    <header class="league-topbar">
+      <a class="league-brand" href="homepage.html" aria-label="Vlastenec – hlavní stránka">
+        <img src="logo.svg" alt="Vlastenec">
+        <span>LIGA VLASTENCE</span>
+      </a>
+
+      <div class="league-top-actions">
+        <a class="league-utility" href="profile.html">Profil</a>
+        <button id="league-profile-chip" class="league-profile-chip" type="button">
+          <span class="profile-copy">
+            <strong id="league-profile-name">Načítám…</strong>
+            <small id="league-profile-meta">Hráč</small>
+          </span>
+          <span id="league-profile-avatar" class="profile-avatar">?</span>
+        </button>
+      </div>
+    </header>
+
+    <section class="league-intro">
+      <div>
+        <span class="league-kicker">SOUTĚŽNÍ REŽIM</span>
+        <h1>Liga <em>Vlastence</em></h1>
+      </div>
+      <div class="season-clock">
+        <span id="season-name">SEZÓNA —</span>
+        <strong id="season-countdown">Načítám sezónu…</strong>
+      </div>
+    </section>
+
+    <section class="league-hero-grid">
+      <article class="panel rank-hero">
+        <div class="rank-glow" aria-hidden="true"></div>
+        <div id="rank-crest" class="rank-crest provisional" aria-hidden="true">
+          <span class="crest-crown"></span>
+          <span class="crest-mark">V</span>
+        </div>
+
+        <div id="rank-authenticated" class="rank-copy">
+          <span id="rank-kicker" class="section-kicker">ROZŘAZENÍ</span>
+          <h2 id="rank-title">0 / 5 zápasů</h2>
+          <p id="rank-description">Odehraj pět rozřazovacích zápasů. Rating a divize se odkryjí až potom.</p>
+
+          <div id="rank-progress-wrap" class="rank-progress-wrap">
+            <div class="rank-progress-head">
+              <span id="rank-progress-left">Rozřazení</span>
+              <strong id="rank-progress-right">0 / 5</strong>
+            </div>
+            <div class="rank-progress"><i id="rank-progress-bar"></i></div>
+          </div>
+
+          <button id="league-play" class="league-play" type="button">
+            <span>HRÁT LIGU</span>
+            <small id="league-play-note">Matchmaking bude další krok</small>
+          </button>
+        </div>
+
+        <div id="rank-guest" class="rank-copy hidden">
+          <span class="section-kicker">VSTUP DO LIGY</span>
+          <h2>Přihlas se a vstup do sezóny</h2>
+          <p>Liga používá trvalý účet, aby rating, historie a sezonní odměny zůstaly bezpečně uložené.</p>
+          <button id="league-login" class="league-play" type="button">
+            <span>PŘIHLÁSIT SE</span>
+            <small>nebo si vytvořit účet</small>
+          </button>
+        </div>
+      </article>
+
+      <article class="panel season-summary">
+        <div class="section-head compact">
+          <div>
+            <span class="section-kicker">VAŠE SEZÓNA</span>
+            <h2>Výkon v aktuální sezóně</h2>
+          </div>
+          <span id="season-status" class="season-status">AKTIVNÍ</span>
+        </div>
+
+        <div class="season-stat-grid">
+          <div class="season-stat"><span>ZÁPASY</span><strong id="league-games">—</strong><small id="league-placement-copy">rozřazení</small></div>
+          <div class="season-stat"><span>VÍTĚZSTVÍ</span><strong id="league-wins">—</strong><small id="league-winrate">—</small></div>
+          <div class="season-stat"><span>RATING</span><strong id="league-rating">—</strong><small id="league-rating-delta">zatím skrytý</small></div>
+          <div class="season-stat"><span>POŘADÍ</span><strong id="league-rank">—</strong><small id="league-ranked-count">— hráčů</small></div>
+        </div>
+
+        <div class="season-profile-strip">
+          <div>
+            <span>PROFIL HRÁČE</span>
+            <strong id="league-level">LEVEL —</strong>
+          </div>
+          <div class="profile-xp-mini">
+            <div><span id="league-xp-title">—</span><strong id="league-xp-copy">— XP</strong></div>
+            <div class="mini-track"><i id="league-xp-bar"></i></div>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <section class="league-main-grid">
+      <article class="panel leaderboard-panel">
+        <div class="section-head">
+          <div>
+            <span class="section-kicker">ŽEBŘÍČEK</span>
+            <h2 id="leaderboard-heading">Kolem mě</h2>
+          </div>
+          <div class="leaderboard-tabs" role="tablist" aria-label="Výběr žebříčku">
+            <button id="tab-around" class="active" type="button">Kolem mě</button>
+            <button id="tab-top" type="button">TOP 100</button>
+          </div>
+        </div>
+        <div id="leaderboard-list" class="leaderboard-list">
+          <div class="empty-state">Načítám žebříček…</div>
+        </div>
+      </article>
+
+      <article class="panel recent-panel">
+        <div class="section-head">
+          <div>
+            <span class="section-kicker">HISTORIE</span>
+            <h2>Poslední ligové zápasy</h2>
+          </div>
+          <span class="section-meta">AKTUÁLNÍ SEZÓNA</span>
+        </div>
+        <div id="recent-matches" class="recent-list">
+          <div class="empty-state">Zatím tu nejsou žádné ligové zápasy.</div>
+        </div>
+      </article>
+    </section>
+
+    <section class="league-lower-grid">
+      <article class="panel divisions-panel">
+        <div class="section-head">
+          <div>
+            <span class="section-kicker">CESTA VZHŮRU</span>
+            <h2>Ligové divize</h2>
+          </div>
+          <span class="section-meta">RATING URČUJE DIVIZI</span>
+        </div>
+        <div id="division-track" class="division-track"></div>
+      </article>
+
+      <article class="panel rules-panel">
+        <div class="section-head">
+          <div>
+            <span class="section-kicker">SEZÓNA</span>
+            <h2>Jak Liga funguje</h2>
+          </div>
+        </div>
+        <div class="rule-list">
+          <div class="rule"><span>01</span><div><strong>Stejné podmínky</strong><p>Všech 9 kategorií, žádné vlastní nastavení a žádní boti.</p></div></div>
+          <div class="rule"><span>02</span><div><strong>Soupeři podle síly</strong><p>Matchmaking začne úzkým ratingovým rozmezím a postupně ho rozšíří.</p></div></div>
+          <div class="rule"><span>03</span><div><strong>Výsledek rozhoduje</strong><p>Rating se mění podle umístění a síly soupeřů. XP zůstávají oddělené.</p></div></div>
+          <div class="rule"><span>04</span><div><strong>8týdenní sezóny</strong><p>Na konci se výsledky uzavřou automaticky a rating projde soft resetem.</p></div></div>
+        </div>
+      </article>
+    </section>
+
+    <footer class="league-footer">
+      <span>VLASTENEC · LIGA</span>
+      <span id="league-footer-season">Sezóna —</span>
+    </footer>
+  </main>
+
+  <div id="league-modal" class="league-modal hidden" role="dialog" aria-modal="true" aria-labelledby="league-modal-title">
+    <div class="league-modal-card">
+      <span class="section-kicker">DALŠÍ KROK</span>
+      <h2 id="league-modal-title">Ligový matchmaking</h2>
+      <p>League Hub a sezonní data už běží nad PostgreSQL. Další část napojí skutečnou frontu, ready check a serverově autoritativní rating.</p>
+      <button id="league-modal-close" type="button">Rozumím</button>
+    </div>
+  </div>
+
+  <script src="league.js"></script>
+</body>
+</html>

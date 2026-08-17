@@ -1,4 +1,4 @@
-console.log('🧪 VLASTENEC BUILD: 2026-08-17-bots-recovery-v1');
+console.log('🧪 VLASTENEC BUILD: 2026-08-17-league-hub-v1');
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
@@ -7,6 +7,7 @@ const fs = require('fs');
 const db = require('./db');
 const { mountAuthRoutes } = require('./auth');
 const { mountProfileRoutes } = require('./player-profile');
+const { mountLeagueRoutes } = require('./league');
 
 
 
@@ -16,6 +17,7 @@ app.set('trust proxy', 1);
 app.use(express.json({ limit: '64kb' }));
 mountAuthRoutes(app);
 mountProfileRoutes(app);
+mountLeagueRoutes(app);
 app.use(express.static('public')); // servíruje index.html a další soubory
 
 const server = http.createServer(app);
@@ -28,7 +30,7 @@ const PORT = process.env.PORT || 3000;
   await db.initDatabase();
   server.listen(PORT, '0.0.0.0', () => {
     console.log('Server běží na', PORT);
-    console.log('🧪 VLASTENEC BUILD: 2026-08-17-bots-recovery-v1');
+    console.log('🧪 VLASTENEC BUILD: 2026-08-17-league-hub-v1');
   });
 })();
 

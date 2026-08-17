@@ -122,6 +122,7 @@ CREATE TABLE IF NOT EXISTS league_players (
   season_id BIGINT NOT NULL REFERENCES league_seasons(id) ON DELETE CASCADE,
   user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   rating INTEGER NOT NULL DEFAULT 1200,
+  starting_rating INTEGER NOT NULL DEFAULT 1200,
   games INTEGER NOT NULL DEFAULT 0,
   wins INTEGER NOT NULL DEFAULT 0,
   second_places INTEGER NOT NULL DEFAULT 0,
@@ -133,6 +134,7 @@ CREATE TABLE IF NOT EXISTS league_players (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   PRIMARY KEY (season_id, user_id)
 );
+ALTER TABLE league_players ADD COLUMN IF NOT EXISTS starting_rating INTEGER NOT NULL DEFAULT 1200;
 CREATE INDEX IF NOT EXISTS league_players_rating_idx ON league_players(season_id, rating DESC);
 
 CREATE TABLE IF NOT EXISTS league_matches (
@@ -175,7 +177,7 @@ CREATE TABLE IF NOT EXISTS league_rewards (
 );
 
 INSERT INTO schema_meta(key, value)
-VALUES ('schema_version', '2')
+VALUES ('schema_version', '3')
 ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = NOW();
 `;
 
