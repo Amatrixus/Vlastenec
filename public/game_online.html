@@ -659,11 +659,14 @@ window.addEventListener('gameStartedAfterAnimation', () => {
 
 
 
-        // 🔁 Po tom, co známe roomId, odešleme serveru kategorie (platí pro random/friends/bots i po resume)
-        socket.emit('settings:update', {
-           roomId: currentRoomId,
-           settings: { mode: gameMode, cats: catIds, catNames }
-        });
+        // Nastavení friends lobby autoritativně spravuje hostitel (seat 1).
+        // U random/bots se chováme stejně jako dřív.
+        if (gameMode !== 'friends' || number === 1) {
+          socket.emit('settings:update', {
+             roomId: currentRoomId,
+             settings: { mode: gameMode, cats: catIds, catNames }
+          });
+        }
 
 
 
@@ -954,13 +957,16 @@ if (regionValues && typeof regionValues === 'object') {
 
 
 
-                  // 🔍 porovnej, zda se změnil stav "bot/human"
+                  // 🔍 porovnej, zda se změnil stav "bot/human".
+                // V lobby ještě základny neexistují, takže je tam nepřepočítáváme.
                 if (JSON.stringify(lastSeatControllers) !== JSON.stringify(seatControllers)) {
-                    console.log("♻️ Změna typu hráče – obnovuji základny");
-                    settlePlayer1();
-                    settlePlayer2();
-                    settlePlayer3();
-                    lastSeatControllers = { ...seatControllers };
+                    if (window.currentPhase !== 'lobby' && player1CurrentBase && player2CurrentBase && player3CurrentBase) {
+                        console.log("♻️ Změna typu hráče – obnovuji základny");
+                        settlePlayer1();
+                        settlePlayer2();
+                        settlePlayer3();
+                    }
+                    lastSeatControllers = { ...(seatControllers || {}) };
                 }
                 
                 
@@ -974,20 +980,24 @@ if (regionValues && typeof regionValues === 'object') {
 
 
             function updateLobbyList(allNames) {
-                    const lobbyDiv = document.getElementById("lobby_list");
-                    if (!lobbyDiv) return;
+                // Moderní friends lobby dostává přesný stav přes `lobby:state`.
+                // Tohle zůstává jako fallback pro první okamžiky připojování a pro ostatní módy.
+                window.__lastLobbyNames = allNames || window.__lastLobbyNames || {};
+                if (typeof window.renderLobbyFallback === 'function') {
+                    window.renderLobbyFallback(window.__lastLobbyNames);
+                    return;
+                }
 
-                    // Vyčisti obsah
-                    lobbyDiv.innerHTML = "";
-
-                    // Pro každé číslo hráče (1–3), přidej jméno do seznamu
-                    for (let i = 1; i <= 3; i++) {
-                        const name = allNames[i] || `Robot ${i}`;
-                        const entry = document.createElement("div");
-                        entry.textContent = name;
-                        lobbyDiv.appendChild(entry);
-                    }
+                const lobbyDiv = document.getElementById("lobby_list");
+                if (!lobbyDiv) return;
+                lobbyDiv.innerHTML = "";
+                for (let i = 1; i <= 3; i++) {
+                    const entry = document.createElement("div");
+                    entry.textContent = (allNames && allNames[i]) || `Čekáme na hráče ${i}`;
+                    lobbyDiv.appendChild(entry);
+                }
             }
+
 
 
     </script>
@@ -1431,20 +1441,125 @@ if (regionValues && typeof regionValues === 'object') {
 
 
       <div id="lobby_container">
-            
-
-            <div id="lobby_window">
-
-                <div id="lobby_status">
-                    Status
-                </div>
-
-                <div id="lobby_list">
-
-                </div>
+        <div id="lobby_window" class="lobby-shell">
+          <header class="lobby-head">
+            <div class="lobby-brand-block">
+              <img src="logo.svg" alt="Vlastenec" class="lobby-logo">
+              <div>
+                <div class="lobby-eyebrow">HRA S PŘÁTELI</div>
+                <div class="lobby-title">Připravte bojiště</div>
+              </div>
             </div>
+            <div class="lobby-room-block">
+              <span class="lobby-room-label">Místnost</span>
+              <strong id="lobby_room_code">------</strong>
+              <button id="lobby_copy_link" type="button" class="lobby-copy-btn">Kopírovat pozvánku</button>
+            </div>
+          </header>
 
+          <div class="lobby-layout">
+            <main class="lobby-main">
+              <section class="lobby-section lobby-players-section">
+                <div class="lobby-section-head">
+                  <div>
+                    <span class="lobby-section-kicker">HRÁČI</span>
+                    <h2>3 místa. Jeden vítěz.</h2>
+                  </div>
+                  <div id="lobby_status" class="lobby-status-pill">Čekáme na hráče…</div>
+                </div>
+                <div id="lobby_list" class="lobby-player-grid"></div>
+              </section>
 
+              <section class="lobby-section lobby-categories-section">
+                <div class="lobby-section-head compact">
+                  <div>
+                    <span class="lobby-section-kicker">KATEGORIE</span>
+                    <h2>Vyberte okruhy otázek</h2>
+                  </div>
+                  <span id="lobby_category_hint" class="lobby-muted">Kategorie nastavuje hostitel.</span>
+                </div>
+
+                <div id="lobby_category_tiles" class="lobby-category-grid">
+                  <label class="lobby-cat-tile" data-cat="1" title="Přírodní vědy">
+                    <input type="checkbox" value="1" checked>
+                    <img src="tiles/tile1.png" alt="Přírodní vědy">
+                    <span class="lobby-cat-check">✓</span><span class="lobby-cat-name">Přírodní vědy</span>
+                  </label>
+                  <label class="lobby-cat-tile" data-cat="2" title="Jazyk a literatura">
+                    <input type="checkbox" value="2" checked>
+                    <img src="tiles/tile2.png" alt="Jazyk a literatura">
+                    <span class="lobby-cat-check">✓</span><span class="lobby-cat-name">Literatura</span>
+                  </label>
+                  <label class="lobby-cat-tile" data-cat="3" title="Technologie">
+                    <input type="checkbox" value="3" checked>
+                    <img src="tiles/tile3.png" alt="Technologie">
+                    <span class="lobby-cat-check">✓</span><span class="lobby-cat-name">Technologie</span>
+                  </label>
+                  <label class="lobby-cat-tile" data-cat="4" title="Geografie">
+                    <input type="checkbox" value="4" checked>
+                    <img src="tiles/tile4.png" alt="Geografie">
+                    <span class="lobby-cat-check">✓</span><span class="lobby-cat-name">Geografie</span>
+                  </label>
+                  <label class="lobby-cat-tile" data-cat="5" title="Historie">
+                    <input type="checkbox" value="5" checked>
+                    <img src="tiles/tile5.png" alt="Historie">
+                    <span class="lobby-cat-check">✓</span><span class="lobby-cat-name">Historie</span>
+                  </label>
+                  <label class="lobby-cat-tile" data-cat="6" title="Kultura a umění">
+                    <input type="checkbox" value="6" checked>
+                    <img src="tiles/tile6.png" alt="Kultura a umění">
+                    <span class="lobby-cat-check">✓</span><span class="lobby-cat-name">Kultura</span>
+                  </label>
+                  <label class="lobby-cat-tile" data-cat="7" title="Sport">
+                    <input type="checkbox" value="7" checked>
+                    <img src="tiles/tile7.png" alt="Sport">
+                    <span class="lobby-cat-check">✓</span><span class="lobby-cat-name">Sport</span>
+                  </label>
+                  <label class="lobby-cat-tile" data-cat="8" title="Osobnosti">
+                    <input type="checkbox" value="8" checked>
+                    <img src="tiles/tile8.png" alt="Osobnosti">
+                    <span class="lobby-cat-check">✓</span><span class="lobby-cat-name">Osobnosti</span>
+                  </label>
+                  <label class="lobby-cat-tile" data-cat="9" title="Politika">
+                    <input type="checkbox" value="9" checked>
+                    <img src="tiles/tile9.png" alt="Politika">
+                    <span class="lobby-cat-check">✓</span><span class="lobby-cat-name">Politika</span>
+                  </label>
+                </div>
+              </section>
+
+              <footer class="lobby-actions">
+                <div class="lobby-ready-copy">
+                  <strong id="lobby_action_title">Připrav se na hru</strong>
+                  <span id="lobby_action_note">Až budeš hotový, potvrď připravenost.</span>
+                </div>
+                <div class="lobby-action-buttons">
+                  <button id="lobby_ready_btn" type="button" class="lobby-btn lobby-btn-secondary">Jsem připraven</button>
+                  <button id="lobby_start_btn" type="button" class="lobby-btn lobby-btn-primary" disabled>Spustit hru</button>
+                </div>
+              </footer>
+            </main>
+
+            <aside class="lobby-chat-panel">
+              <div class="chat-panel-head">
+                <div>
+                  <span class="lobby-section-kicker">CHAT</span>
+                  <h2>Buďte ve spojení</h2>
+                </div>
+                <span class="chat-online-dot" title="Připojeno"></span>
+              </div>
+              <div class="chat-tabs" role="tablist">
+                <button class="chat-channel-tab active" data-channel="session" type="button">Místnost</button>
+                <button class="chat-channel-tab" data-channel="community" type="button">Komunita</button>
+              </div>
+              <div id="lobby_chat_messages" class="modern-chat-messages"></div>
+              <div class="modern-chat-compose">
+                <input id="lobby_chat_input" type="text" maxlength="500" autocomplete="off" placeholder="Napiš zprávu…">
+                <button id="lobby_chat_send" type="button" aria-label="Odeslat zprávu">➤</button>
+              </div>
+            </aside>
+          </div>
+        </div>
       </div>
 
 
@@ -2384,275 +2499,423 @@ if (regionValues && typeof regionValues === 'object') {
       </div>
 
 
-      <div id="chat">
-            <input type="text" id="chatinput" placeholder="Napiš zprávu…">
-            <input type="button" id="chatbutton" value="►">
+      <button id="game_chat_toggle" type="button" aria-label="Otevřít chat">
+        <span class="game-chat-icon">💬</span>
+        <span id="game_chat_unread" class="game-chat-unread">0</span>
+      </button>
 
-            <div id="chatcontent"></div>
-            </div>
+      <aside id="game_chat_drawer" aria-hidden="true">
+        <div class="game-chat-head">
+          <strong>Chat</strong>
+          <button id="game_chat_close" type="button" aria-label="Zavřít chat">×</button>
+        </div>
+        <div class="chat-tabs game-chat-tabs" role="tablist">
+          <button class="chat-channel-tab active" data-channel="session" type="button">Místnost</button>
+          <button class="chat-channel-tab" data-channel="community" type="button">Komunita</button>
+        </div>
+        <div id="game_chat_messages" class="modern-chat-messages"></div>
+        <div class="modern-chat-compose">
+          <input id="game_chat_input" type="text" maxlength="500" autocomplete="off" placeholder="Napiš zprávu…">
+          <button id="game_chat_send" type="button" aria-label="Odeslat zprávu">➤</button>
+        </div>
+      </aside>
 
-            
+      <script>
+      (() => {
+        const CATEGORY_SLUGS_LOBBY = [
+          'vedy','literatura','technologie','geografie','historie',
+          'kultura','sport','osobnosti','politika'
+        ];
+        const numberToTeamClass = { 1: 'team-blue', 2: 'team-red', 3: 'team-white' };
+        const nameToTeamClass = new Map();
+        const chatState = { session: [], community: [] };
+        let activeChatChannel = 'session';
+        let lobbyState = null;
+        let unreadGameChat = 0;
 
-            <!-- 2) Tvůj klientský chat -->
-            <script>
+        function syncNameTeamMap(names) {
+          if (!names) return;
+          for (let i = 1; i <= 3; i++) {
+            const nm = names[i];
+            if (nm) nameToTeamClass.set(nm, numberToTeamClass[i] || '');
+          }
+        }
+        window.syncNameTeamMap = syncNameTeamMap;
 
-                /* FUNKČNÍ CHAT
+        function fmtTime(ts) {
+          try { return new Date(ts).toLocaleTimeString('cs-CZ', { hour:'2-digit', minute:'2-digit' }); }
+          catch { return ''; }
+        }
 
-                // ====== Týmové barvy podle čísla hráče ======
-                const numberToTeamClass = {
-                1: 'team-blue',
-                2: 'team-red',
-                3: 'team-white'
-                };
+        function makeInitials(name) {
+          return String(name || '?').trim().split(/\s+/).slice(0,2).map(x => x[0] || '').join('').toUpperCase() || '?';
+        }
 
-                // Mapování jméno -> třída týmu (dynamicky plníme z allNames)
-                const nameToTeamClass = new Map();
+        function stripRoomPrefix(roomId) {
+          return String(roomId || '').replace(/^room_/i, '');
+        }
 
-                function syncNameTeamMap(allNames) {
-                if (!allNames) return;
-                for (let i = 1; i <= 3; i++) {
-                    const nm = allNames[i];
-                    if (nm) {
-                    nameToTeamClass.set(nm, numberToTeamClass[i] || '');
-                    }
-                }
-                }
+        function setRoomCode(roomId) {
+          const el = document.getElementById('lobby_room_code');
+          if (el) el.textContent = stripRoomPrefix(roomId) || '------';
+        }
 
-                
-                function teamClassFor(name) {
-                return nameToTeamClass.get(name) || '';
-                }
+        function showLobbyMessage(text, tone = '') {
+          const el = document.getElementById('lobby_status');
+          if (!el) return;
+          el.textContent = text;
+          el.dataset.tone = tone;
+        }
 
+        function fallbackPlayersFromNames(names = {}) {
+          return [1,2,3].map(seat => ({
+            seat,
+            name: names[seat] || null,
+            connected: !!names[seat],
+            ready: false,
+            host: seat === 1,
+            controller: 'human'
+          }));
+        }
 
+        function renderPlayerSlots(players) {
+          const list = document.getElementById('lobby_list');
+          if (!list) return;
+          list.innerHTML = '';
+          (players || fallbackPlayersFromNames()).forEach(p => {
+            const card = document.createElement('div');
+            card.className = `lobby-player-card seat-${p.seat}${p.connected ? ' connected' : ' offline'}${p.ready ? ' ready' : ''}`;
 
+            const avatar = document.createElement('div');
+            avatar.className = 'lobby-player-avatar';
+            avatar.textContent = p.name ? makeInitials(p.name) : String(p.seat);
 
+            const info = document.createElement('div');
+            info.className = 'lobby-player-info';
+            const name = document.createElement('strong');
+            name.textContent = p.name || 'Čekáme na hráče…';
+            const meta = document.createElement('span');
+            if (!p.name) meta.textContent = 'Volné místo';
+            else if (!p.connected) meta.textContent = 'Odpojen';
+            else if (p.ready) meta.textContent = 'Připraven';
+            else meta.textContent = 'V lobby';
+            info.append(name, meta);
 
-
-
-            // ====== Pomocné funkce ======
-            function escapeHtml(s) {
-                return String(s).replace(/[&<>"']/g, m => (
-                {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]
-                ));
+            const side = document.createElement('div');
+            side.className = 'lobby-player-side';
+            if (p.host) {
+              const host = document.createElement('span');
+              host.className = 'lobby-host-badge';
+              host.textContent = 'HOST';
+              side.appendChild(host);
             }
-            function fmtTime(ts) {
-                try { return new Date(ts).toLocaleTimeString('cs-CZ', {hour:'2-digit', minute:'2-digit'}); }
-                catch { return ''; }
+            const dot = document.createElement('span');
+            dot.className = 'lobby-presence-dot';
+            dot.title = p.connected ? 'Připojen' : 'Odpojen';
+            side.appendChild(dot);
+            card.append(avatar, info, side);
+            list.appendChild(card);
+          });
+        }
+
+        function applyLobbySettings(settings = {}) {
+          const selected = new Set(
+            Array.isArray(settings.cats) && settings.cats.length
+              ? settings.cats.map(Number)
+              : [1,2,3,4,5,6,7,8,9]
+          );
+          document.querySelectorAll('#lobby_category_tiles input[type="checkbox"]').forEach(input => {
+            input.checked = selected.has(Number(input.value));
+          });
+        }
+
+        function setCategoryAccess() {
+          const isFriends = gameMode === 'friends';
+          const isHost = isFriends && Number(myPlayerNumber) === 1;
+          document.querySelectorAll('#lobby_category_tiles input[type="checkbox"]').forEach(input => {
+            input.disabled = !isHost;
+          });
+          const hint = document.getElementById('lobby_category_hint');
+          if (hint) {
+            hint.textContent = !isFriends
+              ? 'Kategorie byly zvoleny před vstupem do hry.'
+              : (isHost ? 'Kliknutím kategorie zapneš nebo vypneš.' : 'Kategorie nastavuje hostitel.');
+          }
+        }
+
+        function renderLobby(state) {
+          if (!state) return;
+          lobbyState = state;
+          setRoomCode(state.roomId || currentRoomId);
+          renderPlayerSlots(state.players);
+          applyLobbySettings(state.settings || {});
+          setCategoryAccess();
+
+          const me = (state.players || []).find(p => Number(p.seat) === Number(myPlayerNumber));
+          const readyBtn = document.getElementById('lobby_ready_btn');
+          const startBtn = document.getElementById('lobby_start_btn');
+          const title = document.getElementById('lobby_action_title');
+          const note = document.getElementById('lobby_action_note');
+          const isHost = Number(myPlayerNumber) === Number(state.hostSeat || 1);
+
+          if (readyBtn) {
+            readyBtn.disabled = !me?.connected;
+            readyBtn.classList.toggle('is-ready', !!me?.ready);
+            readyBtn.textContent = me?.ready ? 'Zrušit připravenost' : 'Jsem připraven';
+          }
+          if (startBtn) {
+            startBtn.style.display = isHost ? '' : 'none';
+            startBtn.disabled = !state.canStart;
+          }
+
+          const connected = (state.players || []).filter(p => p.name && p.connected).length;
+          const ready = (state.players || []).filter(p => p.name && p.connected && p.ready).length;
+          if (state.canStart) {
+            showLobbyMessage('Všichni připraveni', 'ready');
+            if (title) title.textContent = isHost ? 'Všichni jsou připraveni' : 'Čekáme na hostitele';
+            if (note) note.textContent = isHost ? 'Můžeš spustit zápas.' : 'Hostitel může spustit zápas.';
+          } else if (connected < 3) {
+            showLobbyMessage(`${connected}/3 připojeni`, 'waiting');
+            if (title) title.textContent = 'Čekáme na další hráče';
+            if (note) note.textContent = 'Pošli ostatním odkaz na tuto místnost.';
+          } else {
+            showLobbyMessage(`${ready}/3 připraveni`, 'waiting');
+            if (title) title.textContent = 'Potvrď připravenost';
+            if (note) note.textContent = 'Hra začne až po potvrzení všech tří hráčů.';
+          }
+        }
+
+        window.renderLobbyFallback = (names = {}) => {
+          if (lobbyState) return;
+          renderPlayerSlots(fallbackPlayersFromNames(names));
+          setRoomCode(currentRoomId);
+          setCategoryAccess();
+        };
+
+        function selectedCategories() {
+          return [...document.querySelectorAll('#lobby_category_tiles input[type="checkbox"]:checked')]
+            .map(input => Number(input.value))
+            .filter(n => n >= 1 && n <= 9);
+        }
+
+        function emitCategorySettings(changedInput) {
+          if (gameMode !== 'friends' || Number(myPlayerNumber) !== 1 || !currentRoomId) return;
+          let cats = selectedCategories();
+          if (!cats.length) {
+            changedInput.checked = true;
+            cats = selectedCategories();
+            showLobbyMessage('Musí zůstat vybraná alespoň jedna kategorie.', 'warning');
+            return;
+          }
+          socket.emit('settings:update', {
+            roomId: currentRoomId,
+            settings: {
+              mode: gameMode,
+              cats,
+              catNames: cats.map(id => CATEGORY_SLUGS_LOBBY[id - 1]).filter(Boolean)
             }
-            
-            
+          });
+        }
 
-            
+        document.querySelectorAll('#lobby_category_tiles input[type="checkbox"]').forEach(input => {
+          input.addEventListener('change', () => emitCategorySettings(input));
+        });
 
-            function appendMsg({ name, text, ts, number }) {
-            const line = document.createElement('div');
-            line.className = 'chat-line';
+        document.getElementById('lobby_ready_btn')?.addEventListener('click', () => {
+          if (!currentRoomId) return;
+          const me = lobbyState?.players?.find(p => Number(p.seat) === Number(myPlayerNumber));
+          socket.emit('lobby:ready', { roomId: currentRoomId, ready: !me?.ready });
+        });
 
-            const teamClass = numberToTeamClass[number] || teamClassFor(name); // fallback na jméno
+        document.getElementById('lobby_start_btn')?.addEventListener('click', () => {
+          if (currentRoomId) socket.emit('lobby:start', { roomId: currentRoomId });
+        });
 
-            line.innerHTML =
-                `<span class="chat-time">[${fmtTime(ts)}]</span> ` +
-                `<span class="chat-name ${teamClass || ''}" data-name="${escapeHtml(name)}"><strong>${escapeHtml(name)}:</strong></span> ` +
-                `<span class="chat-text">${escapeHtml(text)}</span>`;
-
-            chatBox.appendChild(line);
-            chatBox.scrollTop = chatBox.scrollHeight;
+        document.getElementById('lobby_copy_link')?.addEventListener('click', async () => {
+          const url = new URL(location.href);
+          if (currentRoomId) url.searchParams.set('room', stripRoomPrefix(currentRoomId));
+          try {
+            await navigator.clipboard.writeText(url.toString());
+            const btn = document.getElementById('lobby_copy_link');
+            if (btn) {
+              const old = btn.textContent;
+              btn.textContent = 'Zkopírováno';
+              setTimeout(() => btn.textContent = old, 1400);
             }
+          } catch {
+            prompt('Zkopíruj odkaz na místnost:', url.toString());
+          }
+        });
 
+        // ===== CHAT: dva kanály, jedna datová vrstva =====
+        function createChatLine(msg, channel) {
+          const line = document.createElement('div');
+          line.className = 'modern-chat-line';
+          const meta = document.createElement('div');
+          meta.className = 'modern-chat-meta';
+          const name = document.createElement('strong');
+          name.textContent = msg?.name || 'Hráč';
+          if (channel === 'session') {
+            name.classList.add(numberToTeamClass[msg?.number] || nameToTeamClass.get(msg?.name) || '');
+          }
+          const time = document.createElement('span');
+          time.textContent = fmtTime(msg?.ts);
+          meta.append(name, time);
+          const text = document.createElement('div');
+          text.className = 'modern-chat-text';
+          text.textContent = msg?.text || '';
+          line.append(meta, text);
+          return line;
+        }
 
-            // ====== Elementy ======
-            const chatInput = document.getElementById('chatinput');
-            const chatBtn   = document.getElementById('chatbutton');
-            const chatBox   = document.getElementById('chatcontent');
+        function renderChatBox(box) {
+          if (!box) return;
+          box.innerHTML = '';
+          const items = chatState[activeChatChannel] || [];
+          if (!items.length) {
+            const empty = document.createElement('div');
+            empty.className = 'modern-chat-empty';
+            empty.textContent = activeChatChannel === 'community'
+              ? 'Komunitní chat je zatím tichý.'
+              : 'V místnosti zatím nikdo nic nenapsal.';
+            box.appendChild(empty);
+          } else {
+            items.forEach(msg => box.appendChild(createChatLine(msg, activeChatChannel)));
+          }
+          box.scrollTop = box.scrollHeight;
+        }
 
-            // ====== Socket ======
-            window.socket = socket;
+        function syncChatUI() {
+          document.querySelectorAll('.chat-channel-tab').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.channel === activeChatChannel);
+          });
+          renderChatBox(document.getElementById('lobby_chat_messages'));
+          renderChatBox(document.getElementById('game_chat_messages'));
+          const placeholder = activeChatChannel === 'community' ? 'Napiš komunitě…' : 'Napiš do místnosti…';
+          ['lobby_chat_input','game_chat_input'].forEach(id => {
+            const el = document.getElementById(id); if (el) el.placeholder = placeholder;
+          });
+        }
 
-            socket.on("connect", () => {
-                console.log("🔌 connected:", socket.id);
-            });
-            socket.on("connect_error", (err) => {
-                console.log("❌ connect_error:", err?.message || err);
-            });
+        document.querySelectorAll('.chat-channel-tab').forEach(btn => {
+          btn.addEventListener('click', () => {
+            activeChatChannel = btn.dataset.channel === 'community' ? 'community' : 'session';
+            syncChatUI();
+          });
+        });
 
-            // Server přiřadí číslo hráče + roomId
-            socket.on("assignPlayerNumber", (data) => {
-                roomId = data?.roomId || roomId;
-                console.log("✅ assignPlayerNumber:", data);
-            });
+        function sendChatFrom(input) {
+          const text = String(input?.value || '').trim();
+          if (!text) return;
+          if (activeChatChannel === 'community') {
+            socket.emit('community:chat:send', { text });
+          } else {
+            if (!currentRoomId) return;
+            socket.emit('chat:send', { roomId: currentRoomId, text });
+          }
+          input.value = '';
+          input.focus();
+        }
 
-            // ====== Odeslání zprávy ======
-            function sendChat() {
-                const text = (chatInput?.value || "").trim();
-                console.log("🖊️ sendChat()", { text, roomId, socketId: socket.id });
+        function wireCompose(inputId, buttonId) {
+          const input = document.getElementById(inputId);
+          const btn = document.getElementById(buttonId);
+          btn?.addEventListener('click', () => sendChatFrom(input));
+          input?.addEventListener('keydown', e => { if (e.key === 'Enter') sendChatFrom(input); });
+        }
+        wireCompose('lobby_chat_input','lobby_chat_send');
+        wireCompose('game_chat_input','game_chat_send');
 
-                if (!text) return;
-                if (!roomId) {
-                console.warn("⚠️ roomId není k dispozici. Neposílám.");
-                return;
-                }
-                socket.emit("chat:send", { roomId, text });
-                console.log("➡️ emitted chat:send");
+        function setUnread(n) {
+          unreadGameChat = Math.max(0, Number(n) || 0);
+          const el = document.getElementById('game_chat_unread');
+          if (el) {
+            el.textContent = String(unreadGameChat);
+            el.style.display = unreadGameChat ? '' : 'none';
+          }
+        }
 
-                chatInput.value = "";
-                chatInput.focus();
-            }
+        const gameDrawer = document.getElementById('game_chat_drawer');
+        function setGameDrawer(open) {
+          gameDrawer?.classList.toggle('open', !!open);
+          gameDrawer?.setAttribute('aria-hidden', open ? 'false' : 'true');
+          if (open) setUnread(0);
+        }
+        document.getElementById('game_chat_toggle')?.addEventListener('click', () => setGameDrawer(!gameDrawer?.classList.contains('open')));
+        document.getElementById('game_chat_close')?.addEventListener('click', () => setGameDrawer(false));
 
-            chatBtn?.addEventListener('click', sendChat);
-            chatInput?.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') sendChat();
-            });
+        function receiveMessage(channel, msg) {
+          chatState[channel].push(msg);
+          if (chatState[channel].length > 200) chatState[channel].shift();
+          if (channel === activeChatChannel) syncChatUI();
+          if (document.body.classList.contains('is-game-started') && !gameDrawer?.classList.contains('open')) {
+            setUnread(unreadGameChat + 1);
+          }
+        }
 
-            // ====== Příjem historie a nových zpráv ======
-            socket.on("chat:history", (msgs) => {
-                console.log("📜 chat:history", msgs);
-                chatBox.innerHTML = "";
-                (msgs || []).forEach(appendMsg);
-            });
+        socket.on('lobby:state', state => renderLobby(state));
+        socket.on('lobby:error', ({ message } = {}) => showLobbyMessage(message || 'Lobby není připravená.', 'warning'));
+        socket.on('settings:applied', ({ settings } = {}) => applyLobbySettings(settings || {}));
 
-            socket.on("chat:new", (msg) => {
-                console.log("⬅️ chat:new", msg);
-                appendMsg(msg);
-            });
+        socket.on('assignPlayerNumber', data => {
+          setRoomCode(data?.roomId || currentRoomId);
+          syncNameTeamMap(data?.allNames);
+          setCategoryAccess();
+          if (currentRoomId) socket.emit('chat:history:get', { roomId: currentRoomId });
+          socket.emit('community:chat:history:get');
+        });
 
+        socket.on('stateSync', ({ snapshot } = {}) => {
+          if (!snapshot) return;
+          setRoomCode(snapshot.roomId || currentRoomId);
+          syncNameTeamMap(snapshot.allNames);
+          if (snapshot.settings) applyLobbySettings(snapshot.settings);
+          if (Array.isArray(snapshot.chat)) {
+            chatState.session = snapshot.chat.slice(-200);
+            syncChatUI();
+          } else if (snapshot.roomId || currentRoomId) {
+            socket.emit('chat:history:get', { roomId: snapshot.roomId || currentRoomId });
+          }
+          if (!snapshot.hasStarted && snapshot.roomId) {
+            // server po resume pošle i lobby:state; fallback mezitím zobrazuje jména
+            window.renderLobbyFallback(snapshot.allNames || {});
+          }
+          if (snapshot.hasStarted) document.body.classList.add('is-game-started');
+        });
 
+        socket.on('chat:history', msgs => {
+          chatState.session = Array.isArray(msgs) ? msgs.slice(-200) : [];
+          syncChatUI();
+        });
+        socket.on('chat:new', msg => receiveMessage('session', msg));
+        socket.on('community:chat:history', msgs => {
+          chatState.community = Array.isArray(msgs) ? msgs.slice(-200) : [];
+          syncChatUI();
+        });
+        socket.on('community:chat:new', msg => receiveMessage('community', msg));
 
+        socket.on('startGame', () => {
+          document.body.classList.add('is-game-started');
+          setGameDrawer(false);
+        });
 
+        if (socket.connected) socket.emit('community:chat:history:get');
+        socket.on('connect', () => socket.emit('community:chat:history:get'));
 
-            */
-
-
-
-
-
-
-
-
-
-
-
-                // ====== Týmové barvy podle čísla hráče ======
-                const numberToTeamClass = { 1: 'team-blue', 2: 'team-red', 3: 'team-white' };
-                const nameToTeamClass = new Map();
-
-                function syncNameTeamMap(allNames) {
-                if (!allNames) return;
-                for (let i = 1; i <= 3; i++) {
-                    const nm = allNames[i];
-                    if (nm) nameToTeamClass.set(nm, numberToTeamClass[i] || '');
-                }
-                }
-                function teamClassFor(name) { return nameToTeamClass.get(name) || ''; }
-
-                // ====== Pomocné funkce ======
-                function escapeHtml(s) {
-                return String(s).replace(/[&<>"']/g, m => (
-                    {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]
-                ));
-                }
-                function fmtTime(ts) {
-                try { return new Date(ts).toLocaleTimeString('cs-CZ', {hour:'2-digit', minute:'2-digit'}); }
-                catch { return ''; }
-                }
-                function appendMsg({ name, text, ts, number }) {
-                const line = document.createElement('div');
-                line.className = 'chat-line';
-                const teamClass = numberToTeamClass[number] || teamClassFor(name);
-                line.innerHTML =
-                    `<span class="chat-time">[${fmtTime(ts)}]</span> ` +
-                    `<span class="chat-name ${teamClass || ''}" data-name="${escapeHtml(name)}"><strong>${escapeHtml(name)}:</strong></span> ` +
-                    `<span class="chat-text">${escapeHtml(text)}</span>`;
-                chatBox.appendChild(line);
-                chatBox.scrollTop = chatBox.scrollHeight;
-                }
-
-                // ====== Elementy ======
-                const chatInput = document.getElementById('chatinput');
-                const chatBtn   = document.getElementById('chatbutton');
-                const chatBox   = document.getElementById('chatcontent');
-
-                // ====== Stav + socket ======
-                let roomId = window.currentRoomId || null;     // ⬅️ globální, aby sendChat nikdy nepadal
-                window.socket = socket;                        // používáš už existující `socket`
-
-                // ====== Odeslání zprávy ======
-                function sendChat() {
-                const text = (chatInput?.value || "").trim();
-                if (!text) return;
-                if (!roomId) {
-                    console.warn("⚠️ roomId není k dispozici. Neposílám.");
-                    return;
-                }
-                socket.emit("chat:send", { roomId, text });
-                chatInput.value = "";
-                chatInput.focus();
-                }
-
-                chatBtn?.addEventListener('click', sendChat);
-                chatInput?.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') sendChat();
-                });
-
-                // ====== Drátování socketu ======
-                socket.on("connect", () => {
-                console.log("🔌 connected:", socket.id);
-                });
-                socket.on("connect_error", (err) => {
-                console.log("❌ connect_error:", err?.message || err);
-                });
-
-                // Když server přiřadí číslo hráče + roomId (přichází brzo u “nové” session)
-                socket.on("assignPlayerNumber", (data) => {
-                roomId = data?.roomId || roomId || window.currentRoomId || null;
-                console.log("✅ assignPlayerNumber:", data);
-                });
-
-                // === REHYDRATACE PO OBNOVENÍ / RESUME ===
-                // 1) preferuj chat v snapshotu (server ho může přidat do buildRoomSnapshot)
-                // 2) pokud v snapshotu není, požádej o historii
-                socket.on("stateSync", ({ myNumber, snapshot }) => {
-                // ulož roomId i tady – při resume se `assignPlayerNumber` nemusí hned trefit
-                roomId = snapshot?.roomId || roomId || window.currentRoomId || null;
-
-                if (Array.isArray(snapshot?.chat)) {
-                    // máme historii přímo v snapshotu
-                    chatBox.innerHTML = "";
-                    snapshot.chat.forEach(appendMsg);
-                } else if (roomId) {
-                    // snapshot chat neobsahuje → vyžádáme si ji
-                    socket.emit("chat:history:get", { roomId });
-                }
-                });
-
-                // Server vrací historii (buď při založení místnosti, nebo po našem chat:history:get)
-                socket.on("chat:history", (msgs) => {
-                console.log("📜 chat:history", msgs);
-                chatBox.innerHTML = "";
-                (msgs || []).forEach(appendMsg);
-                });
-
-                // Nové zprávy
-                socket.on("chat:new", (msg) => {
-                console.log("⬅️ chat:new", msg);
-                appendMsg(msg);
-                });
-                </script>
-
-
-
-
-
-
-
-            </script>
-
-            <!-- Volitelně jednoduché styly -->
-            <style>
-            
-            </style>
-
-    
-
+        if (gameMode !== 'friends') {
+          document.getElementById('lobby_ready_btn')?.classList.add('lobby-hidden');
+          document.getElementById('lobby_start_btn')?.classList.add('lobby-hidden');
+          const actionTitle = document.getElementById('lobby_action_title');
+          const actionNote = document.getElementById('lobby_action_note');
+          if (actionTitle) actionTitle.textContent = 'Hledáme soupeře';
+          if (actionNote) actionNote.textContent = 'Hra se spustí automaticky, jakmile bude připravena.';
+        }
+        setRoomCode(currentRoomId);
+        setCategoryAccess();
+        syncChatUI();
+        setUnread(0);
+      })();
+      </script>
 
       <svg onclick="showLeavegameWindow()" id="leave" xmlns="http://www.w3.org/2000/svg" shape-rendering="geometricPrecision" text-rendering="geometricPrecision" image-rendering="optimizeQuality" fill-rule="evenodd" clip-rule="evenodd" viewBox="0 0 474 512.46"><path d="M249.71.13 12.08 35.6C5.46 36.59 0 43.43 0 50.23v418.88c0 6.77 5.39 9.38 12.08 10.31l237.63 32.97c6.68.92 12.08-7.77 12.08-14.63V10.44c0-6.86-5.53-11.28-12.08-10.31zm124.96 329.08-.01-34.07c-.58.17-1.2.27-1.83.27h-53.47c-3.55 0-6.45-2.96-6.45-6.45v-66.2c0-3.48 2.97-6.45 6.45-6.45h53.47c.63 0 1.24.1 1.82.27v-34.06c0-6.29 5.1-11.4 11.39-11.4 3.29 0 6.25 1.4 8.33 3.63l76.01 70.9c4.59 4.27 4.85 11.47.58 16.06l-76.95 75.59c-4.47 4.4-11.67 4.34-16.07-.13a11.439 11.439 0 0 1-3.27-7.96zm-87.26 129.54h31.02V345.46h25.37v113.9c0 6.77-2.8 12.95-7.27 17.44-4.47 4.52-10.67 7.31-17.49 7.31h-31.63v-25.36zm31.02-292.48V52.98h-31.02V27.62h31.63c6.81 0 13.01 2.79 17.49 7.27 4.47 4.48 7.27 10.68 7.27 17.49v113.89h-25.37zm-87.67 58.52-24.93-5.68v74.24l24.93-7.18v-61.38z"/></svg>
 

@@ -18,7 +18,7 @@ const io = new Server(server, { cors: { origin: "*" } }); // (později si omezí
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, '0.0.0.0', () => {
   console.log('Server běží na', PORT);
-  console.log('🧪 VLASTENEC BUILD: 2026-08-16-region-fix-v3');
+  console.log('🧪 VLASTENEC BUILD: 2026-08-17-lobby-v1');
 });
 
 
@@ -28,6 +28,7 @@ server.listen(PORT, '0.0.0.0', () => {
 
 const MAX_PLAYERS_PER_ROOM = 3;
 const rooms = {}; // roomId -> { players, scores, bases, regions, regionValues, defenseBonuses }
+const communityChat = []; // globální komunitní chat; v RAM, max. 200 zpráv
 const regionValuesByRoom = {};
 
 
@@ -158,7 +159,8 @@ function buildRoomSnapshot(room, roomId) {
     expansionPlan: room.expansionPlan || null,
     battlePlan: room.battlePlan || null,
     chat: room.chat || [],
-    settings: room.settings || {}
+    settings: room.settings || {},
+    ready: room.ready || { 1: false, 2: false, 3: false }
   };
 }
 
@@ -193,6 +195,7 @@ function makeEmptyRoom(roomId, mode = 'random') {
     playerLives: { Player1: 3, Player2: 3, Player3: 3 },
     chat: [],
     settings: {},           // volitelné – můžeš sem ukládat cats/catNames
+    ready: { 1: false, 2: false, 3: false },
 
 
 
@@ -209,6 +212,76 @@ function makeEmptyRoom(roomId, mode = 'random') {
 
   };
   return rooms[roomId];
+}
+
+
+// ===== LOBBY =====
+function buildLobbyState(room, roomId) {
+  const ready = room.ready || { 1: false, 2: false, 3: false };
+  const players = [1, 2, 3].map(seat => {
+    const rec = room.players?.[seat - 1];
+    const controller = room.seatControllers?.[seat] || 'human';
+    return {
+      seat,
+      name: rec?.name || null,
+      connected: controller === 'bot' ? true : !!rec?.id,
+      ready: controller === 'bot' ? true : !!ready[seat],
+      controller,
+      host: seat === 1
+    };
+  });
+
+  const allConnected = players.every(p => p.name && p.connected);
+  const allReady = players.every(p => p.name && p.connected && p.ready);
+
+  return {
+    roomId,
+    mode: room.mode,
+    players,
+    hostSeat: 1,
+    settings: room.settings || {},
+    allConnected,
+    allReady,
+    canStart: room.mode === 'friends' && !room.hasStarted && allConnected && allReady
+  };
+}
+
+function broadcastLobbyState(roomId) {
+  const room = rooms[roomId];
+  if (!room) return;
+  io.to(roomId).emit('lobby:state', buildLobbyState(room, roomId));
+}
+
+function startRoomGame(roomId) {
+  const room = rooms[roomId];
+  if (!room || room.hasStarted || !isRoomAlive(roomId)) return false;
+
+  const possibleBases = ['Rho', 'Omega', 'Theta'];
+  const shuffled = [...possibleBases].sort(() => Math.random() - 0.5);
+
+  room.bases[1] = shuffled[0];
+  room.bases[2] = shuffled[1];
+  room.bases[3] = shuffled[2];
+
+  room.regions.Player1regions = [room.bases[1]];
+  room.regions.Player2regions = [room.bases[2]];
+  room.regions.Player3regions = [room.bases[3]];
+  room.scores = calculateScores(room.regions, room.regionValues, room.defenseBonuses);
+
+  room.hasStarted = true;
+  room.phase = 'settle';
+  room.round = 0;
+
+  io.to(roomId).emit('startGame', {
+    bases: room.bases,
+    regions: room.regions,
+    regionValues: room.regionValues
+  });
+  io.to(roomId).emit('updateScores', { scores: room.scores });
+
+  console.log(`🎮 ${roomId}: hra spuštěna (${room.mode})`);
+  if (isRoomAlive(roomId)) runGameScenario(roomId);
+  return true;
 }
 
 
@@ -286,6 +359,7 @@ function roomAddPlayerAndBroadcast(roomId, socket, name) {
 
     io.to(roomId).emit("updatePlayers", { allNames, displayNames, seatControllers: room.seatControllers });
     io.to(roomId).emit("updateScores", { scores: room.scores });
+    if (room.mode === 'friends' && !room.hasStarted) broadcastLobbyState(roomId);
     return;
   }
 
@@ -328,35 +402,15 @@ function roomAddPlayerAndBroadcast(roomId, socket, name) {
   io.to(roomId).emit("updatePlayers", { allNames, displayNames, seatControllers: room.seatControllers });
   io.to(roomId).emit("updateScores", { scores: room.scores });
 
-  // 5) Start hry pouze jednou (zbytek nech tak, jak už máš – hasStarted guard)
-  if (room.players.filter(Boolean).length === MAX_PLAYERS_PER_ROOM && !room.hasStarted) {
-    const possibleBases = ['Rho', 'Omega', 'Theta'];
-    const shuffled = possibleBases.sort(() => Math.random() - 0.5);
-
-    room.bases[1] = shuffled[0];
-    room.bases[2] = shuffled[1];
-    room.bases[3] = shuffled[2];
-
-    room.regions.Player1regions = [room.bases[1]];
-    room.regions.Player2regions = [room.bases[2]];
-    room.regions.Player3regions = [room.bases[3]];
-
-    room.scores = calculateScores(room.regions, room.regionValues, room.defenseBonuses);
-
-    room.hasStarted = true;
-    room.phase = "settle";
-    room.round = 0;
-
-    io.to(roomId).emit("startGame", {
-      bases: room.bases,
-      regions: room.regions,
-      regionValues: room.regionValues
-    });
-
-    io.to(roomId).emit("updateScores", { scores: room.scores });
-    if (isRoomAlive(roomId)) runGameScenario(roomId);
+  // FRIENDS mají skutečnou lobby: po připojení třetího hráče se hra sama nespouští.
+  if (room.mode === 'friends' && !room.hasStarted) {
+    room.ready = room.ready || { 1: false, 2: false, 3: false };
+    room.ready[myNumber] = false;
+    broadcastLobbyState(roomId);
+  } else if (room.players.filter(Boolean).length === MAX_PLAYERS_PER_ROOM && !room.hasStarted) {
+    // RANDOM + BOTI zachovávají původní automatický start.
+    startRoomGame(roomId);
   } else if (room.hasStarted) {
-    // Pozdější vstup/reconnect = jen snapshot (pokud tu funkci máš)
     if (typeof buildRoomSnapshot === 'function') {
       socket.emit("stateSync", { myNumber, snapshot: buildRoomSnapshot(room, roomId) });
     }
@@ -1938,13 +1992,53 @@ io.on('connection', socket => {
     const room = rooms[roomId];
     if (!room) return;
 
+    const seat = getSeatNumber(room, socket.id);
+    // Ve friends lobby smí kategorie měnit hostitel (seat 1). Po startu už se nemění.
+    if (room.mode === 'friends' && (!seat || seat !== 1 || room.hasStarted)) {
+      socket.emit('settings:applied', { settings: room.settings || {} });
+      return;
+    }
+
     const safe = sanitizeSettings(settings);
     room.settings = { ...(room.settings || {}), ...safe };
 
-    // (volitelně) pošli potvrzení všem v místnosti
+    if (room.mode === 'friends' && !room.hasStarted) {
+      // Jakákoli změna pravidel zruší připravenost – nikdo nemůže odstartovat
+      // zápas s nastavením, které se změnilo až po jeho potvrzení.
+      room.ready = { 1: false, 2: false, 3: false };
+    }
+
     io.to(roomId).emit('settings:applied', { settings: room.settings });
+    if (room.mode === 'friends' && !room.hasStarted) broadcastLobbyState(roomId);
 
     console.log('🧩 settings:update', roomId, room.settings);
+  });
+
+  socket.on('lobby:ready', ({ roomId, ready }) => {
+    const room = rooms[roomId];
+    if (!room || room.mode !== 'friends' || room.hasStarted) return;
+    const seat = getSeatNumber(room, socket.id);
+    if (!seat) return;
+
+    room.ready = room.ready || { 1: false, 2: false, 3: false };
+    room.ready[seat] = !!ready;
+    console.log(`✅ ${roomId}: seat ${seat} ready=${room.ready[seat]}`);
+    broadcastLobbyState(roomId);
+  });
+
+  socket.on('lobby:start', ({ roomId } = {}) => {
+    const room = rooms[roomId];
+    if (!room || room.mode !== 'friends' || room.hasStarted) return;
+    const seat = getSeatNumber(room, socket.id);
+    if (seat !== 1) return;
+
+    const state = buildLobbyState(room, roomId);
+    if (!state.canStart) {
+      socket.emit('lobby:error', { message: 'Všichni tři hráči musí být připojeni a připraveni.' });
+      broadcastLobbyState(roomId);
+      return;
+    }
+    startRoomGame(roomId);
   });
 
 
@@ -2016,6 +2110,7 @@ io.on('connection', socket => {
     };
 
     io.to(roomId).emit("updatePlayers", { allNames, displayNames, seatControllers: room.seatControllers });
+    if (room.mode === 'friends' && !room.hasStarted) broadcastLobbyState(roomId);
   });
 
 
@@ -2077,7 +2172,7 @@ socket.on("createRoom", ({ settings }) => {
   const roomId = makeFriendsRoomId();
 
   const room = makeEmptyRoom(roomId, mode);       // ⬅️ použij mód i do room
-  room.settings = settings || {};
+  room.settings = sanitizeSettings(settings || {});
 
   socket.emit("roomReady", { room: roomId });
 
@@ -2122,7 +2217,7 @@ socket.on("joinRoom", ({ room, settings }) => {
 
   if (!rooms[roomId]) {
     makeEmptyRoom(roomId, 'friends');
-    rooms[roomId].settings = settings || {};
+    rooms[roomId].settings = sanitizeSettings(settings || {});
   }
 
   // ⬇️ doplň tohle (volitelné)
@@ -2132,7 +2227,8 @@ socket.on("joinRoom", ({ room, settings }) => {
   }
 
   const current = rooms[roomId];
-  if (occupiedSeatCount(current) >= MAX_PLAYERS_PER_ROOM) {
+  const availableSeat = findSeatForReturningOrBot(current, name);
+  if (!availableSeat) {
     socket.emit("roomError", { message: "Room is full" });
     return;
   }
@@ -2207,6 +2303,17 @@ socket.on("disconnect", () => {
   const seat = ix + 1;
   const name = room.players[ix]?.name || `Player${seat}`;
 
+  // Před startem friends hry zůstává sedadlo jen offline; bot ho nepřebírá.
+  if (room.mode === 'friends' && !room.hasStarted) {
+    room.players[ix].id = null;
+    room.ready = room.ready || { 1: false, 2: false, 3: false };
+    room.ready[seat] = false;
+    room.seatControllers[seat] = 'human';
+    console.log(`⌛ ${name} opustil lobby ${roomId} (seat ${seat} offline)`);
+    broadcastLobbyState(roomId);
+    return;
+  }
+
   console.log(`⌛ ${name} temporarily left ${roomId} – switching seat ${seat} to BOT`);
 
   // nepřehazuj sedadla – jen zneplatni id a přepni na bota
@@ -2257,6 +2364,38 @@ socket.on("disconnect", () => {
 
 
 
+
+// ===== KOMUNITNÍ CHAT =====
+socket.on('community:chat:send', ({ text } = {}) => {
+  const clean = (typeof text === 'string' ? text.trim() : '');
+  if (!clean) return;
+
+  const now = Date.now();
+  socket.data = socket.data || {};
+  if (socket.data.lastCommunityChatAt && now - socket.data.lastCommunityChatAt < 700) return;
+  socket.data.lastCommunityChatAt = now;
+
+  const roomId = socket.data.joinedRoom || socket.data.roomId;
+  const room = roomId ? rooms[roomId] : null;
+  const seat = room ? getSeatNumber(room, socket.id) : null;
+  const name = socket.data.name || (seat && room?.players?.[seat - 1]?.name) || 'Host';
+
+  const msg = {
+    id: `${now}_${Math.random().toString(16).slice(2)}`,
+    name: String(name).slice(0, 40),
+    text: clean.slice(0, 500),
+    ts: now
+  };
+  communityChat.push(msg);
+  if (communityChat.length > 200) communityChat.shift();
+  io.emit('community:chat:new', msg);
+});
+
+socket.on('community:chat:history:get', () => {
+  socket.emit('community:chat:history', communityChat);
+});
+
+
 socket.on("chat:send", ({ roomId, text }) => {
   console.log("📩 chat:send received", { from: socket.id, roomId, text });
 
@@ -2267,6 +2406,10 @@ socket.on("chat:send", ({ roomId, text }) => {
   }
 
   const clean = (typeof text === "string" ? text.trim() : "");
+  socket.data = socket.data || {};
+  const now = Date.now();
+  if (socket.data.lastRoomChatAt && now - socket.data.lastRoomChatAt < 500) return;
+  socket.data.lastRoomChatAt = now;
   if (!clean) {
     console.log("❌ empty/invalid text");
     return;
@@ -2275,7 +2418,7 @@ socket.on("chat:send", ({ roomId, text }) => {
   // CHANGED: určete číslo hráče (1..3) – vždy podle aktuálního pořadí
   const number = getSeatNumber(room, socket.id) || 0;
 
-  const ix = room.players.findIndex(p => p.id === socket.id);
+  const ix = room.players.findIndex(p => p && p.id === socket.id);
   const name = ix !== -1 ? room.players[ix].name : "Neznámý hráč";
 
   // CHANGED: ukládáme i number do historie
