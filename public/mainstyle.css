@@ -3629,3 +3629,190 @@ body.random-hub-visible #random_hub {
     width: 100%;
   }
 }
+
+
+/* ============================================================
+   VLASTENEC — PLAYER IDENTITY V1
+   Identity belongs to the player, not to the current room.
+   ============================================================ */
+
+.random-hub-head-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  min-width: 0;
+}
+
+.player-identity-card {
+  flex: 0 0 auto;
+  min-width: 300px;
+  max-width: 390px;
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: 36px minmax(92px, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 8px;
+  border: 1px solid rgba(255,255,255,.09);
+  border-radius: 13px;
+  background: rgba(7,7,8,.34);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.025);
+  backdrop-filter: blur(14px) saturate(115%);
+  -webkit-backdrop-filter: blur(14px) saturate(115%);
+}
+
+.player-identity-avatar {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255,154,58,.24);
+  border-radius: 10px;
+  background: linear-gradient(145deg, rgba(242,139,43,.18), rgba(242,139,43,.07));
+  color: #ffb16b;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: .035em;
+}
+
+.player-identity-card.is-profile .player-identity-avatar {
+  border-color: rgba(90,213,113,.22);
+  background: linear-gradient(145deg, rgba(90,213,113,.14), rgba(90,213,113,.05));
+  color: #8dde9b;
+}
+
+.player-identity-copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.player-identity-copy > strong {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #fff;
+  font-size: 13px;
+  line-height: 1.15;
+  font-weight: 780;
+}
+
+.player-identity-meta {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: rgba(255,255,255,.38);
+  font-size: 9px;
+  line-height: 1.2;
+}
+
+.player-identity-meta > span {
+  text-transform: uppercase;
+  font-weight: 850;
+  letter-spacing: .10em;
+}
+
+.player-identity-edit {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: rgba(255,177,107,.72);
+  font: inherit;
+  font-size: 9px;
+  font-weight: 750;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.player-identity-edit::before {
+  content: '·';
+  margin-right: 7px;
+  color: rgba(255,255,255,.22);
+}
+
+.player-identity-edit:hover {
+  color: #ffc28c;
+}
+
+.player-identity-login {
+  height: 32px;
+  padding: 0 11px;
+  border: 1px solid rgba(255,255,255,.10);
+  border-radius: 9px;
+  background: rgba(255,255,255,.055);
+  color: rgba(255,255,255,.80);
+  font: inherit;
+  font-size: 10px;
+  font-weight: 800;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background .15s ease, border-color .15s ease, color .15s ease;
+}
+
+.player-identity-login:hover:not(:disabled) {
+  border-color: rgba(255,154,58,.24);
+  background: rgba(242,139,43,.10);
+  color: #fff;
+}
+
+.player-identity-login:disabled {
+  cursor: default;
+  color: rgba(255,255,255,.42);
+}
+
+/* "Vaše sestava" is now display-only; identity controls live in the header. */
+.lobby-player-info > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+body.is-game-started .player-identity-card {
+  display: none !important;
+}
+
+@media (max-width: 1180px), (max-height: 760px) {
+  .player-identity-card {
+    min-width: 274px;
+    grid-template-columns: 32px minmax(82px, 1fr) auto;
+    gap: 8px;
+    padding: 6px 7px;
+  }
+  .player-identity-avatar { width: 32px; height: 32px; border-radius: 9px; }
+  .player-identity-login { padding-inline: 9px; }
+}
+
+@media (max-width: 900px) {
+  .random-hub-head-actions {
+    margin-left: auto;
+  }
+  .random-hub-head-actions .random-hub-back {
+    display: none;
+  }
+  .lobby-head-v2 {
+    flex-direction: row;
+    align-items: center;
+  }
+}
+
+@media (max-width: 680px) {
+  .lobby-head-v2,
+  .random-hub-head {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .random-hub-head-actions {
+    width: 100%;
+    margin-left: 0;
+  }
+  .player-identity-card {
+    width: 100%;
+    max-width: none;
+    min-width: 0;
+  }
+}

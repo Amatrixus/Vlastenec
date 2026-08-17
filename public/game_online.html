@@ -283,7 +283,7 @@
 
     // --- Jediná inicializace socketu ---
     const socket = io();
-    console.log('🧪 VLASTENEC CLIENT: guest-name-v1');
+    console.log('🧪 VLASTENEC CLIENT: player-identity-v1');
 
     let randomSelectionMade = false;
 
@@ -1605,7 +1605,20 @@ if (regionValues && typeof regionValues === 'object') {
                 <h1>Jak chcete hrát?</h1>
               </div>
             </div>
-            <a href="homepage.html" class="random-hub-back">Zpět na hlavní stránku</a>
+            <div class="random-hub-head-actions">
+              <a href="homepage.html" class="random-hub-back">Zpět na hlavní stránku</a>
+              <div class="player-identity-card" data-player-identity aria-label="Identita hráče">
+              <div class="player-identity-avatar" data-identity-avatar>H</div>
+              <div class="player-identity-copy">
+                <strong data-identity-name>Host</strong>
+                <div class="player-identity-meta">
+                  <span data-identity-kind>Host</span>
+                  <button type="button" class="player-identity-edit" data-identity-edit>Upravit jméno</button>
+                </div>
+              </div>
+              <button type="button" class="player-identity-login" data-identity-login>Přihlásit se</button>
+            </div>
+            </div>
           </header>
 
           <div class="random-hub-options">
@@ -1648,6 +1661,17 @@ if (regionValues && typeof regionValues === 'object') {
               </div>
             </div>
 
+            <div class="player-identity-card" data-player-identity aria-label="Identita hráče">
+              <div class="player-identity-avatar" data-identity-avatar>H</div>
+              <div class="player-identity-copy">
+                <strong data-identity-name>Host</strong>
+                <div class="player-identity-meta">
+                  <span data-identity-kind>Host</span>
+                  <button type="button" class="player-identity-edit" data-identity-edit>Upravit jméno</button>
+                </div>
+              </div>
+              <button type="button" class="player-identity-login" data-identity-login>Přihlásit se</button>
+            </div>
           </header>
 
           <div class="lobby-layout lobby-layout-v2">
@@ -1800,7 +1824,7 @@ if (regionValues && typeof regionValues === 'object') {
               </div>
               <button id="lobby_rename_close" type="button" class="invite-close" aria-label="Zavřít">×</button>
             </div>
-            <p class="lobby-rename-copy">Toto jméno uvidí ostatní hráči během hry.</p>
+            <p class="lobby-rename-copy">Toto jméno se zobrazí v sestavě, chatu i během hry.</p>
             <input id="lobby_rename_input" class="lobby-rename-input" type="text" minlength="2" maxlength="24" autocomplete="off" spellcheck="false">
             <div id="lobby_rename_error" class="lobby-rename-error" aria-live="polite"></div>
             <div class="lobby-rename-actions">
@@ -2837,6 +2861,58 @@ if (regionValues && typeof regionValues === 'object') {
           return String(name || '?').trim().split(/\s+/).slice(0,2).map(x => x[0] || '').join('').toUpperCase() || '?';
         }
 
+        function syncIdentityWidgets() {
+          const displayName = String(myName || '').trim() || 'Host';
+          document.querySelectorAll('[data-player-identity]').forEach(card => {
+            const avatar = card.querySelector('[data-identity-avatar]');
+            const name = card.querySelector('[data-identity-name]');
+            const kind = card.querySelector('[data-identity-kind]');
+            const edit = card.querySelector('[data-identity-edit]');
+            const login = card.querySelector('[data-identity-login]');
+            if (avatar) avatar.textContent = makeInitials(displayName);
+            if (name) name.textContent = displayName;
+            if (kind) kind.textContent = isGuestPlayer ? 'Host' : 'Přihlášený hráč';
+            if (edit) edit.hidden = !isGuestPlayer || document.body.classList.contains('is-game-started');
+            if (login) login.hidden = !isGuestPlayer;
+            card.classList.toggle('is-profile', !isGuestPlayer);
+          });
+        }
+
+        function applyLocalPlayerName(name) {
+          const safeName = String(name || '').replace(/\s+/g, ' ').trim().slice(0, 24);
+          if (!safeName) return;
+          myName = safeName;
+          settings.name = safeName;
+          sessionStorage.setItem('vl_name', safeName);
+          if (isGuestPlayer) sessionStorage.setItem('vl_guest_name', safeName);
+          syncIdentityWidgets();
+        }
+
+        function requestLogin() {
+          if (!isGuestPlayer) return;
+          if (typeof window.VLASTENEC_OPEN_LOGIN === 'function') {
+            window.VLASTENEC_OPEN_LOGIN();
+            return;
+          }
+          const event = new CustomEvent('vlastenec:login-request', {
+            cancelable: true,
+            detail: { name: myName }
+          });
+          window.dispatchEvent(event);
+          if (event.defaultPrevented) return;
+          document.querySelectorAll('[data-identity-login]').forEach(button => {
+            const old = button.textContent;
+            button.textContent = 'Přihlášení brzy';
+            button.disabled = true;
+            setTimeout(() => {
+              button.textContent = old;
+              button.disabled = false;
+            }, 1500);
+          });
+        }
+
+        syncIdentityWidgets();
+
         function stripRoomPrefix(roomId) {
           return String(roomId || '').replace(/^room_/i, '');
         }
@@ -2917,18 +2993,7 @@ if (regionValues && typeof regionValues === 'object') {
             else if (p.ready) meta.textContent = 'Připraven';
             else meta.textContent = 'V lobby';
             info.appendChild(name);
-            const metaRow = document.createElement('div');
-            metaRow.className = 'lobby-player-meta-row';
-            metaRow.appendChild(meta);
-            if (isGuestPlayer && p.connected && p.controller !== 'bot' && Number(p.seat) === Number(myPlayerNumber)) {
-              const rename = document.createElement('button');
-              rename.type = 'button';
-              rename.className = 'lobby-rename-trigger';
-              rename.textContent = 'Změnit jméno';
-              rename.addEventListener('click', openRenameDialog);
-              metaRow.appendChild(rename);
-            }
-            info.appendChild(metaRow);
+            info.appendChild(meta);
 
             const side = document.createElement('div');
             side.className = 'lobby-player-side';
@@ -3006,6 +3071,7 @@ if (regionValues && typeof regionValues === 'object') {
         function renderLobby(state) {
           if (!state) return;
           lobbyState = state;
+          syncIdentityWidgets();
           if (gameMode === 'random') {
             const modeTitle = document.getElementById('lobby_mode_title');
             const infoKicker = document.getElementById('lobby_mode_info_kicker');
@@ -3183,7 +3249,7 @@ if (regionValues && typeof regionValues === 'object') {
         });
 
         function openRenameDialog() {
-          if (!isGuestPlayer || !currentRoomId || !myPlayerNumber || document.body.classList.contains('is-game-started')) return;
+          if (!isGuestPlayer || document.body.classList.contains('is-game-started')) return;
           const overlay = document.getElementById('lobby_rename_overlay');
           const input = document.getElementById('lobby_rename_input');
           const error = document.getElementById('lobby_rename_error');
@@ -3211,7 +3277,7 @@ if (regionValues && typeof regionValues === 'object') {
           const input = document.getElementById('lobby_rename_input');
           const error = document.getElementById('lobby_rename_error');
           const save = document.getElementById('lobby_rename_save');
-          if (!input || !currentRoomId) return;
+          if (!input) return;
           const value = String(input.value || '').replace(/\s+/g, ' ').trim();
           if (value.length < 2) {
             if (error) error.textContent = 'Jméno musí mít alespoň 2 znaky.';
@@ -3220,8 +3286,21 @@ if (regionValues && typeof regionValues === 'object') {
           }
           if (save) save.disabled = true;
           if (error) error.textContent = '';
-          socket.emit('lobby:rename', { roomId: currentRoomId, name: value });
+          if (currentRoomId && myPlayerNumber) {
+            socket.emit('lobby:rename', { roomId: currentRoomId, name: value });
+          } else {
+            applyLocalPlayerName(value);
+            if (save) save.disabled = false;
+            closeRenameDialog();
+          }
         }
+
+        document.querySelectorAll('[data-identity-edit]').forEach(button => {
+          button.addEventListener('click', openRenameDialog);
+        });
+        document.querySelectorAll('[data-identity-login]').forEach(button => {
+          button.addEventListener('click', requestLogin);
+        });
 
         document.getElementById('lobby_rename_close')?.addEventListener('click', closeRenameDialog);
         document.getElementById('lobby_rename_cancel')?.addEventListener('click', closeRenameDialog);
@@ -3238,12 +3317,7 @@ if (regionValues && typeof regionValues === 'object') {
 
         socket.on('lobby:rename:ok', ({ name } = {}) => {
           const safeName = String(name || '').trim();
-          if (safeName) {
-            myName = safeName;
-            settings.name = safeName;
-            sessionStorage.setItem('vl_name', safeName);
-            if (isGuestPlayer) sessionStorage.setItem('vl_guest_name', safeName);
-          }
+          if (safeName) applyLocalPlayerName(safeName);
           const save = document.getElementById('lobby_rename_save');
           if (save) save.disabled = false;
           closeRenameDialog();
