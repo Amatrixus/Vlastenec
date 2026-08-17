@@ -503,3 +503,63 @@ a { color: inherit; }
   .portal-footer { padding: 0 14px; }
   .portal-status span:nth-of-type(2), .portal-status i { display: none; }
 }
+
+
+/* =========================================================
+   CLEAN PORTAL V2 — bez hlavního skleněného boxu a footeru
+   ========================================================= */
+.portal-stage {
+  padding: clamp(18px, 2.2vw, 36px) clamp(24px, 3.2vw, 58px);
+}
+
+.portal-shell {
+  width: min(1640px, 96vw);
+  height: min(930px, 94vh);
+  grid-template-rows: 72px minmax(0, 1fr);
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+.portal-shell::after { display: none; }
+
+.portal-header {
+  padding: 0 4px;
+  border-bottom-color: rgba(255,255,255,.08);
+}
+
+.portal-main {
+  padding: clamp(24px, 3.5vh, 42px) 4px 2px;
+  gap: clamp(19px, 2.8vh, 30px);
+}
+
+.portal-heading {
+  grid-template-columns: 1.25fr .75fr;
+}
+
+.portal-heading h1 {
+  text-shadow: 0 10px 34px rgba(0,0,0,.28);
+}
+
+.eyebrow { display: none !important; }
+.portal-footer { display: none !important; }
+
+.mode-card {
+  background: rgba(18,14,11,.80);
+  box-shadow: 0 18px 48px rgba(0,0,0,.18);
+  backdrop-filter: blur(4px);
+}
+
+@media (max-height: 790px) and (min-width: 901px) {
+  .portal-shell { grid-template-rows: 64px minmax(0,1fr); }
+  .portal-main { padding-top: 20px; padding-bottom: 0; gap: 17px; }
+}
+
+@media (max-width: 900px) {
+  .portal-stage { padding: 14px; }
+  .portal-shell { width: 100%; height: auto; min-height: calc(100vh - 28px); grid-template-rows: auto auto; }
+  .portal-main { padding: 24px 0; }
+}

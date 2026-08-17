@@ -523,3 +523,114 @@ select {
   .intro-map { animation: none; }
   .intro-play { transition: none; }
 }
+
+
+/* =========================================================
+   CLEAN INTRO V2 — otevřená kompozice bez velkého panelu
+   ========================================================= */
+.intro-stage {
+  padding: clamp(26px, 4vw, 68px);
+}
+
+.intro-shell {
+  width: min(1540px, 94vw);
+  height: min(880px, 90vh);
+  display: block;
+  overflow: visible;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+
+.intro-shell::before { display: none; }
+
+.intro-content {
+  height: 100%;
+  grid-template-columns: minmax(0, .92fr) minmax(430px, 1.08fr);
+  align-items: center;
+  gap: clamp(26px, 4vw, 70px);
+}
+
+.intro-copy {
+  padding: clamp(30px, 4.2vh, 58px) 0;
+  border: 0;
+}
+
+.intro-logo {
+  width: min(410px, 74%);
+  margin-bottom: 30px;
+}
+
+.intro-lead { max-width: 610px; }
+
+.intro-points {
+  max-width: 610px;
+  background: rgba(13, 10, 8, .16);
+  backdrop-filter: blur(2px);
+}
+
+.intro-actions {
+  width: min(610px, 100%);
+  margin-top: clamp(28px, 4.4vh, 44px);
+  justify-content: flex-end;
+  padding-right: clamp(12px, 3vw, 52px);
+}
+
+.intro-play {
+  width: 200px;
+  height: 56px;
+  padding: 0 24px;
+  display: grid;
+  place-items: center;
+  text-align: center;
+}
+
+.intro-map-area {
+  height: min(670px, 74vh);
+  min-height: 420px;
+  padding: 0;
+}
+
+.intro-map-frame {
+  width: 100%;
+  height: 100%;
+}
+
+.intro-map {
+  width: min(790px, 100%);
+  max-height: 78%;
+}
+
+/* Prvky odstraněné z čisté verze, pojistka pro případ staršího HTML v cache. */
+.intro-topbar,
+.intro-map-label,
+.intro-map-caption,
+.intro-footer,
+.intro-action-note,
+.intro-play-arrow { display: none !important; }
+
+@media (max-height: 790px) and (min-width: 901px) {
+  .intro-shell { height: 90vh; }
+  .intro-copy { padding-top: 16px; padding-bottom: 16px; }
+  .intro-actions { margin-top: 22px; }
+  .intro-map-area { height: 70vh; }
+}
+
+@media (max-width: 900px) {
+  .intro-stage { padding: 18px; }
+  .intro-shell { width: 100%; min-height: calc(100vh - 36px); }
+  .intro-content { grid-template-columns: 1fr; gap: 16px; }
+  .intro-copy { padding: 36px 12px 10px; border: 0; }
+  .intro-map-area { min-height: 330px; height: 42vh; padding: 0 10px 20px; }
+  .intro-actions { justify-content: flex-start; padding-right: 0; }
+}
+
+@media (max-width: 560px) {
+  .intro-stage { padding: 12px; }
+  .intro-copy { padding: 28px 8px 8px; }
+  .intro-logo { width: min(320px, 88%); }
+  .intro-actions { width: 100%; }
+  .intro-play { width: min(220px, 72vw); }
+}
