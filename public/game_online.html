@@ -3088,7 +3088,10 @@ if (regionValues && typeof regionValues === 'object') {
             // server po resume pošle i lobby:state; fallback mezitím zobrazuje jména
             window.renderLobbyFallback(snapshot.allNames || {});
           }
-          if (snapshot.hasStarted) document.body.classList.add('is-game-started');
+          if (snapshot.hasStarted) {
+            document.body.classList.add('is-game-started');
+            setGameDrawer(true);
+          }
         });
 
         socket.on('chat:history', msgs => {
@@ -3104,7 +3107,8 @@ if (regionValues && typeof regionValues === 'object') {
 
         socket.on('startGame', () => {
           document.body.classList.add('is-game-started');
-          setGameDrawer(false);
+          // Ve hře je chat znovu trvale viditelný vlevo nahoře.
+          setGameDrawer(true);
         });
 
         if (socket.connected) socket.emit('community:chat:history:get');
