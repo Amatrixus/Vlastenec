@@ -697,3 +697,43 @@ a { color: inherit; }
   .mode-grid { height: auto; min-height: 0; }
   .mode-card { min-height: 360px; }
 }
+
+
+/* =========================================================
+   MODE ART V4 — mode1.png … mode4.png
+   Obrázek začíná přesně na horní hraně karty a má 100 % šířky.
+   Výška se dopočítává z poměru stran obrázku, takže se nic
+   horizontálně neořezává.
+   ========================================================= */
+.mode-card {
+  background: #020d19;
+}
+
+.mode-card .mode-art {
+  position: absolute;
+  inset: auto;
+  top: 0;
+  left: 0;
+  display: block;
+  width: 100%;
+  height: auto;
+  max-width: none;
+  object-fit: initial;
+  object-position: top center;
+  z-index: 0;
+  transform: none;
+  transform-origin: top center;
+  filter: saturate(.92) brightness(.86) contrast(1.02);
+  transition: transform .35s ease, filter .35s ease;
+}
+
+.mode-card:hover .mode-art {
+  transform: scale(1.018);
+  filter: saturate(1) brightness(.92) contrast(1.03);
+}
+
+/* Starý hover-swap už u nové sady nepoužíváme. */
+.mode-art-default,
+.mode-art-hover {
+  opacity: 1;
+}
