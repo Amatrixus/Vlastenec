@@ -292,6 +292,7 @@
     // --- Jediná inicializace socketu ---
     const socket = io({ autoConnect: false });
     console.log('🧪 VLASTENEC CLIENT: league-matchmaking-v1');
+    console.log('🧪 VLASTENEC FIX: endgame-names-v1');
 
     // --- Profil hráče: lokální statistiky od této verze ---
     const profileStore = window.VlastenecProfileStore || null;
@@ -1308,6 +1309,14 @@ if (regionValues && typeof regionValues === 'object') {
             socket.on("updatePlayers", ({ allNames, displayNames, seatControllers }) => {
                 if (allNames) {
                     window.allNames = allNames;
+
+                    // Drž i starší lokální proměnné synchronizované. První hráč může
+                    // dostat assignPlayerNumber ještě ve chvíli, kdy v místnosti sedí
+                    // jen on; bez tohoto kroku mu player2/player3 zůstanou jako fallback boti.
+                    player1 = allNames[1] || player1;
+                    player2 = allNames[2] || player2;
+                    player3 = allNames[3] || player3;
+
                     if (typeof window.syncNameTeamMap === 'function') window.syncNameTeamMap(allNames);
                 }
                 if (displayNames) window.displayNames = displayNames;
@@ -8197,7 +8206,7 @@ socket.on("gameOver", ({ message, finalScores }) => {
       profileMatch.finalized = true;
       const opponents = finalScores
         .filter(entry => Number(entry.player) !== Number(myPlayerNumber))
-        .map(entry => ({1:player1,2:player2,3:player3}[entry.player] || `Hráč ${entry.player}`));
+        .map(entry => labelForSeat(Number(entry.player)));
       const effectiveMode = (gameMode === 'random' && window.vlastenecLobbyMatchKind === 'custom') ? 'custom' : gameMode;
       const summary = profileStore.recordMatch({
         mode: effectiveMode,
@@ -8211,13 +8220,9 @@ socket.on("gameOver", ({ message, finalScores }) => {
     }
   }
 
-  // Mapování čísel hráčů na jména
-  const allNames = {
-    1: player1,
-    2: player2,
-    3: player3
-  };
-
+  // Jména bereme z posledního autoritativního seznamu od serveru.
+  // Lokální player1/player2/player3 jsou jen legacy fallback a u prvního
+  // připojeného hráče mohou být zpočátku ještě názvy robotů.
   const resultBox = document.getElementById("endgame_results");
   resultBox.innerHTML = `<div class="endtitle">${message}</div>`;
 
@@ -8230,7 +8235,7 @@ socket.on("gameOver", ({ message, finalScores }) => {
   }
 
   finalScores.forEach((entry, index) => {
-  const name = allNames[entry.player] || `Hráč ${entry.player}`;
+  const name = labelForSeat(Number(entry.player));
   console.log(`${index + 1}. ${name} – ${entry.score} bodů`);
 
   const line = document.createElement("div");
