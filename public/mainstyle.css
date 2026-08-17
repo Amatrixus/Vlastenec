@@ -3395,3 +3395,23 @@ body.lobby-mode-random .lobby-category-grid-v2 .lobby-cat-tile:not(:has(input:di
   .random-browser { margin: 0 18px 18px; }
 }
 body.lobby-mode-random .lobby-categories-v2 .lobby-cat-tile:has(input:not(:disabled)) { cursor: pointer; }
+
+
+/* =========================================================
+   RANDOM HUB V3 — exclusive entry screen
+   The lobby shell uses display:grid !important in the base styles,
+   therefore hiding it must also use !important.
+   ========================================================= */
+#lobby_window.random-lobby-hidden {
+  display: none !important;
+}
+
+body.random-hub-visible #lobby_container {
+  justify-content: center !important;
+  align-items: center !important;
+}
+
+body.random-hub-visible #random_hub {
+  flex: 0 1 min(1180px, 94vw);
+  margin: 0 auto;
+}

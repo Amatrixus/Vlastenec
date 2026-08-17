@@ -253,14 +253,17 @@
 
     // --- Jediná inicializace socketu ---
     const socket = io();
-    console.log('🧪 VLASTENEC CLIENT: random-hub-v2');
+    console.log('🧪 VLASTENEC CLIENT: random-hub-v3-entry-flow');
+
+    let randomSelectionMade = false;
 
     function showRandomHub() {
       if (gameMode !== 'random') return;
       const hub = document.getElementById('random_hub');
       const lobbyWin = document.getElementById('lobby_window');
       hub?.classList.add('is-visible');
-      if (lobbyWin) lobbyWin.style.display = 'none';
+      lobbyWin?.classList.add('random-lobby-hidden');
+      document.body.classList.add('random-hub-visible');
     }
 
     function showRandomLobby() {
@@ -268,7 +271,8 @@
       const hub = document.getElementById('random_hub');
       const lobbyWin = document.getElementById('lobby_window');
       hub?.classList.remove('is-visible');
-      if (lobbyWin) lobbyWin.style.display = '';
+      lobbyWin?.classList.remove('random-lobby-hidden');
+      document.body.classList.remove('random-hub-visible');
     }
 
 
@@ -671,7 +675,20 @@ window.addEventListener('gameStartedAfterAnimation', () => {
           return;
         }
 
-        // Ostatní režimy ponecháváme beze změny.
+        // RANDOM: při běžném vstupu z homepage se NESMÍ automaticky obnovit stará
+        // čekající random místnost. Nejdřív vždy zobrazíme rozcestník a do lobby
+        // vstoupíme teprve po explicitní volbě hráče.
+        if (gameMode === 'random' && !explicitRoomFromUrl && !randomSelectionMade) {
+          currentRoomId = null;
+          sessionStorage.removeItem('vl_room');
+          sessionStorage.removeItem('vl_seat');
+          showRandomHub();
+          socket.emit('random:custom:list');
+          DBG('random: entry hub shown; stale room ignored');
+          return;
+        }
+
+        // Ostatní režimy / reconnect po už provedené random volbě.
         const targetRoom = currentRoomId || savedRoom;
         const sameSavedRoom = !explicitRoomFromUrl || explicitRoomFromUrl === savedRoom;
         if (savedName && sameSavedRoom) myName = savedName;
@@ -688,8 +705,6 @@ window.addEventListener('gameStartedAfterAnimation', () => {
         if (gameMode === 'bots') {
             socket.emit('createRoom', { settings: { ...settings, name: myName } });
         } else if (gameMode === 'random') {
-            // RANDOM už hráče nezařazuje do fronty automaticky. Nejprve se zobrazí
-            // rozcestník Rychlá hra / Custom / Veřejné místnosti.
             showRandomHub();
             socket.emit('random:custom:list');
         }
@@ -702,6 +717,7 @@ window.addEventListener('gameStartedAfterAnimation', () => {
     socket.on('resume:error', ({ message } = {}) => {
       DBG('resume:error', message);
       if (gameMode === 'random') {
+        randomSelectionMade = false;
         currentRoomId = null;
         sessionStorage.removeItem('vl_room');
         sessionStorage.removeItem('vl_seat');
@@ -3341,6 +3357,7 @@ if (regionValues && typeof regionValues === 'object') {
             join.className = 'lobby-btn lobby-btn-secondary random-room-join';
             join.textContent = 'Připojit';
             join.addEventListener('click', () => {
+              randomSelectionMade = true;
               join.disabled = true;
               socket.emit('random:custom:join', { roomId: room.roomId || room.code, name: myName });
             });
@@ -3350,12 +3367,14 @@ if (regionValues && typeof regionValues === 'object') {
         }
 
         document.getElementById('random_quick_btn')?.addEventListener('click', () => {
+          randomSelectionMade = true;
           showRandomLobby();
           showLobbyMessage('Zařazujeme do fronty…', 'waiting');
           socket.emit('random:quick:join', { name: myName, rating: null });
         });
 
         document.getElementById('random_create_btn')?.addEventListener('click', () => {
+          randomSelectionMade = true;
           showRandomLobby();
           socket.emit('random:custom:create', {
             name: myName,
