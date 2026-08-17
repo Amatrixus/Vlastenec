@@ -290,7 +290,7 @@
 
     // --- Jediná inicializace socketu ---
     const socket = io({ autoConnect: false });
-    console.log('🧪 VLASTENEC CLIENT: server-profile-v1');
+    console.log('🧪 VLASTENEC CLIENT: bots-recovery-v1');
 
     // --- Profil hráče: lokální statistiky od této verze ---
     const profileStore = window.VlastenecProfileStore || null;
@@ -732,6 +732,19 @@ window.addEventListener('gameStartedAfterAnimation', () => {
         const savedName  = sessionStorage.getItem('vl_name');
         const savedMode  = sessionStorage.getItem('vl_mode');
         const explicitRoomFromUrl = roomCodeFromUrl;
+        const navigationType = (() => {
+          try { return performance.getEntriesByType('navigation')?.[0]?.type || 'navigate'; }
+          catch (_) { return 'navigate'; }
+        })();
+
+        const createFreshBotsRoom = (reason = 'fresh entry') => {
+          currentRoomId = null;
+          sessionStorage.removeItem('vl_room');
+          sessionStorage.removeItem('vl_seat');
+          DBG('bots: creating fresh room', { reason, name: myName });
+          socket.emit('createRoom', { settings: { ...settings, mode: 'bots', name: myName } });
+        };
+        window.__vlastenecCreateFreshBotsRoom = createFreshBotsRoom;
 
         // Room z jiného herního režimu nikdy nesmí ovlivnit nový vstup.
         if (savedMode && savedMode !== gameMode && !explicitRoomFromUrl) {
@@ -785,6 +798,23 @@ window.addEventListener('gameStartedAfterAnimation', () => {
           return;
         }
 
+        // BOTI mají vždy vlastní sólo room. Při novém vstupu z homepage nikdy
+        // nerecyklujeme starou session room. Při F5/reload se naopak nejdřív
+        // pokusíme obnovit rozehranou hru; pokud server po restartu room ztratil,
+        // resume:error níže automaticky založí novou.
+        if (gameMode === 'bots' && !explicitRoomFromUrl) {
+          const canResumeReload = navigationType === 'reload' && !!savedRoom && !!savedToken;
+          if (!canResumeReload) {
+            createFreshBotsRoom(navigationType === 'reload' ? 'reload without resumable room' : 'new navigation');
+            return;
+          }
+          currentRoomId = savedRoom;
+          if (savedName) myName = savedName;
+          DBG('bots: trying reload resume', { room: savedRoom, name: myName });
+          socket.emit('resume', { roomId: savedRoom, token: savedToken, expectedMode: 'bots' });
+          return;
+        }
+
         // RANDOM: při běžném vstupu z homepage se NESMÍ automaticky obnovit stará
         // čekající random místnost. Nejdřív vždy zobrazíme rozcestník a do lobby
         // vstoupíme teprve po explicitní volbě hráče.
@@ -833,6 +863,14 @@ window.addEventListener('gameStartedAfterAnimation', () => {
         sessionStorage.removeItem('vl_seat');
         showRandomHub();
         socket.emit('random:custom:list');
+        return;
+      }
+      if (gameMode === 'bots') {
+        currentRoomId = null;
+        sessionStorage.removeItem('vl_room');
+        sessionStorage.removeItem('vl_seat');
+        DBG('bots: resume failed, replacing lost room with a fresh one', message);
+        socket.emit('createRoom', { settings: { ...settings, mode: 'bots', name: myName } });
         return;
       }
       if (resumeJoinFallbackUsed || gameMode !== 'friends' || !currentRoomId) return;

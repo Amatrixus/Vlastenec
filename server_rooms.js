@@ -1,4 +1,4 @@
-console.log('🧪 VLASTENEC BUILD: 2026-08-17-server-profile-v1');
+console.log('🧪 VLASTENEC BUILD: 2026-08-17-bots-recovery-v1');
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
@@ -28,7 +28,7 @@ const PORT = process.env.PORT || 3000;
   await db.initDatabase();
   server.listen(PORT, '0.0.0.0', () => {
     console.log('Server běží na', PORT);
-    console.log('🧪 VLASTENEC BUILD: 2026-08-17-server-profile-v1');
+    console.log('🧪 VLASTENEC BUILD: 2026-08-17-bots-recovery-v1');
   });
 })();
 
@@ -2325,7 +2325,10 @@ io.on('connection', socket => {
     };
 
     io.to(roomId).emit("updatePlayers", { allNames, displayNames, seatControllers: room.seatControllers });
-    if (room.mode === 'friends' && !room.hasStarted) broadcastLobbyState(roomId);
+    if (!room.hasStarted && ['friends','bots','random'].includes(room.mode)) {
+      broadcastLobbyState(roomId);
+      if (room.mode === 'random' && room.matchKind === 'custom') broadcastPublicRandomRooms();
+    }
   });
 
 
