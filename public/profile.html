@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="cs">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Profil hráče | VLASTENEC</title>
+  <link rel="stylesheet" href="profile.css">
+</head>
+<body>
+  <div class="profile-bg" aria-hidden="true"></div>
+  <main class="profile-page">
+    <header class="profile-topbar">
+      <a class="profile-brand" href="homepage.html" aria-label="Vlastenec – hlavní stránka">
+        <img src="logo.svg" alt="Vlastenec">
+        <span>PROFIL HRÁČE</span>
+      </a>
+      <div class="profile-top-actions">
+        <span id="profile-storage-badge" class="profile-storage-badge">LOKÁLNÍ PROFIL</span>
+        <button id="profile-back" class="profile-back" type="button">Zpět</button>
+      </div>
+    </header>
+
+    <section class="profile-hero panel">
+      <div class="profile-avatar" id="profile-avatar">H</div>
+      <div class="profile-identity">
+        <div class="profile-kicker" id="profile-kind">HOST</div>
+        <h1 id="profile-name">Host</h1>
+        <div class="profile-level-line">
+          <span class="level-badge">LEVEL <strong id="profile-level">1</strong></span>
+          <span id="profile-title">Nováček</span>
+        </div>
+      </div>
+      <div class="profile-xp">
+        <div class="profile-xp-head">
+          <span>ZKUŠENOSTI</span>
+          <strong id="profile-xp-copy">0 / 200 XP</strong>
+        </div>
+        <div class="xp-track"><div id="profile-xp-bar" class="xp-bar"></div></div>
+        <div class="profile-xp-foot">
+          <span id="profile-total-xp">Celkem 0 XP</span>
+          <span id="profile-next-level">Do další úrovně 200 XP</span>
+        </div>
+      </div>
+    </section>
+
+    <div id="guest-note" class="guest-note">
+      Statistiky tohoto hostovského profilu se ukládají pouze v tomto prohlížeči. Po zavedení účtů je bude možné synchronizovat se serverem.
+    </div>
+
+    <section class="stat-grid" aria-label="Hlavní statistiky">
+      <article class="stat-card"><span>ODEHRANÉ HRY</span><strong id="stat-games">0</strong><small id="stat-mode">0 online · 0 s boty</small></article>
+      <article class="stat-card"><span>VÍTĚZSTVÍ</span><strong id="stat-wins">0</strong><small id="stat-winrate">0 % win rate</small></article>
+      <article class="stat-card"><span>ÚSPĚŠNÉ OTÁZKY</span><strong id="stat-questions">0</strong><small id="stat-accuracy">0 % úspěšnost</small></article>
+      <article class="stat-card"><span>ZÍSKANÁ ÚZEMÍ</span><strong id="stat-territories">0</strong><small>celkem ve všech hrách</small></article>
+      <article class="stat-card"><span>NEJLEPŠÍ SKÓRE</span><strong id="stat-best-score">0</strong><small id="stat-average-score">průměr 0</small></article>
+      <article class="stat-card"><span>NEJDELŠÍ SÉRIE</span><strong id="stat-streak">0</strong><small>úspěšných otázek v řadě</small></article>
+    </section>
+
+    <div class="profile-main-grid">
+      <section class="panel category-panel">
+        <div class="section-head">
+          <div><span class="section-kicker">ZNALOSTI</span><h2>Výkon podle kategorií</h2></div>
+          <span id="category-total" class="section-meta">0 otázek</span>
+        </div>
+        <div id="category-list" class="category-list"></div>
+      </section>
+
+      <section class="panel achievement-panel">
+        <div class="section-head">
+          <div><span class="section-kicker">ÚSPĚCHY</span><h2>Sbírka odznaků</h2></div>
+          <span id="achievement-count" class="section-meta">0 / 12</span>
+        </div>
+        <div id="achievement-list" class="achievement-list"></div>
+      </section>
+    </div>
+
+    <div class="profile-bottom-grid">
+      <section class="panel modes-panel">
+        <div class="section-head"><div><span class="section-kicker">REŽIMY</span><h2>Kde hraješ nejčastěji</h2></div></div>
+        <div id="mode-list" class="mode-list"></div>
+      </section>
+
+      <section class="panel matches-panel">
+        <div class="section-head"><div><span class="section-kicker">HISTORIE</span><h2>Poslední zápasy</h2></div><span class="section-meta">POSLEDNÍCH 20</span></div>
+        <div id="match-list" class="match-list"></div>
+      </section>
+    </div>
+  </main>
+  <script src="profile-store.js"></script>
+  <script src="profile.js"></script>
+</body>
+</html>

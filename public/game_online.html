@@ -4,6 +4,7 @@
   <meta charset="utf-8" />
   <title>VLASTENEC</title>
   <link rel="stylesheet" href="mainstyle.css">
+  <script src="profile-store.js"></script>
 </head>
 <body>
 
@@ -259,9 +260,14 @@
     }
 
     function getGuestPlayerName() {
-      const existing = String(sessionStorage.getItem('vl_guest_name') || '').trim();
-      if (existing) return existing.slice(0, 24);
+      const existing = String(localStorage.getItem('vl_guest_name') || sessionStorage.getItem('vl_guest_name') || '').trim();
+      if (existing) {
+        localStorage.setItem('vl_guest_name', existing.slice(0, 24));
+        sessionStorage.setItem('vl_guest_name', existing.slice(0, 24));
+        return existing.slice(0, 24);
+      }
       const generated = createGuestPlayerName();
+      localStorage.setItem('vl_guest_name', generated);
       sessionStorage.setItem('vl_guest_name', generated);
       return generated;
     }
@@ -283,7 +289,39 @@
 
     // --- Jediná inicializace socketu ---
     const socket = io();
-    console.log('🧪 VLASTENEC CLIENT: player-identity-v1');
+    console.log('🧪 VLASTENEC CLIENT: player-profile-v1');
+
+    // --- Profil hráče: lokální statistiky od této verze ---
+    const profileStore = window.VlastenecProfileStore || null;
+    const profileMatch = {
+      questionWins: 0,
+      questionsPlayed: 0,
+      territories: 0,
+      lastRegionCount: 0,
+      finalized: false
+    };
+    let profileQuestionCategory = null;
+    let profileQuestionCanAnswer = true;
+
+    function profileCountMyRegions(regions) {
+      if (!regions || !myPlayerNumber) return 0;
+      const key = `Player${myPlayerNumber}regions`;
+      const list = regions[key];
+      return Array.isArray(list) ? list.length : 0;
+    }
+
+    function profileTrackRegionSnapshot(regions) {
+      const count = profileCountMyRegions(regions);
+      if (count > profileMatch.lastRegionCount) profileMatch.territories += count - profileMatch.lastRegionCount;
+      profileMatch.lastRegionCount = count;
+    }
+
+    function profileRecordQuestion(success) {
+      if (!profileStore || !profileQuestionCanAnswer) return;
+      profileMatch.questionsPlayed += 1;
+      if (success) profileMatch.questionWins += 1;
+      profileStore.recordQuestion(profileQuestionCategory, !!success);
+    }
 
     let randomSelectionMade = false;
 
@@ -1614,6 +1652,7 @@ if (regionValues && typeof regionValues === 'object') {
                 <div class="player-identity-meta">
                   <span data-identity-kind>Host</span>
                   <button type="button" class="player-identity-edit" data-identity-edit>Upravit jméno</button>
+                  <a class="player-identity-profile" href="profile.html">Profil</a>
                 </div>
               </div>
               <button type="button" class="player-identity-login" data-identity-login>Přihlásit se</button>
@@ -1668,6 +1707,7 @@ if (regionValues && typeof regionValues === 'object') {
                 <div class="player-identity-meta">
                   <span data-identity-kind>Host</span>
                   <button type="button" class="player-identity-edit" data-identity-edit>Upravit jméno</button>
+                  <a class="player-identity-profile" href="profile.html">Profil</a>
                 </div>
               </div>
               <button type="button" class="player-identity-login" data-identity-login>Přihlásit se</button>
@@ -2884,7 +2924,11 @@ if (regionValues && typeof regionValues === 'object') {
           myName = safeName;
           settings.name = safeName;
           sessionStorage.setItem('vl_name', safeName);
-          if (isGuestPlayer) sessionStorage.setItem('vl_guest_name', safeName);
+          if (isGuestPlayer) {
+            sessionStorage.setItem('vl_guest_name', safeName);
+            localStorage.setItem('vl_guest_name', safeName);
+            profileStore?.updateGuestName?.(safeName);
+          }
           syncIdentityWidgets();
         }
 
@@ -3071,6 +3115,7 @@ if (regionValues && typeof regionValues === 'object') {
         function renderLobby(state) {
           if (!state) return;
           lobbyState = state;
+          window.vlastenecLobbyMatchKind = state.matchKind || null;
           syncIdentityWidgets();
           if (gameMode === 'random') {
             const modeTitle = document.getElementById('lobby_mode_title');
@@ -7713,6 +7758,7 @@ socket.on("availableRegions", ({ regions }) => {
 
     socket.on("updateRegions", ({ regions, regionValues }) => {
             console.log("🎨 Aktualizace regionů:", regions);
+            profileTrackRegionSnapshot(regions);
 
             playerControlledRegions = regions;
             window.regionValues = regionValues; // pokud používáš globální
@@ -7729,17 +7775,17 @@ let lastQuestionOptions = [];
 
 
  socket.on("multipleChoiceQuestion", (data) => {
-    const { question, options, time, attacker, defender, attackerName, defenderName, canAnswer } = data;
+    const { question, options, time, attacker, defender, attackerName, defenderName, canAnswer, category } = data;
+    profileQuestionCategory = category || null;
+    profileQuestionCanAnswer = canAnswer !== false;
     showMultipleChoice(question, options, time, attacker, defender, attackerName, defenderName, canAnswer);
 });
 
 // Přijme výsledky od serveru
 socket.on("multipleChoiceResults", (data) => {
     const { correctAnswer, answersByPlayer } = data;
-
-    
+    profileRecordQuestion(myAnswer !== "" && myAnswer === correctAnswer);
     showMultipleChoiceResults(correctAnswer, answersByPlayer, lastQuestionOptions);
-
 });
 
 let myAnswer = ""; // Uložení mojí odpovědi
@@ -7927,24 +7973,32 @@ let numericStartTime = 0;
 
 
 socket.on("numericQuestion", (data) => {
-    const { question, time } = data;
+    const { question, time, category } = data;
+    profileQuestionCategory = category || null;
+    profileQuestionCanAnswer = true;
     showNumericQuestionForThree(question, time);
 });
 
 
 socket.on("numericQuestionResults", (data) => {
     const { correctAnswer, answers } = data;
+    profileRecordQuestion(Array.isArray(answers) && answers[0]?.player === myPlayerNumber);
     showNumericResultsForThree(correctAnswer, answers);
 });
 
 
 
-socket.on("numericQuestionForTwo", ({ question, time, attacker, defender, attackerName, defenderName }) => {
+socket.on("numericQuestionForTwo", ({ question, time, attacker, defender, attackerName, defenderName, category }) => {
+    profileQuestionCategory = category || null;
+    profileQuestionCanAnswer = [attacker, defender].includes(myPlayerNumber);
     showNumericQuestionForTwo(question, time, attacker, defender, attackerName, defenderName);
 });
 
 
 socket.on("numericQuestionResultsForTwo", ({ correctAnswer, answers, attacker, defender }) => {
+    if ([attacker, defender].includes(myPlayerNumber)) {
+      profileRecordQuestion(Array.isArray(answers) && answers[0]?.player === myPlayerNumber);
+    }
     showNumericResultsForTwo(correctAnswer, answers, attacker, defender);
 });
 
@@ -7955,6 +8009,27 @@ socket.on("numericQuestionResultsForTwo", ({ correctAnswer, answers, attacker, d
 socket.on("gameOver", ({ message, finalScores }) => {
   console.log(`🎮 ${message}`);
   console.log("🏆 Konečné pořadí:");
+
+  if (profileStore && !profileMatch.finalized && Array.isArray(finalScores)) {
+    const myIndex = finalScores.findIndex(entry => Number(entry.player) === Number(myPlayerNumber));
+    const mine = myIndex >= 0 ? finalScores[myIndex] : null;
+    if (mine) {
+      profileMatch.finalized = true;
+      const opponents = finalScores
+        .filter(entry => Number(entry.player) !== Number(myPlayerNumber))
+        .map(entry => ({1:player1,2:player2,3:player3}[entry.player] || `Hráč ${entry.player}`));
+      const effectiveMode = (gameMode === 'random' && window.vlastenecLobbyMatchKind === 'custom') ? 'custom' : gameMode;
+      const summary = profileStore.recordMatch({
+        mode: effectiveMode,
+        placement: myIndex + 1,
+        score: Number(mine.score) || 0,
+        territories: profileMatch.territories,
+        questionWins: profileMatch.questionWins,
+        opponents
+      });
+      console.log('📈 Profil aktualizován:', { xp: summary.xpEarned, level: summary.afterLevel });
+    }
+  }
 
   // Mapování čísel hráčů na jména
   const allNames = {

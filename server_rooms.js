@@ -1,3 +1,4 @@
+console.log('🧪 VLASTENEC BUILD: 2026-08-17-player-profile-v1');
 const express = require('express');
 console.log('🧪 VLASTENEC BUILD: 2026-08-17-guest-name-v1');
 const http = require('http');
@@ -800,7 +801,8 @@ function runMultipleChoice(roomId, participatingPlayers = [1, 2, 3]) {
         defender,
         attackerName: isDuel ? displayName(room, attacker, true) : "",
         defenderName: isDuel ? displayName(room, defender, true) : "",
-        canAnswer: participatingPlayers.includes(playerNumber)
+        canAnswer: participatingPlayers.includes(playerNumber),
+        category: question.category || null
       });
     });
 
@@ -880,7 +882,8 @@ function runNumericQuestionForTwo(roomId, [player1, player2]) {
       attacker: player1,
       defender: player2,
       attackerName: displayName(room, player1, true),
-      defenderName: displayName(room, player2, true)
+      defenderName: displayName(room, player2, true),
+      category: nq.category || null
     });
 
     // BOT odpovědi
@@ -969,7 +972,8 @@ function runNumericQuestionForThree(roomId) {
 
     io.to(roomId).emit("numericQuestion", {
       question: nq.question,
-      time: 15
+      time: 15,
+      category: nq.category || null
     });
 
     // BOT odpovědi

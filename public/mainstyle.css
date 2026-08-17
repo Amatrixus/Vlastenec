@@ -3816,3 +3816,22 @@ body.is-game-started .player-identity-card {
     min-width: 0;
   }
 }
+
+/* ============================================================
+   VLASTENEC — PLAYER PROFILE LINK V1
+   ============================================================ */
+.player-identity-profile {
+  padding: 0;
+  color: rgba(255,255,255,.52);
+  font-size: 9px;
+  font-weight: 750;
+  white-space: nowrap;
+  text-decoration: none;
+  transition: color .15s ease;
+}
+.player-identity-profile::before {
+  content: '·';
+  margin-right: 7px;
+  color: rgba(255,255,255,.22);
+}
+.player-identity-profile:hover { color: #fff; }
