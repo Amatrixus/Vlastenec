@@ -3633,12 +3633,14 @@ if (regionValues && typeof regionValues === 'object') {
           box.innerHTML = '';
           const items = chatState[channel] || [];
           if (!items.length) {
-            const empty = document.createElement('div');
-            empty.className = 'modern-chat-empty';
-            empty.textContent = channel === 'community'
-              ? 'Komunitní chat je zatím tichý.'
-              : 'V místnosti zatím nikdo nic nenapsal.';
-            box.appendChild(empty);
+            // U chatu konkrétní seance necháváme prázdnou plochu bez textu
+            // typu „Zatím nikdo nic nenapsal“. Komunitní chat si svůj empty state ponechává.
+            if (channel === 'community') {
+              const empty = document.createElement('div');
+              empty.className = 'modern-chat-empty';
+              empty.textContent = 'Komunitní chat je zatím tichý.';
+              box.appendChild(empty);
+            }
           } else {
             items.forEach(msg => box.appendChild(createChatLine(msg, channel)));
           }
@@ -3655,11 +3657,14 @@ if (regionValues && typeof regionValues === 'object') {
           // Ve hře existuje pouze chat aktuální session.
           renderChatBox(document.getElementById('game_chat_messages'), 'session');
 
-          // Chatové inputy jsou záměrně bez placeholderu.
+          // Session chat má krátký užitečný placeholder; community zůstává bez něj.
           const lobbyInput = document.getElementById('lobby_chat_input');
-          if (lobbyInput) lobbyInput.removeAttribute('placeholder');
+          if (lobbyInput) {
+            if (activeChatChannel === 'session') lobbyInput.placeholder = 'Napište zprávu spoluhráčům...';
+            else lobbyInput.removeAttribute('placeholder');
+          }
           const gameInput = document.getElementById('game_chat_input');
-          if (gameInput) gameInput.removeAttribute('placeholder');
+          if (gameInput) gameInput.placeholder = 'Napište zprávu spoluhráčům...';
         }
 
         document.querySelectorAll('.chat-channel-tab').forEach(btn => {
@@ -7100,25 +7105,60 @@ document.querySelectorAll(".region").forEach(region => {
 
 
                     function applyStickColors(expansionPlan) {
-                        // Barvy pro hráče
+                        // Barvy pro hráče + barva světelné záře aktivního kolíku.
                         const playerColors = {
-                            1: "blue",
-                            2: "red",
-                            3: "white"
+                            1: { color: "blue", glow: "rgba(70, 125, 255, .98)" },
+                            2: { color: "red", glow: "rgba(255, 72, 72, .98)" },
+                            3: { color: "white", glow: "rgba(255, 255, 255, .98)" }
                         };
 
                         // Získáme všechny "bundle" prvky (každé kolo)
                         let bundles = document.querySelectorAll(".bundle");
 
-                        // Projdeme všechny čtyři kola
                         expansionPlan.forEach((round, roundIndex) => {
-                            let sticks = bundles[roundIndex].querySelectorAll(".stick");
+                            const bundle = bundles[roundIndex];
+                            if (!bundle) return;
+                            let sticks = bundle.querySelectorAll(".stick");
 
-                            // Každému hráči v kole přiřadíme odpovídající barvu
+                            // Každému hráči v kole přiřadíme odpovídající barvu.
                             round.forEach((player, playerIndex) => {
-                                sticks[playerIndex].style.backgroundColor = playerColors[player];
+                                const stick = sticks[playerIndex];
+                                const palette = playerColors[Number(player)];
+                                if (!stick || !palette) return;
+                                stick.style.backgroundColor = palette.color;
+                                stick.style.setProperty('--stick-glow', palette.glow);
+                                stick.dataset.player = String(player);
                             });
                         });
+                    }
+
+                    function clearActiveTurnStick() {
+                        document.querySelectorAll('#playersticks .stick.highlighted_stick')
+                            .forEach(stick => stick.classList.remove('highlighted_stick'));
+                    }
+
+                    function highlightTurnStick(round, stickPosition, player = null) {
+                        const roundIndex = Math.max(0, Number(round) - 1);
+                        const stickIndex = Math.max(0, Number(stickPosition) - 1);
+                        const bundle = document.querySelectorAll('#playersticks .bundle')[roundIndex];
+                        const stick = bundle?.querySelectorAll('.stick')[stickIndex];
+
+                        clearActiveTurnStick();
+                        if (!stick) return;
+
+                        if (player != null) stick.dataset.player = String(player);
+                        stick.classList.add('highlighted_stick');
+                    }
+
+                    function highlightExpansionTurnStick(player, round) {
+                        const plan = Array.isArray(window.currentExpansionPlan)
+                            ? window.currentExpansionPlan
+                            : (Array.isArray(window.expansionPlan) ? window.expansionPlan : null);
+                        const order = plan?.[Math.max(0, Number(round) - 1)];
+                        if (!Array.isArray(order)) return;
+
+                        const position = order.findIndex(p => Number(p) === Number(player));
+                        if (position >= 0) highlightTurnStick(round, position + 1, player);
                     }
 
 
@@ -7498,6 +7538,9 @@ document.querySelectorAll(".region").forEach(region => {
     socket.on("phaseChange", (data) => {
         currentPhase = data.phase;
         console.log(`📢 Fáze změněna na: ${currentPhase}`);
+        if (currentPhase !== 'expansion' && currentPhase !== 'battle') {
+            clearActiveTurnStick();
+        }
     });
 
 
@@ -7533,6 +7576,8 @@ document.querySelectorAll(".region").forEach(region => {
 
     socket.on("battleIntro", ({ battlePlan, title }) => {
         console.log("⚔️ Fáze bitev začíná! Pořadí hráčů:", battlePlan);
+        window.currentBattlePlan = battlePlan;
+        clearActiveTurnStick();
         
         // Zobraz na obrazovce – můžeš použít svůj existující panel
         document.getElementById("gamephase").innerText = title;
@@ -7554,7 +7599,10 @@ document.querySelectorAll(".region").forEach(region => {
 
     });
 
-
+    // Server posílá přesný kolík právě hrajícího útočníka v bitevní fázi.
+    socket.on("updateBattleStick", ({ round, battlestick, player }) => {
+        highlightTurnStick(round, battlestick, player);
+    });
 
 
 
@@ -7875,6 +7923,7 @@ socket.on("removeAnswerOptions", () => {
 
             // Uložíme plán do globální proměnné (pro další kola)
             window.expansionPlan = expansionPlan;
+            window.currentExpansionPlan = expansionPlan;
 
             // Vykreslíme vizuál
             applyStickColors(expansionPlan);
@@ -7892,6 +7941,7 @@ socket.on("removeAnswerOptions", () => {
 
     socket.on("playerTurn", ({ player, round, timeLeft }) => {
         console.log(`🎯 Tah hráče ${player}`);
+        highlightExpansionTurnStick(player, round);
         if (player === myPlayerNumber) {
             console.log("✅ Jsi na tahu, čekám na dostupná políčka...");
             startCountdownTile(10);
@@ -9466,6 +9516,7 @@ function showNumericResultsForThree(correctAnswer, answers) {
 
 
 	<script>console.log("🧪 VLASTENEC FIX: numeric-timeout-input-v1");</script>
+    <script>console.log('🧪 VLASTENEC FIX: chat-turn-stick-v1');</script>
 </body>
 
 
