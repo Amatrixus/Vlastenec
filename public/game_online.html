@@ -1505,10 +1505,7 @@ if (regionValues && typeof regionValues === 'object') {
                 <div class="lobby-title">Připravte bojiště</div>
               </div>
             </div>
-            <div class="lobby-head-status">
-              <span class="lobby-head-status-dot"></span>
-              <span id="lobby_head_status_text">Soukromá místnost</span>
-            </div>
+
           </header>
 
           <div class="lobby-layout lobby-layout-v2">
@@ -1634,7 +1631,7 @@ if (regionValues && typeof regionValues === 'object') {
               </div>
               <div id="lobby_chat_messages" class="modern-chat-messages"></div>
               <div class="modern-chat-compose">
-                <input id="lobby_chat_input" type="text" maxlength="500" autocomplete="off" placeholder="Napiš zprávu…">
+                <input id="lobby_chat_input" type="text" maxlength="500" autocomplete="off">
                 <button id="lobby_chat_send" type="button" aria-label="Odeslat zprávu">➤</button>
               </div>
             </aside>
@@ -2632,7 +2629,7 @@ if (regionValues && typeof regionValues === 'object') {
         </div>
         <div id="game_chat_messages" class="modern-chat-messages"></div>
         <div class="modern-chat-compose">
-          <input id="game_chat_input" type="text" maxlength="500" autocomplete="off" placeholder="Napiš zprávu…">
+          <input id="game_chat_input" type="text" maxlength="500" autocomplete="off">
           <button id="game_chat_send" type="button" aria-label="Odeslat zprávu">➤</button>
         </div>
       </aside>
@@ -2826,8 +2823,6 @@ if (regionValues && typeof regionValues === 'object') {
 
           const connected = (state.players || []).filter(p => p.name && p.connected).length;
           const ready = (state.players || []).filter(p => p.name && p.connected && p.ready).length;
-          const headStatus = document.getElementById('lobby_head_status_text');
-          if (headStatus) headStatus.textContent = `${connected}/3 hráči připojeni`;
           if (state.canStart) {
             showLobbyMessage('Všichni připraveni', 'ready');
             if (title) title.textContent = isHost ? 'Všichni jsou připraveni' : 'Čekáme na hostitele';
@@ -2963,7 +2958,9 @@ if (regionValues && typeof regionValues === 'object') {
             name.classList.add(numberToTeamClass[msg?.number] || nameToTeamClass.get(msg?.name) || '');
           }
           const time = document.createElement('span');
-          time.textContent = fmtTime(msg?.ts);
+          time.className = 'modern-chat-time';
+          const messageTs = Number(msg?.ts || msg?.time || msg?.timestamp || Date.now());
+          time.textContent = fmtTime(messageTs);
           meta.append(name, time);
           const text = document.createElement('div');
           text.className = 'modern-chat-text';
@@ -2999,11 +2996,11 @@ if (regionValues && typeof regionValues === 'object') {
           // Ve hře existuje pouze chat aktuální session.
           renderChatBox(document.getElementById('game_chat_messages'), 'session');
 
-          const lobbyPlaceholder = activeChatChannel === 'community' ? 'Napiš komunitě…' : 'Napiš do místnosti…';
+          // Chatové inputy jsou záměrně bez placeholderu.
           const lobbyInput = document.getElementById('lobby_chat_input');
-          if (lobbyInput) lobbyInput.placeholder = lobbyPlaceholder;
+          if (lobbyInput) lobbyInput.removeAttribute('placeholder');
           const gameInput = document.getElementById('game_chat_input');
-          if (gameInput) gameInput.placeholder = 'Napiš zprávu…';
+          if (gameInput) gameInput.removeAttribute('placeholder');
         }
 
         document.querySelectorAll('.chat-channel-tab').forEach(btn => {
