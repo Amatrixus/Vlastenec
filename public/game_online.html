@@ -293,6 +293,7 @@
     const socket = io({ autoConnect: false });
     console.log('🧪 VLASTENEC CLIENT: league-matchmaking-v1');
     console.log('🧪 VLASTENEC FIX: endgame-names-v1');
+    console.log('🧪 VLASTENEC CLIENT: endgame-stats-ui-v1');
 
     // --- Profil hráče: lokální statistiky od této verze ---
     const profileStore = window.VlastenecProfileStore || null;
@@ -2094,45 +2095,40 @@ if (regionValues && typeof regionValues === 'object') {
 
 
 
-      <div id="endgamewindow" class="modal">
-        <div id="endgamemenu">
-            <div class="endmenuitem active" onclick="showEndgameTab('results')">Výsledky</div>
-            <div class="endmenuitem" onclick="showEndgameTab('stats')">Statistiky</div>
+      <div id="endgamewindow" class="modal" role="dialog" aria-modal="true" aria-labelledby="endgame_heading">
+        <div id="endgamemenu" role="tablist" aria-label="Výsledky zápasu">
+            <button type="button" class="endmenuitem active" data-endtab="results" onclick="showEndgameTab('results', this)">Výsledky</button>
+            <button type="button" class="endmenuitem" data-endtab="stats" onclick="showEndgameTab('stats', this)">Statistiky</button>
         </div>
         <div id="endgamecontent">
-            <div id="endgame_results" class="endtab">
-            <div class="endtitle">Konečné výsledky</div>
-            <div class="scoreline"><span class="rank"></span> <span class="playername">S Cooper PhD</span> <span class="score">4400</span></div>
-            <div class="scoreline"><span class="rank"></span> <span class="playername">jurac22</span> <span class="score">1700</span></div>
-            <div class="scoreline"><span class="rank"></span> <span class="playername">sisa92</span> <span class="score">0</span></div>
+            <div id="endgame_results" class="endtab" role="tabpanel">
+              <div class="endtitle" id="endgame_heading">Konečné výsledky</div>
             </div>
-            <div id="endgame_stats" class="endtab" style="display:none;">
-            <div class="endtitle">Statistiky</div>
-            <div class="statline">Zatím žádná data</div>
+            <div id="endgame_stats" class="endtab" role="tabpanel" style="display:none;">
+              <div class="endtitle">Statistiky zápasu</div>
+              <div class="endstats-loading">Načítám statistiky…</div>
             </div>
-            <button id="endgameok" onclick="closeEndgame()">OK</button>
+            <div class="endgame-actions">
+              <button id="endgameok" class="endgame-button endgame-button-primary" type="button" onclick="closeEndgame()">OK</button>
+              <button id="endgamehome" class="endgame-button endgame-button-secondary" type="button" onclick="goToHomepage()">Zpět na homepage</button>
+            </div>
         </div>
-        </div>
+      </div>
 
 
 
 
 
         
-      <div id="leavegamewindow" class="modal">
-                <div id="leavetitle">Opustit hru?</div>
-                <div id="leavegamecontent">
-                    
-                    
-
-
-                    <button class="leavebutton" onclick="window.location.href='altersettings.html'">Ano</button>
-                    <button class="leavebutton" onclick="closeLeavegame();">Ne</button>
-                    
-                </div>
-                
-            
-    </div>
+      <div id="leavegamewindow" class="modal" role="dialog" aria-modal="true" aria-labelledby="leavetitle">
+        <div class="leavegame-kicker">OPUŠTĚNÍ ZÁPASU</div>
+        <div id="leavetitle">Opustit hru?</div>
+        <p class="leavegame-copy">Rozehraný zápas opustíte a vrátíte se na hlavní stránku.</p>
+        <div id="leavegamecontent">
+          <button class="leavebutton leavebutton-secondary" type="button" onclick="closeLeavegame();">Zůstat ve hře</button>
+          <button class="leavebutton leavebutton-primary" type="button" onclick="goToHomepage();">Opustit hru</button>
+        </div>
+      </div>
       
 
 
@@ -3998,14 +3994,13 @@ if (regionValues && typeof regionValues === 'object') {
 
 
 
-        function showEndgameTab(tabId, event = null) {
+        function showEndgameTab(tabId, trigger = null) {
                 document.querySelectorAll('.endtab').forEach(el => el.style.display = 'none');
                 document.querySelectorAll('.endmenuitem').forEach(el => el.classList.remove('active'));
-                document.getElementById('endgame_' + tabId).style.display = 'block';
-                
-                if (event && event.target) {
-                    event.target.classList.add('active');
-                }
+                const panel = document.getElementById('endgame_' + tabId);
+                if (panel) panel.style.display = 'block';
+                const activeTrigger = trigger || document.querySelector(`.endmenuitem[data-endtab="${tabId}"]`);
+                if (activeTrigger) activeTrigger.classList.add('active');
         }
 
 
@@ -4050,6 +4045,108 @@ if (regionValues && typeof regionValues === 'object') {
 
         function closeLeavegame() {
             document.getElementById('leavegamewindow').style.display = 'none';
+        }
+
+
+        function goToHomepage() {
+            window.location.href = 'homepage.html';
+        }
+
+        function endgameFormatNumber(value, digits = 0) {
+            const num = Number(value);
+            if (!Number.isFinite(num)) return '—';
+            return num.toLocaleString('cs-CZ', { minimumFractionDigits: digits, maximumFractionDigits: digits });
+        }
+
+        function renderEndgameStats(matchStats, finalScores = []) {
+            const box = document.getElementById('endgame_stats');
+            if (!box) return;
+            box.innerHTML = '<div class="endtitle">Statistiky zápasu</div>';
+
+            const players = Array.isArray(matchStats?.players) ? [...matchStats.players] : [];
+            if (!players.length) {
+                const empty = document.createElement('div');
+                empty.className = 'endstats-empty';
+                empty.textContent = 'Statistiky tohoto zápasu nejsou k dispozici.';
+                box.appendChild(empty);
+                return;
+            }
+
+            const order = new Map((finalScores || []).map((entry, index) => [Number(entry.player), index + 1]));
+            players.sort((a, b) => (order.get(Number(a.seat)) || 99) - (order.get(Number(b.seat)) || 99));
+
+            const intro = document.createElement('div');
+            intro.className = 'endstats-intro';
+            intro.textContent = 'Data jsou vypočítána přímo z průběhu tohoto zápasu.';
+            box.appendChild(intro);
+
+            const list = document.createElement('div');
+            list.className = 'match-stats-list';
+
+            players.forEach((stat, index) => {
+                const seat = Number(stat.seat);
+                const placement = order.get(seat) || Number(stat.placement) || (index + 1);
+                const card = document.createElement('section');
+                card.className = 'match-stat-card' + (placement === 1 ? ' winner' : '') + (seat === Number(myPlayerNumber) ? ' mine' : '');
+
+                const head = document.createElement('div');
+                head.className = 'match-stat-head';
+
+                const rank = document.createElement('span');
+                rank.className = 'match-stat-rank';
+                rank.textContent = `${placement}.`;
+
+                const identity = document.createElement('div');
+                identity.className = 'match-stat-identity';
+                const name = document.createElement('strong');
+                name.textContent = labelForSeat(seat) || stat.name || `Hráč ${seat}`;
+                identity.appendChild(name);
+                if (seat === Number(myPlayerNumber)) {
+                    const you = document.createElement('span');
+                    you.textContent = 'VY';
+                    identity.appendChild(you);
+                }
+
+                const score = document.createElement('div');
+                score.className = 'match-stat-score';
+                score.innerHTML = `<strong>${endgameFormatNumber(stat.score)}</strong><span>bodů</span>`;
+
+                head.append(rank, identity, score);
+                card.appendChild(head);
+
+                const grid = document.createElement('div');
+                grid.className = 'match-stat-grid';
+
+                const accuracy = Number.isFinite(Number(stat.choiceAccuracyPct)) ? `${endgameFormatNumber(stat.choiceAccuracyPct, 0)} %` : '—';
+                const numericError = Number.isFinite(Number(stat.numericMedianErrorPct)) ? `${endgameFormatNumber(stat.numericMedianErrorPct, 1)} %` : '—';
+                const best = stat.bestCategory && Number(stat.bestCategory.asked) > 0 ? stat.bestCategory : null;
+                const exactSuffix = Number(stat.exactHits) > 0 ? ` · ${Number(stat.exactHits)} přesný zásah` + (Number(stat.exactHits) === 1 ? '' : 'y') : '';
+
+                const metrics = [
+                    ['SPRÁVNÉ ODPOVĚDI', accuracy, `${Number(stat.choiceCorrect)||0} / ${Number(stat.choiceAsked)||0} výběrových`],
+                    ['NUMERICKÝ ODHAD', numericError, Number(stat.numericAsked) ? `medián odchylky · ${Number(stat.numericAnswered)||0}/${Number(stat.numericAsked)||0} odpovědí${exactSuffix}` : 'bez numerické otázky'],
+                    ['ZÍSKANÁ ÚZEMÍ', endgameFormatNumber(stat.territoriesGained), 'během tohoto zápasu'],
+                    ['NEJÚSPĚŠNĚJŠÍ KATEGORIE', best ? best.name : '—', best ? `${Number(best.successes)||0} / ${Number(best.asked)||0} úspěchů` : 'bez dat']
+                ];
+
+                metrics.forEach(([label, value, meta]) => {
+                    const metric = document.createElement('div');
+                    metric.className = 'match-stat-metric';
+                    const labelEl = document.createElement('span');
+                    labelEl.textContent = label;
+                    const valueEl = document.createElement('strong');
+                    valueEl.textContent = value;
+                    const metaEl = document.createElement('small');
+                    metaEl.textContent = meta;
+                    metric.append(labelEl, valueEl, metaEl);
+                    grid.appendChild(metric);
+                });
+
+                card.appendChild(grid);
+                list.appendChild(card);
+            });
+
+            box.appendChild(list);
         }
 
 
@@ -8195,7 +8292,7 @@ socket.on('league:rating:result', (result = {}) => {
   setTimeout(render, 120);
 });
 
-socket.on("gameOver", ({ message, finalScores }) => {
+socket.on("gameOver", ({ message, finalScores, matchStats }) => {
   console.log(`🎮 ${message}`);
   console.log("🏆 Konečné pořadí:");
 
@@ -8224,7 +8321,13 @@ socket.on("gameOver", ({ message, finalScores }) => {
   // Lokální player1/player2/player3 jsou jen legacy fallback a u prvního
   // připojeného hráče mohou být zpočátku ještě názvy robotů.
   const resultBox = document.getElementById("endgame_results");
-  resultBox.innerHTML = `<div class="endtitle">${message}</div>`;
+  resultBox.innerHTML = `<div class="endtitle">${message}</div><div class="endgame-subtitle">Konečné pořadí zápasu</div>`;
+
+  const okButton = document.getElementById('endgameok');
+  if (okButton) {
+    okButton.textContent = 'OK';
+    okButton.onclick = closeEndgame;
+  }
 
   if (gameMode === 'liga') {
     const ok = document.getElementById('endgameok');
@@ -8243,7 +8346,7 @@ socket.on("gameOver", ({ message, finalScores }) => {
   if (index === 0) line.classList.add("winner"); // zvýrazni vítěze
 
   line.innerHTML = `
-    <span class="rank"></span>
+    <span class="rank">${index + 1}.</span>
     <span class="playername">${name}</span>
     <span class="score">${entry.score}</span>
   `;
@@ -8262,6 +8365,8 @@ socket.on("gameOver", ({ message, finalScores }) => {
       resultBox.appendChild(block);
     }
   }
+
+  renderEndgameStats(matchStats, finalScores);
 
   // Výchozí zobrazená tabulka
   showEndgameTab("results");

@@ -1,4 +1,4 @@
-console.log('🧪 VLASTENEC BUILD: 2026-08-17-leaderboards-v2.1-rating-eligibility');
+console.log('🧪 VLASTENEC BUILD: 2026-08-17-endgame-stats-v1');
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
@@ -38,7 +38,7 @@ const PORT = process.env.PORT || 3000;
   if (db.getStatus().ready) await recoverInterruptedLeagueMatches().catch(err => console.error('league boot recovery:', err));
   server.listen(PORT, '0.0.0.0', () => {
     console.log('Server běží na', PORT);
-    console.log('🧪 VLASTENEC BUILD: 2026-08-17-leaderboards-v2.1-rating-eligibility');
+    console.log('🧪 VLASTENEC BUILD: 2026-08-17-endgame-stats-v1');
   });
 })();
 
@@ -296,6 +296,7 @@ function queueQuestionProfileEvents(room, eventBase, category, questionType, sea
     const seat = Number(rawSeat);
     if (![1,2,3].includes(seat)) continue;
     const detail = detailsBySeat[seat] || {};
+    recordMatchQuestionStat(room, seat, category, questionType, detail);
     if (detail.success) {
       room.profileQuestionWins = room.profileQuestionWins || {1:0,2:0,3:0};
       room.profileQuestionWins[seat] = Number(room.profileQuestionWins[seat] || 0) + 1;
@@ -327,6 +328,98 @@ function numericErrorPercent(answer, correct, answered = true) {
   if (!Number.isFinite(a) || !Number.isFinite(c)) return 100;
   const denominator = Math.max(1, Math.abs(c));
   return Math.min(1_000_000, Math.abs(a-c) / denominator * 100);
+}
+
+function ensureMatchStats(room) {
+  if (!room) return null;
+  if (!room.matchStats) {
+    room.matchStats = {
+      1: { choiceAsked:0, choiceAnswered:0, choiceCorrect:0, numericAsked:0, numericAnswered:0, numericWins:0, numericErrors:[], exactHits:0, categories:{} },
+      2: { choiceAsked:0, choiceAnswered:0, choiceCorrect:0, numericAsked:0, numericAnswered:0, numericWins:0, numericErrors:[], exactHits:0, categories:{} },
+      3: { choiceAsked:0, choiceAnswered:0, choiceCorrect:0, numericAsked:0, numericAnswered:0, numericWins:0, numericErrors:[], exactHits:0, categories:{} }
+    };
+  }
+  return room.matchStats;
+}
+
+function recordMatchQuestionStat(room, seat, category, questionType, detail = {}) {
+  const all = ensureMatchStats(room);
+  seat = Number(seat);
+  if (!all || ![1,2,3].includes(seat)) return;
+  const stat = all[seat];
+  const answered = detail.answered !== false;
+  const success = !!detail.success;
+
+  if (questionType === 'choice') {
+    stat.choiceAsked += 1;
+    if (answered) stat.choiceAnswered += 1;
+    if (success) stat.choiceCorrect += 1;
+  } else if (questionType === 'numeric') {
+    stat.numericAsked += 1;
+    if (answered) stat.numericAnswered += 1;
+    if (success) stat.numericWins += 1;
+    const err = Number(detail.numericErrorPct);
+    if (Number.isFinite(err)) stat.numericErrors.push(Math.max(0, err));
+    if (detail.exactHit) stat.exactHits += 1;
+  }
+
+  const cat = String(category || '').trim();
+  if (cat) {
+    stat.categories[cat] = stat.categories[cat] || { asked:0, successes:0 };
+    stat.categories[cat].asked += 1;
+    if (success) stat.categories[cat].successes += 1;
+  }
+}
+
+function medianNumber(values = []) {
+  const nums = values.map(Number).filter(Number.isFinite).sort((a,b) => a-b);
+  if (!nums.length) return null;
+  const mid = Math.floor(nums.length / 2);
+  return nums.length % 2 ? nums[mid] : (nums[mid - 1] + nums[mid]) / 2;
+}
+
+function buildEndgameMatchStats(room, ordered = []) {
+  const all = ensureMatchStats(room) || {};
+  const placementBySeat = {};
+  const scoreBySeat = {};
+  (ordered || []).forEach((entry, index) => {
+    placementBySeat[Number(entry.player)] = index + 1;
+    scoreBySeat[Number(entry.player)] = Number(entry.score) || 0;
+  });
+
+  return {
+    authoritative: true,
+    players: [1,2,3].map(seat => {
+      const stat = all[seat] || {};
+      const categories = Object.entries(stat.categories || {}).map(([name, value]) => ({
+        name,
+        asked: Number(value.asked) || 0,
+        successes: Number(value.successes) || 0,
+        rate: Number(value.asked) > 0 ? (Number(value.successes) / Number(value.asked)) * 100 : 0
+      })).sort((a,b) => b.rate - a.rate || b.successes - a.successes || b.asked - a.asked || a.name.localeCompare(b.name, 'cs'));
+      const bestCategory = categories[0] || null;
+      const choiceAsked = Number(stat.choiceAsked) || 0;
+      const choiceCorrect = Number(stat.choiceCorrect) || 0;
+      return {
+        seat,
+        name: displayName(room, seat, true),
+        placement: placementBySeat[seat] || null,
+        score: scoreBySeat[seat] || 0,
+        choiceAsked,
+        choiceAnswered: Number(stat.choiceAnswered) || 0,
+        choiceCorrect,
+        choiceAccuracyPct: choiceAsked ? (choiceCorrect / choiceAsked) * 100 : null,
+        numericAsked: Number(stat.numericAsked) || 0,
+        numericAnswered: Number(stat.numericAnswered) || 0,
+        numericWins: Number(stat.numericWins) || 0,
+        numericMedianErrorPct: medianNumber(stat.numericErrors || []),
+        exactHits: Number(stat.exactHits) || 0,
+        territoriesGained: Number(room.profileTerritoriesGained?.[seat]) || 0,
+        questionSuccesses: Number(room.profileQuestionWins?.[seat]) || 0,
+        bestCategory
+      };
+    })
+  };
 }
 
 async function refreshRoomAccountIds(room) {
@@ -2779,7 +2872,7 @@ async function finishRoomGame(roomId, ordered) {
     console.error(`📊 ${roomId}: autoritativní profil/žebříček se nepodařilo dokončit:`,err);
   }
 
-  io.to(roomId).emit('gameOver', { message:'Hra skončila!', finalScores:ordered });
+  io.to(roomId).emit('gameOver', { message:'Hra skončila!', finalScores:ordered, matchStats:buildEndgameMatchStats(room, ordered) });
   if (leagueResult) io.to(roomId).emit('league:rating:result', leagueResult);
   if (profileSummary?.normalRating) io.to(roomId).emit('normal:rating:result', profileSummary.normalRating);
 }

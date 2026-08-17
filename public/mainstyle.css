@@ -3891,3 +3891,457 @@ body.league-game-connecting .league-game-connect-overlay{display:grid}
 .league-rating-summary>span{grid-column:1/-1;color:rgba(255,255,255,.3);font-size:7px;font-weight:900;letter-spacing:.12em}
 .league-rating-summary>strong{font-size:15px;color:#fff}.league-rating-summary>em{font-style:normal;font-size:15px;font-weight:950}.league-rating-summary>small{text-align:right;color:rgba(255,255,255,.38);font-size:8px}
 .league-rating-summary.positive>em{color:#70d79a}.league-rating-summary.negative>em{color:#eb8a81}
+
+/* ============================================================
+   VLASTENEC — ENDGAME + LEAVE DIALOG V2 (2026-08-17)
+   Modern portal styling and real match-statistics layout.
+   ============================================================ */
+
+#endgamewindow {
+  width: min(780px, calc(100vw - 36px));
+  height: min(650px, calc(100vh - 36px));
+  padding: 0;
+  flex-direction: column;
+  background:
+    radial-gradient(circle at 50% -20%, rgba(255,148,31,.10), transparent 42%),
+    rgba(9, 12, 18, .97);
+  border: 1px solid rgba(255,255,255,.11);
+  border-radius: 18px;
+  color: rgba(255,255,255,.92);
+  font-family: 'Segoe UI', sans-serif;
+  box-shadow:
+    0 0 0 100vmax rgba(0,0,0,.64),
+    0 28px 90px rgba(0,0,0,.62),
+    inset 0 1px 0 rgba(255,255,255,.04);
+  overflow: hidden;
+}
+
+#endgamemenu {
+  width: 100%;
+  min-height: 58px;
+  flex: 0 0 58px;
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  padding: 0 22px;
+  box-sizing: border-box;
+  background: rgba(255,255,255,.018);
+  border: 0;
+  border-bottom: 1px solid rgba(255,255,255,.075);
+}
+
+.endmenuitem {
+  appearance: none;
+  -webkit-appearance: none;
+  min-width: 120px;
+  padding: 0 18px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: rgba(255,255,255,.45);
+  cursor: pointer;
+  font: inherit;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: .11em;
+  text-transform: uppercase;
+  transition: color .18s ease, border-color .18s ease, background .18s ease;
+}
+
+.endmenuitem:hover {
+  background: rgba(255,255,255,.025);
+  color: rgba(255,255,255,.78);
+}
+
+.endmenuitem.active {
+  background: transparent;
+  border-bottom-color: #ff941f;
+  color: #ffad52;
+}
+
+#endgamecontent {
+  width: 100%;
+  min-height: 0;
+  flex: 1 1 auto;
+  box-sizing: border-box;
+  padding: 27px 30px 24px;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: 20px;
+}
+
+.endtab {
+  min-height: 0;
+  overflow-y: auto;
+  padding: 0 4px 8px 0;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,148,31,.38) rgba(255,255,255,.035);
+}
+
+.endtab::-webkit-scrollbar { width: 7px; }
+.endtab::-webkit-scrollbar-track { background: rgba(255,255,255,.025); border-radius: 10px; }
+.endtab::-webkit-scrollbar-thumb { background: rgba(255,148,31,.34); border-radius: 10px; }
+
+.endtitle {
+  margin: 0;
+  color: #fff;
+  font-size: clamp(23px, 3vw, 31px);
+  line-height: 1.12;
+  font-weight: 850;
+  letter-spacing: -.035em;
+  text-align: left;
+}
+
+.endgame-subtitle,
+.endstats-intro {
+  margin: 7px 0 20px;
+  color: rgba(255,255,255,.40);
+  font-size: 10px;
+  line-height: 1.5;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+}
+
+.scoreline {
+  min-height: 64px;
+  margin: 8px 0;
+  padding: 0 16px;
+  display: grid;
+  grid-template-columns: 48px minmax(0,1fr) auto;
+  gap: 10px;
+  align-items: center;
+  box-sizing: border-box;
+  background: rgba(255,255,255,.032);
+  border: 1px solid rgba(255,255,255,.075);
+  border-radius: 12px;
+  box-shadow: none;
+  font-size: 14px;
+  transition: border-color .18s ease, background .18s ease;
+}
+
+.scoreline:nth-child(2) .rank::before,
+.scoreline:nth-child(3) .rank::before,
+.scoreline:nth-child(4) .rank::before { content: none; }
+
+.scoreline .rank {
+  width: auto;
+  color: rgba(255,255,255,.34);
+  font-size: 13px;
+  font-weight: 900;
+  text-align: center;
+}
+
+.scoreline .playername {
+  min-width: 0;
+  padding-left: 0;
+  overflow: hidden;
+  color: rgba(255,255,255,.88);
+  font-size: 15px;
+  font-weight: 750;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.scoreline .score {
+  width: auto;
+  min-width: 76px;
+  color: rgba(255,255,255,.72);
+  font-size: 15px;
+  font-weight: 900;
+  text-align: right;
+}
+
+.scoreline .score::after {
+  content: ' b.';
+  color: rgba(255,255,255,.28);
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.scoreline.winner {
+  background: linear-gradient(90deg, rgba(255,148,31,.12), rgba(255,148,31,.035));
+  border: 1px solid rgba(255,148,31,.36);
+  box-shadow: inset 3px 0 0 #ff941f;
+}
+.scoreline.winner .rank,
+.scoreline.winner .score { color: #ffad52; }
+.scoreline.winner .playername { color: #fff; }
+
+.endgame-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(255,255,255,.07);
+}
+
+#endgameok,
+.endgame-button {
+  align-self: auto;
+  margin: 0;
+  min-height: 42px;
+  padding: 0 18px;
+  border-radius: 9px;
+  border: 1px solid transparent;
+  box-shadow: none;
+  cursor: pointer;
+  font: inherit;
+  font-size: 9px;
+  font-weight: 900;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+  transition: transform .16s ease, background .16s ease, border-color .16s ease;
+}
+
+.endgame-button:hover { transform: translateY(-1px); }
+.endgame-button-primary,
+#endgameok {
+  background: #ff941f;
+  border-color: #ff941f;
+  color: #100c08;
+}
+.endgame-button-primary:hover,
+#endgameok:hover { background: #ffab4b; }
+.endgame-button-secondary {
+  background: rgba(255,255,255,.035);
+  border-color: rgba(255,255,255,.10);
+  color: rgba(255,255,255,.72);
+}
+.endgame-button-secondary:hover {
+  background: rgba(255,255,255,.07);
+  border-color: rgba(255,255,255,.18);
+}
+
+.endstats-loading,
+.endstats-empty {
+  margin-top: 18px;
+  padding: 26px;
+  border: 1px dashed rgba(255,255,255,.10);
+  border-radius: 12px;
+  color: rgba(255,255,255,.42);
+  font-size: 12px;
+  text-align: center;
+}
+
+.match-stats-list {
+  display: grid;
+  gap: 10px;
+}
+
+.match-stat-card {
+  padding: 14px 15px 15px;
+  border: 1px solid rgba(255,255,255,.075);
+  border-radius: 13px;
+  background: rgba(255,255,255,.027);
+}
+
+.match-stat-card.winner {
+  border-color: rgba(255,148,31,.27);
+  background: linear-gradient(120deg, rgba(255,148,31,.075), rgba(255,255,255,.02) 54%);
+}
+
+.match-stat-card.mine {
+  box-shadow: inset 3px 0 0 rgba(255,148,31,.82);
+}
+
+.match-stat-head {
+  display: grid;
+  grid-template-columns: 34px minmax(0,1fr) auto;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.match-stat-rank {
+  color: rgba(255,255,255,.30);
+  font-size: 12px;
+  font-weight: 900;
+  text-align: center;
+}
+
+.match-stat-identity {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.match-stat-identity strong {
+  overflow: hidden;
+  color: #fff;
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.match-stat-identity span {
+  flex: 0 0 auto;
+  padding: 3px 5px;
+  border-radius: 4px;
+  background: rgba(255,148,31,.11);
+  color: #ffad52;
+  font-size: 7px;
+  font-weight: 950;
+  letter-spacing: .10em;
+}
+
+.match-stat-score {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+.match-stat-score strong { color: rgba(255,255,255,.82); font-size: 13px; }
+.match-stat-score span { color: rgba(255,255,255,.28); font-size: 8px; }
+
+.match-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.match-stat-metric {
+  min-width: 0;
+  padding: 10px 10px 9px;
+  border-radius: 9px;
+  background: rgba(0,0,0,.16);
+  border: 1px solid rgba(255,255,255,.045);
+}
+.match-stat-metric > span {
+  display: block;
+  margin-bottom: 5px;
+  color: rgba(255,255,255,.28);
+  font-size: 6.5px;
+  font-weight: 900;
+  letter-spacing: .09em;
+  line-height: 1.25;
+}
+.match-stat-metric > strong {
+  display: block;
+  overflow: hidden;
+  color: rgba(255,255,255,.88);
+  font-size: 13px;
+  line-height: 1.22;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.match-stat-metric > small {
+  display: block;
+  margin-top: 4px;
+  overflow: hidden;
+  color: rgba(255,255,255,.29);
+  font-size: 7px;
+  line-height: 1.3;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Keep the existing league rating summary consistent inside the new dialog. */
+#endgamewindow .league-rating-summary {
+  margin-top: 14px;
+  background: rgba(255,255,255,.025);
+  border-color: rgba(255,255,255,.075);
+}
+
+#leavegamewindow {
+  width: min(430px, calc(100vw - 36px));
+  height: auto;
+  min-height: 0;
+  box-sizing: border-box;
+  padding: 30px;
+  display: none;
+  flex-direction: column;
+  background:
+    radial-gradient(circle at 50% -30%, rgba(255,148,31,.11), transparent 48%),
+    rgba(9, 12, 18, .98);
+  border: 1px solid rgba(255,255,255,.11);
+  border-radius: 17px;
+  color: rgba(255,255,255,.90);
+  font-family: 'Segoe UI', sans-serif;
+  box-shadow:
+    0 0 0 100vmax rgba(0,0,0,.64),
+    0 28px 90px rgba(0,0,0,.62),
+    inset 0 1px 0 rgba(255,255,255,.04);
+  overflow: hidden;
+}
+
+.leavegame-kicker {
+  margin-bottom: 9px;
+  color: #ff941f;
+  font-size: 8px;
+  font-weight: 950;
+  letter-spacing: .14em;
+  text-align: center;
+}
+
+#leavetitle {
+  width: auto;
+  margin: 0;
+  color: #fff;
+  font-size: 26px;
+  line-height: 1.1;
+  font-weight: 850;
+  letter-spacing: -.035em;
+  text-align: center;
+}
+
+.leavegame-copy {
+  max-width: 320px;
+  margin: 10px auto 22px;
+  color: rgba(255,255,255,.42);
+  font-size: 11px;
+  line-height: 1.55;
+  text-align: center;
+}
+
+#leavegamecontent {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  gap: 9px;
+}
+
+.leavebutton {
+  float: none;
+  align-self: auto;
+  margin: 0;
+  min-height: 42px;
+  padding: 0 16px;
+  border-radius: 9px;
+  border: 1px solid transparent;
+  box-shadow: none;
+  cursor: pointer;
+  font: inherit;
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  transition: transform .16s ease, background .16s ease, border-color .16s ease;
+}
+.leavebutton:hover { transform: translateY(-1px); }
+.leavebutton-primary {
+  background: #ff941f;
+  border-color: #ff941f;
+  color: #100c08;
+}
+.leavebutton-primary:hover { background: #ffab4b; }
+.leavebutton-secondary {
+  background: rgba(255,255,255,.035);
+  border-color: rgba(255,255,255,.10);
+  color: rgba(255,255,255,.70);
+}
+.leavebutton-secondary:hover {
+  background: rgba(255,255,255,.07);
+  border-color: rgba(255,255,255,.18);
+}
+
+@media (max-width: 700px) {
+  #endgamewindow {
+    width: calc(100vw - 20px);
+    height: calc(100vh - 20px);
+    border-radius: 14px;
+  }
+  #endgamemenu { padding: 0 10px; }
+  .endmenuitem { flex: 1; min-width: 0; padding: 0 8px; }
+  #endgamecontent { padding: 20px 16px 15px; gap: 14px; }
+  .match-stat-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .endgame-actions { flex-direction: column-reverse; }
+  .endgame-button { width: 100%; }
+}
