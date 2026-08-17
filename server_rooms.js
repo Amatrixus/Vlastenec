@@ -1,4 +1,4 @@
-console.log('🧪 VLASTENEC BUILD: 2026-08-18-battle-question-transition-v1');
+console.log('🧪 VLASTENEC BUILD: 2026-08-18-battle-ui-sequencer-v1');
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
@@ -38,7 +38,7 @@ const PORT = process.env.PORT || 3000;
   if (db.getStatus().ready) await recoverInterruptedLeagueMatches().catch(err => console.error('league boot recovery:', err));
   server.listen(PORT, '0.0.0.0', () => {
     console.log('Server běží na', PORT);
-    console.log('🧪 VLASTENEC BUILD: 2026-08-18-battle-question-transition-v1');
+    console.log('🧪 VLASTENEC BUILD: 2026-08-18-battle-ui-sequencer-v1');
   });
 })();
 
@@ -722,6 +722,92 @@ async function delayAlive(roomId, ms) {
 }
 
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Battle/question UI sequencer
+// ─────────────────────────────────────────────────────────────────────────────
+// Dříve server odhadoval délku klientských animací pomocí pevných delayů
+// (5.1 s, 5.7 s, 8 s...). To je náchylné na latenci a throttling timerů v
+// prohlížeči: starý close timer pak mohl schovat novou numerickou otázku nebo
+// animaci ničení základny. Každá důležitá UI fáze má nyní unikátní token.
+// Server pokračuje až po potvrzení klientů, s timeoutem pouze jako pojistkou.
+const battleUiWaiters = new Map();
+
+function connectedBattleUiSocketIds(room) {
+  if (!room || !Array.isArray(room.players)) return [];
+  return room.players
+    .map(p => p?.id)
+    .filter(id => id && io.sockets.sockets.has(id));
+}
+
+function finishBattleUiWaiter(uiToken, reason = 'acked') {
+  const waiter = battleUiWaiters.get(uiToken);
+  if (!waiter) return false;
+  battleUiWaiters.delete(uiToken);
+  if (waiter.timer) clearTimeout(waiter.timer);
+  waiter.resolve({ uiToken, stage: waiter.stage, reason });
+  return true;
+}
+
+function emitBattleUiAndWait(roomId, eventName, payload = {}, stage = eventName, timeoutMs = 7500) {
+  const room = rooms[roomId];
+  const uiToken = `ui-${randomUUID()}`;
+  const expected = new Set(connectedBattleUiSocketIds(room));
+
+  // Waiter musí existovat PŘED emitnutím eventu, jinak by velmi rychlý klient
+  // mohl poslat ACK dříve, než jej server začne poslouchat.
+  const promise = new Promise((resolve) => {
+    if (!room || expected.size === 0) {
+      resolve({ uiToken, stage, reason: 'no_clients' });
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      const waiter = battleUiWaiters.get(uiToken);
+      if (!waiter) return;
+      console.warn(`⏱️ UI ACK timeout ${roomId} / ${stage}; čekám ještě na ${waiter.pending.size} klient(ů).`);
+      finishBattleUiWaiter(uiToken, 'timeout');
+    }, timeoutMs);
+    timer.unref?.();
+
+    battleUiWaiters.set(uiToken, {
+      roomId,
+      stage,
+      pending: expected,
+      resolve,
+      timer
+    });
+  });
+
+  io.to(roomId).emit(eventName, { ...payload, uiToken, uiStage: stage });
+  console.log(`🎬 UI stage ${roomId}: ${stage} (${uiToken}), klientů=${expected.size}`);
+  return promise;
+}
+
+function acknowledgeBattleUi(socket, requestedRoomId, uiToken, stage) {
+  const waiter = battleUiWaiters.get(String(uiToken || ''));
+  if (!waiter) return;
+
+  const socketRoomId = socket.data?.roomId || socket.data?.joinedRoom;
+  if (!socketRoomId || String(requestedRoomId || '') !== String(socketRoomId)) return;
+  if (String(waiter.roomId) !== String(socketRoomId)) return;
+  if (stage && String(stage) !== String(waiter.stage)) return;
+  if (!waiter.pending.has(socket.id)) return;
+
+  waiter.pending.delete(socket.id);
+  console.log(`✅ UI ACK ${waiter.roomId}: ${waiter.stage} od ${socket.id}; zbývá=${waiter.pending.size}`);
+  if (waiter.pending.size === 0) finishBattleUiWaiter(String(uiToken), 'acked');
+}
+
+function dropSocketFromBattleUiWaiters(socketId) {
+  for (const [uiToken, waiter] of battleUiWaiters.entries()) {
+    if (!waiter.pending?.has(socketId)) continue;
+    waiter.pending.delete(socketId);
+    console.log(`↩️ UI waiter ${waiter.roomId}: odpojený socket ${socketId} odstraněn; zbývá=${waiter.pending.size}`);
+    if (waiter.pending.size === 0) finishBattleUiWaiter(uiToken, 'clients_gone');
+  }
+}
+
+
 // NEW: zjistí číslo hráče (1..3) v dané room podle socket.id
 function getSeatNumber(room, socketId) {
   if (!room) return null;
@@ -1164,8 +1250,9 @@ function runMultipleChoice(roomId, participatingPlayers = [1, 2, 3]) {
       });
     } catch (e) { console.warn('BOT MC error', e); }
 
-    // ⏲️ Timeout + vyhodnocení + resolve (VRÁCENO)
-    setTimeout(() => {
+    // ⏲️ Timeout + vyhodnocení. runMultipleChoice se vrátí až ve chvíli,
+    // kdy klienti skutečně zavřeli obrazovku s výsledky (ne podle odhadu času).
+    setTimeout(async () => {
       if (!isRoomAlive(roomId)) return resolve([]);
 
       for (const player in room.answers) {
@@ -1183,13 +1270,15 @@ function runMultipleChoice(roomId, participatingPlayers = [1, 2, 3]) {
       });
       queueQuestionProfileEvents(room,questionEventBase,question.category,'choice',participatingPlayers,profileDetails);
 
-      io.to(roomId).emit("multipleChoiceResults", {
-        correctAnswer: question.correct,
-        answersByPlayer: room.answers
-      });
-
+      // Odpovědi už nepřijímáme, ale výsledek zatím zůstává na obrazovce.
       room.currentQuestionType = null;
       room.currentQuestionParticipants = [];
+
+      await emitBattleUiAndWait(roomId, "multipleChoiceResults", {
+        correctAnswer: question.correct,
+        answersByPlayer: room.answers
+      }, 'multiple_choice_results', 7000);
+
       resolve(correctPlayers);
     }, 10000);
   });
@@ -1220,7 +1309,7 @@ function runNumericQuestionForTwo(roomId, [player1, player2]) {
     let finished = false;
     let timeoutHandle = null;
 
-    const finalize = (reason = 'timeout') => {
+    const finalize = async (reason = 'timeout') => {
       if (finished) return;
       finished = true;
       if (timeoutHandle) clearTimeout(timeoutHandle);
@@ -1259,7 +1348,19 @@ function runNumericQuestionForTwo(roomId, [player1, player2]) {
       });
       queueQuestionProfileEvents(liveRoom,questionEventBase,nq.category,'numeric',participants,profileDetails);
 
-      io.to(roomId).emit("numericQuestionResultsForTwo", {
+      if (reason === 'all_answered') {
+        console.log(`⚡ Numeric duel ${roomId}: oba hráči odpověděli, vyhodnocuji hned.`);
+      }
+
+      // Další odpovědi už odmítneme hned. Samotný Promise ale dokončíme až
+      // po zavření výsledkové obrazovky na klientech.
+      liveRoom.currentQuestionType = null;
+      liveRoom.currentQuestionParticipants = [];
+      liveRoom.numericFinalize = null;
+      liveRoom.numericQuestionTimer = null;
+      liveRoom.numericQuestionToken = null;
+
+      await emitBattleUiAndWait(roomId, "numericQuestionResultsForTwo", {
         correctAnswer,
         attacker: player1,
         defender: player2,
@@ -1269,17 +1370,8 @@ function runNumericQuestionForTwo(roomId, [player1, player2]) {
           time:a.time,
           name:liveRoom.players[a.player - 1]?.name || displayName(liveRoom,a.player,false)
         }))
-      });
+      }, 'numeric_duel_results', 8000);
 
-      if (reason === 'all_answered') {
-        console.log(`⚡ Numeric duel ${roomId}: oba hráči odpověděli, vyhodnocuji hned.`);
-      }
-
-      liveRoom.currentQuestionType = null;
-      liveRoom.currentQuestionParticipants = [];
-      liveRoom.numericFinalize = null;
-      liveRoom.numericQuestionTimer = null;
-      liveRoom.numericQuestionToken = null;
       resolve(winner);
     };
 
@@ -1343,7 +1435,7 @@ function runNumericQuestionForThree(roomId) {
     let finished = false;
     let timeoutHandle = null;
 
-    const finalize = (reason = 'timeout') => {
+    const finalize = async (reason = 'timeout') => {
       if (finished) return;
       finished = true;
       if (timeoutHandle) clearTimeout(timeoutHandle);
@@ -1382,8 +1474,6 @@ function runNumericQuestionForThree(roomId) {
       });
       queueQuestionProfileEvents(liveRoom,questionEventBase,nq.category,'numeric',participants,profileDetails);
 
-      io.to(roomId).emit("numericQuestionResults", { correctAnswer, answers:sorted });
-
       if (reason === 'all_answered') {
         console.log(`⚡ Numeric 3p ${roomId}: všichni tři odpověděli, vyhodnocuji hned.`);
       }
@@ -1393,6 +1483,12 @@ function runNumericQuestionForThree(roomId) {
       liveRoom.numericFinalize = null;
       liveRoom.numericQuestionTimer = null;
       liveRoom.numericQuestionToken = null;
+
+      await emitBattleUiAndWait(roomId, "numericQuestionResults", {
+        correctAnswer,
+        answers:sorted
+      }, 'numeric_three_results', 8000);
+
       resolve(winner);
     };
 
@@ -1618,7 +1714,9 @@ async function runExpansionPhase(roomId) {
     if (!isRoomAlive(roomId)) return; // 🔴 NEW
 
 
-    if (!await delayAlive(roomId, 6000)) return; // 🔴 NEW
+    // Výsledková obrazovka MC už je v tuto chvíli potvrzeně zavřená všemi
+    // aktivními klienty. Necháme jen krátký přirozený přechod.
+    if (!await delayAlive(roomId, 350)) return;
 
 
     correctPlayers.forEach(player => {
@@ -1706,8 +1804,8 @@ async function runConquestPhase(roomId) {
     if (winner) {
       console.log(`🏆 Hráč ${winner} vyhrál numerickou otázku`);
 
-      // 3️⃣ Počkej na animaci výsledků na klientovi (stejně jako offline verze)
-      if (!await delayAlive(roomId, 6000)) return; // 🔴 NEW
+      // Výsledky numerické otázky jsou už potvrzeně zavřené na klientech.
+      if (!await delayAlive(roomId, 350)) return;
 
       // 4️⃣ Získej dostupné regiony pro vítěze
       const available = getAvailableRegionsConquest(room);
@@ -2032,30 +2130,30 @@ async function runBattleOnRegion(roomId, attacker, defender, region) {
   if (isBase) {
     const lives = room.playerLives[`Player${defender}`] || 3;
     io.to(roomId).emit("showBaseMini", { attacker, defender, lives });
-    await delay(1000);
+    if (!await delayAlive(roomId, 1000)) return;
   }
 
-  // 1. BĚŽNÉ POLE → žádná smyčka, jen jedna otázka
+  // ───────────────────────────────────────────────────────────────────────────
+  // 1. BĚŽNÉ POLE
+  // runMultipleChoice / runNumericQuestionForTwo už samy čekají, dokud
+  // klienti skutečně nezavřou výsledkovou obrazovku. Tady už proto nejsou
+  // žádné odhady typu „počkej 5/6 sekund“.
+  // ───────────────────────────────────────────────────────────────────────────
   if (!isBase) {
     const correctPlayers = await runMultipleChoice(roomId, [attacker, defender]);
-    
-    await delay(5000);
+    if (!isRoomAlive(roomId)) return;
+    if (!await delayAlive(roomId, 350)) return;
 
     let winner = null;
-    let resolvedByNumeric = false;
 
     if (correctPlayers.length === 1) {
       winner = correctPlayers[0];
     } else if (correctPlayers.length > 1) {
-      await delay(2000);
+      // Krátký čistý přechod mezi MC výsledky a novou numerickou otázkou.
+      if (!await delayAlive(roomId, 400)) return;
       winner = await runNumericQuestionForTwo(roomId, [attacker, defender]);
-      resolvedByNumeric = true;
-
-      // Klient zobrazuje výsledky numerického duelu 6 s. Výsledek bitvy
-      // proto neaplikujeme dřív, než numerické okno stihne zmizet.
-      // Krátká rezerva zabrání tomu, aby se změna regionu vykreslila
-      // ve stejném okamžiku jako zavření otázky.
-      await delay(6300);
+      if (!isRoomAlive(roomId)) return;
+      if (!await delayAlive(roomId, 450)) return;
     }
 
     if (winner === attacker) {
@@ -2065,35 +2163,19 @@ async function runBattleOnRegion(roomId, attacker, defender, region) {
       if (index !== -1) room.regions[defKey].splice(index, 1);
       if (!room.regions[atkKey].includes(region)) {
         room.regions[atkKey].push(region);
-        noteProfileTerritoryGain(room,attacker,1);
+        noteProfileTerritoryGain(room, attacker, 1);
         room.regionValues[region] = 400;
       }
-    } 
-    
-    else if (winner === defender) {
-
-
+    } else if (winner === defender) {
       io.to(roomId).emit("battleDefended");
-
       const bonusKey = `Player${defender}`;
       room.defenseBonuses[bonusKey] = (room.defenseBonuses[bonusKey] || 0) + 100;
-
       console.log(`🛡️ Hráč ${defender} ubránil region ${region} → +100 bodů bonusu`);
-
-
-
-    }
-    
-    else {
-      
-
-
-
     }
 
-    // Aktualizace a konec. Po numerickém duelu už jsme počkali na zavření
-    // výsledkového okna, takže stačí krátká dramaturgická pauza.
-    await delay(resolvedByNumeric ? 800 : 2000);
+    // Malá dramaturgická pauza po rozhodnutí; už neslouží k synchronizaci UI.
+    if (!await delayAlive(roomId, 650)) return;
+
     room.scores = calculateScores(room.regions, room.regionValues, room.defenseBonuses);
     io.to(roomId).emit("updateRegions", {
       regions: room.regions,
@@ -2102,108 +2184,95 @@ async function runBattleOnRegion(roomId, attacker, defender, region) {
     });
     io.to(roomId).emit("updateScores", { scores: room.scores });
 
-    // Při změně majitele trvá odbarvení + nové zabarvení cca 1,57 s.
-    // Další bitevní tah začne až po dokončení efektu a krátké pauze.
+    // Přebarvení regionu má vlastní klientskou bariéru + zde rezervu pro mapu.
     if (!await delayAlive(roomId, 1800)) return;
     return;
   }
 
-
-
-
-
-
-
+  // ───────────────────────────────────────────────────────────────────────────
   // 2. ZÁKLADNA
+  // Každý krok je sekvenční: MC results ACK → případně NUM results ACK →
+  // případně destroyTower ACK → teprve potom další otázka / převod základny.
+  // ───────────────────────────────────────────────────────────────────────────
   let baseCaptured = false;
 
   while (!baseCaptured) {
     const correctPlayers = await runMultipleChoice(roomId, [attacker, defender]);
-    
+    if (!isRoomAlive(roomId)) return;
+    if (!await delayAlive(roomId, 400)) return;
 
-    // 2a. Vyhrál pouze útočník
+    // 2a. Vyhrál pouze útočník → jedna věž dolů.
     if (correctPlayers.length === 1 && correctPlayers[0] === attacker) {
-      await delay(5100);
       room.playerLives[`Player${defender}`]--;
-      io.to(roomId).emit("destroyTower", {
-        defender,
-        remainingLives: room.playerLives[`Player${defender}`]
-      });
-      await delay(6100);
+      const remainingLives = room.playerLives[`Player${defender}`];
 
-      if (room.playerLives[`Player${defender}`] <= 0) {
+      await emitBattleUiAndWait(roomId, "destroyTower", {
+        defender,
+        remainingLives
+      }, 'destroy_tower', 8000);
+      if (!isRoomAlive(roomId)) return;
+
+      if (remainingLives <= 0) {
         transferBase(roomId, room, attacker, defender, region);
         baseCaptured = true;
+      } else {
+        // Nová MC otázka nesmí naskočit v témže frame jako zavření animace věže.
+        if (!await delayAlive(roomId, 450)) return;
       }
-
       continue;
     }
 
-    // 2b. Vyhrál pouze obránce
+    // 2b. Vyhrál pouze obránce.
     if (correctPlayers.length === 1 && correctPlayers[0] === defender) {
-      await delay(3000);
       io.to(roomId).emit("battleDefended");
-
       const bonusKey = `Player${defender}`;
       room.defenseBonuses[bonusKey] = (room.defenseBonuses[bonusKey] || 0) + 100;
-
       console.log(`🛡️ Hráč ${defender} ubránil region ${region} → +100 bodů bonusu`);
-
-
       break;
     }
 
-    // 2c/2d. Oba odpověděli správně → numeric
+    // 2c/2d. Oba správně → numerický duel. Ten se vrátí až po zavření
+    // numerických výsledků, takže nic starého už nemůže schovat další fázi.
     if (correctPlayers.length > 1) {
-      // MC výsledky se na klientovi zavírají po ~5 s. Původních 5,1 s
-      // dávalo jen 100ms rezervu, takže podle latence mohl starý close timer
-      // schovat právě otevřenou numerickou otázku. Necháme čistý přechod.
-      await delay(5700);
+      if (!await delayAlive(roomId, 400)) return;
       const numericWinner = await runNumericQuestionForTwo(roomId, [attacker, defender]);
-      await delay(3000);
+      if (!isRoomAlive(roomId)) return;
+      if (!await delayAlive(roomId, 450)) return;
 
       if (numericWinner === attacker) {
-        await delay(4000);
         room.playerLives[`Player${defender}`]--;
-        io.to(roomId).emit("destroyTower", {
-          defender,
-          remainingLives: room.playerLives[`Player${defender}`]
-        });
-        await delay(8000);
+        const remainingLives = room.playerLives[`Player${defender}`];
 
-        if (room.playerLives[`Player${defender}`] <= 0) {
+        await emitBattleUiAndWait(roomId, "destroyTower", {
+          defender,
+          remainingLives
+        }, 'destroy_tower', 8000);
+        if (!isRoomAlive(roomId)) return;
+
+        if (remainingLives <= 0) {
           transferBase(roomId, room, attacker, defender, region);
           baseCaptured = true;
+        } else {
+          if (!await delayAlive(roomId, 450)) return;
         }
-
         continue;
-      } else {
-        io.to(roomId).emit("battleDefended");
-        const bonusKey = `Player${defender}`;
-        room.defenseBonuses[bonusKey] = (room.defenseBonuses[bonusKey] || 0) + 100;
-
-        console.log(`🛡️ Hráč ${defender} ubránil region ${region} → +100 bodů bonusu`);
-
-
-
-        break;
       }
-    }
 
-    // 2e. Nikdo neodpověděl správně
-    if (correctPlayers.length === 0) {
-      await delay(3000);
       io.to(roomId).emit("battleDefended");
+      const bonusKey = `Player${defender}`;
+      room.defenseBonuses[bonusKey] = (room.defenseBonuses[bonusKey] || 0) + 100;
+      console.log(`🛡️ Hráč ${defender} ubránil region ${region} → +100 bodů bonusu`);
       break;
     }
+
+    // 2e. Nikdo správně.
+    io.to(roomId).emit("battleDefended");
+    break;
   }
 
-  if (isBase) {
-    await delay(1500);
-    io.to(roomId).emit("hideBaseMini");
-  }
+  if (!await delayAlive(roomId, 700)) return;
+  io.to(roomId).emit("hideBaseMini");
 
-  // Final update
   room.scores = calculateScores(room.regions, room.regionValues, room.defenseBonuses);
   io.to(roomId).emit("updateRegions", {
     regions: room.regions,
@@ -2212,11 +2281,8 @@ async function runBattleOnRegion(roomId, attacker, defender, region) {
   });
   io.to(roomId).emit("updateScores", { scores: room.scores });
 
-  // Stejná ochranná pauza i po dobytí základny / hromadném převodu území.
   if (!await delayAlive(roomId, 1800)) return;
 }
-
-
 
 
 function checkForEliminatedPlayers(roomId) {
@@ -3467,6 +3533,9 @@ socket.on("joinRoom", ({ room, settings }) => {
 
 
 socket.on("disconnect", async () => {
+  // Odpojený klient nesmí držet právě běžící UI bariéru až do fallback timeoutu.
+  dropSocketFromBattleUiWaiters(socket.id);
+
   const leagueQueueUserId = String(socket.data?.leagueQueueUserId || '');
   if (leagueQueueUserId) {
     removeLeagueQueueEntry(leagueQueueUserId, socket.id);
@@ -3713,6 +3782,11 @@ socket.on('chat:history:get', ({ roomId }) => {
        
   });
 
+
+
+socket.on("battleUiAck", ({ roomId: requestedRoomId, uiToken, stage } = {}) => {
+  acknowledgeBattleUi(socket, requestedRoomId, uiToken, stage);
+});
 
 
 socket.on("playerAnswered", ({ room: requestedRoomId, player, answerIndex }) => {

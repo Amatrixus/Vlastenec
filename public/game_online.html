@@ -8056,8 +8056,8 @@ socket.on("showBaseMini", ({ defender, lives }) => {
 
 
 // ✅ Zničení věže obránce
-socket.on("destroyTower", ({ defender, remainingLives }) => {
-
+socket.on("destroyTower", ({ defender, remainingLives, uiToken, uiStage }) => {
+    const uiEpoch = beginBattleUiStage("destroy_tower");
     const baseMini = document.getElementById("basevisualmini");
 
     // Během animace věže nesmí spectator overlay zakrývat dění.
@@ -8065,122 +8065,85 @@ socket.on("destroyTower", ({ defender, remainingLives }) => {
     syncAbortVisibility();
 
     console.log(`💥 Ničím věž hráče ${defender}, zbývá životů: ${remainingLives}`);
+    console.log("DESTROY TOWER - Otevírám okno");
 
-    console.log("DESTROY TOWER - Otevírám okno")
-    //Zobrazíme okno
-    question.style.display = 'block';
-    qplayers.style.display = 'block';
-    choice_question.style.display= 'block' ;
-    qtext.innerHTML="";
+    // Vynuceně vyčistíme všechny panely předchozí otázky. I kdyby server musel
+    // pokračovat přes fallback timeout, starý panel ani starý timer už nemůže
+    // tuto animaci schovat.
+    stopQuestionCountdown();
+    question.style.display = "block";
+    qplayers.style.display = "block";
+    choice_question.style.display = "block";
+    numerical_question_two.style.display = "none";
+    numerical_question_three.style.display = "none";
+    qtext.innerHTML = "";
 
-
-    
-
-
-    
-    //Dáváme miniaturu na start
-    
-        baseMini.style.height = "12%";
-        baseMini.style.left = "26.5%";
-        baseMini.style.top = "2%";
-
-
-    //Skryjeme otázky u multiple choice
+    [optioncover1, optioncover2, optioncover3, optioncover4].forEach(cover => {
+        if (cover) cover.style.display = "none";
+    });
     document.querySelectorAll(".option").forEach(el => {
         el.style.display = "none";
-       
     });
 
-    
-    setTimeout(() => {
+    // Miniaturu dáme na výchozí pozici.
+    baseMini.style.display = "block";
+    baseMini.style.height = "12%";
+    baseMini.style.left = "26.5%";
+    baseMini.style.top = "2%";
 
-            // ✅ Přesun do středu a zvětšení pro animaci
-            baseMini.style.top = "50%";
-            baseMini.style.left = "0%";
-            baseMini.style.height = "36%";
-
+    guardedBattleUiTimeout(uiEpoch, () => {
+        // Přesun do středu a zvětšení pro animaci.
+        baseMini.style.top = "50%";
+        baseMini.style.left = "0%";
+        baseMini.style.height = "36%";
     }, 1000);
 
-    
+    guardedBattleUiTimeout(uiEpoch, () => {
+        const towerElement = document.getElementById("basevisualmini");
+        const rect = towerElement.getBoundingClientRect();
+        const x = rect.left + rect.width / 2 + window.scrollX;
+        const y = rect.top + rect.height / 2 + window.scrollY;
 
-    setTimeout(() => {
+        showShockwave(x, y, towerElement);
+        spawnSmokePuffs(x, y, 20);
+        spawnSparks(x, y, 30);
+        new Audio("smallrock.mp3").play();
 
-
-        //ANIMACE
-
-                    // Urči pozici věže
-                    const towerElement = document.getElementById("basevisualmini"); // nebo 2/3 podle hráče
-                    const rect = towerElement.getBoundingClientRect();
-                    const x = rect.left + rect.width / 2 + window.scrollX;
-                    const y = rect.top + rect.height / 2 + window.scrollY;
-
-                    // Spusť efekt
-                    showShockwave(x, y, towerElement);
-                    spawnSmokePuffs(x,y,20);
-                    spawnSparks(x, y, 30); // 💥 jiskry
-
-        //KONEC ANIMACE
-
-
-
-        // ✅ Zvuk efektu
-        let destroySound = new Audio("smallrock.mp3");
-        destroySound.play();
-        
-        if (remainingLives === 2){
-            
-            let baseKey = `base${defender}left`;
+        if (remainingLives === 2) {
+            const baseKey = `base${defender}left`;
             document.getElementById(baseKey).style.display = "none";
             document.getElementById("baseminileft").style.display = "none";
-
-        }
-
-        else if (remainingLives === 1){
-
-            let baseKey = `base${defender}right`;
+        } else if (remainingLives === 1) {
+            const baseKey = `base${defender}right`;
             document.getElementById(baseKey).style.display = "none";
             document.getElementById("baseminiright").style.display = "none";
-        
-        }
-
-        else if (remainingLives === 0){
-            
-            let baseKey = `base${defender}main`;
+        } else if (remainingLives === 0) {
+            const baseKey = `base${defender}main`;
             document.getElementById(baseKey).style.display = "none";
             document.getElementById("baseminimain").style.display = "none";
-        
-        
         }
-        
     }, 4000);
 
-
-    setTimeout(() => {
-
-        // ✅ Vrátíme základnu zpět do rohu
+    guardedBattleUiTimeout(uiEpoch, () => {
         baseMini.style.height = "12%";
         baseMini.style.left = "26.5%";
         baseMini.style.top = "2%";
-
     }, 5000);
 
+    guardedBattleUiTimeout(uiEpoch, () => {
+        console.log("DESTROY TOWER - Zavírám okno");
+        question.style.display = "none";
+        choice_question.style.display = "none";
+        qplayers.style.display = "none";
 
-    setTimeout(() => {
+        abortTemporarilyHidden = false;
+        syncAbortVisibility();
 
-
-            //skryjeme okno
-            console.log("DESTROY TOWER - Zavírám okno")
-
-            question.style.display = 'none';
-
-            // Animace skončila. Pokud tento klient stále patří třetímu,
-            // nehrajícímu hráči, obnovíme jeho abort overlay pro další zobrazení otázky.
-            abortTemporarilyHidden = false;
-            syncAbortVisibility();
-
+        // Teprve nyní server smí spustit další otázku / převést základnu.
+        ackBattleUiStage(uiToken, uiStage || "destroy_tower");
     }, 6000);
-
 });
+
 
 // ✅ Skrytí mini základny po skončení tahu
 socket.on("hideBaseMini", () => {
@@ -8444,6 +8407,58 @@ socket.on("availableRegions", async ({ regions }) => {
 
 
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Question / battle UI stage guard
+// ─────────────────────────────────────────────────────────────────────────────
+// Každá nová obrazovka dostane vlastní generaci. Callback ze staré obrazovky
+// (MC výsledky, numeric výsledky, ničení věže) smí měnit DOM pouze tehdy, pokud
+// je stále aktuální. Tím starý setTimeout nikdy neschová novější fázi.
+let __battleUiEpoch = 0;
+
+function beginBattleUiStage(label) {
+    __battleUiEpoch += 1;
+    window.__battleUiEpoch = __battleUiEpoch;
+    window.__battleUiLabel = label;
+    stopQuestionCountdown();
+
+    // Pojistka proti starému MC timeru.
+    if (typeof clearPendingMultipleChoiceResultTimers === "function") {
+        clearPendingMultipleChoiceResultTimers();
+    }
+
+    // Pojistka proti timeoutu inputu z předchozí numerické otázky.
+    ["__numericInputHideTimerTwo", "__numericInputHideTimerThree"].forEach(key => {
+        if (window[key]) {
+            clearTimeout(window[key]);
+            window[key] = null;
+        }
+    });
+
+    console.log(`🎬 CLIENT UI stage #${__battleUiEpoch}: ${label}`);
+    return __battleUiEpoch;
+}
+
+function guardedBattleUiTimeout(epoch, callback, ms) {
+    return setTimeout(() => {
+        if (epoch !== __battleUiEpoch) {
+            console.log(`🧯 Ignoruji starý UI timer #${epoch}; aktuální je #${__battleUiEpoch}`);
+            return;
+        }
+        callback();
+    }, ms);
+}
+
+function ackBattleUiStage(uiToken, stage) {
+    if (!uiToken || !socket || !currentRoomId) return;
+    socket.emit("battleUiAck", {
+        roomId: currentRoomId,
+        uiToken,
+        stage
+    });
+    console.log(`✅ CLIENT UI ACK: ${stage} (${uiToken})`);
+}
+
+
 let lastQuestionOptions = [];
 
 
@@ -8457,9 +8472,9 @@ let lastQuestionOptions = [];
 // Přijme výsledky od serveru
 socket.on("multipleChoiceResults", (data) => {
     stopQuestionCountdown();
-    const { correctAnswer, answersByPlayer } = data;
+    const { correctAnswer, answersByPlayer, uiToken, uiStage } = data;
     profileRecordQuestion(myAnswer !== "" && myAnswer === correctAnswer);
-    showMultipleChoiceResults(correctAnswer, answersByPlayer, lastQuestionOptions);
+    showMultipleChoiceResults(correctAnswer, answersByPlayer, lastQuestionOptions, uiToken, uiStage);
 });
 
 let myAnswer = ""; // Uložení mojí odpovědi
@@ -8477,6 +8492,7 @@ function syncAbortVisibility() {
 }
 
 function showMultipleChoice(qText, options, timeLimit, attacker, defender, attackerName, defenderName, canAnswer = true) {
+    beginBattleUiStage("multiple_choice_question");
     clearPendingMultipleChoiceResultTimers();
     myAnswer = "";
 
@@ -8585,7 +8601,8 @@ function clearPendingMultipleChoiceResultTimers() {
     }
 }
 
-function showMultipleChoiceResults(correctIndex, answersByPlayer, options) {
+function showMultipleChoiceResults(correctIndex, answersByPlayer, options, uiToken, uiStage = "multiple_choice_results") {
+    const uiEpoch = beginBattleUiStage("multiple_choice_results");
     const playerGradients = {
         1: "linear-gradient(rgb(13 0 76),5%,rgb(58 0 232),95%,rgb(13 0 76))",
         2: "linear-gradient(rgb(102 0 0),5%,rgb(202 0 0),95%,rgb(102,0,0))",
@@ -8623,7 +8640,7 @@ function showMultipleChoiceResults(correctIndex, answersByPlayer, options) {
     });
 
     clearPendingMultipleChoiceResultTimers();
-    __mcResultRevealTimer = setTimeout(() => {
+    __mcResultRevealTimer = guardedBattleUiTimeout(uiEpoch, () => {
         if (myAnswer === correctIndex) {
             new Audio("success.mp3").play();
         } else {
@@ -8636,7 +8653,7 @@ function showMultipleChoiceResults(correctIndex, answersByPlayer, options) {
             optionCover.style.display = "inline-block";
         }
 
-        __mcResultCloseTimer = setTimeout(() => {
+        __mcResultCloseTimer = guardedBattleUiTimeout(uiEpoch, () => {
             console.log("MULTIPLE VÝSLEDKY - Zavírám okno")
             question.style.display = "none";
             choice_question.style.display = "none";
@@ -8645,6 +8662,7 @@ function showMultipleChoiceResults(correctIndex, answersByPlayer, options) {
                 cover.style.display = "none";
             });
             __mcResultCloseTimer = null;
+            ackBattleUiStage(uiToken, uiStage);
         }, 3000);
         __mcResultRevealTimer = null;
     }, 2000);
@@ -8656,7 +8674,7 @@ function showMultipleChoiceResults(correctIndex, answersByPlayer, options) {
 
 
 
-console.log("🧪 VLASTENEC FIX: battle-question-transition-v1");
+console.log("🧪 VLASTENEC FIX: battle-ui-sequencer-v1");
 
 let myNumericAnswer = 0;
 let numericStartTime = 0;
@@ -8671,9 +8689,9 @@ socket.on("numericQuestion", (data) => {
 
 
 socket.on("numericQuestionResults", (data) => {
-    const { correctAnswer, answers } = data;
+    const { correctAnswer, answers, uiToken, uiStage } = data;
     profileRecordQuestion(Array.isArray(answers) && answers[0]?.player === myPlayerNumber);
-    showNumericResultsForThree(correctAnswer, answers);
+    showNumericResultsForThree(correctAnswer, answers, uiToken, uiStage);
 });
 
 
@@ -8685,11 +8703,11 @@ socket.on("numericQuestionForTwo", ({ question, time, attacker, defender, attack
 });
 
 
-socket.on("numericQuestionResultsForTwo", ({ correctAnswer, answers, attacker, defender }) => {
+socket.on("numericQuestionResultsForTwo", ({ correctAnswer, answers, attacker, defender, uiToken, uiStage }) => {
     if ([attacker, defender].includes(myPlayerNumber)) {
       profileRecordQuestion(Array.isArray(answers) && answers[0]?.player === myPlayerNumber);
     }
-    showNumericResultsForTwo(correctAnswer, answers, attacker, defender);
+    showNumericResultsForTwo(correctAnswer, answers, attacker, defender, uiToken, uiStage);
 });
 
 
@@ -8813,11 +8831,11 @@ socket.on("gameOver", ({ message, finalScores, matchStats }) => {
 
 
 
-function showNumericResultsForTwo(correctAnswer, answers, attacker, defender) {
+function showNumericResultsForTwo(correctAnswer, answers, attacker, defender, uiToken, uiStage = "numeric_duel_results") {
+    const uiEpoch = beginBattleUiStage("numeric_duel_results");
     stopQuestionCountdown();
     console.log("📊 Výsledky numerické otázky (2 hráči):", answers);
 
-    // ✅ Výsledek otázky vždy ukončí možnost odpovídat — i když hráč nic neodeslal.
     if (window.__numericInputHideTimerTwo) {
         clearTimeout(window.__numericInputHideTimerTwo);
         window.__numericInputHideTimerTwo = null;
@@ -8831,70 +8849,57 @@ function showNumericResultsForTwo(correctAnswer, answers, attacker, defender) {
     if (numericSubmitTwo) numericSubmitTwo.style.display = "none";
 
     num2answerarea.style.display = "block";
-    ["num2answerbox1","num2answerbox2"].forEach(id=>{
+    ["num2answerbox1","num2answerbox2"].forEach(id => {
         document.getElementById(id).style.opacity = "1";
     });
 
     document.getElementById("numerical_correct2").innerHTML = correctAnswer;
     document.getElementById("numerical_correct2").style.opacity = "1";
 
-    // ✅ Najdeme odpovědi útočníka a obránce
     const attackerAnswer = answers.find(a => a.player === attacker);
     const defenderAnswer = answers.find(a => a.player === defender);
 
-     console.log("✅ Útočník:", attackerAnswer);
+    console.log("✅ Útočník:", attackerAnswer);
     console.log("✅ Obránce:", defenderAnswer);
 
-    // Útočník = box 1
     if (attackerAnswer) {
         document.getElementById("num2answer1").textContent = attackerAnswer.num;
         document.getElementById("num2answertime1").textContent = (attackerAnswer.time / 1000).toFixed(2) + " s";
         document.getElementById("num2answeruser1").textContent = attackerAnswer.name;
     }
-
-    // Obránce = box 2
     if (defenderAnswer) {
         document.getElementById("num2answer2").textContent = defenderAnswer.num;
         document.getElementById("num2answertime2").textContent = (defenderAnswer.time / 1000).toFixed(2) + " s";
         document.getElementById("num2answeruser2").textContent = defenderAnswer.name;
     }
 
-    // ✅ Zvýraznit vítěze a animovat pořadí
-    setTimeout(() => {
+    guardedBattleUiTimeout(uiEpoch, () => {
         const winnerId = answers[0].player;
-
-        // Najdeme, jestli vítěz je útočník (box1) nebo obránce (box2)
         const winnerBox = winnerId === attacker ? 1 : 2;
         const loserBox = winnerBox === 1 ? 2 : 1;
 
-        // ✅ Posuneme jen vítěze
         document.getElementById(`num2answerbox${winnerBox}`).style.top = "10%";
         document.getElementById(`num2answerbox${winnerBox}`).classList.add("boxblinker");
-
-        // ✅ Poražený zůstane na svém místě (nebo ho můžeš snížit)
         document.getElementById(`num2answerbox${loserBox}`).style.top = "20%";
 
-        // ✅ Zvuk
-        if (winnerId === myPlayerNumber) {
-            new Audio("success.mp3").play();
-        } else {
-            new Audio("reveal.mp3").play();
-        }
+        if (winnerId === myPlayerNumber) new Audio("success.mp3").play();
+        else new Audio("reveal.mp3").play();
 
         console.log(`🏆 Vítěz (2 hráči): Hráč ${winnerId}`);
     }, 1000);
 
-    setTimeout(() => {
+    guardedBattleUiTimeout(uiEpoch, () => {
         question.style.display = "none";
         numerical_question_two.style.display = "none";
         qplayers.style.display = "none";
+        ackBattleUiStage(uiToken, uiStage);
     }, 6000);
 }
 
 
 
-
 function showNumericQuestionForTwo(questionText, timeLimit, attacker, defender, attackerName, defenderName) {
+    beginBattleUiStage("numeric_duel_question");
     clearPendingMultipleChoiceResultTimers();
     myNumericAnswerTwo = 0;
     numericStartTimeTwo = Date.now();
@@ -9029,6 +9034,7 @@ function showNumericQuestionForTwo(questionText, timeLimit, attacker, defender, 
 
 
 function showNumericQuestionForThree(questionText, timeLimit) {
+    beginBattleUiStage("numeric_three_question");
     clearPendingMultipleChoiceResultTimers();
     myNumericAnswer = 0;
     numericStartTime = Date.now();
@@ -9122,7 +9128,8 @@ function showNumericQuestionForThree(questionText, timeLimit) {
 
 
 
-function showNumericResultsForThree(correctAnswer, answers) {
+function showNumericResultsForThree(correctAnswer, answers, uiToken, uiStage = "numeric_three_results") {
+    const uiEpoch = beginBattleUiStage("numeric_three_results");
     stopQuestionCountdown();
 
     if (window.__numericInputHideTimerThree) {
@@ -9130,84 +9137,60 @@ function showNumericResultsForThree(correctAnswer, answers) {
         window.__numericInputHideTimerThree = null;
     }
 
-    // ✅ Skryj input
-        document.getElementById("numinput3").style.display = "none";
-        document.getElementById("numinput3").blur();
-        document.getElementById("numsubmit3").style.display = "none";
+    document.getElementById("numinput3").style.display = "none";
+    document.getElementById("numinput3").blur();
+    document.getElementById("numsubmit3").style.display = "none";
 
-
-    // ✅ Zobraz odpovědi všech hráčů
     document.getElementById("num3answerarea").style.display = "block";
-    ["num3answerbox1","num3answerbox2","num3answerbox3"].forEach(id=>{
+    ["num3answerbox1","num3answerbox2","num3answerbox3"].forEach(id => {
         document.getElementById(id).style.opacity = "1";
         document.getElementById(id).style.display = "inline-block";
     });
 
     document.getElementById("numerical_correct").innerHTML = correctAnswer;
 
-    // ✅ Vyplň odpovědi hráčů
     answers.forEach((a) => {
         const name =
             (typeof labelForSeat === 'function')
-            ? labelForSeat(a.player)                            // ✅ používá displayNames/allNames
-            : ({1: player1, 2: player2, 3: player3}[a.player]   // fallback
-                || `Hráč ${a.player}`);
+            ? labelForSeat(a.player)
+            : ({1: player1, 2: player2, 3: player3}[a.player] || `Hráč ${a.player}`);
 
         const ansEl  = document.getElementById(`numanswer${a.player}`);
         const infoEl = document.getElementById(`numanswertime${a.player}`);
         const nameEl = document.getElementById(`numansweruser${a.player}`);
-        
         if (nameEl) nameEl.textContent = name;
         if (ansEl)  ansEl.textContent  = a.num;
         if (infoEl) infoEl.textContent = `${(a.time/1000).toFixed(2)} s`;
     });
 
-
-
-
-
-
-
-
-
-
-    
-
-    // ✅ Ukázat správnou odpověď (posun textu)
-    setTimeout(() => {
+    guardedBattleUiTimeout(uiEpoch, () => {
         numerical_correct.style.display = "inline-block";
         numerical_qtext.style.width = "70%";
         numerical_correct.style.width = "30%";
         numerical_correct.style.left = "70%";
     }, 0);
 
-    // ✅ Zvýraznit vítěze a animovat pořadí
-    setTimeout(() => {
+    guardedBattleUiTimeout(uiEpoch, () => {
         let winnerTop = 10;
         answers.forEach(playerData => {
             const divId = `num3answerbox${playerData.player}`;
             document.getElementById(divId).style.top = `${winnerTop}%`;
             winnerTop += 10;
-
             if (playerData.player === answers[0].player) {
                 document.getElementById(divId).classList.add("boxblinker");
             }
         });
 
-        // ✅ Zvuk
-        if (answers[0].player === myPlayerNumber) {
-            new Audio("success.mp3").play();
-        } else {
-            new Audio("reveal.mp3").play();
-        }
+        if (answers[0].player === myPlayerNumber) new Audio("success.mp3").play();
+        else new Audio("reveal.mp3").play();
 
         console.log(`🏆 Vítěz: Hráč ${answers[0].player}`);
     }, 1000);
 
-    // ✅ Zavření okna po 6 s
-    setTimeout(() => {
+    guardedBattleUiTimeout(uiEpoch, () => {
         question.style.display = "none";
         numerical_question_three.style.display = "none";
+        ackBattleUiStage(uiToken, uiStage);
     }, 6000);
 }
 
