@@ -4542,9 +4542,10 @@ if (regionValues && typeof regionValues === 'object') {
         // V bitvě při změně majitele se stará barva nejdřív stáhne ke středu
         // a až potom se nová barva rozlije ven.
         const REGION_WAVE = Object.freeze({
-            fillMs: 430,
-            clearMs: 300,
-            neutralPauseMs: 55,
+            // v3: záměrně pomalejší, aby bylo rozlévání barvy dobře čitelné
+            fillMs: 860,
+            clearMs: 600,
+            neutralPauseMs: 110,
             radiusPadding: 1.08
         });
 
@@ -4787,29 +4788,30 @@ if (regionValues && typeof regionValues === 'object') {
             return Promise.allSettled(jobs);
         }
 
-        console.log('🧪 VLASTENEC FIX: region-color-wave-v2-phase-sync');
+        console.log('🧪 VLASTENEC FIX: region-color-wave-v3-slower-bases');
 
-        //Colorize bases
+        // Colorize bases
+        // Úvodní základny používají stejnou vlnu jako pozdější rozšiřování.
+        // Funkce je schválně neblokující pro časování celé sekvence základen:
+        // settlePlayerX() vykreslí ikonu/jméno a barva regionu se mezitím rozlije ven.
         function colorizeBaseRegion(playerNumber) {
             const playerKey = `Player${playerNumber}regions`;
             const regions = playerControlledRegions[playerKey] || [];
+            const color = regionOwnerColor(playerNumber) || 'gray';
 
-            const playerColors = {
-                1: "blue",
-                2: "red",
-                3: "white"
-            };
-
-            const color = playerColors[playerNumber] || "gray"; // fallback
-
+            const jobs = [];
             regions.forEach(regionId => {
                 const element = document.getElementById(regionId);
-                if (element) {
-                element.style.fill = color;
-                } else {
-                console.warn(`⚠️ Region ${regionId} not found in DOM.`);
+                if (!element) {
+                    console.warn(`⚠️ Region ${regionId} not found in DOM.`);
+                    return;
                 }
+
+                console.log(`🌊 Base wave fill: ${regionId} → P${playerNumber}`);
+                jobs.push(queueRegionWave(regionId, () => waveFillRegion(element, color)));
             });
+
+            return Promise.allSettled(jobs);
         }
 
 
