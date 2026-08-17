@@ -3420,3 +3420,62 @@ body.random-hub-visible #random_hub {
   flex: 0 1 min(1180px, 94vw);
   margin: 0 auto;
 }
+
+
+/* ============================================================
+   VLASTENEC — LOBBY PLAYER STATUS ICONS
+   Loading indicator for empty seats, check for connected players.
+   ============================================================ */
+
+.lobby-waiting-spinner,
+.lobby-presence-check,
+.lobby-presence-offline {
+  flex: 0 0 auto;
+  display: inline-grid;
+  place-items: center;
+  box-sizing: border-box;
+}
+
+.lobby-waiting-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255,255,255,.13);
+  border-top-color: rgba(255,174,90,.95);
+  border-right-color: rgba(255,174,90,.42);
+  border-radius: 50%;
+  animation: vlastenecLobbyWaitingSpin .8s linear infinite;
+  filter: drop-shadow(0 0 5px rgba(255,148,31,.16));
+}
+
+@keyframes vlastenecLobbyWaitingSpin {
+  to { transform: rotate(360deg); }
+}
+
+.lobby-presence-check {
+  width: 17px;
+  height: 17px;
+  border-radius: 5px;
+  background: rgba(80,201,101,.12);
+  border: 1px solid rgba(92,218,113,.28);
+  box-shadow: 0 0 10px rgba(90,213,113,.10);
+}
+
+.lobby-presence-check::before {
+  content: '';
+  width: 7px;
+  height: 4px;
+  border-left: 2px solid #69dc7d;
+  border-bottom: 2px solid #69dc7d;
+  transform: translateY(-1px) rotate(-45deg);
+}
+
+.lobby-presence-offline {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #6b6764;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lobby-waiting-spinner { animation-duration: 1.8s; }
+}

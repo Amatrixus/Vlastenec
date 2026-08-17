@@ -2875,10 +2875,19 @@ if (regionValues && typeof regionValues === 'object') {
               invite.addEventListener('click', () => openInvitePanel());
               side.appendChild(invite);
             }
-            const dot = document.createElement('span');
-            dot.className = 'lobby-presence-dot';
-            dot.title = p.connected ? 'Připojen' : 'Odpojen';
-            side.appendChild(dot);
+            const presence = document.createElement('span');
+            if (!p.name) {
+              presence.className = 'lobby-waiting-spinner';
+              presence.title = 'Čekáme na hráče';
+            } else if (p.connected) {
+              presence.className = 'lobby-presence-check';
+              presence.title = 'Připojen';
+              presence.setAttribute('aria-label', 'Připojen');
+            } else {
+              presence.className = 'lobby-presence-offline';
+              presence.title = 'Odpojen';
+            }
+            side.appendChild(presence);
             card.append(avatar, info, side);
             list.appendChild(card);
           });
