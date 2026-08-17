@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="cs">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#17100c">
+  <title>Přihlášení | VLASTENEC</title>
+  <link rel="stylesheet" href="login.css">
+  <script src="auth-client.js"></script>
+</head>
+<body>
+  <div class="auth-backdrop" aria-hidden="true"><div class="auth-lion"></div></div>
+  <main class="auth-page">
+    <a class="auth-brand" href="homepage.html" aria-label="Vlastenec – hlavní stránka">
+      <img src="logo.svg" alt="Vlastenec">
+      <span>HRÁČSKÝ ÚČET</span>
+    </a>
+
+    <section class="auth-card" aria-labelledby="auth-title">
+      <div class="auth-head">
+        <span class="auth-kicker">VLASTENEC</span>
+        <h1 id="auth-title">Tvoje identita ve hře</h1>
+        <p>Účet drží jméno, profil a později i ligový rating napříč zařízeními.</p>
+      </div>
+
+      <div id="database-warning" class="auth-warning" hidden></div>
+
+      <div id="auth-existing" class="auth-existing" hidden>
+        <div class="auth-existing-avatar" id="existing-avatar">P</div>
+        <div><small>PŘIHLÁŠENÝ HRÁČ</small><strong id="existing-name">Hráč</strong></div>
+        <button id="continue-button" class="primary-button" type="button">Pokračovat</button>
+        <button id="logout-button" class="text-button" type="button">Odhlásit se</button>
+      </div>
+
+      <div id="auth-forms">
+        <div class="auth-tabs" role="tablist" aria-label="Přihlášení nebo registrace">
+          <button class="auth-tab is-active" type="button" data-tab="login" role="tab">Přihlásit se</button>
+          <button class="auth-tab" type="button" data-tab="register" role="tab">Vytvořit účet</button>
+        </div>
+
+        <form id="login-form" class="auth-form is-active" autocomplete="on">
+          <label>
+            <span>Uživatelské jméno nebo e-mail</span>
+            <input id="login-id" name="login" autocomplete="username" maxlength="254" required>
+          </label>
+          <label>
+            <span>Heslo</span>
+            <input id="login-password" name="password" type="password" autocomplete="current-password" maxlength="200" required>
+          </label>
+          <div class="form-error" id="login-error" aria-live="polite"></div>
+          <button class="primary-button wide" type="submit">Přihlásit se</button>
+        </form>
+
+        <form id="register-form" class="auth-form" autocomplete="on">
+          <label>
+            <span>Hráčské jméno</span>
+            <input id="register-username" name="username" autocomplete="username" minlength="3" maxlength="24" required>
+            <small>3–24 znaků, písmena, čísla, _ nebo -.</small>
+          </label>
+          <label>
+            <span>E-mail</span>
+            <input id="register-email" name="email" type="email" autocomplete="email" maxlength="254" required>
+          </label>
+          <div class="password-grid">
+            <label><span>Heslo</span><input id="register-password" name="password" type="password" autocomplete="new-password" minlength="8" maxlength="200" required></label>
+            <label><span>Heslo znovu</span><input id="register-password2" name="password2" type="password" autocomplete="new-password" minlength="8" maxlength="200" required></label>
+          </div>
+          <div class="form-error" id="register-error" aria-live="polite"></div>
+          <button class="primary-button wide" type="submit">Vytvořit účet</button>
+        </form>
+      </div>
+
+      <a class="auth-back" href="homepage.html">← Zpět na hlavní stránku</a>
+    </section>
+  </main>
+  <script src="login.js"></script>
+</body>
+</html>

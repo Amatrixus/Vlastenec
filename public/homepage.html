@@ -6,6 +6,7 @@
   <meta name="theme-color" content="#16100c" />
   <title>VLASTENEC — Hlavní stránka</title>
   <link rel="stylesheet" href="homepage.css" />
+  <script src="auth-client.js"></script>
 </head>
 <body>
   <div class="portal-backdrop" aria-hidden="true">
@@ -31,10 +32,10 @@
             <span>online</span>
           </div>
           <a class="utility-link" href="settings.html">Nastavení</a>
-          <button class="profile-chip" type="button" title="Přihlášení bude doplněno později">
+          <button id="portal-profile-chip" class="profile-chip" type="button">
             <span class="profile-copy">
-              <strong>Přihlásit se</strong>
-              <small>Ukládej postup a výsledky</small>
+              <strong id="portal-profile-name">Přihlásit se</strong>
+              <small id="portal-profile-meta">Ukládej postup a výsledky</small>
             </span>
             <img src="avatar.png" alt="" />
           </button>
@@ -118,6 +119,33 @@
         const value = Number(payload?.count);
         counter.textContent = Number.isFinite(value) ? String(value) : '—';
       });
+    })();
+  </script>
+
+
+  <script>
+    (() => {
+      const chip = document.getElementById('portal-profile-chip');
+      const name = document.getElementById('portal-profile-name');
+      const meta = document.getElementById('portal-profile-meta');
+      if (!chip) return;
+      chip.addEventListener('click', () => {
+        if (window.VlastenecAuth?.state?.authenticated) location.href = 'profile.html';
+        else window.VLASTENEC_OPEN_LOGIN?.(`${location.pathname}${location.search}${location.hash}`);
+      });
+      (async () => {
+        try { if (window.VLASTENEC_AUTH_READY) await window.VLASTENEC_AUTH_READY; } catch (_) {}
+        const auth = window.VlastenecAuth?.state;
+        if (auth?.authenticated && auth.user) {
+          name.textContent = auth.user.displayName;
+          meta.textContent = 'Profil a statistiky';
+          chip.title = 'Otevřít profil';
+        } else {
+          name.textContent = 'Přihlásit se';
+          meta.textContent = auth?.databaseAvailable === false ? 'Účty čekají na databázi' : 'Ukládej postup a výsledky';
+          chip.title = 'Přihlásit se';
+        }
+      })();
     })();
   </script>
 

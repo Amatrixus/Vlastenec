@@ -21,7 +21,10 @@
     $('profile-avatar').textContent = initials(identity.displayName);
     $('profile-kind').textContent = identity.type === 'guest' ? 'HOST' : 'PŘIHLÁŠENÝ HRÁČ';
     $('profile-storage-badge').textContent = identity.type === 'guest' ? 'LOKÁLNÍ PROFIL' : 'PROFIL ÚČTU';
-    $('guest-note').classList.toggle('hidden', identity.type !== 'guest');
+    const note = $('profile-note');
+    if (note) note.textContent = identity.type === 'guest'
+      ? 'Statistiky tohoto hostovského profilu se ukládají pouze v tomto prohlížeči. Přihlášením získáš trvalou identitu pro budoucí Ligu.'
+      : 'Účet je přihlášený. Statistiky jsou v této meziverzi ještě uložené lokálně; v dalším kroku je přesuneme na serverový profil.';
     $('profile-level').textContent = level.level;
     $('profile-title').textContent = level.title;
     $('profile-xp-copy').textContent = `${fmt(level.currentXp)} / ${fmt(level.nextXp)} XP`;
@@ -133,5 +136,20 @@
     else location.href = 'homepage.html';
   });
 
-  render();
+  $('profile-auth')?.addEventListener('click', async () => {
+    const auth = window.VlastenecAuth?.state;
+    if (auth?.authenticated) {
+      await window.VlastenecAuth.logout();
+      location.reload();
+    } else {
+      window.VLASTENEC_OPEN_LOGIN?.(`${location.pathname}${location.search}${location.hash}`);
+    }
+  });
+
+  (async () => {
+    try { if (window.VLASTENEC_AUTH_READY) await window.VLASTENEC_AUTH_READY; } catch (_) {}
+    const authButton = $('profile-auth');
+    if (authButton) authButton.textContent = window.VlastenecAuth?.state?.authenticated ? 'Odhlásit se' : 'Přihlásit se';
+    render();
+  })();
 })();

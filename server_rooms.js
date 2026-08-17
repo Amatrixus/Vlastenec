@@ -1,15 +1,19 @@
-console.log('🧪 VLASTENEC BUILD: 2026-08-17-player-profile-v1');
+console.log('🧪 VLASTENEC BUILD: 2026-08-17-auth-db-v1');
 const express = require('express');
-console.log('🧪 VLASTENEC BUILD: 2026-08-17-guest-name-v1');
 const http = require('http');
 const { Server } = require('socket.io');
 const path = require('path');
 const fs = require('fs');
+const db = require('./db');
+const { mountAuthRoutes } = require('./auth');
 
 
 
 
 const app = express();
+app.set('trust proxy', 1);
+app.use(express.json({ limit: '64kb' }));
+mountAuthRoutes(app);
 app.use(express.static('public')); // servíruje index.html a další soubory
 
 const server = http.createServer(app);
@@ -18,10 +22,13 @@ const io = new Server(server, { cors: { origin: "*" } }); // (později si omezí
 
 
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, '0.0.0.0', () => {
-  console.log('Server běží na', PORT);
-  console.log('🧪 VLASTENEC BUILD: 2026-08-17-guest-name-v1');
-});
+(async () => {
+  await db.initDatabase();
+  server.listen(PORT, '0.0.0.0', () => {
+    console.log('Server běží na', PORT);
+    console.log('🧪 VLASTENEC BUILD: 2026-08-17-auth-db-v1');
+  });
+})();
 
 
 

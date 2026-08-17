@@ -4,6 +4,7 @@
   <meta charset="utf-8" />
   <title>VLASTENEC</title>
   <link rel="stylesheet" href="mainstyle.css">
+  <script src="auth-client.js"></script>
   <script src="profile-store.js"></script>
 </head>
 <body>
@@ -272,8 +273,8 @@
       return generated;
     }
 
-    const profilePlayerName = resolveProfilePlayerName();
-    const isGuestPlayer = !profilePlayerName;
+    let profilePlayerName = resolveProfilePlayerName();
+    let isGuestPlayer = !profilePlayerName;
     let myName = profilePlayerName || playerName || getGuestPlayerName();
 
     // --- Fallback proměnné ještě před prvními listenery ---
@@ -288,8 +289,8 @@
     const settings = { name: myName, mode: gameMode, cats: catIds, catNames };
 
     // --- Jediná inicializace socketu ---
-    const socket = io();
-    console.log('🧪 VLASTENEC CLIENT: player-profile-v1');
+    const socket = io({ autoConnect: false });
+    console.log('🧪 VLASTENEC CLIENT: auth-db-v1');
 
     // --- Profil hráče: lokální statistiky od této verze ---
     const profileStore = window.VlastenecProfileStore || null;
@@ -302,6 +303,40 @@
     };
     let profileQuestionCategory = null;
     let profileQuestionCanAnswer = true;
+
+    async function bootstrapPlayerIdentityAndSocket() {
+      try {
+        if (window.VLASTENEC_AUTH_READY) await window.VLASTENEC_AUTH_READY;
+      } catch (_) {}
+
+      const accountName = resolveProfilePlayerName();
+      if (accountName) {
+        profilePlayerName = accountName;
+        isGuestPlayer = false;
+        myName = accountName;
+        settings.name = accountName;
+      } else {
+        profilePlayerName = '';
+        isGuestPlayer = true;
+        myName = playerName || getGuestPlayerName();
+        settings.name = myName;
+      }
+
+      const identityKey = window.VLASTENEC_PROFILE?.id
+        ? `account:${window.VLASTENEC_PROFILE.id}`
+        : 'guest';
+      const previousIdentityKey = sessionStorage.getItem('vl_identity_key');
+      if (previousIdentityKey && previousIdentityKey !== identityKey) {
+        for (const key of ['vl_room','vl_seat','vl_token','vl_name']) sessionStorage.removeItem(key);
+      }
+      sessionStorage.setItem('vl_identity_key', identityKey);
+      sessionStorage.setItem('vl_name', myName);
+
+      try { window.dispatchEvent(new CustomEvent('vlastenec:identity-ready', { detail: { name: myName, guest: isGuestPlayer } })); } catch (_) {}
+      socket.connect();
+    }
+
+    bootstrapPlayerIdentityAndSocket();
 
     function profileCountMyRegions(regions) {
       if (!regions || !myPlayerNumber) return 0;
@@ -2944,17 +2979,12 @@ if (regionValues && typeof regionValues === 'object') {
           });
           window.dispatchEvent(event);
           if (event.defaultPrevented) return;
-          document.querySelectorAll('[data-identity-login]').forEach(button => {
-            const old = button.textContent;
-            button.textContent = 'Přihlášení brzy';
-            button.disabled = true;
-            setTimeout(() => {
-              button.textContent = old;
-              button.disabled = false;
-            }, 1500);
-          });
+          const next = `${location.pathname}${location.search}${location.hash}`;
+          location.href = `login.html?next=${encodeURIComponent(next)}`;
         }
 
+        window.syncIdentityWidgets = syncIdentityWidgets;
+        window.addEventListener('vlastenec:identity-ready', syncIdentityWidgets);
         syncIdentityWidgets();
 
         function stripRoomPrefix(roomId) {

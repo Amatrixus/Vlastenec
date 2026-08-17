@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Profil hráče | VLASTENEC</title>
   <link rel="stylesheet" href="profile.css">
+  <script src="auth-client.js"></script>
 </head>
 <body>
   <div class="profile-bg" aria-hidden="true"></div>
@@ -16,6 +17,7 @@
       </a>
       <div class="profile-top-actions">
         <span id="profile-storage-badge" class="profile-storage-badge">LOKÁLNÍ PROFIL</span>
+        <button id="profile-auth" class="profile-back" type="button">Přihlásit se</button>
         <button id="profile-back" class="profile-back" type="button">Zpět</button>
       </div>
     </header>
@@ -43,8 +45,8 @@
       </div>
     </section>
 
-    <div id="guest-note" class="guest-note">
-      Statistiky tohoto hostovského profilu se ukládají pouze v tomto prohlížeči. Po zavedení účtů je bude možné synchronizovat se serverem.
+    <div id="profile-note" class="guest-note">
+      Statistiky tohoto hostovského profilu se ukládají pouze v tomto prohlížeči. Přihlášený účet je už připravený; serverové ukládání statistik napojíme v dalším kroku.
     </div>
 
     <section class="stat-grid" aria-label="Hlavní statistiky">
