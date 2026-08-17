@@ -8477,6 +8477,7 @@ function syncAbortVisibility() {
 }
 
 function showMultipleChoice(qText, options, timeLimit, attacker, defender, attackerName, defenderName, canAnswer = true) {
+    clearPendingMultipleChoiceResultTimers();
     myAnswer = "";
 
 
@@ -8567,12 +8568,22 @@ function showMultipleChoice(qText, options, timeLimit, attacker, defender, attac
 
 
 
+// Guard proti tomu, aby doběhl starý timer výsledků multiple-choice
+// až ve chvíli, kdy už server poslal navazující numerickou otázku.
+// To se může projevit hlavně při opakovaném dobývání základny.
+let __mcResultRevealTimer = null;
+let __mcResultCloseTimer = null;
 
-
-
-
-
-
+function clearPendingMultipleChoiceResultTimers() {
+    if (__mcResultRevealTimer) {
+        clearTimeout(__mcResultRevealTimer);
+        __mcResultRevealTimer = null;
+    }
+    if (__mcResultCloseTimer) {
+        clearTimeout(__mcResultCloseTimer);
+        __mcResultCloseTimer = null;
+    }
+}
 
 function showMultipleChoiceResults(correctIndex, answersByPlayer, options) {
     const playerGradients = {
@@ -8611,7 +8622,8 @@ function showMultipleChoiceResults(correctIndex, answersByPlayer, options) {
         }
     });
 
-    setTimeout(() => {
+    clearPendingMultipleChoiceResultTimers();
+    __mcResultRevealTimer = setTimeout(() => {
         if (myAnswer === correctIndex) {
             new Audio("success.mp3").play();
         } else {
@@ -8624,7 +8636,7 @@ function showMultipleChoiceResults(correctIndex, answersByPlayer, options) {
             optionCover.style.display = "inline-block";
         }
 
-        setTimeout(() => {
+        __mcResultCloseTimer = setTimeout(() => {
             console.log("MULTIPLE VÝSLEDKY - Zavírám okno")
             question.style.display = "none";
             choice_question.style.display = "none";
@@ -8632,7 +8644,9 @@ function showMultipleChoiceResults(correctIndex, answersByPlayer, options) {
             [optioncover1, optioncover2, optioncover3, optioncover4].forEach(cover => {
                 cover.style.display = "none";
             });
+            __mcResultCloseTimer = null;
         }, 3000);
+        __mcResultRevealTimer = null;
     }, 2000);
 }
 
@@ -8641,6 +8655,8 @@ function showMultipleChoiceResults(correctIndex, answersByPlayer, options) {
 
 
 
+
+console.log("🧪 VLASTENEC FIX: battle-question-transition-v1");
 
 let myNumericAnswer = 0;
 let numericStartTime = 0;
@@ -8879,6 +8895,7 @@ function showNumericResultsForTwo(correctAnswer, answers, attacker, defender) {
 
 
 function showNumericQuestionForTwo(questionText, timeLimit, attacker, defender, attackerName, defenderName) {
+    clearPendingMultipleChoiceResultTimers();
     myNumericAnswerTwo = 0;
     numericStartTimeTwo = Date.now();
 
@@ -8887,7 +8904,10 @@ function showNumericQuestionForTwo(questionText, timeLimit, attacker, defender, 
 
 
 
-    // ✅ Zobrazení panelů
+    // ✅ Zobrazení panelů. Předchozí MC panel vypneme explicitně,
+    // aby se stará otázka nemohla překrývat s numerickou.
+    choice_question.style.display = "none";
+    numerical_question_three.style.display = "none";
     question.style.display = "block";
     numerical_question_two.style.display = "block";
     document.getElementById("numinput2").style.display = "block";
@@ -9009,10 +9029,13 @@ function showNumericQuestionForTwo(questionText, timeLimit, attacker, defender, 
 
 
 function showNumericQuestionForThree(questionText, timeLimit) {
+    clearPendingMultipleChoiceResultTimers();
     myNumericAnswer = 0;
     numericStartTime = Date.now();
 
     // ✅ Zobrazení panelů
+    choice_question.style.display = "none";
+    numerical_question_two.style.display = "none";
     question.style.display = "block";
     numerical_question_three.style.display = "block";
     document.getElementById("numinput3").style.display = "block";

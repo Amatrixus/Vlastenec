@@ -1,4 +1,4 @@
-console.log('🧪 VLASTENEC BUILD: 2026-08-18-region-wave-v5.1-battle-result-timing');
+console.log('🧪 VLASTENEC BUILD: 2026-08-18-battle-question-transition-v1');
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
@@ -38,7 +38,7 @@ const PORT = process.env.PORT || 3000;
   if (db.getStatus().ready) await recoverInterruptedLeagueMatches().catch(err => console.error('league boot recovery:', err));
   server.listen(PORT, '0.0.0.0', () => {
     console.log('Server běží na', PORT);
-    console.log('🧪 VLASTENEC BUILD: 2026-08-18-region-wave-v5.1-battle-result-timing');
+    console.log('🧪 VLASTENEC BUILD: 2026-08-18-battle-question-transition-v1');
   });
 })();
 
@@ -2155,7 +2155,10 @@ async function runBattleOnRegion(roomId, attacker, defender, region) {
 
     // 2c/2d. Oba odpověděli správně → numeric
     if (correctPlayers.length > 1) {
-      await delay(5100);
+      // MC výsledky se na klientovi zavírají po ~5 s. Původních 5,1 s
+      // dávalo jen 100ms rezervu, takže podle latence mohl starý close timer
+      // schovat právě otevřenou numerickou otázku. Necháme čistý přechod.
+      await delay(5700);
       const numericWinner = await runNumericQuestionForTwo(roomId, [attacker, defender]);
       await delay(3000);
 
