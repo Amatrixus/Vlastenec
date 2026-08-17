@@ -361,13 +361,10 @@
   async function sendServerEvent(path, payload) {
     const identity = getProfileIdentity();
     if (identity.type !== 'account') return null;
-    try {
-      await bootstrapServerProfile();
-      return await apiJson(path, { method:'POST', body:JSON.stringify(payload) });
-    } catch (err) {
-      console.warn(`Profil: událost ${path} se nepodařilo uložit:`, err.message);
-      return null;
-    }
+    // Od leaderboards-v2 vznikají otázky i výsledky autoritativně na herním serveru.
+    // Lokální profil dál aktualizujeme okamžitě pro UI, ale klient už nesmí posílat
+    // vlastní výsledek do PostgreSQL a riskovat dvojí započtení nebo podvržení dat.
+    return { ok:true, authoritative:true, localOnly:true, ignoredPath:path, ignoredPayload:!!payload };
   }
 
   function updateGuestName(name) {

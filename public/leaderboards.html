@@ -90,6 +90,7 @@
           <div>
             <span class="section-kicker" id="table-kicker">NORMÁLNÍ HRA</span>
             <h2 id="table-title">Nejlepší hráči</h2>
+            <p id="table-note">Výkonnost se počítá z hodnocených rychlých her tří přihlášených hráčů.</p>
           </div>
           <div id="table-count" class="table-count">—</div>
         </div>
@@ -150,17 +151,26 @@
     </section>
 
     <section id="numeric-view" class="view-panel" hidden>
-      <article class="coming-card">
-        <div class="coming-icon">±</div>
-        <span class="section-kicker">NUMERICKÉ OTÁZKY</span>
-        <h2>Přesnost odhadu dostane vlastní disciplínu</h2>
-        <p>Budeme porovnávat medián procentuální odchylky, dlouhodobou přesnost a přesné zásahy. Současná databáze zatím numerickou chybu po jednotlivých odpovědích neukládá, takže tu nevystavujeme vymyšlená data.</p>
-        <div class="coming-metrics">
-          <span><b>MEDIÁN ODCHYLKY</b><small>odolný proti jednomu extrémnímu odhadu</small></span>
-          <span><b>PŘESNOST</b><small>100 % − medián odchylky</small></span>
-          <span><b>PŘESNÝ ZÁSAH</b><small>počet naprosto přesných odpovědí</small></span>
-        </div>
-      </article>
+      <div class="category-results-grid">
+        <article id="numeric-me" class="my-card"></article>
+        <article class="table-card">
+          <div class="section-head compact">
+            <div>
+              <span class="section-kicker">NUMERICKÉ OTÁZKY</span>
+              <h2>Nejpřesnější odhadci</h2>
+              <p>Řadíme podle mediánu procentuální odchylky. Nezodpovězená numerická otázka se započítá jako 100% chyba.</p>
+            </div>
+            <div id="numeric-count" class="table-count">—</div>
+          </div>
+          <div class="table-wrap">
+            <table class="ranking-table">
+              <thead><tr><th>#</th><th>Hráč</th><th>Medián odchylky</th><th>Přesnost</th><th>Přesné zásahy</th><th>Odhadů</th></tr></thead>
+              <tbody id="numeric-body"></tbody>
+            </table>
+          </div>
+          <div id="numeric-empty" class="empty-state" hidden></div>
+        </article>
+      </div>
     </section>
 
     <section id="records-view" class="view-panel" hidden>

@@ -44,14 +44,15 @@
   }
 
   function normalMyCard(me, period) {
-    if (!me) return `<div class="my-empty"><span class="my-label">VAŠE POZICE</span><b>Zatím bez pořadí</b><span>Pro tuto periodu nemáš dokončenou rychlou hru s náhodnými soupeři.</span></div>`;
+    if (!me) return `<div class="my-empty"><span class="my-label">VAŠE POZICE</span><b>Zatím bez hodnocení</b><span>Do výkonnosti se započítají rychlé hry, ve kterých jsou všichni tři hráči přihlášení.</span></div>`;
+    const delta=Number(me.periodDelta||0);
     return `
       <div><span class="my-label">VAŠE POZICE · ${escapeHtml(PERIOD_LABELS[period] || '')}</span><div class="my-rank">#${num(me.rank)}</div><div class="my-name">${escapeHtml(me.displayName)}</div></div>
       <div class="my-stats">
-        <span class="my-stat"><small>Výkonnost</small><strong>${pct(me.performance)}</strong></span>
+        <span class="my-stat"><small>Výkonnost</small><strong>${num(me.rating)}</strong></span>
+        <span class="my-stat"><small>Změna</small><strong class="${delta>0?'delta-up':delta<0?'delta-down':''}">${delta>0?'+':''}${num(delta)}</strong></span>
+        <span class="my-stat"><small>Hodnocené hry</small><strong>${num(me.games)}</strong></span>
         <span class="my-stat"><small>Win rate</small><strong>${pct(me.winRate)}</strong></span>
-        <span class="my-stat"><small>Zápasy</small><strong>${num(me.games)}</strong></span>
-        <span class="my-stat"><small>Průměrné pořadí</small><strong>${Number(me.averagePlacement || 0).toLocaleString('cs-CZ',{maximumFractionDigits:2})}</strong></span>
       </div>`;
   }
 
@@ -78,23 +79,26 @@
       <article class="podium-card place-${index+1}">
         <span class="podium-rank">${index+1}.</span><span class="podium-medal">${index===0?'★':index===1?'II':'III'}</span>
         <div class="podium-name">${escapeHtml(row.displayName)}</div>
-        <div class="podium-value">${league ? `${num(row.rating)} rating` : `${pct(row.performance)} výkon`}</div>
+        <div class="podium-value">${league ? `${num(row.rating)} rating` : `${num(row.rating)} výkonnost`}</div>
         <div class="podium-sub">${league ? `${escapeHtml(row.division?.name || '')} · ${num(row.games)} zápasů` : `${num(row.wins)} výher · ${pct(row.winRate)} win rate`}</div>
       </article>`).join('');
   }
 
   function renderNormalTable(data) {
-    $('ranking-head').innerHTML = `<tr><th>#</th><th>Hráč</th><th>Výkonnost</th><th>Zápasy</th><th>Výhry</th><th>Win rate</th><th>Průměrné pořadí</th></tr>`;
-    $('ranking-body').innerHTML = (data.rows || []).map(row => `
-      <tr class="${row.isMe?'is-me':''}">
+    $('ranking-head').innerHTML = `<tr><th>#</th><th>Hráč</th><th>Výkonnost</th><th>Změna</th><th>Hodnocené hry</th><th>Výhry</th><th>Win rate</th><th>Průměrné pořadí</th></tr>`;
+    $('ranking-body').innerHTML = (data.rows || []).map(row => {
+      const delta=Number(row.periodDelta||0);
+      return `<tr class="${row.isMe?'is-me':''}">
         <td class="rank-cell ${row.rank<=3?'top':''}">#${num(row.rank)}</td>
         <td class="player-cell">${escapeHtml(row.displayName)}${row.isMe?' · TY':''}</td>
-        <td class="metric-gold">${pct(row.performance)}</td>
+        <td class="metric-gold">${num(row.rating)}</td>
+        <td class="${delta>0?'delta-up':delta<0?'delta-down':''}">${delta>0?'+':''}${num(delta)}</td>
         <td>${num(row.games)}</td><td class="metric-strong">${num(row.wins)}</td><td>${pct(row.winRate)}</td>
         <td>${Number(row.averagePlacement || 0).toLocaleString('cs-CZ',{maximumFractionDigits:2})}</td>
-      </tr>`).join('');
+      </tr>`;
+    }).join('');
     $('ranking-empty').hidden = !!data.rows?.length;
-    $('ranking-empty').textContent = 'V tomto období zatím není žádná dokončená rychlá hra s náhodnými soupeři.';
+    $('ranking-empty').textContent = 'V tomto období zatím není žádná hodnocená rychlá hra tří přihlášených hráčů.';
     $('table-count').textContent = `${num(data.total)} hráčů`;
   }
 
@@ -117,7 +121,7 @@
     $('nearby-list').innerHTML = rows.map(row => `
       <div class="nearby-row ${row.isMe?'is-me':''}">
         <span class="nearby-rank">#${num(row.rank)}</span><span class="nearby-name">${escapeHtml(row.displayName)}${row.isMe?' · TY':''}</span>
-        <span class="nearby-metric">${league?'Rating':'Výkon'} <b>${league?num(row.rating):pct(row.performance)}</b></span>
+        <span class="nearby-metric">${league?'Rating':'Výkonnost'} <b>${num(row.rating)}</b></span>
         <span class="nearby-metric">${league?'Výhry':'Win rate'} <b>${league?num(row.wins):pct(row.winRate)}</b></span>
       </div>`).join('');
   }
@@ -130,13 +134,13 @@
         if (token!==loadToken) return;
         $('my-position-card').innerHTML = normalMyCard(data.me,state.period);
         renderPodium(data.rows,false); renderNormalTable(data); renderNearby(data.nearby,false);
-        $('table-kicker').textContent='NORMÁLNÍ HRA'; $('table-title').textContent=`Nejlepší hráči ${PERIOD_LABELS[state.period]}`;
+        $('table-kicker').textContent='NORMÁLNÍ HRA'; $('table-title').textContent=`Nejlepší hráči ${PERIOD_LABELS[state.period]}`; $('table-note').textContent='Výkonnost je serverový rating. Započítají se jen rychlé hry tří přihlášených hráčů.';
       } else {
         const [board,overview] = await Promise.all([json('/api/league/leaderboard?limit=100'),json('/api/league/overview')]);
         if (token!==loadToken) return;
         $('my-position-card').innerHTML = leagueMyCard(overview);
         renderPodium(board.rows,true); renderLeagueTable(board); renderNearby(overview?.leaderboard?.nearby || [],true);
-        $('table-kicker').textContent='LIGA'; $('table-title').textContent=`${board.season?.name || 'Aktuální sezóna'} · celkové pořadí`;
+        $('table-kicker').textContent='LIGA'; $('table-title').textContent=`${board.season?.name || 'Aktuální sezóna'} · celkové pořadí`; $('table-note').textContent='Ligový rating a pořadí se počítají z aktuální sezóny.';
       }
     } catch (err) { if(token!==loadToken)return; showStatus(err.message,true); $('ranking-empty').hidden=false; $('ranking-empty').textContent=err.message; }
   }
@@ -150,10 +154,10 @@
   async function loadCategory() {
     const token=++loadToken; showStatus();
     const meta=CATEGORIES.find(row=>row[0]===state.category) || CATEGORIES[4];
-    $('category-title').textContent=meta[1]; $('category-kicker').textContent='KATEGORIE'; $('category-body').innerHTML=''; $('category-empty').hidden=true;
+    $('category-title').textContent=meta[1]; $('category-kicker').textContent='KATEGORIE'; $('category-period-note').textContent=PERIOD_LABELS[state.period] || 'celkem'; $('category-body').innerHTML=''; $('category-empty').hidden=true;
     $('category-me').innerHTML=`<div class="my-empty"><b>Načítám kategorii…</b></div>`;
     try {
-      const data=await json(`/api/leaderboards/category?category=${encodeURIComponent(state.category)}&limit=100`);
+      const data=await json(`/api/leaderboards/category?category=${encodeURIComponent(state.category)}&period=${encodeURIComponent(state.period)}&limit=100`);
       if(token!==loadToken)return;
       const me=data.me;
       $('category-me').innerHTML = me ? `
@@ -165,6 +169,26 @@
       $('category-empty').hidden=!!data.rows?.length;
       $('category-empty').textContent=`Zatím nikdo nesplnil minimum ${data.minAnswers} odpovědí v této kategorii.`;
     } catch(err){if(token!==loadToken)return;showStatus(err.message,true);$('category-empty').hidden=false;$('category-empty').textContent=err.message;}
+  }
+
+
+  async function loadNumeric() {
+    const token=++loadToken; showStatus();
+    $('numeric-body').innerHTML=''; $('numeric-empty').hidden=true;
+    $('numeric-me').innerHTML=`<div class="my-empty"><b>Načítám numerické statistiky…</b></div>`;
+    try {
+      const data=await json(`/api/leaderboards/numeric?period=${encodeURIComponent(state.period)}&limit=100`);
+      if(token!==loadToken)return;
+      const me=data.me;
+      $('numeric-me').innerHTML = me ? `
+        <div><span class="my-label">VAŠE NUMERICKÁ PŘESNOST · ${escapeHtml(PERIOD_LABELS[state.period]||'')}</span><div class="my-rank">${Number(me.medianErrorPct||0).toLocaleString('cs-CZ',{maximumFractionDigits:1})} %</div><div class="my-name">medián odchylky · ${me.eligible?'zařazen do žebříčku':`ještě ${Math.max(0,data.minAnswers-me.attempts)} odhadů`}</div></div>
+        <div class="my-stats"><span class="my-stat"><small>Přesnost</small><strong>${pct(me.accuracy)}</strong></span><span class="my-stat"><small>Přesné zásahy</small><strong>${num(me.exactHits)}</strong></span><span class="my-stat"><small>Odhadů</small><strong>${num(me.attempts)}</strong></span><span class="my-stat"><small>Odesláno</small><strong>${num(me.submitted)}</strong></span></div>`
+        : `<div class="my-empty"><span class="my-label">VAŠE NUMERICKÁ PŘESNOST</span><b>Zatím bez odhadu</b><span>Numerické otázky z rychlé hry se začnou počítat od této verze.</span></div>`;
+      $('numeric-body').innerHTML=(data.rows||[]).map(row=>`<tr class="${row.isMe?'is-me':''}"><td class="rank-cell ${row.rank<=3?'top':''}">#${num(row.rank)}</td><td class="player-cell">${escapeHtml(row.displayName)}${row.isMe?' · TY':''}</td><td class="metric-gold">${Number(row.medianErrorPct||0).toLocaleString('cs-CZ',{maximumFractionDigits:1})} %</td><td class="metric-strong">${pct(row.accuracy)}</td><td>${num(row.exactHits)}</td><td>${num(row.attempts)}</td></tr>`).join('');
+      $('numeric-count').textContent=`${num(data.total)} kvalifikovaných`;
+      $('numeric-empty').hidden=!!data.rows?.length;
+      $('numeric-empty').textContent=`Zatím nikdo nesplnil minimum ${data.minAnswers} numerických odhadů v tomto období.`;
+    } catch(err){if(token!==loadToken)return;showStatus(err.message,true);$('numeric-empty').hidden=false;$('numeric-empty').textContent=err.message;}
   }
 
   async function loadRecords() {
@@ -197,7 +221,7 @@
     });
     document.querySelectorAll('.view-panel').forEach(el=>el.hidden=true);
     $(`${state.view}-view`).hidden=false;
-    const showPeriods=state.scope==='normal' && ['overall','records'].includes(state.view);
+    const showPeriods=state.scope==='normal' && ['overall','categories','numeric','records'].includes(state.view);
     $('period-controls').hidden=!showPeriods;
     $('period-caption').hidden=showPeriods;
     if(!showPeriods){$('period-caption').textContent=state.scope==='league'?'Aktuální sezóna':'Celková statistika';}
@@ -209,6 +233,7 @@
     applyStateToUI(); showStatus();
     if(state.view==='overall') loadOverall();
     else if(state.view==='categories'){renderCategoryGrid();loadCategory();}
+    else if(state.view==='numeric') loadNumeric();
     else if(state.view==='records') loadRecords();
   }
 
@@ -230,5 +255,5 @@
   }
 
   wireHeader(); wireControls(); renderCategoryGrid(); reload();
-  console.log('🧪 VLASTENEC CLIENT: leaderboards-v1');
+  console.log('🧪 VLASTENEC CLIENT: leaderboards-v2');
 })();

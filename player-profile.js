@@ -59,8 +59,20 @@ function cleanAchievements(input) {
 }
 
 function normalizeCategory(raw) {
-  const value = String(raw || '').trim().toLowerCase();
-  return CATEGORY_SLUGS.includes(value) ? value : null;
+  const value = String(Array.isArray(raw) ? raw[0] : (raw || ''))
+    .trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  const aliases = {
+    vedy:'vedy', science:'vedy', 'prirodni vedy':'vedy',
+    literatura:'literatura', literature:'literatura',
+    technologie:'technologie', technology:'technologie', tech:'technologie',
+    geografie:'geografie', geography:'geografie',
+    historie:'historie', history:'historie',
+    kultura:'kultura', culture:'kultura',
+    sport:'sport', sports:'sport',
+    osobnosti:'osobnosti', personalities:'osobnosti', people:'osobnosti',
+    politika:'politika', politics:'politika'
+  };
+  return aliases[value] || null;
 }
 
 function xpForMatch({ placement = 3, score = 0, questionWins = 0, territories = 0 } = {}) {
@@ -225,6 +237,126 @@ function cleanMatch(raw) {
   };
 }
 
+
+function safeMode(raw) {
+  const value = String(raw || '').toLowerCase();
+  if (value === 'liga') return 'league';
+  return MODES.includes(value) ? value : 'random';
+}
+
+function finiteNumberOrNull(value) {
+  const n = Number(value);
+  return Number.isFinite(n) ? n : null;
+}
+
+async function recordAuthoritativeQuestion(event = {}) {
+  if (!db.getStatus().ready) return { saved:false, reason:'db_not_ready' };
+  const userId = String(event.userId || '').trim();
+  const eventId = String(event.eventId || '').trim().slice(0,80);
+  if (!/^\d+$/.test(userId) || !/^[a-zA-Z0-9._:-]{6,80}$/.test(eventId)) return { saved:false, reason:'invalid_identity' };
+
+  const mode = safeMode(event.mode);
+  const category = normalizeCategory(event.category);
+  const questionType = event.questionType === 'numeric' ? 'numeric' : 'choice';
+  const success = !!event.success;
+  const answered = event.answered !== false;
+  const answerNumeric = questionType === 'numeric' ? finiteNumberOrNull(event.answerNumeric) : null;
+  const correctNumeric = questionType === 'numeric' ? finiteNumberOrNull(event.correctNumeric) : null;
+  let numericErrorPct = questionType === 'numeric' ? finiteNumberOrNull(event.numericErrorPct) : null;
+  if (numericErrorPct != null) numericErrorPct = Math.max(0, Math.min(1_000_000, numericErrorPct));
+  const exactHit = questionType === 'numeric' && !!event.exactHit;
+  const matchId = String(event.matchId || '').trim().slice(0,80) || null;
+
+  return db.withTransaction(async client => {
+    const fresh = await insertEvent(client,userId,eventId,'question_server');
+    if (!fresh) return { saved:false, duplicate:true };
+
+    await client.query(
+      `INSERT INTO profile_question_events(
+         user_id,event_id,match_id,mode,category,question_type,success,answered,
+         answer_numeric,correct_numeric,numeric_error_pct,exact_hit
+       ) VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12)`,
+      [userId,eventId,matchId,mode,category,questionType,success,answered,
+       answerNumeric,correctNumeric,numericErrorPct,exactHit]
+    );
+
+    await client.query('INSERT INTO player_profiles(user_id) VALUES($1) ON CONFLICT (user_id) DO NOTHING', [userId]);
+    const locked = await client.query('SELECT * FROM player_profiles WHERE user_id=$1 FOR UPDATE', [userId]);
+    const row = locked.rows[0];
+    const categories = cleanCategories(row.category_stats);
+    if (category) {
+      categories[category].played += 1;
+      if (success) categories[category].successes += 1;
+    }
+    const meta = safeObject(row.profile_meta);
+    const currentStreak = success ? clampInt(meta.currentStreak,0,1_000_000) + 1 : 0;
+    const bestStreak = Math.max(row.best_streak || 0,currentStreak);
+    row.questions_answered = (row.questions_answered || 0) + 1;
+    row.questions_correct = (row.questions_correct || 0) + (success ? 1 : 0);
+    row.best_streak = bestStreak;
+    row.category_stats = categories;
+    row.profile_meta = { ...meta, currentStreak };
+    row.achievements = achievementState(row);
+    await client.query(
+      `UPDATE player_profiles SET questions_answered=$2,questions_correct=$3,best_streak=$4,
+         category_stats=$5::jsonb,profile_meta=$6::jsonb,achievements=$7::jsonb,updated_at=NOW()
+       WHERE user_id=$1`,
+      [userId,row.questions_answered,row.questions_correct,bestStreak,JSON.stringify(categories),JSON.stringify(row.profile_meta),JSON.stringify(row.achievements)]
+    );
+    return { saved:true, duplicate:false };
+  });
+}
+
+async function recordAuthoritativeMatch(event = {}) {
+  if (!db.getStatus().ready) return { saved:false, reason:'db_not_ready' };
+  const userId = String(event.userId || '').trim();
+  const eventId = String(event.eventId || '').trim().slice(0,80);
+  if (!/^\d+$/.test(userId) || !/^[a-zA-Z0-9._:-]{6,80}$/.test(eventId)) return { saved:false, reason:'invalid_identity' };
+
+  const mode = safeMode(event.mode);
+  const placement = clampInt(event.placement,1,3);
+  const score = clampInt(event.score,0,10_000_000);
+  const territories = clampInt(event.territories,0,10_000);
+  const questionWins = clampInt(event.questionWins,0,10_000);
+  const opponents = Array.isArray(event.opponents) ? event.opponents.slice(0,2).map(v=>String(v).slice(0,24)) : [];
+  const xpEarned = xpForMatch({placement,score,questionWins,territories});
+
+  return db.withTransaction(async client => {
+    const fresh = await insertEvent(client,userId,eventId,'match_server');
+    if (!fresh) return { saved:false, duplicate:true, xpEarned:0 };
+    await client.query('INSERT INTO player_profiles(user_id) VALUES($1) ON CONFLICT (user_id) DO NOTHING', [userId]);
+    const locked = await client.query('SELECT * FROM player_profiles WHERE user_id=$1 FOR UPDATE', [userId]);
+    const row = locked.rows[0];
+    const modes = cleanModes(row.mode_stats);
+    modes[mode].games += 1;
+    if (placement === 1) modes[mode].wins += 1;
+    row.xp = Number(row.xp || 0) + xpEarned;
+    row.games_played = (row.games_played || 0) + 1;
+    if (placement === 1) row.wins = (row.wins || 0) + 1;
+    if (placement === 2) row.second_places = (row.second_places || 0) + 1;
+    if (placement === 3) row.third_places = (row.third_places || 0) + 1;
+    row.total_score = Number(row.total_score || 0) + score;
+    row.best_score = Math.max(row.best_score || 0,score);
+    row.territories_captured = (row.territories_captured || 0) + territories;
+    row.mode_stats = modes;
+    row.achievements = achievementState(row);
+
+    await client.query(
+      `UPDATE player_profiles SET xp=$2,games_played=$3,wins=$4,second_places=$5,third_places=$6,
+         total_score=$7,best_score=$8,territories_captured=$9,mode_stats=$10::jsonb,
+         achievements=$11::jsonb,updated_at=NOW() WHERE user_id=$1`,
+      [userId,row.xp,row.games_played,row.wins,row.second_places,row.third_places,row.total_score,row.best_score,
+       row.territories_captured,JSON.stringify(modes),JSON.stringify(row.achievements)]
+    );
+    await client.query(
+      `INSERT INTO profile_matches(user_id,event_id,mode,placement,score,xp,territories,question_wins,opponents,source)
+       VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9::jsonb,'server')`,
+      [userId,eventId,mode,placement,score,xpEarned,territories,questionWins,JSON.stringify(opponents)]
+    );
+    return { saved:true, duplicate:false, xpEarned };
+  });
+}
+
 function mountProfileRoutes(app) {
   app.get('/api/profile', async (req, res) => {
     try {
@@ -287,47 +419,17 @@ function mountProfileRoutes(app) {
     }
   });
 
+  // Od v2 se profilové události počítají autoritativně přímo z herního serveru.
+  // Endpointy ponecháváme kvůli starším klientům, ale jejich payload už statistiky nemění.
   app.post('/api/profile/event/question', async (req, res) => {
     try {
       const user = await requireUser(req, res);
       if (!user) return;
       if (!sameOrigin(req)) return res.status(403).json({ ok:false, message:'Neplatný původ požadavku.' });
-      const eventId = req.body?.eventId;
-      const category = normalizeCategory(req.body?.category);
-      const success = !!req.body?.success;
-
-      const result = await db.withTransaction(async client => {
-        const fresh = await insertEvent(client,user.id,eventId,'question');
-        if (!fresh) return { duplicate:true };
-        await client.query('INSERT INTO player_profiles(user_id) VALUES($1) ON CONFLICT (user_id) DO NOTHING', [user.id]);
-        const locked = await client.query('SELECT * FROM player_profiles WHERE user_id=$1 FOR UPDATE', [user.id]);
-        const row = locked.rows[0];
-        const categories = cleanCategories(row.category_stats);
-        if (category) {
-          categories[category].played += 1;
-          if (success) categories[category].successes += 1;
-        }
-        const meta = safeObject(row.profile_meta);
-        const currentStreak = success ? clampInt(meta.currentStreak,0,1_000_000) + 1 : 0;
-        const bestStreak = Math.max(row.best_streak || 0,currentStreak);
-        row.questions_answered = (row.questions_answered || 0) + 1;
-        row.questions_correct = (row.questions_correct || 0) + (success ? 1 : 0);
-        row.best_streak = bestStreak;
-        row.category_stats = categories;
-        row.profile_meta = { ...meta, currentStreak };
-        row.achievements = achievementState(row);
-        await client.query(
-          `UPDATE player_profiles SET questions_answered=$2,questions_correct=$3,best_streak=$4,
-             category_stats=$5::jsonb,profile_meta=$6::jsonb,achievements=$7::jsonb,updated_at=NOW()
-           WHERE user_id=$1`,
-          [user.id,row.questions_answered,row.questions_correct,bestStreak,JSON.stringify(categories),JSON.stringify(row.profile_meta),JSON.stringify(row.achievements)]
-        );
-        return { duplicate:false };
-      });
-      res.json({ ok:true, ...result });
+      res.json({ ok:true, ignored:true, authoritative:true });
     } catch (err) {
-      console.error('profile/question:', err);
-      res.status(500).json({ ok:false, message:'Statistiku otázky se nepodařilo uložit.' });
+      console.error('profile/question legacy endpoint:', err);
+      res.status(500).json({ ok:false, message:'Profilový server není dostupný.' });
     }
   });
 
@@ -336,57 +438,12 @@ function mountProfileRoutes(app) {
       const user = await requireUser(req, res);
       if (!user) return;
       if (!sameOrigin(req)) return res.status(403).json({ ok:false, message:'Neplatný původ požadavku.' });
-      const eventId = String(req.body?.eventId || '').slice(0,80);
-      const raw = safeObject(req.body?.result);
-      const mode = MODES.includes(raw.mode) ? raw.mode : 'random';
-      const placement = clampInt(raw.placement,1,3);
-      const score = clampInt(raw.score,0,10_000_000);
-      const territories = clampInt(raw.territories,0,1000);
-      const questionWins = clampInt(raw.questionWins,0,1000);
-      const opponents = Array.isArray(raw.opponents) ? raw.opponents.slice(0,2).map(v=>String(v).slice(0,24)) : [];
-      const xpEarned = xpForMatch({placement,score,questionWins,territories});
-
-      const result = await db.withTransaction(async client => {
-        const fresh = await insertEvent(client,user.id,eventId,'match');
-        if (!fresh) return { duplicate:true, xpEarned:0 };
-        await client.query('INSERT INTO player_profiles(user_id) VALUES($1) ON CONFLICT (user_id) DO NOTHING', [user.id]);
-        const locked = await client.query('SELECT * FROM player_profiles WHERE user_id=$1 FOR UPDATE', [user.id]);
-        const row = locked.rows[0];
-        const modes = cleanModes(row.mode_stats);
-        modes[mode].games += 1;
-        if (placement === 1) modes[mode].wins += 1;
-        row.xp = Number(row.xp || 0) + xpEarned;
-        row.games_played = (row.games_played || 0) + 1;
-        if (placement === 1) row.wins = (row.wins || 0) + 1;
-        if (placement === 2) row.second_places = (row.second_places || 0) + 1;
-        if (placement === 3) row.third_places = (row.third_places || 0) + 1;
-        row.total_score = Number(row.total_score || 0) + score;
-        row.best_score = Math.max(row.best_score || 0,score);
-        row.territories_captured = (row.territories_captured || 0) + territories;
-        row.mode_stats = modes;
-        row.achievements = achievementState(row);
-
-        await client.query(
-          `UPDATE player_profiles SET xp=$2,games_played=$3,wins=$4,second_places=$5,third_places=$6,
-             total_score=$7,best_score=$8,territories_captured=$9,mode_stats=$10::jsonb,
-             achievements=$11::jsonb,updated_at=NOW() WHERE user_id=$1`,
-          [user.id,row.xp,row.games_played,row.wins,row.second_places,row.third_places,row.total_score,row.best_score,
-           row.territories_captured,JSON.stringify(modes),JSON.stringify(row.achievements)]
-        );
-        await client.query(
-          `INSERT INTO profile_matches(user_id,event_id,mode,placement,score,xp,territories,question_wins,opponents)
-           VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9::jsonb)
-           ON CONFLICT (user_id,event_id) DO NOTHING`,
-          [user.id,eventId,mode,placement,score,xpEarned,territories,questionWins,JSON.stringify(opponents)]
-        );
-        return { duplicate:false, xpEarned };
-      });
-      res.json({ ok:true, ...result });
+      res.json({ ok:true, ignored:true, authoritative:true });
     } catch (err) {
-      console.error('profile/match:', err);
-      res.status(500).json({ ok:false, message:'Výsledek zápasu se nepodařilo uložit.' });
+      console.error('profile/match legacy endpoint:', err);
+      res.status(500).json({ ok:false, message:'Profilový server není dostupný.' });
     }
   });
 }
 
-module.exports = { mountProfileRoutes, xpForMatch };
+module.exports = { mountProfileRoutes, xpForMatch, recordAuthoritativeQuestion, recordAuthoritativeMatch, normalizeCategory };

@@ -1,13 +1,14 @@
-console.log('🧪 VLASTENEC BUILD: 2026-08-17-leaderboards-v1');
+console.log('🧪 VLASTENEC BUILD: 2026-08-17-leaderboards-v2');
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const path = require('path');
 const fs = require('fs');
+const { randomUUID } = require('crypto');
 const db = require('./db');
 const { mountAuthRoutes, sessionUser } = require('./auth');
-const { mountProfileRoutes } = require('./player-profile');
-const { mountLeaderboardRoutes } = require('./leaderboards');
+const { mountProfileRoutes, recordAuthoritativeQuestion, recordAuthoritativeMatch } = require('./player-profile');
+const { mountLeaderboardRoutes, finalizeNormalRatedMatch } = require('./leaderboards');
 const {
   mountLeagueRoutes, leagueEntryForSocketRequest, createReadyMatch, cancelLeagueMatch,
   activateLeagueMatch, activeLeagueMatchForUser, leagueMatchForUser, leagueMatchPlayers, finalizeLeagueMatch,
@@ -37,7 +38,7 @@ const PORT = process.env.PORT || 3000;
   if (db.getStatus().ready) await recoverInterruptedLeagueMatches().catch(err => console.error('league boot recovery:', err));
   server.listen(PORT, '0.0.0.0', () => {
     console.log('Server běží na', PORT);
-    console.log('🧪 VLASTENEC BUILD: 2026-08-17-leaderboards-v1');
+    console.log('🧪 VLASTENEC BUILD: 2026-08-17-leaderboards-v2');
   });
 })();
 
@@ -229,6 +230,10 @@ function makeEmptyRoom(roomId, mode = 'random') {
     publicRoom: false,
     createdAt: Date.now(),
     skillRating: null,
+    profileMatchId: `match-${randomUUID()}`,
+    profileWriteChain: Promise.resolve(),
+    profileQuestionWins: { 1: 0, 2: 0, 3: 0 },
+    profileTerritoriesGained: { 1: 0, 2: 0, 3: 0 },
 
 
      // 🔽 NOVÉ:
@@ -246,6 +251,135 @@ function makeEmptyRoom(roomId, mode = 'random') {
   return rooms[roomId];
 }
 
+
+
+function profileModeForRoom(room) {
+  if (!room) return 'random';
+  if (room.mode === 'liga') return 'league';
+  if (room.mode === 'random' && room.matchKind === 'custom') return 'custom';
+  if (['random','friends','bots'].includes(room.mode)) return room.mode;
+  return 'random';
+}
+
+function profileUserIdForSeat(room, seat) {
+  const rec = room?.players?.[Number(seat) - 1];
+  const direct = rec?.userId || room?.leagueUsers?.[Number(seat)] || null;
+  if (direct) return String(direct);
+  const liveSocket = rec?.id ? io.sockets.sockets.get(rec.id) : null;
+  return liveSocket?.data?.accountUserId ? String(liveSocket.data.accountUserId) : null;
+}
+
+function queueProfileWrite(room, label, task) {
+  if (!room || typeof task !== 'function') return Promise.resolve();
+  const previous = room.profileWriteChain || Promise.resolve();
+  room.profileWriteChain = previous
+    .catch(() => {})
+    .then(task)
+    .catch(err => {
+      console.error(`📊 Profilová událost ${label} selhala:`, err);
+    });
+  return room.profileWriteChain;
+}
+
+function noteProfileTerritoryGain(room, seat, count = 1) {
+  if (!room || ![1,2,3].includes(Number(seat))) return;
+  room.profileTerritoriesGained = room.profileTerritoriesGained || {1:0,2:0,3:0};
+  room.profileTerritoriesGained[Number(seat)] = Math.max(0, Number(room.profileTerritoriesGained[Number(seat)] || 0) + Math.max(0, Number(count)||0));
+}
+
+function queueQuestionProfileEvents(room, eventBase, category, questionType, seats, detailsBySeat = {}) {
+  if (!room) return;
+  const mode = profileModeForRoom(room);
+  const matchId = String(room.profileMatchId || '').slice(0,80);
+  const tasks = [];
+  for (const rawSeat of seats || []) {
+    const seat = Number(rawSeat);
+    if (![1,2,3].includes(seat)) continue;
+    const detail = detailsBySeat[seat] || {};
+    if (detail.success) {
+      room.profileQuestionWins = room.profileQuestionWins || {1:0,2:0,3:0};
+      room.profileQuestionWins[seat] = Number(room.profileQuestionWins[seat] || 0) + 1;
+    }
+    const userId = profileUserIdForSeat(room,seat);
+    if (!userId) continue;
+    tasks.push({
+      userId,
+      eventId:`${eventBase}-s${seat}`.slice(0,80),
+      matchId,
+      mode,
+      category,
+      questionType,
+      success:!!detail.success,
+      answered:detail.answered !== false,
+      answerNumeric:detail.answerNumeric,
+      correctNumeric:detail.correctNumeric,
+      numericErrorPct:detail.numericErrorPct,
+      exactHit:!!detail.exactHit
+    });
+  }
+  if (!tasks.length) return;
+  queueProfileWrite(room,`${questionType}:${eventBase}`,() => Promise.all(tasks.map(recordAuthoritativeQuestion)));
+}
+
+function numericErrorPercent(answer, correct, answered = true) {
+  if (!answered) return 100;
+  const a = Number(answer), c = Number(correct);
+  if (!Number.isFinite(a) || !Number.isFinite(c)) return 100;
+  const denominator = Math.max(1, Math.abs(c));
+  return Math.min(1_000_000, Math.abs(a-c) / denominator * 100);
+}
+
+async function finalizeAuthoritativeProfiles(roomId, ordered) {
+  const room = rooms[roomId];
+  if (!room || !Array.isArray(ordered)) return { normalRating:null };
+  try { await (room.profileWriteChain || Promise.resolve()); } catch (_) {}
+
+  const mode = profileModeForRoom(room);
+  const matchId = String(room.profileMatchId || `match-${randomUUID()}`).slice(0,80);
+  room.profileMatchId = matchId;
+  const profileWrites = [];
+  const ratedPlayers = [];
+
+  ordered.forEach((entry,index) => {
+    const seat = Number(entry.player);
+    if (![1,2,3].includes(seat)) return;
+    const userId = profileUserIdForSeat(room,seat);
+    if (!userId) return;
+    const rec = room.players?.[seat-1];
+    const opponents = ordered
+      .filter(other => Number(other.player) !== seat)
+      .map(other => room.players?.[Number(other.player)-1]?.name || `Hráč ${other.player}`);
+    profileWrites.push(recordAuthoritativeMatch({
+      userId,
+      eventId:`m-${matchId}-s${seat}`.slice(0,80),
+      mode,
+      placement:index+1,
+      score:Number(entry.score)||0,
+      territories:Number(room.profileTerritoriesGained?.[seat]||0),
+      questionWins:Number(room.profileQuestionWins?.[seat]||0),
+      opponents
+    }));
+    ratedPlayers.push({ userId, displayName:rec?.name || `Hráč ${seat}`, placement:index+1 });
+  });
+
+  if (profileWrites.length) {
+    const results = await Promise.allSettled(profileWrites);
+    const rejected = results.filter(r=>r.status==='rejected');
+    if (rejected.length) console.error(`📊 ${roomId}: ${rejected.length} profilových zápisů zápasu selhalo.`);
+  }
+
+  let normalRating = null;
+  if (room.mode === 'random' && room.matchKind === 'quick') {
+    const uniqueUsers = new Set(ratedPlayers.map(p=>p.userId));
+    const allHumanAtFinish = [1,2,3].every(seat => room.seatControllers?.[seat] === 'human');
+    if (ratedPlayers.length === 3 && uniqueUsers.size === 3 && allHumanAtFinish) {
+      normalRating = await finalizeNormalRatedMatch(matchId,ratedPlayers,roomId);
+    } else {
+      normalRating = { rated:false, reason:allHumanAtFinish?'three_authenticated_players_required':'bot_or_disconnect_present' };
+    }
+  }
+  return { normalRating };
+}
 
 function sanitizePlayerName(value) {
   return String(value || '')
@@ -511,7 +645,7 @@ function roomAddPlayerAndBroadcast(roomId, socket, name) {
   // Připoj socket do room a obsad' konkrétní sedadlo
   socket.join(roomId);
   while (room.players.length < MAX_PLAYERS_PER_ROOM) room.players.push(undefined);
-  room.players[myNumber - 1] = { id: socket.id, name };
+  room.players[myNumber - 1] = { id: socket.id, name, userId: socket.data?.accountUserId || null };
 
   room.seatControllers = room.seatControllers || {1:"human",2:"human",3:"human"};
   room.seatControllers[myNumber] = "human";
@@ -804,11 +938,14 @@ function runMultipleChoice(roomId, participatingPlayers = [1, 2, 3]) {
 
     const pool = filterQuestionsByRoomCategories(questions, room);
     const question = pickRandom(pool);
+    const questionEventBase = `q-${randomUUID()}`;
     console.log(`🧠 MC otázka z kategorie: ${question.category}`);
 
     const correctPlayers = [];
 
     room.answers = {};
+    room.currentQuestionType = 'choice';
+    room.currentQuestionParticipants = [...participatingPlayers];
 
     const isDuel = participatingPlayers.length === 2;
     const attacker = isDuel ? participatingPlayers[0] : null;
@@ -873,11 +1010,22 @@ function runMultipleChoice(roomId, participatingPlayers = [1, 2, 3]) {
         }
       }
 
+      const profileDetails = {};
+      participatingPlayers.forEach(seat => {
+        profileDetails[seat] = {
+          success: room.answers?.[seat] === question.correct,
+          answered: room.answers?.[seat] !== undefined
+        };
+      });
+      queueQuestionProfileEvents(room,questionEventBase,question.category,'choice',participatingPlayers,profileDetails);
+
       io.to(roomId).emit("multipleChoiceResults", {
         correctAnswer: question.correct,
         answersByPlayer: room.answers
       });
 
+      room.currentQuestionType = null;
+      room.currentQuestionParticipants = [];
       resolve(correctPlayers);
     }, 10000);
   });
@@ -893,6 +1041,7 @@ function runNumericQuestionForTwo(roomId, [player1, player2]) {
 
     const npool = filterQuestionsByRoomCategories(numericQuestions, room);
     const nq = pickRandom(npool);
+    const questionEventBase = `q-${randomUUID()}`;
     console.log(`🔢 Numeric otázka z kategorie: ${nq.category}`);
 
 
@@ -900,6 +1049,8 @@ function runNumericQuestionForTwo(roomId, [player1, player2]) {
 
     room.numericAnswers = {};
     room.numericStartTime = Date.now();
+    room.currentQuestionType = 'numeric';
+    room.currentQuestionParticipants = [player1,player2];
 
     io.to(roomId).emit("numericQuestionForTwo", {
       question: nq.question,
@@ -940,6 +1091,8 @@ function runNumericQuestionForTwo(roomId, [player1, player2]) {
     setTimeout(() => {
       if (!isRoomAlive(roomId)) return resolve(null);
 
+      const answeredSeats = new Set(Object.keys(room.numericAnswers || {}).map(Number));
+
       // doplň chybějící odpovědi
       [player1, player2].forEach(p => {
         if (!room.numericAnswers[p]) {
@@ -958,6 +1111,19 @@ function runNumericQuestionForTwo(roomId, [player1, player2]) {
         .sort((a, b) => (a.diff !== b.diff ? a.diff - b.diff : a.time - b.time));
 
       const winner = sorted[0].player;
+      const profileDetails = {};
+      sorted.forEach(item => {
+        const answered = answeredSeats.has(item.player);
+        profileDetails[item.player] = {
+          success:item.player === winner,
+          answered,
+          answerNumeric:item.num,
+          correctNumeric:correctAnswer,
+          numericErrorPct:numericErrorPercent(item.num,correctAnswer,answered),
+          exactHit:answered && item.diff === 0
+        };
+      });
+      queueQuestionProfileEvents(room,questionEventBase,nq.category,'numeric',[player1,player2],profileDetails);
 
       io.to(roomId).emit("numericQuestionResultsForTwo", {
         correctAnswer,
@@ -971,6 +1137,8 @@ function runNumericQuestionForTwo(roomId, [player1, player2]) {
         }))
       });
 
+      room.currentQuestionType = null;
+      room.currentQuestionParticipants = [];
       resolve(winner);
     }, 15000);
   });
@@ -987,6 +1155,7 @@ function runNumericQuestionForThree(roomId) {
 
     const npool = filterQuestionsByRoomCategories(numericQuestions, room);
     const nq = pickRandom(npool);
+    const questionEventBase = `q-${randomUUID()}`;
     console.log(`🔢 Numeric (3p) otázka z kategorie: ${nq.category}`);
 
 
@@ -994,6 +1163,8 @@ function runNumericQuestionForThree(roomId) {
 
     room.numericAnswers = {};
     room.numericStartTime = Date.now();
+    room.currentQuestionType = 'numeric';
+    room.currentQuestionParticipants = [1,2,3];
 
     io.to(roomId).emit("numericQuestion", {
       question: nq.question,
@@ -1030,6 +1201,8 @@ function runNumericQuestionForThree(roomId) {
     setTimeout(() => {
       if (!isRoomAlive(roomId)) return resolve(null);
 
+      const answeredSeats = new Set(Object.keys(room.numericAnswers || {}).map(Number));
+
       // doplň chybějící
       [1, 2, 3].forEach(player => {
         if (!room.numericAnswers[player]) {
@@ -1048,12 +1221,27 @@ function runNumericQuestionForThree(roomId) {
         .sort((a, b) => (a.diff !== b.diff ? a.diff - b.diff : a.time - b.time));
 
       const winner = sorted[0].player;
+      const profileDetails = {};
+      sorted.forEach(item => {
+        const answered = answeredSeats.has(item.player);
+        profileDetails[item.player] = {
+          success:item.player === winner,
+          answered,
+          answerNumeric:item.num,
+          correctNumeric:correctAnswer,
+          numericErrorPct:numericErrorPercent(item.num,correctAnswer,answered),
+          exactHit:answered && item.diff === 0
+        };
+      });
+      queueQuestionProfileEvents(room,questionEventBase,nq.category,'numeric',[1,2,3],profileDetails);
 
       io.to(roomId).emit("numericQuestionResults", {
         correctAnswer,
         answers: sorted
       });
 
+      room.currentQuestionType = null;
+      room.currentQuestionParticipants = [];
       resolve(winner);
     }, 15000);
   });
@@ -1257,6 +1445,7 @@ async function runExpansionPhase(roomId) {
       const selectedRegion = room.lastSelections[player];
       if (selectedRegion) {
         room.regions[`Player${player}regions`].push(selectedRegion);
+        noteProfileTerritoryGain(room,player,1);
         room.regionValues[selectedRegion] = 200;
         room.scores[player] += 200;
         console.log(`✅ Hráč ${player} získal region ${selectedRegion} (+200 bodů)`);
@@ -1374,6 +1563,7 @@ async function runConquestPhase(roomId) {
 
         // ✅ Přiděl region a přepočítej body
         room.regions[`Player${winner}regions`].push(selectedRegion);
+        noteProfileTerritoryGain(room,winner,1);
         room.regionValues[selectedRegion] = 300;
         room.scores[winner] += 300;
 
@@ -1686,6 +1876,7 @@ async function runBattleOnRegion(roomId, attacker, defender, region) {
       if (index !== -1) room.regions[defKey].splice(index, 1);
       if (!room.regions[atkKey].includes(region)) {
         room.regions[atkKey].push(region);
+        noteProfileTerritoryGain(room,attacker,1);
         room.regionValues[region] = 400;
       }
     } 
@@ -1851,9 +2042,11 @@ function transferBase(roomId, room, attacker, defender, baseRegion) {
 
   const defenderRegions = room.regions[defKey] || [];
 
+  let transferredCount = 0;
   defenderRegions.forEach(region => {
     if (!room.regions[atkKey].includes(region)) {
       room.regions[atkKey].push(region);
+      transferredCount += 1;
     }
 
     // ✅ Pouze základně přepiš hodnotu na 400
@@ -1861,6 +2054,8 @@ function transferBase(roomId, room, attacker, defender, baseRegion) {
       room.regionValues[region] = 400;
     }
   });
+
+  noteProfileTerritoryGain(room,attacker,transferredCount);
 
   // ✅ Vymaž obráncova území
   room.regions[defKey] = [];
@@ -2253,6 +2448,7 @@ async function launchLeagueReadyMatch(matchId) {
   room.publicRoom = false;
   room.settings = { mode:'liga', cats:[1,2,3,4,5,6,7,8,9] };
   room.leagueMatchId = matchId;
+  room.profileMatchId = `league-${String(matchId)}`;
   room.leagueUsers = {};
   room.leagueDisconnectedTimers = new Map();
   room.leagueForfeitSeat = null;
@@ -2263,7 +2459,7 @@ async function launchLeagueReadyMatch(matchId) {
   state.players.forEach((p, index) => {
     const seat = index + 1;
     room.leagueUsers[seat] = String(p.userId);
-    room.players[seat - 1] = { id:null, name:p.entry.displayName };
+    room.players[seat - 1] = { id:null, name:p.entry.displayName, userId:String(p.userId) };
   });
   leagueMatchRooms.set(matchId, roomId);
   leagueReadyChecks.delete(matchId);
@@ -2468,7 +2664,7 @@ async function joinLeagueGame(socket, matchId) {
     socket.data.leagueUserId = String(user.id);
     socket.data.leagueMatchId = safeMatchId;
 
-    room.players[seat - 1] = { id:socket.id, name:socket.data.name };
+    room.players[seat - 1] = { id:socket.id, name:socket.data.name, userId:String(user.id) };
     room.seatControllers[seat] = 'human';
     const reconnectTimer = room.leagueDisconnectedTimers?.get(seat);
     if (reconnectTimer) {
@@ -2531,8 +2727,16 @@ async function finishRoomGame(roomId, ordered) {
     }
   }
 
+  let profileSummary = null;
+  try {
+    profileSummary = await finalizeAuthoritativeProfiles(roomId,ordered);
+  } catch (err) {
+    console.error(`📊 ${roomId}: autoritativní profil/žebříček se nepodařilo dokončit:`,err);
+  }
+
   io.to(roomId).emit('gameOver', { message:'Hra skončila!', finalScores:ordered });
   if (leagueResult) io.to(roomId).emit('league:rating:result', leagueResult);
+  if (profileSummary?.normalRating) io.to(roomId).emit('normal:rating:result', profileSummary.normalRating);
 }
 
 setInterval(() => {
@@ -2542,6 +2746,25 @@ setInterval(() => {
 
 
 io.on('connection', socket => {
+
+  socket.data = socket.data || {};
+  socket.data.accountPromise = sessionUser(socket.request, { touch:false })
+    .then(user => {
+      socket.data.accountUserId = user ? String(user.id) : null;
+      socket.data.accountDisplayName = user?.displayName || user?.username || null;
+      const roomId = socket.data?.roomId || socket.data?.joinedRoom;
+      const room = roomId ? rooms[roomId] : null;
+      if (room) {
+        const seat = getSeatNumber(room,socket.id);
+        if (seat && room.players?.[seat-1]) room.players[seat-1].userId = socket.data.accountUserId;
+      }
+      return user || null;
+    })
+    .catch(err => {
+      console.warn('Socket účet se nepodařilo načíst:',err.message);
+      socket.data.accountUserId = null;
+      return null;
+    });
 
   // ===== LIGA socket API =====
   socket.on('league:queue:join', () => joinLeagueQueue(socket));
@@ -3294,36 +3517,42 @@ socket.on('chat:history:get', ({ roomId }) => {
 
 
 
-socket.on("playerAnswered", ({ room: roomId, player, answerIndex }) => {
+socket.on("playerAnswered", ({ room: requestedRoomId, player, answerIndex }) => {
+  const roomId = socket.data?.roomId || socket.data?.joinedRoom;
+  if (!roomId || String(requestedRoomId || '') !== String(roomId)) return;
   const room = rooms[roomId];
-  if (!room) return;
+  if (!room || room.currentQuestionType !== 'choice') return;
+
+  const seat = getSeatNumber(room,socket.id);
+  if (!seat || Number(player) !== seat || !room.currentQuestionParticipants?.includes(seat)) return;
+  const answer = Number(answerIndex);
+  if (!Number.isInteger(answer) || answer < 0 || answer > 20) return;
 
   room.answers = room.answers || {};
-
-  // Ulož odpověď jen pokud ještě neodpověděl
-  if (room.answers[player] === undefined) {
-    room.answers[player] = answerIndex;
-    console.log(`✏️ Hráč ${player} v ${roomId} odpověděl: ${answerIndex}`);
+  if (room.answers[seat] === undefined) {
+    room.answers[seat] = answer;
+    console.log(`✏️ Hráč ${seat} v ${roomId} odpověděl: ${answer}`);
   }
 });
 
 
 
-
-socket.on("playerNumericAnswer", ({ room: roomId, player, answer }) => {
+socket.on("playerNumericAnswer", ({ room: requestedRoomId, player, answer }) => {
+  const roomId = socket.data?.roomId || socket.data?.joinedRoom;
+  if (!roomId || String(requestedRoomId || '') !== String(roomId)) return;
   const room = rooms[roomId];
-  if (!room) return;
+  if (!room || room.currentQuestionType !== 'numeric') return;
 
-  
+  const seat = getSeatNumber(room,socket.id);
+  if (!seat || Number(player) !== seat || !room.currentQuestionParticipants?.includes(seat)) return;
+  const value = Number(answer);
+  if (!Number.isFinite(value) || Math.abs(value) > 1e15) return;
+
   room.numericAnswers = room.numericAnswers || {};
-  const startTime = room.numericStartTime || Date.now(); // server uchovává začátek
-
-  if (!room.numericAnswers[player]) {
-    room.numericAnswers[player] = {
-      num: answer,
-      time: Date.now() - startTime
-    };
-    console.log(`✏️ Numerická odpověď: Hráč ${player} v ${roomId} → ${answer} (${room.numericAnswers[player].time}ms)`);
+  const startTime = room.numericStartTime || Date.now();
+  if (!room.numericAnswers[seat]) {
+    room.numericAnswers[seat] = { num:value, time:Date.now()-startTime };
+    console.log(`✏️ Numerická odpověď: Hráč ${seat} v ${roomId} → ${value} (${room.numericAnswers[seat].time}ms)`);
   }
 });
 

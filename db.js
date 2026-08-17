@@ -82,7 +82,9 @@ CREATE TABLE IF NOT EXISTS profile_matches (
   UNIQUE(user_id, event_id),
   CHECK (placement BETWEEN 1 AND 3)
 );
+ALTER TABLE profile_matches ADD COLUMN IF NOT EXISTS source VARCHAR(20) NOT NULL DEFAULT 'legacy_client';
 CREATE INDEX IF NOT EXISTS profile_matches_user_date_idx ON profile_matches(user_id, played_at DESC);
+CREATE INDEX IF NOT EXISTS profile_matches_mode_date_idx ON profile_matches(mode, played_at DESC);
 
 CREATE TABLE IF NOT EXISTS profile_events (
   user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -92,6 +94,64 @@ CREATE TABLE IF NOT EXISTS profile_events (
   PRIMARY KEY (user_id, event_id)
 );
 CREATE INDEX IF NOT EXISTS profile_events_created_idx ON profile_events(created_at);
+
+
+
+CREATE TABLE IF NOT EXISTS profile_question_events (
+  id BIGSERIAL PRIMARY KEY,
+  user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  event_id VARCHAR(80) NOT NULL,
+  match_id VARCHAR(80),
+  answered_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  mode VARCHAR(16) NOT NULL,
+  category VARCHAR(24),
+  question_type VARCHAR(16) NOT NULL,
+  success BOOLEAN NOT NULL DEFAULT FALSE,
+  answered BOOLEAN NOT NULL DEFAULT TRUE,
+  answer_numeric DOUBLE PRECISION,
+  correct_numeric DOUBLE PRECISION,
+  numeric_error_pct DOUBLE PRECISION,
+  exact_hit BOOLEAN NOT NULL DEFAULT FALSE,
+  UNIQUE(user_id, event_id),
+  CHECK (question_type IN ('choice','numeric'))
+);
+CREATE INDEX IF NOT EXISTS profile_question_events_user_date_idx ON profile_question_events(user_id, answered_at DESC);
+CREATE INDEX IF NOT EXISTS profile_question_events_mode_category_date_idx ON profile_question_events(mode, category, answered_at DESC);
+CREATE INDEX IF NOT EXISTS profile_question_events_numeric_date_idx ON profile_question_events(mode, question_type, answered_at DESC);
+
+CREATE TABLE IF NOT EXISTS normal_matches (
+  match_id VARCHAR(80) PRIMARY KEY,
+  room_id VARCHAR(80),
+  played_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS normal_ratings (
+  user_id BIGINT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  rating INTEGER NOT NULL DEFAULT 1000,
+  rated_games INTEGER NOT NULL DEFAULT 0,
+  wins INTEGER NOT NULL DEFAULT 0,
+  second_places INTEGER NOT NULL DEFAULT 0,
+  third_places INTEGER NOT NULL DEFAULT 0,
+  highest_rating INTEGER NOT NULL DEFAULT 1000,
+  last_match_at TIMESTAMPTZ,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS normal_ratings_rating_idx ON normal_ratings(rating DESC, rated_games DESC);
+
+CREATE TABLE IF NOT EXISTS normal_rating_events (
+  match_id VARCHAR(80) NOT NULL REFERENCES normal_matches(match_id) ON DELETE CASCADE,
+  user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  played_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  placement SMALLINT NOT NULL,
+  rating_before INTEGER NOT NULL,
+  rating_after INTEGER NOT NULL,
+  rating_delta INTEGER NOT NULL,
+  opponents JSONB NOT NULL DEFAULT '[]'::jsonb,
+  PRIMARY KEY (match_id, user_id),
+  CHECK (placement BETWEEN 1 AND 3)
+);
+CREATE INDEX IF NOT EXISTS normal_rating_events_user_date_idx ON normal_rating_events(user_id, played_at DESC);
+CREATE INDEX IF NOT EXISTS normal_rating_events_date_idx ON normal_rating_events(played_at DESC);
 
 CREATE TABLE IF NOT EXISTS auth_sessions (
   token_hash CHAR(64) PRIMARY KEY,
@@ -177,7 +237,7 @@ CREATE TABLE IF NOT EXISTS league_rewards (
 );
 
 INSERT INTO schema_meta(key, value)
-VALUES ('schema_version', '3')
+VALUES ('schema_version', '4')
 ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = NOW();
 `;
 
