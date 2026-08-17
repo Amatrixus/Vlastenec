@@ -2930,7 +2930,7 @@ body.is-game-started #game_chat_drawer {
   box-sizing: border-box;
   padding: 8px 10px 10px;
   grid-template-columns: 1fr;
-  grid-template-rows: 28px 34px minmax(0, 1fr);
+  grid-template-rows: 34px minmax(0, 1fr);
   gap: 6px;
   border: 0;
   border-right: 1px solid rgba(255,255,255,.08);
@@ -2954,27 +2954,14 @@ body.is-game-started #game_chat_close {
   display: none;
 }
 
-/* Keep both requested channels, but make them subtle. */
+/* In-game chat has no channel selector: it belongs only to this session. */
 body.is-game-started #game_chat_drawer .game-chat-tabs {
-  grid-row: 1;
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  margin: 0;
-  padding: 0;
-  background: transparent;
-}
-body.is-game-started #game_chat_drawer .chat-channel-tab {
-  min-height: 26px;
-  padding: 0 10px;
-  border-radius: 7px;
-  font-size: 10px;
-  letter-spacing: .04em;
+  display: none !important;
 }
 
 /* As in the old chat: compose first, history below. */
 body.is-game-started #game_chat_drawer .modern-chat-compose {
-  grid-row: 2;
+  grid-row: 1;
   display: grid;
   grid-template-columns: 1fr 48px;
   gap: 5px;
@@ -3008,7 +2995,7 @@ body.is-game-started #game_chat_drawer .modern-chat-compose button {
 }
 
 body.is-game-started #game_chat_drawer .modern-chat-messages {
-  grid-row: 3;
+  grid-row: 2;
   min-height: 0;
   overflow-y: auto;
   padding: 3px 7px 4px;

@@ -2630,10 +2630,6 @@ if (regionValues && typeof regionValues === 'object') {
           <strong>Chat</strong>
           <button id="game_chat_close" type="button" aria-label="Zavřít chat">×</button>
         </div>
-        <div class="chat-tabs game-chat-tabs" role="tablist">
-          <button class="chat-channel-tab active" data-channel="session" type="button">Místnost</button>
-          <button class="chat-channel-tab" data-channel="community" type="button">Komunita</button>
-        </div>
         <div id="game_chat_messages" class="modern-chat-messages"></div>
         <div class="modern-chat-compose">
           <input id="game_chat_input" type="text" maxlength="500" autocomplete="off" placeholder="Napiš zprávu…">
@@ -2976,33 +2972,38 @@ if (regionValues && typeof regionValues === 'object') {
           return line;
         }
 
-        function renderChatBox(box) {
+        function renderChatBox(box, channel = activeChatChannel) {
           if (!box) return;
           box.innerHTML = '';
-          const items = chatState[activeChatChannel] || [];
+          const items = chatState[channel] || [];
           if (!items.length) {
             const empty = document.createElement('div');
             empty.className = 'modern-chat-empty';
-            empty.textContent = activeChatChannel === 'community'
+            empty.textContent = channel === 'community'
               ? 'Komunitní chat je zatím tichý.'
               : 'V místnosti zatím nikdo nic nenapsal.';
             box.appendChild(empty);
           } else {
-            items.forEach(msg => box.appendChild(createChatLine(msg, activeChatChannel)));
+            items.forEach(msg => box.appendChild(createChatLine(msg, channel)));
           }
           box.scrollTop = box.scrollHeight;
         }
 
         function syncChatUI() {
-          document.querySelectorAll('.chat-channel-tab').forEach(btn => {
+          // Lobby si zachovává přepínač Místnost / Komunita.
+          document.querySelectorAll('.lobby-chat-panel .chat-channel-tab').forEach(btn => {
             btn.classList.toggle('active', btn.dataset.channel === activeChatChannel);
           });
-          renderChatBox(document.getElementById('lobby_chat_messages'));
-          renderChatBox(document.getElementById('game_chat_messages'));
-          const placeholder = activeChatChannel === 'community' ? 'Napiš komunitě…' : 'Napiš do místnosti…';
-          ['lobby_chat_input','game_chat_input'].forEach(id => {
-            const el = document.getElementById(id); if (el) el.placeholder = placeholder;
-          });
+          renderChatBox(document.getElementById('lobby_chat_messages'), activeChatChannel);
+
+          // Ve hře existuje pouze chat aktuální session.
+          renderChatBox(document.getElementById('game_chat_messages'), 'session');
+
+          const lobbyPlaceholder = activeChatChannel === 'community' ? 'Napiš komunitě…' : 'Napiš do místnosti…';
+          const lobbyInput = document.getElementById('lobby_chat_input');
+          if (lobbyInput) lobbyInput.placeholder = lobbyPlaceholder;
+          const gameInput = document.getElementById('game_chat_input');
+          if (gameInput) gameInput.placeholder = 'Napiš zprávu…';
         }
 
         document.querySelectorAll('.chat-channel-tab').forEach(btn => {
@@ -3012,10 +3013,11 @@ if (regionValues && typeof regionValues === 'object') {
           });
         });
 
-        function sendChatFrom(input) {
+        function sendChatFrom(input, forcedChannel = null) {
           const text = String(input?.value || '').trim();
           if (!text) return;
-          if (activeChatChannel === 'community') {
+          const channel = forcedChannel || activeChatChannel;
+          if (channel === 'community') {
             socket.emit('community:chat:send', { text });
           } else {
             if (!currentRoomId) return;
@@ -3025,14 +3027,14 @@ if (regionValues && typeof regionValues === 'object') {
           input.focus();
         }
 
-        function wireCompose(inputId, buttonId) {
+        function wireCompose(inputId, buttonId, forcedChannel = null) {
           const input = document.getElementById(inputId);
           const btn = document.getElementById(buttonId);
-          btn?.addEventListener('click', () => sendChatFrom(input));
-          input?.addEventListener('keydown', e => { if (e.key === 'Enter') sendChatFrom(input); });
+          btn?.addEventListener('click', () => sendChatFrom(input, forcedChannel));
+          input?.addEventListener('keydown', e => { if (e.key === 'Enter') sendChatFrom(input, forcedChannel); });
         }
         wireCompose('lobby_chat_input','lobby_chat_send');
-        wireCompose('game_chat_input','game_chat_send');
+        wireCompose('game_chat_input','game_chat_send', 'session');
 
         function setUnread(n) {
           unreadGameChat = Math.max(0, Number(n) || 0);
@@ -3055,8 +3057,12 @@ if (regionValues && typeof regionValues === 'object') {
         function receiveMessage(channel, msg) {
           chatState[channel].push(msg);
           if (chatState[channel].length > 200) chatState[channel].shift();
-          if (channel === activeChatChannel) syncChatUI();
-          if (document.body.classList.contains('is-game-started') && !gameDrawer?.classList.contains('open')) {
+
+          // Lobby sleduje aktuálně zvolený kanál; herní chat vždy pouze session.
+          if (channel === activeChatChannel || (channel === 'session' && document.body.classList.contains('is-game-started'))) {
+            syncChatUI();
+          }
+          if (channel === 'session' && document.body.classList.contains('is-game-started') && !gameDrawer?.classList.contains('open')) {
             setUnread(unreadGameChat + 1);
           }
         }
@@ -3107,8 +3113,9 @@ if (regionValues && typeof regionValues === 'object') {
 
         socket.on('startGame', () => {
           document.body.classList.add('is-game-started');
-          // Ve hře je chat znovu trvale viditelný vlevo nahoře.
+          // Herní chat je vždy pouze pro aktuální session.
           setGameDrawer(true);
+          renderChatBox(document.getElementById('game_chat_messages'), 'session');
         });
 
         if (socket.connected) socket.emit('community:chat:history:get');
