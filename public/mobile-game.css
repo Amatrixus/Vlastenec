@@ -1095,20 +1095,22 @@ body.vl-tablet-device.is-game-started #vl_tablet_fullscreen_btn:active {
 
 
 /* ============================================================
-   VLASTENEC — TABLET MAP FIT + TAP HIGHLIGHT FIX V15
-   V11 desktop-like tablet gameplay is preserved. Only the map viewport and
-   touch/focus highlight behaviour are changed.
+   VLASTENEC — TABLET MOBILE-MAP GEOMETRY + TAP HIGHLIGHT FIX V17
+   Tablet keeps the desktop gameplay UI. Only #map uses the phone gameplay
+   geometry; touch/focus highlight removal from V15 is preserved.
    ============================================================ */
 @media (min-width: 700px) and (max-width: 1400px) {
   /* Keep the whole SVG viewBox inside the visible tablet game area. The SVG's
      preserveAspectRatio="xMidYMid meet" guarantees that no map edge is cropped. */
   body.vl-tablet-device.is-game-started #map {
-    top: 6dvh !important;
-    left: 5vw !important;
-    width: 90vw !important;
-    height: 78dvh !important;
-    max-width: 90vw !important;
-    max-height: 78dvh !important;
+    /* Exact geometry from the phone gameplay map. No other phone rule is
+       applied to tablet. */
+    top: 1.5dvh !important;
+    left: 4vw !important;
+    width: 92vw !important;
+    height: 86dvh !important;
+    max-width: none !important;
+    max-height: none !important;
     overflow: visible !important;
   }
 
@@ -1130,39 +1132,5 @@ body.vl-tablet-device.is-game-started #vl_tablet_fullscreen_btn:active {
   body.vl-tablet-device.is-game-started #map .region:active {
     outline: none !important;
     box-shadow: none !important;
-  }
-}
-
-
-/* ============================================================
-   VLASTENEC — TABLET SVG RENDER STABILITY V16
-   Rendering-only workaround. No region state, colour, opacity, timing,
-   selection or wave logic changes.
-   ============================================================ */
-@media (min-width: 700px) and (max-width: 1400px) {
-  /* CSS brightness() on individual paths of the large scaled map can be
-     raster-clipped by tablet renderers. These shared SVG filters reproduce
-     the same 20%/120% RGB multiplication with an explicit filter region. */
-  body.vl-tablet-device.is-game-started #map .region.unavailable,
-  body.vl-tablet-device.is-game-started #map .region.unclickable {
-    filter: url(#vlTabletBrightness20) !important;
-  }
-
-  /* Existing JS uses inline brightness(120%) for the exact same hover effect.
-     Keep the appearance but route it through the stable SVG filter on tablet. */
-  body.vl-tablet-device.is-game-started #map .region[style*="brightness(120%)"] {
-    filter: url(#vlTabletBrightness120) !important;
-  }
-
-  /* brightness(100%) is mathematically a no-op. Avoid allocating a filtered
-     SVG surface for it on tablet while preserving the exact rendered image. */
-  body.vl-tablet-device.is-game-started #map .region[style*="brightness(100%)"]:not(.unavailable):not(.unclickable) {
-    filter: none !important;
-  }
-
-  /* Dynamic wave clones are already filter:none inline; keep that explicit
-     in the tablet layer so the animated clipPath/mask never inherits a path filter. */
-  body.vl-tablet-device.is-game-started #map .region-wave-overlay {
-    filter: none !important;
   }
 }
