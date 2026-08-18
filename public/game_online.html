@@ -348,9 +348,24 @@
 
 
         function runBasesOnce() {
-        if (basesSettleRan) return;
+        if (basesSettleRan) return window.__basesSettlePromise || Promise.resolve();
         basesSettleRan = true;
-        basesSettle();
+        window.__basesSettlePromise = Promise.resolve(basesSettle())
+          .then(() => {
+            try { sessionStorage.setItem(animDoneKey(currentRoomId), '1'); } catch (_) {}
+            sawPreGameSnapshot = false;
+            if (socket?.connected && currentRoomId) {
+              socket.emit('basesAnimationDone', { roomId: currentRoomId });
+            }
+            try { window.dispatchEvent(new Event('gameStartedAfterAnimation')); } catch (_) {}
+            console.log('✅ Úvodní animace základen dokončena a potvrzena serveru.');
+          })
+          .catch(err => {
+            console.error('❌ Chyba animace základen:', err);
+            // Ani chyba vizuálu nesmí zablokovat celou hru; server má navíc timeout.
+            if (socket?.connected && currentRoomId) socket.emit('basesAnimationDone', { roomId: currentRoomId });
+          });
+        return window.__basesSettlePromise;
         }
 
 
@@ -418,6 +433,10 @@
     // ---- anti-refresh guards ----
     let gameStarted = false;        // přijmi startGame jen 1×
     let hydratedFromServer = false; // už mám nahraný aktuální stav?
+    // Pokud tento konkrétní tab už viděl lobby snapshot, následný started/settle
+    // snapshot je stále součást živého startu, ne F5. Po skutečném reloadu je
+    // tato proměnná znovu false, takže reconnect se rehydratuje okamžitě.
+    let sawPreGameSnapshot = false;
 
     let allowPaint = false;
 
@@ -509,6 +528,7 @@
     console.log('🧪 VLASTENEC FIX: responsive-game-clocks-v2-original-look');
     console.log('🧪 VLASTENEC FIX: countdown-zero-responsive-fonts-v1');
     console.log('🧪 VLASTENEC FIX: base-score-on-settle-v1');
+    console.log('🧪 VLASTENEC FIX: start-sequence-sync-v1');
 
     // --- Profil hráče: lokální statistiky od této verze ---
     const profileStore = window.VlastenecProfileStore || null;
@@ -751,7 +771,8 @@ function renderBasesFromSnapshot(snapshot) {
     const base = bases[seat];
     const owned = Array.isArray(regions[`Player${seat}regions`]) ? regions[`Player${seat}regions`] : [];
     const remainingLives = Number(lives[`Player${seat}`] ?? 3);
-    const valid = !!base && owned.includes(base) && remainingLives > 0 && !!document.getElementById(base);
+    const settled = snapshot?.phase !== 'settle' || snapshot?.baseScoreSettled?.[seat] === true;
+    const valid = settled && !!base && owned.includes(base) && remainingLives > 0 && !!document.getElementById(base);
 
     if (!valid) {
       hideBaseForSeat(seat);
@@ -927,6 +948,19 @@ function scheduleAuthoritativeVisualRender(snapshot, attempt = 0) {
   // Snapshot je jediný zdroj pravdy. Nevoláme updateScores(), protože by klient
   // znovu odvozoval skóre ze svého lokálního stavu.
   if (typeof colorizeTiles === 'function') colorizeTiles();
+
+  // Při F5 uprostřed úvodního rozdělování jsou základní regiony už autoritativně
+  // vlastněné, ale ještě nemusely být odhaleny. Nezobrazené základny proto
+  // necháme neutrální, dokud server nepotvrdí jejich baseSettled stav.
+  if (snapshot?.phase === 'settle') {
+    for (let seat = 1; seat <= 3; seat++) {
+      if (snapshot?.baseScoreSettled?.[seat] === true) continue;
+      const baseId = snapshot?.bases?.[seat];
+      const baseRegion = baseId ? document.getElementById(baseId) : null;
+      if (baseRegion) baseRegion.style.removeProperty('fill');
+    }
+  }
+
   if (typeof displayRegionValues === 'function') displayRegionValues();
   if (typeof updateScoreUI === 'function' && snapshot?.scores) updateScoreUI(snapshot.scores);
   if (typeof updateScoreNames === 'function') updateScoreNames();
@@ -1035,6 +1069,7 @@ function applySnapshotWhenReady(myNumber, snapshot, attempt = 0) {
 
   // Lobby snapshot – žádná herní rehydratace.
   if (!serverSaysStarted) {
+    sawPreGameSnapshot = true;
     clearUiFlagsForRoom(snapshot.roomId || currentRoomId);
     uiStartHandled = false;
     basesSettleRan = false;
@@ -1060,8 +1095,26 @@ function applySnapshotWhenReady(myNumber, snapshot, attempt = 0) {
     return;
   }
 
-  // Jakýkoli stateSync rozehrané hry znamená reconnect/refresh/late join.
-  // Úvodní animaci NEREPLAYUJEME. Okamžitě aplikujeme celý autoritativní snapshot.
+  // stateSync může dorazit i během ÚPLNĚ PRVNÍHO startu hry. Dříve jsme každý
+  // started snapshot považovali za F5/reconnect, schovali overlay a okamžitě
+  // vykreslili všechny základny bez animace. Pokud tento tab už právě odbavuje
+  // živou settle sekvenci, snapshot pouze použijeme pro data/skóre a vizuální
+  // start necháme doběhnout.
+  const liveSettleSequence =
+    snapshot.phase === 'settle' &&
+    (uiStartHandled || sawPreGameSnapshot) &&
+    sessionStorage.getItem(animDoneKey(snapshot.roomId || currentRoomId)) !== '1';
+
+  if (liveSettleSequence) {
+    applyAuthoritativeSnapshotState(snapshot);
+    if (typeof updateScoreUI === 'function' && snapshot?.scores) updateScoreUI(snapshot.scores);
+    if (typeof updateScoreNames === 'function') updateScoreNames();
+    DBG('LIVE START: stateSync data applied without interrupting overlay/base animation');
+    return;
+  }
+
+  // Opravdový reconnect/refresh/late join: úvodní animaci nereplayujeme a
+  // okamžitě aplikujeme autoritativní snapshot.
   applyAuthoritativeSnapshotState(snapshot);
   allowPaint = true;
   gameStarted = true;
@@ -7766,66 +7819,61 @@ document.querySelectorAll(".region").forEach(region => {
 
                 
                 //PHASE 1 - BASE SELECTION
-                function basesSettle() {
+                async function basesSettle() {
 
+                  const gamePhase = document.getElementById("gamephase");
+                  if (gamePhase) {
+                    gamePhase.innerHTML = "Výběr základny";
+                    gamePhase.style.height = "100%";
+                  }
 
-                  var gamePhase = document.getElementById("gamephase");
-                  gamePhase.innerHTML = "Výběr základny";
-                  
-                  var gameRounds = document.getElementById("gamerounds");
-                  gameRounds.style.display = "none";
+                  const gameRounds = document.getElementById("gamerounds");
+                  if (gameRounds) gameRounds.style.display = "none";
 
-                  var playerSticks = document.getElementById("playersticks");
-                  playerSticks.style.display = "none";
+                  const playerSticks = document.getElementById("playersticks");
+                  if (playerSticks) playerSticks.style.display = "none";
 
-                  var gameProgress = document.getElementById("gameprogress");
-                  gameProgress.style.height = "7%";
+                  const gameProgress = document.getElementById("gameprogress");
+                  if (gameProgress) {
+                    gameProgress.style.display = "block";
+                    gameProgress.style.height = "7%";
+                  }
 
-                  var gamePhase = document.getElementById("gamephase");
-                  gamePhase.style.height = "100%";
-                
+                  const thudSound = document.getElementById('thud');
+                  const startedAt = performance.now();
 
+                  const waitUntil = async (targetMs) => {
+                    const remaining = targetMs - (performance.now() - startedAt);
+                    if (remaining > 0) await new Promise(resolve => setTimeout(resolve, remaining));
+                  };
 
-                  var thudSound = document.getElementById('thud');
-                        
-                    
-                    setTimeout(() => {
-                        thudSound.play();
-                        settlePlayer1();
-                        colorizeBaseRegion(1);
-                        socket.emit("baseSettled", { playerNumber: 1 });
-
-                       
-                    }, 2000);
-                    setTimeout(() => {
+                  const revealBase = async (seat, targetMs) => {
+                    await waitUntil(targetMs);
+                    if (thudSound) {
+                      try {
                         thudSound.pause();
-                        thudSound.currentTime = 0; // Reset audio to beginning
-                        thudSound.play();
-                        settlePlayer2();
-                        colorizeBaseRegion(2);
-                        socket.emit("baseSettled", { playerNumber: 2 });
+                        thudSound.currentTime = 0;
+                        await thudSound.play();
+                      } catch (_) {}
+                    }
 
-                        
-                    }, 4000); // Delay of 2000 milliseconds (2 seconds)
+                    const settleFn = window[`settlePlayer${seat}`];
+                    if (typeof settleFn === 'function') settleFn();
 
-                    setTimeout(() => {
-                        thudSound.pause();
-                        thudSound.currentTime = 0; // Reset audio to beginning
-                        thudSound.play();
-                        settlePlayer3();
-                        colorizeBaseRegion(3);
-                        socket.emit("baseSettled", { playerNumber: 3 });
+                    // Skóre se připíše ve chvíli, kdy se základna začne skutečně
+                    // vykreslovat. Vlnu ale čekáme do konce, aby server nepustil
+                    // rozšiřování dřív než vizuál opravdu doběhne.
+                    socket.emit("baseSettled", { playerNumber: seat });
+                    await colorizeBaseRegion(seat);
+                  };
 
-                        
-                    }, 6000); // Delay of 4000 milliseconds (2 seconds after the previous couplet)
-
-
-                    setTimeout(() => {
-
-                      
-
-                    }, 8000);
-                    
+                  // Starty zůstávají přesně po 2 / 4 / 6 sekundách. Promise.all
+                  // navíc čeká na dokončení poslední barevné vlny (~0,86 s).
+                  await Promise.all([
+                    revealBase(1, 2000),
+                    revealBase(2, 4000),
+                    revealBase(3, 6000)
+                  ]);
                 }
 
 

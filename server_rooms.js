@@ -1,3 +1,4 @@
+console.log('🧪 VLASTENEC BUILD: 2026-08-18-start-sequence-sync-v1');
 console.log('🧪 VLASTENEC BUILD: 2026-08-18-base-score-on-settle-v1');
 console.log('🧪 VLASTENEC BUILD: 2026-08-18-authoritative-refresh-v1');
 console.log('🧪 VLASTENEC BUILD: 2026-08-18-mc-human-timing-v1');
@@ -266,6 +267,7 @@ function buildRoomSnapshot(room, roomId, forSeat = null) {
     scores: { ...(room.scores || {}) },
     defenseBonuses: { ...(room.defenseBonuses || {}) },
     playerLives: { ...(room.playerLives || {}) },
+    baseScoreSettled: { ...(room.baseScoreSettled || { 1:false, 2:false, 3:false }) },
     seatControllers: { ...(room.seatControllers || {}) },
     expansionPlan: room.expansionPlan || null,
     battlePlan: room.battlePlan || null,
@@ -864,6 +866,65 @@ async function delayAlive(roomId, ms) {
 // animaci ničení základny. Každá důležitá UI fáze má nyní unikátní token.
 // Server pokračuje až po potvrzení klientů, s timeoutem pouze jako pojistkou.
 const battleUiWaiters = new Map();
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Start/base animation barrier
+// ─────────────────────────────────────────────────────────────────────────────
+// Začátek hry už nesmí běžet podle dvou nezávislých hodin (server delay + klientské
+// setTimeouty). Server po startGame čeká na skutečné dokončení úvodní animace
+// základen. Jakmile ji dokončí všichni právě připojení klienti, pokračuje ihned.
+const baseAnimationWaiters = new Map();
+
+function waitForBaseAnimationDone(roomId, timeoutMs = 16000) {
+  const room = rooms[roomId];
+  const expected = new Set(connectedBattleUiSocketIds(room));
+
+  return new Promise((resolve) => {
+    if (!room || expected.size === 0) {
+      resolve({ reason: 'no_clients' });
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      const waiter = baseAnimationWaiters.get(roomId);
+      if (!waiter) return;
+      console.warn(`⏱️ ${roomId}: timeout úvodní animace základen; zbývá ${waiter.pending.size} klient(ů).`);
+      baseAnimationWaiters.delete(roomId);
+      resolve({ reason: 'timeout' });
+    }, timeoutMs);
+    timer.unref?.();
+
+    baseAnimationWaiters.set(roomId, { pending: expected, resolve, timer });
+    console.log(`🏁 ${roomId}: čekám na dokončení animace základen od ${expected.size} klient(ů).`);
+  });
+}
+
+function acknowledgeBaseAnimationDone(socket, requestedRoomId) {
+  const roomId = socket.data?.roomId || socket.data?.joinedRoom;
+  if (!roomId || String(requestedRoomId || '') !== String(roomId)) return;
+  const waiter = baseAnimationWaiters.get(roomId);
+  if (!waiter || !waiter.pending.has(socket.id)) return;
+
+  waiter.pending.delete(socket.id);
+  console.log(`✅ ${roomId}: animace základen hotová na ${socket.id}; zbývá=${waiter.pending.size}`);
+  if (waiter.pending.size > 0) return;
+
+  baseAnimationWaiters.delete(roomId);
+  if (waiter.timer) clearTimeout(waiter.timer);
+  waiter.resolve({ reason: 'acked' });
+}
+
+function dropSocketFromBaseAnimationWaiters(socketId) {
+  for (const [roomId, waiter] of baseAnimationWaiters.entries()) {
+    if (!waiter.pending?.has(socketId)) continue;
+    waiter.pending.delete(socketId);
+    console.log(`↩️ ${roomId}: odpojený socket odstraněn z čekání na základny; zbývá=${waiter.pending.size}`);
+    if (waiter.pending.size > 0) continue;
+    baseAnimationWaiters.delete(roomId);
+    if (waiter.timer) clearTimeout(waiter.timer);
+    waiter.resolve({ reason: 'clients_gone' });
+  }
+}
 
 function connectedBattleUiSocketIds(room) {
   if (!room || !Array.isArray(room.players)) return [];
@@ -1840,22 +1901,24 @@ async function runGameScenario(roomId) {
   room.phase = "settle";
   room.round = 0;
 
+  // Klient dostal startGame už těsně před spuštěním scénáře a sám zobrazí
+  // pětisekundový overlay. Po jeho zmizení spustí animaci základen (2/4/6 s).
+  // Místo starého pevného 7 s + 8 s čekání nyní server čeká na skutečný konec
+  // této animace. Tím nevznikne hluché místo a fáze se nemohou předbíhat.
+  const baseAnimationResult = await waitForBaseAnimationDone(roomId, 16000);
+  if (!isRoomAlive(roomId)) return;
+  console.log(`🏁 ${roomId}: úvodní animace základen dokončena (${baseAnimationResult?.reason || 'unknown'}).`);
 
-    if (!await delayAlive(roomId, 7000)) return; // 🔴 NEW
+  // Nouzová pojistka: pokud některý baseSettled ACK nedorazil, dorovnáme stav
+  // až po skončení/timeoutu animace. Helper je idempotentní.
+  for (let seat = 1; seat <= 3; seat++) {
+    awardBaseSettlementScore(roomId, seat, 'settle-fallback');
+  }
 
-  //FÁZE USAZENÍ
-      io.to(roomId).emit("runClientScenario", { action: "basesSettle" });
-       if (!await delayAlive(roomId, 8000)) return; // 🔴 NEW
+  // Krátké nadechnutí po poslední vlně; už nejde o synchronizační delay.
+  if (!await delayAlive(roomId, 350)) return;
 
-       // Nouzová pojistka: v normálním běhu klient potvrdí každou základnu
-       // přesně při jejím vykreslení (2/4/6 s). Kdyby během settle nikdo
-       // nebyl připojený nebo ACK nedorazil, před přechodem do expansion
-       // dorovnáme chybějící základny, aby herní stav nezůstal bez 1000 bodů.
-       for (let seat = 1; seat <= 3; seat++) {
-         awardBaseSettlementScore(roomId, seat, 'settle-fallback');
-       }
-
-       room.phase ="expansion" 
+  room.phase ="expansion";
   //INTRO K ROZŠIŘOVÁNÍ
 
        if (!isRoomAlive(roomId)) return; // 🔴 NEW
@@ -1874,7 +1937,9 @@ async function runGameScenario(roomId) {
       });
 
       console.log("🧭 Odeslán expansionPlan:", expansionPlan);
-      if (!await delayAlive(roomId, 2000)) return; // 🔴 NEW
+      // Jen krátký čas na přečtení/rozsvícení pořadí. Synchronizace už proběhla
+      // skutečným ACKem úvodní animace, takže zde není potřeba dlouhá rezerva.
+      if (!await delayAlive(roomId, 900)) return;
 
       //FÁZE ROZŠIŘOVÁNÍ
       if (!isRoomAlive(roomId)) return; // 🔴 NEW
@@ -3647,6 +3712,11 @@ io.on('connection', socket => {
   });
 
 
+  socket.on("basesAnimationDone", ({ roomId } = {}) => {
+    acknowledgeBaseAnimationDone(socket, roomId);
+  });
+
+
 
   // FRIENDS: host vytvoří místnost a rovnou se do ní přidá
 socket.on("createRoom", ({ settings }) => {
@@ -3826,6 +3896,7 @@ socket.on("joinRoom", ({ room, settings }) => {
 socket.on("disconnect", async () => {
   // Odpojený klient nesmí držet právě běžící UI bariéru až do fallback timeoutu.
   dropSocketFromBattleUiWaiters(socket.id);
+  dropSocketFromBaseAnimationWaiters(socket.id);
 
   const leagueQueueUserId = String(socket.data?.leagueQueueUserId || '');
   if (leagueQueueUserId) {
