@@ -1095,7 +1095,7 @@ body.vl-tablet-device.is-game-started #vl_tablet_fullscreen_btn:active {
 
 
 /* ============================================================
-   VLASTENEC — TABLET MAP FIT + TAP HIGHLIGHT FIX V14
+   VLASTENEC — TABLET MAP FIT + TAP HIGHLIGHT FIX V15
    V11 desktop-like tablet gameplay is preserved. Only the map viewport and
    touch/focus highlight behaviour are changed.
    ============================================================ */
@@ -1109,7 +1109,7 @@ body.vl-tablet-device.is-game-started #vl_tablet_fullscreen_btn:active {
     height: 78dvh !important;
     max-width: 90vw !important;
     max-height: 78dvh !important;
-    overflow: visible !important;
+    overflow: hidden !important;
   }
 
   /* Remove the blue WebKit/Chromium touch rectangle and focus outline without
