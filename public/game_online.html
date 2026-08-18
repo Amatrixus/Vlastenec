@@ -5243,7 +5243,7 @@ if (regionValues && typeof regionValues === 'object') {
         }
 
         // ============================================================
-        // VLASTENEC — MAP RENDERER V2.3 (opt-in with ?mapv2=1)
+        // VLASTENEC — MAP RENDERER V2.3.2 / V38 (opt-in with ?mapv2=1)
         //
         // Rendering only. Server/game/selection state is untouched.
         //
@@ -5469,7 +5469,10 @@ if (regionValues && typeof regionValues === 'object') {
             const neutral = neutralRegionFill(regionEl);
             const part = makeRegionWaveV2Split(regionEl, neutral, newFill, 0, epoch);
             if (!part) {
-                if (isRegionWaveV2EpochCurrent(epoch)) setRegionVisualFill(regionEl, newFill);
+                if (isRegionWaveV2EpochCurrent(epoch)) {
+                    setRegionVisualFill(regionEl, newFill);
+                    if (MAP_RENDERER_V2_ENABLED) renderRegionStateV2Canvas();
+                }
                 return;
             }
 
@@ -5479,11 +5482,17 @@ if (regionValues && typeof regionValues === 'object') {
                     part.clipCircle, 0, part.maxRadius,
                     REGION_WAVE.fillMs, easeOutCubic, epoch
                 );
+
+                // V38: commit the final canvas paint while the completed wave is
+                // still covering the region. Only after the backing canvas already
+                // contains the final colour do we remove the temporary wave layer.
+                // This prevents a one-frame flash of the neutral/highlighted region.
+                if (completed && isRegionWaveV2EpochCurrent(epoch)) {
+                    setRegionVisualFill(regionEl, newFill);
+                    if (MAP_RENDERER_V2_ENABLED) renderRegionStateV2Canvas();
+                }
             } finally {
                 removeRegionWaveV2Part(part);
-            }
-            if (completed && isRegionWaveV2EpochCurrent(epoch)) {
-                setRegionVisualFill(regionEl, newFill);
             }
         }
 
@@ -5494,18 +5503,27 @@ if (regionValues && typeof regionValues === 'object') {
             const oldPart = makeRegionWaveV2Split(regionEl, neutral, oldFill, 0, epoch);
 
             if (!oldPart) {
-                if (isRegionWaveV2EpochCurrent(epoch)) setRegionVisualFill(regionEl, neutral);
+                if (isRegionWaveV2EpochCurrent(epoch)) {
+                    setRegionVisualFill(regionEl, neutral);
+                    if (MAP_RENDERER_V2_ENABLED) renderRegionStateV2Canvas();
+                }
             } else {
                 oldPart.clipCircle.setAttribute('r', String(oldPart.maxRadius));
+                let cleared = false;
                 try {
-                    await animateRegionWaveV2Circle(
+                    cleared = await animateRegionWaveV2Circle(
                         oldPart.clipCircle, oldPart.maxRadius, 0,
                         REGION_WAVE.clearMs, easeInCubic, epoch
                     );
+                    // Same atomic handoff for battle colour removal: neutral canvas
+                    // is ready before the temporary old-colour overlay disappears.
+                    if (cleared && isRegionWaveV2EpochCurrent(epoch)) {
+                        setRegionVisualFill(regionEl, neutral);
+                        if (MAP_RENDERER_V2_ENABLED) renderRegionStateV2Canvas();
+                    }
                 } finally {
                     removeRegionWaveV2Part(oldPart);
                 }
-                if (isRegionWaveV2EpochCurrent(epoch)) setRegionVisualFill(regionEl, neutral);
             }
 
             if (!isRegionWaveV2EpochCurrent(epoch)) return;
