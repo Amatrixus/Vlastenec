@@ -1,4 +1,4 @@
-console.log('🧪 VLASTENEC BUILD: 2026-08-18-battle-ui-sequencer-v1');
+console.log('🧪 VLASTENEC BUILD: 2026-08-18-authoritative-refresh-v1');
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
@@ -38,7 +38,7 @@ const PORT = process.env.PORT || 3000;
   if (db.getStatus().ready) await recoverInterruptedLeagueMatches().catch(err => console.error('league boot recovery:', err));
   server.listen(PORT, '0.0.0.0', () => {
     console.log('Server běží na', PORT);
-    console.log('🧪 VLASTENEC BUILD: 2026-08-18-battle-ui-sequencer-v1');
+    console.log('🧪 VLASTENEC BUILD: 2026-08-18-authoritative-refresh-v1');
   });
 })();
 
@@ -157,7 +157,82 @@ function sanitizeSettings(incoming = {}) {
 
 
 // === SNAPSHOT: sestavení stavu místnosti pro rehydrataci klienta ===
-function buildRoomSnapshot(room, roomId) {
+// Snapshot je autoritativní zdroj pravdy po F5/reconnectu. Nevrací jen mapu,
+// ale i právě běžící interakci (otázku / výběr pole), aby klient nemusel
+// hádat, co se na serveru zrovna děje.
+function buildActiveQuestionSnapshot(room, forSeat = null) {
+  const q = room?.activeQuestion;
+  if (!q || !room.currentQuestionType) return null;
+
+  const seat = Number(forSeat) || null;
+  const participants = Array.isArray(q.participants) ? q.participants.map(Number) : [];
+  const answered = seat
+    ? (q.kind === 'choice' ? room.answers?.[seat] !== undefined : !!room.numericAnswers?.[seat])
+    : false;
+  const ownAnswer = seat && answered
+    ? (q.kind === 'choice' ? room.answers?.[seat] : room.numericAnswers?.[seat]?.num)
+    : null;
+
+  return {
+    kind: q.kind,
+    question: q.question,
+    options: Array.isArray(q.options) ? [...q.options] : null,
+    category: q.category || null,
+    participants,
+    attacker: q.attacker ?? null,
+    defender: q.defender ?? null,
+    attackerName: q.attackerName || '',
+    defenderName: q.defenderName || '',
+    startedAt: Number(q.startedAt) || null,
+    deadline: Number(q.deadline) || null,
+    remainingMs: Math.max(0, (Number(q.deadline) || Date.now()) - Date.now()),
+    answered,
+    ownAnswer,
+    isParticipant: !!seat && participants.includes(seat),
+    canAnswer: !!seat && participants.includes(seat) && !answered
+  };
+}
+
+function buildActiveTurnSnapshot(room, forSeat = null) {
+  const turn = room?.activeTurn;
+  if (!turn) return null;
+  const seat = Number(forSeat) || null;
+  return {
+    kind: turn.kind || null,
+    player: Number(turn.player) || null,
+    round: Number(turn.round) || 0,
+    battlestick: Number(turn.battlestick) || null,
+    deadline: Number(turn.deadline) || null,
+    remainingMs: Math.max(0, (Number(turn.deadline) || Date.now()) - Date.now()),
+    canSelect: !!seat && Number(turn.player) === seat,
+    availableRegions: (!!seat && Number(turn.player) === seat && Array.isArray(turn.availableRegions))
+      ? [...turn.availableRegions]
+      : []
+  };
+}
+
+function normalizeAuthoritativeBaseState(room) {
+  if (!room) return;
+  room.bases = room.bases || {};
+  room.playerLives = room.playerLives || { Player1:3, Player2:3, Player3:3 };
+  for (let seat = 1; seat <= 3; seat++) {
+    const base = room.bases[seat];
+    if (!base) continue;
+    const owned = room.regions?.[`Player${seat}regions`] || [];
+    if (!owned.includes(base) || Number(room.playerLives[`Player${seat}`]) <= 0) {
+      delete room.bases[seat];
+    }
+  }
+}
+
+function buildRoomSnapshot(room, roomId, forSeat = null) {
+  normalizeAuthoritativeBaseState(room);
+  // Skóre se při reconnectu vždy dopočítá z autoritativních regionů, hodnot a bonusů.
+  // Tím se neopíráme o případnou starou cache z předchozího eventu.
+  if (room?.regions && room?.regionValues && room?.defenseBonuses) {
+    room.scores = calculateScores(room.regions, room.regionValues, room.defenseBonuses);
+  }
+
   const allNames = {};
   for (let i = 0; i < MAX_PLAYERS_PER_ROOM; i++) {
     const p = room.players[i];
@@ -170,7 +245,6 @@ function buildRoomSnapshot(room, roomId) {
     3: displayName(room, 3, true)
   };
 
-
   return {
     roomId,
     allNames,
@@ -178,14 +252,24 @@ function buildRoomSnapshot(room, roomId) {
     hasStarted: !!room.hasStarted,
     phase: room.phase,
     round: room.round,
-    bases: room.bases,
-    regions: room.regions,
-    regionValues: room.regionValues,
-    scores: room.scores,
-    defenseBonuses: room.defenseBonuses,
-    seatControllers: room.seatControllers,
+    battlestick: room.battlestick || null,
+    bases: { ...(room.bases || {}) },
+    regions: {
+      Player1regions: [...(room.regions?.Player1regions || [])],
+      Player2regions: [...(room.regions?.Player2regions || [])],
+      Player3regions: [...(room.regions?.Player3regions || [])]
+    },
+    regionValues: { ...(room.regionValues || {}) },
+    scores: { ...(room.scores || {}) },
+    defenseBonuses: { ...(room.defenseBonuses || {}) },
+    playerLives: { ...(room.playerLives || {}) },
+    seatControllers: { ...(room.seatControllers || {}) },
     expansionPlan: room.expansionPlan || null,
     battlePlan: room.battlePlan || null,
+    activeQuestion: buildActiveQuestionSnapshot(room, forSeat),
+    activeTurn: buildActiveTurnSnapshot(room, forSeat),
+    activeBaseBattle: room.activeBaseBattle ? { ...room.activeBaseBattle } : null,
+    pendingPins: { ...(room.pendingPins || {}) },
     chat: room.chat || [],
     settings: room.settings || {},
     matchKind: room.matchKind || null,
@@ -223,6 +307,7 @@ function makeEmptyRoom(roomId, mode = 'random') {
     regionValues: { ...defaultRegionValues },
     defenseBonuses: { Player1: 0, Player2: 0, Player3: 0 },
     playerLives: { Player1: 3, Player2: 3, Player3: 3 },
+    pendingPins: {},
     chat: [],
     settings: {},           // volitelné – můžeš sem ukládat cats/catNames
     ready: { 1: false, 2: false, 3: false },
@@ -676,11 +761,22 @@ function startRoomGame(roomId) {
   room.regions.Player1regions = [room.bases[1]];
   room.regions.Player2regions = [room.bases[2]];
   room.regions.Player3regions = [room.bases[3]];
+
+  // Základny jsou herní stav serveru, ne vedlejší efekt klientské animace.
+  // Hodnotu 1000 nastavíme autoritativně hned při startu, takže F5 nikdy
+  // nemůže pomocí baseSettled znovu „oživit“ už poraženou základnu.
+  room.regionValues[room.bases[1]] = 1000;
+  room.regionValues[room.bases[2]] = 1000;
+  room.regionValues[room.bases[3]] = 1000;
   room.scores = calculateScores(room.regions, room.regionValues, room.defenseBonuses);
 
   room.hasStarted = true;
   room.phase = 'settle';
   room.round = 0;
+  room.pendingPins = {};
+  room.activeTurn = null;
+  room.activeQuestion = null;
+  room.activeBaseBattle = null;
 
   io.to(roomId).emit('startGame', {
     bases: room.bases,
@@ -913,7 +1009,7 @@ function roomAddPlayerAndBroadcast(roomId, socket, name) {
     if (room.matchKind === 'custom') broadcastPublicRandomRooms();
   } else if (room.hasStarted) {
     if (typeof buildRoomSnapshot === 'function') {
-      socket.emit("stateSync", { myNumber, snapshot: buildRoomSnapshot(room, roomId) });
+      socket.emit("stateSync", { myNumber, snapshot: buildRoomSnapshot(room, roomId, myNumber) });
     }
   }
 }
@@ -1200,6 +1296,22 @@ function runMultipleChoice(roomId, participatingPlayers = [1, 2, 3]) {
     const isDuel = participatingPlayers.length === 2;
     const attacker = isDuel ? participatingPlayers[0] : null;
     const defender = isDuel ? participatingPlayers[1] : null;
+    const questionStartedAt = Date.now();
+    const questionDeadline = questionStartedAt + 10000;
+
+    room.activeQuestion = {
+      kind: 'choice',
+      question: question.question,
+      options: [...question.options],
+      category: question.category || null,
+      participants: [...participatingPlayers],
+      attacker,
+      defender,
+      attackerName: isDuel ? displayName(room, attacker, true) : '',
+      defenderName: isDuel ? displayName(room, defender, true) : '',
+      startedAt: questionStartedAt,
+      deadline: questionDeadline
+    };
 
     // Pošli otázku všem (canAnswer = jen účastníci)
     room.players.forEach((p, index) => {
@@ -1273,6 +1385,7 @@ function runMultipleChoice(roomId, participatingPlayers = [1, 2, 3]) {
       // Odpovědi už nepřijímáme, ale výsledek zatím zůstává na obrazovce.
       room.currentQuestionType = null;
       room.currentQuestionParticipants = [];
+      room.activeQuestion = null;
 
       await emitBattleUiAndWait(roomId, "multipleChoiceResults", {
         correctAnswer: question.correct,
@@ -1305,6 +1418,19 @@ function runNumericQuestionForTwo(roomId, [player1, player2]) {
     room.currentQuestionType = 'numeric';
     room.currentQuestionParticipants = [...participants];
     room.numericQuestionToken = questionEventBase;
+    room.activeQuestion = {
+      kind: 'numeric-two',
+      question: nq.question,
+      options: null,
+      category: nq.category || null,
+      participants: [...participants],
+      attacker: player1,
+      defender: player2,
+      attackerName: displayName(room, player1, true),
+      defenderName: displayName(room, player2, true),
+      startedAt: room.numericStartTime,
+      deadline: room.numericStartTime + 15000
+    };
 
     let finished = false;
     let timeoutHandle = null;
@@ -1356,6 +1482,7 @@ function runNumericQuestionForTwo(roomId, [player1, player2]) {
       // po zavření výsledkové obrazovky na klientech.
       liveRoom.currentQuestionType = null;
       liveRoom.currentQuestionParticipants = [];
+      liveRoom.activeQuestion = null;
       liveRoom.numericFinalize = null;
       liveRoom.numericQuestionTimer = null;
       liveRoom.numericQuestionToken = null;
@@ -1431,6 +1558,19 @@ function runNumericQuestionForThree(roomId) {
     room.currentQuestionType = 'numeric';
     room.currentQuestionParticipants = [...participants];
     room.numericQuestionToken = questionEventBase;
+    room.activeQuestion = {
+      kind: 'numeric-three',
+      question: nq.question,
+      options: null,
+      category: nq.category || null,
+      participants: [...participants],
+      attacker: null,
+      defender: null,
+      attackerName: '',
+      defenderName: '',
+      startedAt: room.numericStartTime,
+      deadline: room.numericStartTime + 15000
+    };
 
     let finished = false;
     let timeoutHandle = null;
@@ -1480,6 +1620,7 @@ function runNumericQuestionForThree(roomId) {
 
       liveRoom.currentQuestionType = null;
       liveRoom.currentQuestionParticipants = [];
+      liveRoom.activeQuestion = null;
       liveRoom.numericFinalize = null;
       liveRoom.numericQuestionTimer = null;
       liveRoom.numericQuestionToken = null;
@@ -1732,11 +1873,16 @@ async function runExpansionPhase(roomId) {
       }
     });
 
-    // Aktualizace klientů
+    // Aktualizace klientů – po přidělení regionů už výběrové piny nejsou aktivní.
+    room.pendingPins = {};
     io.to(roomId).emit("updateRegions", {
       regions: room.regions,
       regionValues: room.regionValues,
-      scores: room.scores
+      scores: room.scores,
+      bases: room.bases,
+      playerLives: room.playerLives,
+      defenseBonuses: room.defenseBonuses,
+      pendingPins: room.pendingPins
     });
 
     // Nezačínej další tah dřív, než klienti stihnou dokončit vlnu zabarvení.
@@ -1817,24 +1963,37 @@ async function runConquestPhase(roomId) {
         break;
       }
 
+      // Aktivní tah uložíme PŘED emitnutím dostupných regionů. Když hráč
+      // refreshne přesně v tomto okamžiku, stateSync už obsahuje celou volbu.
+      const turnStartedAt = Date.now();
+      room.activeTurn = {
+        kind: 'conquest',
+        player: winner,
+        round,
+        battlestick: null,
+        availableRegions: [...available],
+        startedAt: turnStartedAt,
+        deadline: turnStartedAt + 10000
+      };
+      room.pendingPins = {};
+
       const winRec = room.players[winner - 1];
       const playerSocketId = winRec && winRec.id;
       if (playerSocketId) {
-        io.to(playerSocketId).emit("availableRegions", { regions: available });
+        io.to(playerSocketId).emit("availableRegions", { regions: available, timeLeft: 10, round, kind: 'conquest' });
       }
 
-
-      console.log("📊 Dostupná pole pro hráče", winner, ":", getAvailableRegionsConquest(room));
+      console.log("📊 Dostupná pole pro hráče", winner, ":", available);
       console.log("📌 Regions:", room.regions);
       console.log("📌 RegionValues:", room.regionValues);
 
-
-      // Čekej na výběr regionu nebo náhodné přiřazení
       const selectedRegion = await waitForPlayerSelection(roomId, winner, 10000, available);
+      room.activeTurn = null;
       if (!isRoomAlive(roomId)) return; // 🔴 NEW
 
 
       if (selectedRegion) {
+        room.pendingPins[winner] = selectedRegion;
         // ✅ Okamžitě zobraz pin na mapě všem hráčům
         io.to(roomId).emit("playerSelectedRegion", {
           player: winner,
@@ -1852,10 +2011,15 @@ async function runConquestPhase(roomId) {
       await delayAlive(roomId, 2000); // 🔴 NEW
 
         // ✅ Aktualizace pro všechny hráče (zabarvení + skóre)
+        room.pendingPins = {};
         io.to(roomId).emit("updateRegions", {
           regions: room.regions,
           regionValues: room.regionValues,
-          scores: room.scores
+          scores: room.scores,
+          bases: room.bases,
+          playerLives: room.playerLives,
+          defenseBonuses: room.defenseBonuses,
+          pendingPins: room.pendingPins
         });
 
         io.to(roomId).emit("updateScores", { scores: room.scores });
@@ -1911,6 +2075,7 @@ async function runBattlePhase(roomId) {
     for (let battlestick = 1; battlestick <= 3; battlestick++) {
       if (!isRoomAlive(roomId)) return; // 🔴 NEW
 
+      room.battlestick = battlestick;
       const attacker = room.battlePlan[round - 1][battlestick - 1];
 
       io.to(roomId).emit("updateBattleStick", {
@@ -1982,10 +2147,22 @@ async function runBattleClaiming(roomId, attacker) {
     return null;
   }
 
+  const turnStartedAt = Date.now();
+  room.activeTurn = {
+    kind: 'battle',
+    player: attacker,
+    round: Number(room.round) || 0,
+    battlestick: Number(room.battlestick) || null,
+    availableRegions: [...availableEnemyRegions],
+    startedAt: turnStartedAt,
+    deadline: turnStartedAt + 10000
+  };
+  room.pendingPins = {};
+
   const attRec = room.players[attacker - 1];
   const attackerSocketId = attRec && attRec.id;
   if (attackerSocketId) {
-    io.to(attackerSocketId).emit("battleAvailableRegions", { regions: availableEnemyRegions });
+    io.to(attackerSocketId).emit("battleAvailableRegions", { regions: availableEnemyRegions, timeLeft: 10 });
   }
 
 
@@ -2021,6 +2198,7 @@ async function runBattleClaiming(roomId, attacker) {
 
 
   const selectedRegion = await waitForPlayerSelection(roomId, attacker, 10000, availableEnemyRegions);
+  room.activeTurn = null;
 
   if (!selectedRegion) {
     console.log(`⏳ Hráč ${attacker} nestihl vybrat → kolo se přeskočí`);
@@ -2038,6 +2216,7 @@ async function runBattleClaiming(roomId, attacker) {
 
 
   // ✅ Okamžitě zobraz pin na mapě
+  room.pendingPins[attacker] = selectedRegion;
   io.to(roomId).emit("playerSelectedRegion", {
     player: attacker,
     region: selectedRegion
@@ -2129,6 +2308,7 @@ async function runBattleOnRegion(roomId, attacker, defender, region) {
 
   if (isBase) {
     const lives = room.playerLives[`Player${defender}`] || 3;
+    room.activeBaseBattle = { attacker, defender, region, lives };
     io.to(roomId).emit("showBaseMini", { attacker, defender, lives });
     if (!await delayAlive(roomId, 1000)) return;
   }
@@ -2177,10 +2357,15 @@ async function runBattleOnRegion(roomId, attacker, defender, region) {
     if (!await delayAlive(roomId, 650)) return;
 
     room.scores = calculateScores(room.regions, room.regionValues, room.defenseBonuses);
+    room.pendingPins = {};
     io.to(roomId).emit("updateRegions", {
       regions: room.regions,
       regionValues: room.regionValues,
-      scores: room.scores
+      scores: room.scores,
+      bases: room.bases,
+      playerLives: room.playerLives,
+      defenseBonuses: room.defenseBonuses,
+      pendingPins: room.pendingPins
     });
     io.to(roomId).emit("updateScores", { scores: room.scores });
 
@@ -2205,6 +2390,7 @@ async function runBattleOnRegion(roomId, attacker, defender, region) {
     if (correctPlayers.length === 1 && correctPlayers[0] === attacker) {
       room.playerLives[`Player${defender}`]--;
       const remainingLives = room.playerLives[`Player${defender}`];
+      if (room.activeBaseBattle) room.activeBaseBattle.lives = remainingLives;
 
       await emitBattleUiAndWait(roomId, "destroyTower", {
         defender,
@@ -2242,6 +2428,7 @@ async function runBattleOnRegion(roomId, attacker, defender, region) {
       if (numericWinner === attacker) {
         room.playerLives[`Player${defender}`]--;
         const remainingLives = room.playerLives[`Player${defender}`];
+        if (room.activeBaseBattle) room.activeBaseBattle.lives = remainingLives;
 
         await emitBattleUiAndWait(roomId, "destroyTower", {
           defender,
@@ -2271,13 +2458,19 @@ async function runBattleOnRegion(roomId, attacker, defender, region) {
   }
 
   if (!await delayAlive(roomId, 700)) return;
+  room.activeBaseBattle = null;
   io.to(roomId).emit("hideBaseMini");
 
   room.scores = calculateScores(room.regions, room.regionValues, room.defenseBonuses);
+  room.pendingPins = {};
   io.to(roomId).emit("updateRegions", {
     regions: room.regions,
     regionValues: room.regionValues,
-    scores: room.scores
+    scores: room.scores,
+    bases: room.bases,
+    playerLives: room.playerLives,
+    defenseBonuses: room.defenseBonuses,
+    pendingPins: room.pendingPins
   });
   io.to(roomId).emit("updateScores", { scores: room.scores });
 
@@ -2324,11 +2517,14 @@ function transferBase(roomId, room, attacker, defender, baseRegion) {
   // ✅ Vymaž obráncova území
   room.regions[defKey] = [];
 
-  
+  // Základna po dobytí už neexistuje. To musí být pravda i v serverovém
+  // snapshotu; jinak ji refresh klienta znovu vykreslí.
+  delete room.bases[defender];
+  room.playerLives[`Player${defender}`] = 0;
+
   // ✅ Vynuluj obráncovy bonusy
   room.defenseBonuses[`Player${defender}`] = 0;
   console.log(`🛡️ Obránci Player${defender} byly vynulovány defense bonusy.`);
-
 
   checkForEliminatedPlayers(roomId);
 }
@@ -2362,6 +2558,7 @@ async function runPlayerTurns(roomId, round, order) {
 
   room.selections = {};
   room.lastSelections = {}; // ✅ Reset pro aktuální kolo
+  room.pendingPins = {};
 
   for (const player of order) {
     const availableRegions = getAvailableRegions(room, player);
@@ -2375,6 +2572,17 @@ async function runPlayerTurns(roomId, round, order) {
       continue;
     }
 
+    const turnStartedAt = Date.now();
+    room.activeTurn = {
+      kind: 'expansion',
+      player,
+      round,
+      battlestick: null,
+      availableRegions: [...availableRegions],
+      startedAt: turnStartedAt,
+      deadline: turnStartedAt + 10000
+    };
+
     io.to(roomId).emit("playerTurn", {
       player,
       round,
@@ -2385,16 +2593,21 @@ async function runPlayerTurns(roomId, round, order) {
       const playerSocketId = playerRec && playerRec.id;
       if (playerSocketId) {
         io.to(playerSocketId).emit("availableRegions", {
-          regions: availableRegions
+          regions: availableRegions,
+          timeLeft: 10,
+          round,
+          kind: 'expansion'
         });
       }
 
     console.log(`🎯 Hráč ${player} je na tahu (kolo ${round})`);
 
     const selectedRegion = await waitForPlayerSelection(roomId, player, 10000, availableRegions);
+    room.activeTurn = null;
 
     room.selections[player] = selectedRegion;
     room.lastSelections[player] = selectedRegion; // ✅ Uložíme i pro pozdější vyhodnocení
+    if (selectedRegion) room.pendingPins[player] = selectedRegion;
 
     console.log(`✅ Hráč ${player} vybral: ${selectedRegion}`);
 
@@ -2944,7 +3157,7 @@ async function joinLeagueGame(socket, matchId) {
       displayNames:{1:displayName(room,1,true),2:displayName(room,2,true),3:displayName(room,3,true)},
       seatControllers:room.seatControllers
     });
-    socket.emit('stateSync', { myNumber:seat, snapshot:buildRoomSnapshot(room,roomId) });
+    socket.emit('stateSync', { myNumber:seat, snapshot:buildRoomSnapshot(room,roomId,seat) });
 
     const connected = connectedHumanCount(room);
     io.to(roomId).emit('league:game:status', { connected, total:3 });
@@ -3280,7 +3493,7 @@ io.on('connection', socket => {
     // Pošli snapshot místo startu
     socket.emit("stateSync", {
       myNumber: seat,
-      snapshot: buildRoomSnapshot(room, roomId)
+      snapshot: buildRoomSnapshot(room, roomId, seat)
     });
 
     // ať ostatní vidí, že hráč je zpět “human”
@@ -3312,6 +3525,23 @@ io.on('connection', socket => {
   console.log(`✅ ${socket.id} connected`);
 
 
+  // Klient po úplném načtení stránky požádá ještě jednou o čerstvý snapshot.
+  // Tím pokryjeme i extrémní případ, kdy první stateSync dorazil během parsování
+  // velkého game_online.html a některé pozdější legacy inicializace by jej přepsaly.
+  socket.on("requestStateSync", () => {
+    const roomId = socket.data?.roomId || socket.data?.joinedRoom;
+    const room = roomId ? rooms[roomId] : null;
+    if (!room || !isRoomAlive(roomId)) return;
+    const seat = getSeatNumber(room, socket.id) || Number(socket.data?.seat) || null;
+    if (!seat) return;
+    socket.emit("stateSync", {
+      myNumber: seat,
+      snapshot: buildRoomSnapshot(room, roomId, seat)
+    });
+    console.log(`🔄 ${roomId}: fresh stateSync pro Player${seat}`);
+  });
+
+
   socket.on("baseSettled", ({ playerNumber } = {}) => {
     // baseSettled smí měnit pouze místnost, ke které patří tento socket.
     // Původní verze procházela VŠECHNY rooms, takže event z jiné rozehrané
@@ -3340,18 +3570,23 @@ io.on('connection', socket => {
       return;
     }
 
-    room.regionValues[baseRegion] = 1000;
-
-    if (!Array.isArray(room.regions[regionKey])) room.regions[regionKey] = [];
-    if (!room.regions[regionKey].includes(baseRegion)) {
-      room.regions[regionKey].push(baseRegion);
+    // Kompatibilita se staršími klienty: baseSettled je dovoleno pouze během
+    // úvodní fáze a NIKDY nesmí region znovu přidat hráči. Vlastnictví už
+    // vytvořil server v startRoomGame().
+    if (room.phase !== 'settle') {
+      console.log(`↩️ ${roomId}: baseSettled Player${seat} ignorován mimo settle (${room.phase}).`);
+      return;
+    }
+    if (!Array.isArray(room.regions[regionKey]) || !room.regions[regionKey].includes(baseRegion)) {
+      console.warn(`⚠️ ${roomId}: baseSettled Player${seat} ignorován – základna už není jeho území.`);
+      return;
     }
 
+    room.regionValues[baseRegion] = 1000;
     room.scores = calculateScores(room.regions, room.regionValues, room.defenseBonuses);
 
     io.to(roomId).emit("updateScores", { scores: room.scores });
-    console.log(`✅ ${roomId}: Hráč ${seat} usadil základnu ${baseRegion} (1000 bodů)`);
-    console.log("🧮 Nové skóre:", room.scores);
+    console.log(`✅ ${roomId}: potvrzena základna Player${seat} ${baseRegion} (1000 bodů)`);
   });
 
 
@@ -3390,7 +3625,7 @@ socket.on("createRoom", ({ settings }) => {
 
   // po přidání hráče pošli snapshot
   const seatNum = getSeatNumber(rooms[roomId], socket.id);
-  socket.emit("stateSync", { myNumber: seatNum, snapshot: buildRoomSnapshot(rooms[roomId], roomId) });
+  socket.emit("stateSync", { myNumber: seatNum, snapshot: buildRoomSnapshot(rooms[roomId], roomId, seatNum) });
 });
 
 
@@ -3434,7 +3669,7 @@ socket.on("joinRoom", ({ room, settings }) => {
   console.log(`👥 joinRoom → ${roomId} by ${name}`);
 
   const seatNum = getSeatNumber(rooms[roomId], socket.id);
-  socket.emit("stateSync", { myNumber: seatNum, snapshot: buildRoomSnapshot(rooms[roomId], roomId) });
+  socket.emit("stateSync", { myNumber: seatNum, snapshot: buildRoomSnapshot(rooms[roomId], roomId, seatNum) });
 });
 
 

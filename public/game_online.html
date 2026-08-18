@@ -504,6 +504,7 @@
     console.log('🧪 VLASTENEC FIX: endgame-names-v1');
     console.log('🧪 VLASTENEC CLIENT: endgame-stats-ui-v1');
     console.log('🧪 VLASTENEC FIX: in-game-sound-toggle-v1');
+    console.log('🧪 VLASTENEC FIX: authoritative-refresh-v1');
 
     // --- Profil hráče: lokální statistiky od této verze ---
     const profileStore = window.VlastenecProfileStore || null;
@@ -550,6 +551,17 @@
     }
 
     bootstrapPlayerIdentityAndSocket();
+
+    // Po úplném načtení velkého herního HTML si vyžádáme ještě jeden aktuální
+    // snapshot. První stateSync totiž může při rychlém spojení dorazit už během
+    // parsování stránky; tento druhý průchod je definitivní autoritativní render.
+    window.addEventListener('load', () => {
+      const requestFreshSnapshot = () => {
+        try { socket.emit('requestStateSync'); } catch (_) {}
+      };
+      if (socket.connected) requestFreshSnapshot();
+      else socket.once('connect', () => setTimeout(requestFreshSnapshot, 0));
+    }, { once: true });
 
     function profileCountMyRegions(regions) {
       if (!regions || !myPlayerNumber) return 0;
@@ -626,15 +638,16 @@ function isBoardReady() {
 
 
 //FUNKCE NA REHYDRATACI FÁZE
-function updatePhaseUI(phase) {
+function updatePhaseUI(phase, round = window.currentRound) {
   const el = document.getElementById('gamephase');
   if (!el) return;
 
-  // Překlad klíčů z backendu na text v UI
   const PHASE_LABELS = {
     lobby:      'Lobby',
     base:       'Výběr základny',
+    settle:     'Výběr základny',
     expansion:  'Rozšiřování',
+    conquest:   Number(round) > 0 ? `Dobývání – ${Number(round)}. kolo` : 'Dobývání',
     battle:     'Bitvy',
     end:        'Konec hry'
   };
@@ -642,7 +655,315 @@ function updatePhaseUI(phase) {
   el.textContent = PHASE_LABELS[phase] || phase || '';
 }
 
+function rehydratePhasePanel(snapshot) {
+  if (!snapshot?.hasStarted) return;
+  const phase = snapshot.phase || window.currentPhase || 'settle';
+  const round = Number(snapshot.round) || 0;
+  const gameProgress = document.getElementById('gameprogress');
+  const gamePhase = document.getElementById('gamephase');
+  const gameRounds = document.getElementById('gamerounds');
+  const playerSticks = document.getElementById('playersticks');
+  if (!gameProgress || !gamePhase || !gameRounds || !playerSticks) return;
 
+  gameProgress.style.display = 'block';
+  updatePhaseUI(phase, round);
+
+  if (phase === 'expansion' || phase === 'battle') {
+    gameProgress.style.height = '15%';
+    gamePhase.style.height = '33%';
+    gameRounds.style.display = 'block';
+    playerSticks.style.display = 'block';
+
+    const plan = phase === 'expansion' ? snapshot.expansionPlan : snapshot.battlePlan;
+    if (Array.isArray(plan) && typeof applyStickColors === 'function') {
+      try { applyStickColors(plan); } catch (e) { DBG('rehydrate applyStickColors error', e); }
+    }
+    if (typeof updateRoundClasses === 'function') {
+      try { updateRoundClasses(round); } catch (e) { DBG('rehydrate round UI error', e); }
+    }
+
+    // V bitvě zůstává aktuální kolík zvýrazněný i během otázky/animace.
+    if (phase === 'battle' && Number(snapshot.battlestick) > 0 && typeof highlightTurnStick === 'function') {
+      const order = Array.isArray(snapshot.battlePlan?.[Math.max(0, round - 1)])
+        ? snapshot.battlePlan[Math.max(0, round - 1)]
+        : [];
+      const player = Number(order[Math.max(0, Number(snapshot.battlestick) - 1)]) || null;
+      try { highlightTurnStick(round, Number(snapshot.battlestick), player); } catch (e) { DBG('rehydrate battle stick error', e); }
+    }
+  } else {
+    gameProgress.style.height = '7%';
+    gamePhase.style.height = '100%';
+    gameRounds.style.display = 'none';
+    playerSticks.style.display = 'none';
+  }
+}
+
+function resetRegionVisualsForSnapshot() {
+  document.querySelectorAll('.region').forEach(region => {
+    // Inline fill je pouze aktuální vlastnictví. Po F5 začínáme z SVG atributu
+    // fill="url(#texture)" a pak naneseme autoritativní vlastnictví ze serveru.
+    region.style.removeProperty('fill');
+    region.style.removeProperty('filter');
+    region.style.removeProperty('opacity');
+    region.style.pointerEvents = '';
+    region.style.cursor = '';
+    region.classList.remove('unavailable', 'battle-selectable');
+    delete region.dataset.battleHover;
+  });
+}
+
+function hideBaseForSeat(seat) {
+  const nameEl = document.getElementById(`player${seat}basename`);
+  const baseEl = document.getElementById(`player${seat}basevisual`);
+  if (nameEl) nameEl.style.display = 'none';
+  if (baseEl) baseEl.style.display = 'none';
+  const oldHandler = window.__vlastenecBaseResizeHandlers?.[seat];
+  if (oldHandler) {
+    window.removeEventListener('resize', oldHandler);
+    delete window.__vlastenecBaseResizeHandlers[seat];
+  }
+}
+
+function applyBaseLivesVisual(seat, lives) {
+  const n = Math.max(0, Number(lives) || 0);
+  const left = document.getElementById(`base${seat}left`);
+  const right = document.getElementById(`base${seat}right`);
+  const main = document.getElementById(`base${seat}main`);
+  if (left) left.style.display = n >= 3 ? '' : 'none';
+  if (right) right.style.display = n >= 2 ? '' : 'none';
+  if (main) main.style.display = n >= 1 ? '' : 'none';
+}
+
+function renderBasesFromSnapshot(snapshot) {
+  const bases = snapshot?.bases || {};
+  const lives = snapshot?.playerLives || {};
+  const regions = snapshot?.regions || {};
+
+  player1CurrentBase = bases[1] || '';
+  player2CurrentBase = bases[2] || '';
+  player3CurrentBase = bases[3] || '';
+
+  for (let seat = 1; seat <= 3; seat++) {
+    const base = bases[seat];
+    const owned = Array.isArray(regions[`Player${seat}regions`]) ? regions[`Player${seat}regions`] : [];
+    const remainingLives = Number(lives[`Player${seat}`] ?? 3);
+    const valid = !!base && owned.includes(base) && remainingLives > 0 && !!document.getElementById(base);
+
+    if (!valid) {
+      hideBaseForSeat(seat);
+      continue;
+    }
+
+    const fn = window[`settlePlayer${seat}`];
+    if (typeof fn === 'function') fn();
+    applyBaseLivesVisual(seat, remainingLives);
+  }
+}
+
+function rehydrateActiveBaseBattle(snapshot) {
+  const battle = snapshot?.activeBaseBattle;
+  const baseMini = document.getElementById('basevisualmini');
+  if (!baseMini) return;
+  if (!battle) {
+    baseMini.style.display = 'none';
+    return;
+  }
+
+  const lives = Math.max(0, Number(battle.lives) || 0);
+  baseMini.style.display = 'block';
+  baseMini.style.top = '2%';
+  baseMini.style.left = '26.5%';
+  baseMini.style.height = '12%';
+  ['baseminileft','baseminiright','baseminimain'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = 'block';
+  });
+  if (lives < 3) document.getElementById('baseminileft')?.style.setProperty('display','none');
+  if (lives < 2) document.getElementById('baseminiright')?.style.setProperty('display','none');
+  if (lives < 1) document.getElementById('baseminimain')?.style.setProperty('display','none');
+}
+
+function scheduleTransientRehydration(snapshot, attempt = 0) {
+  if (!snapshot?.hasStarted) return;
+  const q = snapshot.activeQuestion;
+  const turn = snapshot.activeTurn;
+
+  const questionReady = !q ||
+    (q.kind === 'choice' && typeof showMultipleChoice === 'function') ||
+    (q.kind === 'numeric-two' && typeof showNumericQuestionForTwo === 'function') ||
+    (q.kind === 'numeric-three' && typeof showNumericQuestionForThree === 'function');
+
+  const turnReady = !turn ||
+    ((turn.kind === 'battle' && typeof activateBattleAvailableRegions === 'function') ||
+     ((turn.kind === 'expansion' || turn.kind === 'conquest') && typeof activateStandardAvailableRegions === 'function'));
+
+  if ((!questionReady || !turnReady) && attempt < 60) {
+    return setTimeout(() => scheduleTransientRehydration(snapshot, attempt + 1), 50);
+  }
+
+  rehydrateActiveBaseBattle(snapshot);
+
+  // Aktivní otázka má přednost před výběrem regionu. Čas se nikdy nerestartuje:
+  // snapshot nese deadline serveru a sem přichází pouze zbývající čas.
+  if (q && Number(q.remainingMs) > 0) {
+    const seconds = Math.max(1, Math.ceil(Number(q.remainingMs) / 1000));
+    profileQuestionCategory = q.category || null;
+    profileQuestionCanAnswer = q.isParticipant !== false;
+
+    if (q.kind === 'choice') {
+      lastQuestionOptions = Array.isArray(q.options) ? [...q.options] : [];
+      showMultipleChoice(q.question, q.options || [], seconds, q.attacker, q.defender, q.attackerName, q.defenderName, !!q.canAnswer);
+      if (q.answered) {
+        myAnswer = Number.isInteger(Number(q.ownAnswer)) ? Number(q.ownAnswer) : '';
+        document.querySelectorAll('.option').forEach((option, index) => {
+          option.classList.add('unavailable_multiple_choice');
+          if (index === Number(q.ownAnswer)) {
+            option.classList.remove('unavailable_multiple_choice');
+            option.classList.add('highlighted_choice');
+          }
+        });
+      }
+    } else if (q.kind === 'numeric-two') {
+      showNumericQuestionForTwo(q.question, seconds, q.attacker, q.defender, q.attackerName, q.defenderName);
+      if (!q.canAnswer || q.answered) {
+        const input = document.getElementById('numinput2');
+        const submit = document.getElementById('numsubmit2');
+        if (input) input.style.display = 'none';
+        if (submit) submit.style.display = 'none';
+      }
+    } else if (q.kind === 'numeric-three') {
+      showNumericQuestionForThree(q.question, seconds);
+      if (!q.canAnswer || q.answered) {
+        const input = document.getElementById('numinput3');
+        const submit = document.getElementById('numsubmit3');
+        if (input) input.style.display = 'none';
+        if (submit) submit.style.display = 'none';
+      }
+    }
+
+    console.log(`🔄 Obnovena aktivní otázka po reconnectu (${q.kind}), zbývá ~${seconds}s`);
+    return;
+  }
+
+  if (turn) rehydrateActiveTurn(turn);
+}
+
+function applyAuthoritativeSnapshotState(snapshot) {
+  if (!snapshot) return;
+
+  if (snapshot.regions) {
+    playerControlledRegions = {
+      Player1regions: [...(snapshot.regions.Player1regions || [])],
+      Player2regions: [...(snapshot.regions.Player2regions || [])],
+      Player3regions: [...(snapshot.regions.Player3regions || [])]
+    };
+    window.playerControlledRegions = playerControlledRegions;
+  }
+
+  if (snapshot.regionValues && typeof snapshot.regionValues === 'object') {
+    window.regionValues = { ...snapshot.regionValues };
+    // legacy kód používá i globální binding `regionValues`
+    try { regionValues = window.regionValues; } catch (_) {}
+  }
+
+  window.defenseBonuses = { ...(snapshot.defenseBonuses || {}) };
+  window.playerLives = { ...(snapshot.playerLives || {}) };
+
+  if (snapshot.bases) {
+    player1CurrentBase = snapshot.bases[1] || '';
+    player2CurrentBase = snapshot.bases[2] || '';
+    player3CurrentBase = snapshot.bases[3] || '';
+  }
+
+  if (snapshot.allNames) {
+    window.allNames = { ...snapshot.allNames };
+    player1 = snapshot.allNames[1] || player1;
+    player2 = snapshot.allNames[2] || player2;
+    player3 = snapshot.allNames[3] || player3;
+  }
+  if (snapshot.displayNames) window.displayNames = { ...snapshot.displayNames };
+  if (snapshot.seatControllers) window.seatControllers = { ...snapshot.seatControllers };
+}
+
+function renderPendingPinsFromSnapshot(snapshot) {
+  document.querySelectorAll('.pin-marker').forEach(pin => pin.remove());
+  const pins = snapshot?.pendingPins || {};
+  if (typeof addPinToRegion !== 'function') return;
+  Object.entries(pins).forEach(([seatRaw, regionId]) => {
+    const seat = Number(seatRaw);
+    const region = document.getElementById(String(regionId || ''));
+    if (region && [1,2,3].includes(seat)) {
+      try { addPinToRegion(region, seat); } catch (e) { DBG('rehydrate pin error', e); }
+    }
+  });
+}
+
+function scheduleAuthoritativeVisualRender(snapshot, attempt = 0) {
+  const ready =
+    typeof colorizeTiles === 'function' &&
+    typeof displayRegionValues === 'function' &&
+    typeof settlePlayer1 === 'function' &&
+    typeof settlePlayer2 === 'function' &&
+    typeof settlePlayer3 === 'function' &&
+    typeof addPinToRegion === 'function' &&
+    !!document.getElementById('gameprogress');
+
+  if (!ready && attempt < 80) {
+    return setTimeout(() => scheduleAuthoritativeVisualRender(snapshot, attempt + 1), 50);
+  }
+
+  // Některé legacy globály (např. regionValues) jsou deklarované níže v HTML.
+  // Kdyby stateSync dorazil už během parsování stránky, jejich pozdější inicializace
+  // by mohla snapshot přepsat. Proto autoritativní data aplikujeme ještě jednou
+  // těsně před samotným renderem, až je celý herní skript připravený.
+  applyAuthoritativeSnapshotState(snapshot);
+  allowPaint = true;
+  resetRegionVisualsForSnapshot();
+
+  // Snapshot je jediný zdroj pravdy. Nevoláme updateScores(), protože by klient
+  // znovu odvozoval skóre ze svého lokálního stavu.
+  if (typeof colorizeTiles === 'function') colorizeTiles();
+  if (typeof displayRegionValues === 'function') displayRegionValues();
+  if (typeof updateScoreUI === 'function' && snapshot?.scores) updateScoreUI(snapshot.scores);
+  if (typeof updateScoreNames === 'function') updateScoreNames();
+
+  renderBasesFromSnapshot(snapshot);
+  renderPendingPinsFromSnapshot(snapshot);
+  rehydratePhasePanel(snapshot);
+  scheduleTransientRehydration(snapshot);
+
+  console.log('🔄 Autoritativní stav hry obnoven po reconnectu/F5.', {
+    phase: snapshot?.phase,
+    round: snapshot?.round,
+    question: snapshot?.activeQuestion?.kind || null,
+    turn: snapshot?.activeTurn?.kind || null
+  });
+}
+
+function rehydrateActiveTurn(turn) {
+  if (!turn) return;
+  const remainingMs = Number(turn.remainingMs) || 0;
+  const seconds = Math.max(1, Math.ceil(remainingMs / 1000));
+
+  if (turn.kind === 'expansion' && typeof highlightExpansionTurnStick === 'function') {
+    highlightExpansionTurnStick(turn.player, turn.round);
+  } else if (turn.kind === 'battle' && typeof highlightTurnStick === 'function') {
+    highlightTurnStick(turn.round, turn.battlestick, turn.player);
+  }
+
+  if (!turn.canSelect || remainingMs <= 0) {
+    if (typeof stopTileCountdown === 'function') stopTileCountdown();
+    return;
+  }
+
+  if (turn.kind === 'battle' && typeof activateBattleAvailableRegions === 'function') {
+    activateBattleAvailableRegions(turn.availableRegions || [], seconds, { rehydrated: true });
+  } else if ((turn.kind === 'expansion' || turn.kind === 'conquest') && typeof activateStandardAvailableRegions === 'function') {
+    activateStandardAvailableRegions(turn.availableRegions || [], turn.kind, turn.round, seconds, { rehydrated: true });
+  }
+
+  console.log(`🔄 Obnoven aktivní výběr ${turn.kind}; zbývá ~${seconds}s`);
+}
 
 
 
@@ -666,209 +987,104 @@ function updatePhaseUI(phase) {
 function applySnapshotWhenReady(myNumber, snapshot, attempt = 0) {
   DBG('applySnapshotWhenReady enter', { attempt });
 
-  const MAX_ATTEMPTS = 40; // ~4s při 100ms
+  const MAX_ATTEMPTS = 40;
   const RETRY_MS = 100;
 
-  // 0) počkej, až bude mapa v DOM
   if (!isBoardReady()) {
     DBG('board NOT ready → retry', { attempt });
     if (attempt === 0) __pendingSnapshot = { myNumber, snapshot };
     if (attempt < MAX_ATTEMPTS) {
       return setTimeout(() => applySnapshotWhenReady(myNumber, snapshot, attempt + 1), RETRY_MS);
     }
-    // poslední pokus – pokračuj dál i tak
   }
 
-  // 1) identita
   window.myPlayerNumber = myNumber;
   myPlayerNumber = myNumber;
   DBG('identity set', { myNumber, name: myName });
 
-  // 2) status ze serveru (nepřepisuj tím gameStarted)
   serverSaysStarted = !!snapshot.hasStarted;
-  DBG('serverSaysStarted=', serverSaysStarted);
   hydratedFromServer = true;
 
-
   if (typeof snapshot.phase === 'string' && snapshot.phase) {
-    window.currentPhase = snapshot.phase;     // např. 'lobby' | 'base' | 'expansion' | 'battle' | 'end'
-    } else if (!serverSaysStarted) {
+    window.currentPhase = snapshot.phase;
+  } else if (!serverSaysStarted) {
     window.currentPhase = 'lobby';
-    }
-    updatePhaseUI(window.currentPhase);
+  }
 
+  if (Number.isInteger(snapshot.round)) window.currentRound = snapshot.round;
+  else if (!serverSaysStarted) window.currentRound = 0;
 
-    // --- ROUND rehydration ---
-    if (Number.isInteger(snapshot.round)) {
-    window.currentRound = snapshot.round;
-    } else if (!serverSaysStarted) {
-    window.currentRound = 0; // lobby/reset
-    }
+  if (Array.isArray(snapshot.expansionPlan)) window.currentExpansionPlan = snapshot.expansionPlan;
+  if (Array.isArray(snapshot.battlePlan)) window.currentBattlePlan = snapshot.battlePlan;
 
-    // Promítnout do UI (pokud funkce existuje)
-    if (typeof updateRoundClasses === 'function') {
-    try { updateRoundClasses(window.currentRound); }
-    catch (e) { DBG('updateRoundClasses error', e); }
-    }
-
-
-
-    // --- ⬇️ NEW: STICKY (plány) rehydration ---
-    if (Array.isArray(snapshot.expansionPlan)) {
-        window.currentExpansionPlan = snapshot.expansionPlan;
-    }
-    if (Array.isArray(snapshot.battlePlan)) {
-        window.currentBattlePlan = snapshot.battlePlan;
-    }
-
-    // Po nastavení phase/round/plánů promítnout sticky do UI podle fáze
-    if (typeof applyStickColors === 'function') {
-        try {
-        if (window.currentPhase === 'expansion' && Array.isArray(window.currentExpansionPlan)) {
-            applyStickColors(window.currentExpansionPlan);
-        } else if (window.currentPhase === 'battle' && Array.isArray(window.currentBattlePlan)) {
-            applyStickColors(window.currentBattlePlan);
-        }
-        } catch (e) {
-        DBG('applyStickColors error', e);
-        }
-    }
-
-
-
-  // 3) perzistence
   if (snapshot.roomId) {
     currentRoomId = snapshot.roomId;
     sessionStorage.setItem('vl_room', snapshot.roomId);
   }
+  if (typeof myName === 'string' && myName) sessionStorage.setItem('vl_name', myName);
 
-
-  // chat: máme roomId → povol input (pokud už je vepsaný v DOMu)
-    const __chatInput = document.getElementById('chat_input');
-    if (__chatInput) { __chatInput.disabled = false; __chatInput.removeAttribute('disabled'); }
-
-   
-
-
-  if (typeof myName === 'string' && myName) {
-    sessionStorage.setItem('vl_name', myName);
+  const __chatInput = document.getElementById('chat_input');
+  if (__chatInput) {
+    __chatInput.disabled = false;
+    __chatInput.removeAttribute('disabled');
   }
 
-  // 4) PRE-GAME → nová hra: smaž případné staré příznaky pro tento room a připrav lobby
+  // Lobby snapshot – žádná herní rehydratace.
   if (!serverSaysStarted) {
     clearUiFlagsForRoom(snapshot.roomId || currentRoomId);
-    uiStartHandled   = false;
-    basesSettleRan   = false;   // případný lock animace resetni pro novou hru
+    uiStartHandled = false;
+    basesSettleRan = false;
     uiOverlayRunning = false;
 
-    // jména do lobby
     if (snapshot.allNames) {
+      window.allNames = { ...snapshot.allNames };
+      if (snapshot.displayNames) window.displayNames = { ...snapshot.displayNames };
       player1 = snapshot.allNames[1] || player1;
       player2 = snapshot.allNames[2] || player2;
       player3 = snapshot.allNames[3] || player3;
       if (typeof updateScoreNames === 'function') updateScoreNames();
-      if (typeof updateLobbyList  === 'function') updateLobbyList(snapshot.allNames);
+      if (typeof updateLobbyList === 'function') updateLobbyList(snapshot.allNames);
     }
 
-    // UI: lobby zapnout, overlay neschovávat pokud právě běží (neměl by)
-    const lobby = document.getElementById("lobby_container");
-    if (lobby) lobby.style.display = "";
+    const lobby = document.getElementById('lobby_container');
+    if (lobby) lobby.style.display = '';
     if (!uiOverlayRunning) hideOverlay();
-
     __pendingSnapshot = { myNumber, snapshot };
-    DBG('PRE-GAME snapshot stored & return');
-
-
-    // reset kola v lobby
-    window.currentRound = 0;
     if (typeof updateRoundClasses === 'function') {
-    try { updateRoundClasses(0); } catch(e) {}
+      try { updateRoundClasses(0); } catch (_) {}
     }
-
-
-
-
     return;
   }
 
-  // 5) HRA UŽ BĚŽÍ → přepiš autoritativní stav
-  if (snapshot.bases) {
-    player1CurrentBase = snapshot.bases[1] || "";
-    player2CurrentBase = snapshot.bases[2] || "";
-    player3CurrentBase = snapshot.bases[3] || "";
-  }
-  if (snapshot.regions) {
-    playerControlledRegions = {
-      Player1regions: snapshot.regions.Player1regions || [],
-      Player2regions: snapshot.regions.Player2regions || [],
-      Player3regions: snapshot.regions.Player3regions || []
-    };
-  }
-  if (snapshot.regionValues && typeof snapshot.regionValues === 'object') {
-    if (!window.regionValues || typeof window.regionValues !== 'object') window.regionValues = {};
-    Object.entries(snapshot.regionValues).forEach(([k,v]) => { window.regionValues[k] = v; });
-    }
-  if (snapshot.allNames) {
-    player1 = snapshot.allNames[1] || player1;
-    player2 = snapshot.allNames[2] || player2;
-    player3 = snapshot.allNames[3] || player3;
-    if (typeof updateScoreNames === 'function') updateScoreNames();
-  }
-
-  updatePhaseUI(window.currentPhase);
-
-
-  // 6) rozhodnutí podle lokálního stavu
-  const roomKey = snapshot.roomId || currentRoomId;
-  const seenStart = sessionStorage.getItem(startSeenKey(roomKey)) === '1';
-  const animDone  = sessionStorage.getItem(animDoneKey(roomKey))  === '1';
-
-  if (!gameStarted) {
-  if (!seenStart && !animDone) {
-    // (A) late join → sjednocený start UI
-    DBG('FALLBACK overlay → kickoffStartUI', { seenStart, animDone, room: roomKey });
-    
-
-    kickoffStartUI();
-    return;
-  } else {
-      // (B) refresh/reconnect → bez overlaye, rovnou vykreslit
-      allowPaint = true;
-      if (typeof updateScores      === 'function') updateScores();
-      if (typeof updateScoreUI     === 'function' && snapshot.scores) updateScoreUI(snapshot.scores);
-      if (typeof colorizeTiles     === 'function') colorizeTiles();
-      if (typeof displayRegionValues === 'function') displayRegionValues();
-      if (typeof settlePlayer1 === 'function') settlePlayer1();
-      if (typeof settlePlayer2 === 'function') settlePlayer2();
-      if (typeof settlePlayer3 === 'function') settlePlayer3();
-
-      const lobby = document.getElementById("lobby_container");
-      if (lobby) lobby.style.display = "none";
-      if (!uiOverlayRunning) hideOverlay();
-
-      uiStartHandled   = true;
-      gameStarted      = true;
-      __pendingSnapshot = null;
-      DBG('REFRESH branch rendered & return');
-      return;
-    }
-  }
-
-  // 7) (C) hra běží a lokálně už start proběhl → jen znovu vykresli (bez overlaye)
-  DBG('RUNNING: re-render only (no overlay)');
-  if (typeof updateScores      === 'function') updateScores();
-  if (typeof updateScoreUI     === 'function' && snapshot.scores) updateScoreUI(snapshot.scores);
-  if (typeof colorizeTiles     === 'function') colorizeTiles();
-  if (typeof displayRegionValues === 'function') displayRegionValues();
-
-  const lobby = document.getElementById("lobby_container");
-  if (lobby) lobby.style.display = "none";
-  if (!uiOverlayRunning) hideOverlay();
-
+  // Jakýkoli stateSync rozehrané hry znamená reconnect/refresh/late join.
+  // Úvodní animaci NEREPLAYUJEME. Okamžitě aplikujeme celý autoritativní snapshot.
+  applyAuthoritativeSnapshotState(snapshot);
+  allowPaint = true;
+  gameStarted = true;
+  uiStartHandled = true;
+  basesSettleRan = true;
   __pendingSnapshot = null;
+
+  const roomKey = snapshot.roomId || currentRoomId;
+  try {
+    sessionStorage.setItem(startSeenKey(roomKey), '1');
+    sessionStorage.setItem(animDoneKey(roomKey), '1');
+  } catch (_) {}
+
+  const lobby = document.getElementById('lobby_container');
+  if (lobby) lobby.style.display = 'none';
+  hideOverlay();
+  document.body.classList.add('is-game-started');
+
+  // UI funkce jsou v souboru níže; renderer si na ně bezpečně počká.
+  scheduleAuthoritativeVisualRender(snapshot);
+  DBG('AUTHORITATIVE REFRESH scheduled', {
+    phase: snapshot.phase,
+    round: snapshot.round,
+    activeQuestion: snapshot.activeQuestion?.kind || null,
+    activeTurn: snapshot.activeTurn?.kind || null
+  });
 }
-
-
 
 
 
@@ -878,6 +1094,14 @@ function applySnapshotWhenReady(myNumber, snapshot, attempt = 0) {
 // === Socket: autoritativní stav od serveru ===
 socket.on("stateSync", ({ myNumber, snapshot }) => {
   DBG('stateSync RX', { myNumber, hasStarted: snapshot?.hasStarted, roomId: snapshot?.roomId });
+  if (!snapshot) return;
+
+  window.seatControllers = snapshot.seatControllers || window.seatControllers;
+  window.allNames = snapshot.allNames || window.allNames;
+  window.displayNames = snapshot.displayNames || {
+    1: window.allNames[1], 2: window.allNames[2], 3: window.allNames[3]
+  };
+
   const syncedName = snapshot?.allNames?.[myNumber];
   if (syncedName) {
     myName = String(syncedName);
@@ -885,18 +1109,9 @@ socket.on("stateSync", ({ myNumber, snapshot }) => {
     sessionStorage.setItem('vl_name', myName);
     if (isGuestPlayer) sessionStorage.setItem('vl_guest_name', myName);
   }
+
   applySnapshotWhenReady(myNumber, snapshot);
-
-  window.seatControllers = snapshot.seatControllers || window.seatControllers;
-  window.allNames = snapshot.allNames || window.allNames;
-  window.displayNames = snapshot.displayNames || {
-    1: window.allNames[1], 2: window.allNames[2], 3: window.allNames[3]
-  };
-  updateScoreNames && updateScoreNames();
-
-
-
-
+  if (typeof updateScoreNames === 'function') updateScoreNames();
 });
 
 // === Jakmile se hra OPRAVDU spustí (po animaci rozdělení) → pokud byl odložený snapshot, aplikuj ho teď ===
@@ -1093,16 +1308,26 @@ window.addEventListener('gameStartedAfterAnimation', () => {
           return;
         }
 
-        // RANDOM: při běžném vstupu z homepage se NESMÍ automaticky obnovit stará
-        // čekající random místnost. Nejdřív vždy zobrazíme rozcestník a do lobby
-        // vstoupíme teprve po explicitní volbě hráče.
+        // RANDOM: nový vstup z homepage nesmí oživovat starou room, ale skutečný
+        // F5/reload rozehraného Quick/Custom zápasu naopak MUSÍ použít resume.
         if (gameMode === 'random' && !explicitRoomFromUrl && !randomSelectionMade) {
+          const canResumeReload = navigationType === 'reload' && !!savedRoom && !!savedToken && (!savedMode || savedMode === 'random');
+          if (canResumeReload) {
+            currentRoomId = savedRoom;
+            randomSelectionMade = true;
+            if (savedName) myName = savedName;
+            showRandomLobby();
+            DBG('random: trying reload resume', { room: savedRoom, name: myName });
+            socket.emit('resume', { roomId: savedRoom, token: savedToken, expectedMode: 'random' });
+            return;
+          }
+
           currentRoomId = null;
           sessionStorage.removeItem('vl_room');
           sessionStorage.removeItem('vl_seat');
           showRandomHub();
           socket.emit('random:custom:list');
-          DBG('random: entry hub shown; stale room ignored');
+          DBG('random: new navigation → hub; stale room ignored');
           return;
         }
 
@@ -4503,196 +4728,93 @@ if (regionValues && typeof regionValues === 'object') {
 
 
 
-        function settlePlayer1() {
-            const seat = 1;
-            const playerBase = player1CurrentBase;
-            const displayName = seatDisplayName(seat, player1); // ⬅️ použijeme jméno z helperu
+        window.__vlastenecBaseResizeHandlers = window.__vlastenecBaseResizeHandlers || {};
+
+        function settlePlayerBaseVisual(seat) {
+            const bases = {
+                1: player1CurrentBase,
+                2: player2CurrentBase,
+                3: player3CurrentBase
+            };
+            const fallbacks = { 1: player1, 2: player2, 3: player3 };
+            const playerBase = bases[seat];
+            const displayName = seatDisplayName(seat, fallbacks[seat]);
+
+            if (!playerBase) {
+                hideBaseForSeat(seat);
+                return;
+            }
+
+            const regionElement = document.getElementById(playerBase);
+            if (!regionElement) {
+                // Poražený hráč už může mít base odstraněnou ze snapshotu.
+                hideBaseForSeat(seat);
+                return;
+            }
 
             function updatePlayerBasePosition() {
-                const regionElement = document.getElementById(playerBase);
-                if (!regionElement) {
-                console.error(`❌ Region '${playerBase}' nebyl nalezen!`);
-                return;
+                const region = document.getElementById(playerBase);
+                if (!region) {
+                    hideBaseForSeat(seat);
+                    return;
                 }
 
-                const regionRect = regionElement.getBoundingClientRect();
-                let centerX = regionRect.left + regionRect.width / 2 + window.scrollX;
-                let centerY = regionRect.top + regionRect.height / 2 + window.scrollY;
+                const rect = region.getBoundingClientRect();
+                let centerX = rect.left + rect.width / 2 + window.scrollX;
+                let centerY = rect.top + rect.height / 2 + window.scrollY;
 
                 if (pinPositions[playerBase]) {
-                centerX = regionRect.left + regionRect.width * pinPositions[playerBase].x + window.scrollX;
-                centerY = regionRect.top + regionRect.height * pinPositions[playerBase].y + window.scrollY;
+                    centerX = rect.left + rect.width * pinPositions[playerBase].x + window.scrollX;
+                    centerY = rect.top + rect.height * pinPositions[playerBase].y + window.scrollY;
                 }
 
-                // ✅ Jméno hráče (i robota)
-                let nameElement = document.getElementById("player1basename");
-                if (!nameElement) {
-                nameElement = document.createElement("div");
-                nameElement.id = "player1basename";
-                nameElement.classList.add("player-name");
-                document.body.appendChild(nameElement);
+                let nameEl = document.getElementById(`player${seat}basename`);
+                if (!nameEl) {
+                    nameEl = document.createElement('div');
+                    nameEl.id = `player${seat}basename`;
+                    nameEl.classList.add('player-name');
+                    document.body.appendChild(nameEl);
                 }
 
-                nameElement.innerHTML = displayName; // ⬅️ může obsahovat ⚙️
+                nameEl.innerHTML = displayName;
+                nameEl.style.position = 'absolute';
+                nameEl.style.left = `${centerX}px`;
+                nameEl.style.top = `${centerY - 30}px`;
+                nameEl.style.transform = 'translate(-50%, -50%)';
+                nameEl.style.zIndex = '4';
+                nameEl.style.opacity = '1';
+                nameEl.style.visibility = 'visible';
+                nameEl.style.display = 'block';
 
-                nameElement.style.position = "absolute";
-                nameElement.style.left = `${centerX}px`;
-                nameElement.style.top = `${centerY - 30}px`;
-                nameElement.style.transform = "translate(-50%, -50%)";
-                nameElement.style.zIndex = "4";
-                nameElement.style.opacity = "1";
-                nameElement.style.visibility = "visible";
-
-                // ✅ Obrázek základny
-                let baseVisual = document.getElementById("player1basevisual");
-                if (!baseVisual) {
-                baseVisual = document.createElement("img");
-                baseVisual.id = "player1basevisual";
-                baseVisual.src = "base_icon.png";
-                document.body.appendChild(baseVisual);
+                let baseEl = document.getElementById(`player${seat}basevisual`);
+                if (!baseEl) {
+                    baseEl = document.createElement('img');
+                    baseEl.id = `player${seat}basevisual`;
+                    baseEl.src = 'base_icon.png';
+                    document.body.appendChild(baseEl);
                 }
 
-                baseVisual.style.position = "absolute";
-                baseVisual.style.left = `${centerX}px`;
-                baseVisual.style.top = `${centerY}px`;
-                baseVisual.style.transform = "translate(-50%, -50%)";
-                baseVisual.style.display = "block";
+                baseEl.style.position = 'absolute';
+                baseEl.style.left = `${centerX}px`;
+                baseEl.style.top = `${centerY}px`;
+                baseEl.style.transform = 'translate(-50%, -50%)';
+                baseEl.style.display = 'block';
             }
 
             updatePlayerBasePosition();
-            window.addEventListener("resize", updatePlayerBasePosition);
-            socket.emit("baseSettled", { playerNumber: 1 });
-            }
 
+            const oldHandler = window.__vlastenecBaseResizeHandlers[seat];
+            if (oldHandler) window.removeEventListener('resize', oldHandler);
+            window.__vlastenecBaseResizeHandlers[seat] = updatePlayerBasePosition;
+            window.addEventListener('resize', updatePlayerBasePosition);
 
-
-
-        function settlePlayer2() {
-        const seat = 2;
-        const playerBase = player2CurrentBase;
-        const displayName = seatDisplayName(seat, player2); // jméno hráče nebo „Robot … ⚙️“
-
-        function updatePlayerBasePosition() {
-            const regionElement = document.getElementById(playerBase);
-            if (!regionElement) {
-            console.error(`❌ Region '${playerBase}' nebyl nalezen!`);
-            return;
-            }
-
-            const rect = regionElement.getBoundingClientRect();
-            let centerX = rect.left + rect.width / 2 + window.scrollX;
-            let centerY = rect.top + rect.height / 2 + window.scrollY;
-
-            if (pinPositions[playerBase]) {
-            centerX = rect.left + rect.width * pinPositions[playerBase].x + window.scrollX;
-            centerY = rect.top + rect.height * pinPositions[playerBase].y + window.scrollY;
-            }
-
-            // ✅ Jméno hráče (i robota)
-            let nameEl = document.getElementById("player2basename");
-            if (!nameEl) {
-            nameEl = document.createElement("div");
-            nameEl.id = "player2basename";
-            nameEl.classList.add("player-name");
-            document.body.appendChild(nameEl);
-            }
-
-            nameEl.innerHTML = displayName; // může obsahovat ⚙️
-            nameEl.style.position = "absolute";
-            nameEl.style.left = `${centerX}px`;
-            nameEl.style.top = `${centerY - 30}px`;
-            nameEl.style.transform = "translate(-50%, -50%)";
-            nameEl.style.zIndex = "4";
-            nameEl.style.opacity = "1";
-            nameEl.style.visibility = "visible";
-
-            // ✅ Ikona základny
-            let baseEl = document.getElementById("player2basevisual");
-            if (!baseEl) {
-            baseEl = document.createElement("img");
-            baseEl.id = "player2basevisual";
-            baseEl.src = "base_icon.png";
-            document.body.appendChild(baseEl);
-            }
-
-            baseEl.style.position = "absolute";
-            baseEl.style.left = `${centerX}px`;
-            baseEl.style.top = `${centerY}px`;
-            baseEl.style.transform = "translate(-50%, -50%)";
-            baseEl.style.display = "block";
+            // DŮLEŽITÉ: vykreslení základny je čistě prezentace. Už nikdy neposílá
+            // baseSettled na server, takže F5 nemůže změnit vlastnictví ani skóre.
         }
 
-        updatePlayerBasePosition();
-        window.addEventListener("resize", updatePlayerBasePosition);
-        socket.emit("baseSettled", { playerNumber: 2 });
-        }
-
-
-
-
-
-        function settlePlayer3() {
-        const seat = 3;
-        const playerBase = player3CurrentBase;
-        const displayName = seatDisplayName(seat, player3); // ⚙️ nebo běžné jméno
-
-        function updatePlayerBasePosition() {
-            const regionElement = document.getElementById(playerBase);
-            if (!regionElement) {
-            console.error(`❌ Region '${playerBase}' nebyl nalezen!`);
-            return;
-            }
-
-            const rect = regionElement.getBoundingClientRect();
-            let centerX = rect.left + rect.width / 2 + window.scrollX;
-            let centerY = rect.top + rect.height / 2 + window.scrollY;
-
-            if (pinPositions[playerBase]) {
-            centerX = rect.left + rect.width * pinPositions[playerBase].x + window.scrollX;
-            centerY = rect.top + rect.height * pinPositions[playerBase].y + window.scrollY;
-            }
-
-            console.log(`📌 Souřadnice základny hráče 3: X=${centerX}, Y=${centerY}`);
-
-            // ✅ Jméno hráče (i robota)
-            let nameEl = document.getElementById("player3basename");
-            if (!nameEl) {
-            nameEl = document.createElement("div");
-            nameEl.id = "player3basename";
-            nameEl.classList.add("player-name");
-            document.body.appendChild(nameEl);
-            }
-
-            nameEl.innerHTML = displayName;
-            nameEl.style.position = "absolute";
-            nameEl.style.left = `${centerX}px`;
-            nameEl.style.top = `${centerY - 30}px`;
-            nameEl.style.transform = "translate(-50%, -50%)";
-            nameEl.style.zIndex = "4";
-            nameEl.style.opacity = "1";
-            nameEl.style.visibility = "visible";
-
-            // ✅ Ikona základny
-            let baseEl = document.getElementById("player3basevisual");
-            if (!baseEl) {
-            baseEl = document.createElement("img");
-            baseEl.id = "player3basevisual";
-            baseEl.src = "base_icon.png";
-            document.body.appendChild(baseEl);
-            }
-
-            baseEl.style.position = "absolute";
-            baseEl.style.left = `${centerX}px`;
-            baseEl.style.top = `${centerY}px`;
-            baseEl.style.transform = "translate(-50%, -50%)";
-            baseEl.style.display = "block";
-        }
-
-        updatePlayerBasePosition();
-        window.addEventListener("resize", updatePlayerBasePosition);
-        socket.emit("baseSettled", { playerNumber: 3 });
-        }
-
+        function settlePlayer1() { settlePlayerBaseVisual(1); }
+        function settlePlayer2() { settlePlayerBaseVisual(2); }
+        function settlePlayer3() { settlePlayerBaseVisual(3); }
 
 
 
@@ -5235,56 +5357,50 @@ if (regionValues && typeof regionValues === 'object') {
 
 
 // Function to start the countdown - tile expansion, conquering
+function stopTileCountdown() {
+    if (window.__tileCountdownInterval) {
+        clearInterval(window.__tileCountdownInterval);
+        window.__tileCountdownInterval = null;
+    }
+    stopTickSound();
+    const tileClockContainer = document.getElementById('tileclockcontainer');
+    if (tileClockContainer) tileClockContainer.style.display = 'none';
+}
+
 function startCountdownTile(secondsAmount) {
-    var countdownElement = document.getElementById('tilecountdown');
-    var circle = document.getElementById('tiletimer');
-    var tileClockContainer = document.getElementById("tileclockcontainer");
+    const countdownElement = document.getElementById('tilecountdown');
+    const circle = document.getElementById('tiletimer');
+    const tileClockContainer = document.getElementById('tileclockcontainer');
+    if (!countdownElement || !circle || !tileClockContainer) return;
 
-    tileClockContainer.style.display = "flex";
+    stopTileCountdown();
+    tileClockContainer.style.display = 'flex';
 
-    var initial_seconds = secondsAmount;
-    var seconds = secondsAmount;
+    const initialSeconds = Math.max(1, Math.ceil(Number(secondsAmount) || 1));
+    let seconds = initialSeconds;
+    const radius = parseFloat(circle.getAttribute('r')) || 45;
+    const totalLength = 2 * Math.PI * radius;
 
-    // ✅ Získání skutečného poloměru kruhu
-    var radius = parseFloat(circle.getAttribute("r")); // Poloměr kruhu (číslo)
-    var totalLength = 2 * Math.PI * radius; // Výpočet obvodu kruhu
-
-    console.log(`📏 Poloměr: ${radius}, Obvod: ${totalLength}`); // Debugging
-
-    // ✅ Nastavení správného stroke-dasharray pro jakýkoliv kruh
     circle.style.strokeDasharray = totalLength;
-    circle.style.strokeDashoffset = totalLength; // Start na plný kruh (kruh viditelný)
-
+    circle.style.strokeDashoffset = 0;
     countdownElement.textContent = seconds;
-
     playTickSound();
 
-    var countdownInterval = setInterval(function() {
-        seconds--;
+    window.__tileCountdownInterval = setInterval(() => {
+        seconds -= 1;
+        countdownElement.textContent = Math.max(0, seconds);
+        circle.style.strokeDashoffset = totalLength * (1 - Math.max(0, seconds) / initialSeconds);
 
-        countdownElement.textContent = seconds;
-        let newOffset = totalLength * (seconds / initial_seconds); // ✅ Zmenšování čáry od plného kruhu k nule
-        circle.style.strokeDashoffset = newOffset;
-
-        console.log(`⏳ Čas: ${seconds}s, stroke-dashoffset: ${newOffset}`); // Debugging výstup
-
-        if (seconds > 0) {
-            playTickSound();
-        }
-
+        if (seconds > 0) playTickSound();
         if (seconds <= 0) {
-            clearInterval(countdownInterval);
+            clearInterval(window.__tileCountdownInterval);
+            window.__tileCountdownInterval = null;
             countdownElement.textContent = '0';
             stopTickSound();
-            tileClockContainer.style.display = "none";
+            tileClockContainer.style.display = 'none';
         }
     }, 1000);
 }
-
-
-
-
-
 
 
 
@@ -8182,59 +8298,52 @@ function installBattleHoverDelegation() {
 
 installBattleHoverDelegation();
 
-socket.on("battleAvailableRegions", async ({ regions }) => {
-    console.log("🟢 Dostupná nepřátelská políčka:", regions);
+async function activateBattleAvailableRegions(regions, timeLeft = 10, { rehydrated = false } = {}) {
+    const validRegions = Array.isArray(regions) ? regions : [];
+    console.log(rehydrated ? '🔄 Obnovuji bitevní cíle:' : '🟢 Dostupná nepřátelská políčka:', validRegions);
 
     await waitForRegionWaveIdle();
-    console.log("🌊 Bitevní mapa je po animaci připravená pro další tah.");
-    console.log("🧪 BATTLE HOVER v3 (delegated) aktivní");
+    if (typeof window.__regionSelectionCleanup === 'function') window.__regionSelectionCleanup();
 
-    const validRegions = Array.isArray(regions) ? regions : [];
     window.__battleTargetIds = new Set(validRegions);
     window.__battleSelectionActive = true;
     installBattleHoverDelegation();
 
-    document.querySelectorAll(".region").forEach(el => {
-        // Reset pouze battle-specific inline stavu; barvu (fill) regionu neměníme.
-        el.style.removeProperty("filter");
-        el.style.removeProperty("opacity");
+    document.querySelectorAll('.region').forEach(el => {
+        el.style.removeProperty('filter');
+        el.style.removeProperty('opacity');
         delete el.dataset.battleHover;
-        el.classList.remove("battle-selectable");
+        el.classList.remove('battle-selectable');
 
         if (window.__battleTargetIds.has(el.id)) {
-            el.classList.remove("unavailable");
-            el.classList.add("battle-selectable");
-            el.style.pointerEvents = "auto";
-            el.style.cursor = "pointer";
+            el.classList.remove('unavailable');
+            el.classList.add('battle-selectable');
+            el.style.pointerEvents = 'auto';
+            el.style.cursor = 'pointer';
         } else {
-            el.classList.add("unavailable");
-            el.style.pointerEvents = "none";
-            el.style.cursor = "default";
+            el.classList.add('unavailable');
+            el.style.pointerEvents = 'none';
+            el.style.cursor = 'default';
         }
     });
 
-    enableBattleSelection(validRegions);
+    enableBattleSelection(validRegions, timeLeft);
+}
+
+socket.on("battleAvailableRegions", ({ regions, timeLeft = 10 }) => {
+    activateBattleAvailableRegions(regions, timeLeft);
 });
 
-
-
-
-
-
-
-
-async function enableBattleSelection(validRegions) {
-    console.log("✅ Vyber území pro útok");
-    startCountdownTile(10); // ✅ Spustíme časomíru
+async function enableBattleSelection(validRegions, timeLeft = 10) {
+    console.log('✅ Vyber území pro útok');
+    startCountdownTile(timeLeft);
 
     try {
-        const clickedRegion = await waitForClick(".region", validRegions);
-
+        const clickedRegion = await waitForClick('.region', validRegions);
         console.log(`🖱️ (Bitva) Vybral jsi: ${clickedRegion.id}`);
-        socket.emit("claimRegion", { region: clickedRegion.id });
-
+        socket.emit('claimRegion', { region: clickedRegion.id });
     } catch (err) {
-        console.error("❌ Chyba při výběru regionu v bitvě:", err);
+        console.error('❌ Chyba při výběru regionu v bitvě:', err);
     }
 }
 
@@ -8368,14 +8477,9 @@ socket.on("hideBaseMini", () => {
 
 
 socket.on("playerLoses", ({defender}) => {
-
-    const baseNameElement = document.getElementById(`player${defender}basename`);
-    if (baseNameElement) {
-        baseNameElement.style.display = "none";
-    }
-
+    hideBaseForSeat(Number(defender));
+    applyBaseLivesVisual(Number(defender), 0);
     console.log("Hráč", defender, "prohrál.");
-
 });
 
 
@@ -8471,85 +8575,76 @@ function resetRegion(e) {
 
 
 
-socket.on("availableRegions", async ({ regions }) => {
-    console.log("🟢 Dostupná políčka:", regions);
+async function activateStandardAvailableRegions(regions, kind = null, round = null, timeLeft = 10, { rehydrated = false } = {}) {
+    const validRegions = Array.isArray(regions) ? regions : [];
+    const effectiveKind = kind || window.currentPhase || currentPhase || 'expansion';
+    console.log(rehydrated ? `🔄 Obnovuji dostupná políčka (${effectiveKind}):` : '🟢 Dostupná políčka:', validRegions);
 
     await waitForRegionWaveIdle();
-    console.log("🌊 Mapa je po animaci připravená pro další tah.");
+    if (typeof window.__regionSelectionCleanup === 'function') window.__regionSelectionCleanup();
 
-    // ✅ Reset filtrů a listenerů
-    document.querySelectorAll(".region").forEach(el => {
-        el.style.filter = "";
-        el.replaceWith(el.cloneNode(true)); // smaže staré listenery i filtry
-    });
+    window.__battleSelectionActive = false;
+    window.__battleTargetIds = new Set();
 
-    document.querySelectorAll(".region").forEach(el => {
-        if (regions.includes(el.id)) {
-            el.classList.remove("unavailable");
-            el.style.pointerEvents = "auto";
-            el.addEventListener("mouseover", highlightRegion);
-            el.addEventListener("mouseout", resetRegion);
+    document.querySelectorAll('.region').forEach(el => {
+        // Necloneujeme SVG path. Stačí odstranit naše známé listenery; tím zachováme
+        // DOM reference, SVG vrstvy i delegovaný battle hover.
+        el.removeEventListener('mouseover', highlightRegion);
+        el.removeEventListener('mouseout', resetRegion);
+        el.style.removeProperty('filter');
+        el.style.removeProperty('opacity');
+        el.classList.remove('battle-selectable');
+        delete el.dataset.battleHover;
+
+        if (validRegions.includes(el.id)) {
+            el.classList.remove('unavailable');
+            el.style.pointerEvents = 'auto';
+            el.style.cursor = 'pointer';
+            el.addEventListener('mouseover', highlightRegion);
+            el.addEventListener('mouseout', resetRegion);
         } else {
-            el.classList.add("unavailable");
-            el.style.pointerEvents = "none";
+            el.classList.add('unavailable');
+            el.style.pointerEvents = 'none';
+            el.style.cursor = 'default';
         }
     });
 
-    if (currentPhase === "conquest") {
-        enableConquestSelection();
+    if (effectiveKind === 'conquest') {
+        enableConquestSelection(timeLeft);
     } else {
-        enableRegionSelection();
-    }
-});
-
-
-
-
-
-
-
-    async function enableRegionSelection(round) {
-    console.log("✅ Můžeš vybrat region");
-
-    startCountdownTile(10); // ✅ Spustíme časomíru
-
-    try {
-        const clickedRegion = await waitForClick(".region");
-
-        console.log(`🖱️ Vybral jsi: ${clickedRegion.id}`);
-
-        // Odeslat serveru
-        socket.emit("claimRegion", {
-            round,
-            region: clickedRegion.id
-        });
-
-    } catch (err) {
-        console.error("❌ Chyba při výběru regionu:", err);
+        enableRegionSelection(round, timeLeft);
     }
 }
 
+socket.on("availableRegions", ({ regions, timeLeft = 10, round = null, kind = null }) => {
+    const effectiveKind = kind || window.currentPhase || currentPhase || 'expansion';
+    activateStandardAvailableRegions(regions, effectiveKind, round, timeLeft);
+});
 
+async function enableRegionSelection(round, timeLeft = 10) {
+    console.log('✅ Můžeš vybrat region');
+    startCountdownTile(timeLeft);
 
+    try {
+        const clickedRegion = await waitForClick('.region');
+        console.log(`🖱️ Vybral jsi: ${clickedRegion.id}`);
+        socket.emit('claimRegion', { round, region: clickedRegion.id });
+    } catch (err) {
+        console.error('❌ Chyba při výběru regionu:', err);
+    }
+}
 
+async function enableConquestSelection(timeLeft = 10) {
+    console.log('✅ Můžeš vybrat region (dobývání)');
+    startCountdownTile(timeLeft);
 
-    async function enableConquestSelection() {
-        console.log("✅ Můžeš vybrat region (dobývání)");
-
-        startCountdownTile(10); // stejná časomíra jako v rozšiřování
-
-        try {
-            const clickedRegion = await waitForClick(".region");
-
-            console.log(`🖱️ (Dobývání) Vybral jsi: ${clickedRegion.id}`);
-
-            socket.emit("claimRegion", {
-                region: clickedRegion.id // při dobývání neposíláme round
-            });
-
-        } catch (err) {
-            console.error("❌ Chyba při výběru regionu (dobývání):", err);
-        }
+    try {
+        const clickedRegion = await waitForClick('.region');
+        console.log(`🖱️ (Dobývání) Vybral jsi: ${clickedRegion.id}`);
+        socket.emit('claimRegion', { region: clickedRegion.id });
+    } catch (err) {
+        console.error('❌ Chyba při výběru regionu (dobývání):', err);
+    }
 }
 
 
@@ -8557,6 +8652,7 @@ socket.on("availableRegions", async ({ regions }) => {
 
     socket.on("playerSelectedRegion", ({ player, region }) => {
         console.log(`📍 Hráč ${player} vybral region: ${region}`);
+        stopTileCountdown();
 
         // Server tímto potvrzuje konec výběru (i když vybral náhodně po timeoutu).
         // Zrušíme proto případný lokální waiter, aby se listenery nehromadily do dalších tahů.
@@ -8583,34 +8679,53 @@ socket.on("availableRegions", async ({ regions }) => {
 
 
 
-    socket.on("updateRegions", ({ regions, regionValues }) => {
+    socket.on("updateRegions", ({ regions, regionValues, scores, bases, playerLives, defenseBonuses, pendingPins }) => {
             console.log("🎨 Aktualizace regionů:", regions);
             profileTrackRegionSnapshot(regions);
 
-            // Stav PŘED serverovou aktualizací potřebujeme pro zjištění,
-            // zda jde o nové volné pole, nebo změnu majitele v bitvě.
             const previousRegions = {
                 Player1regions: Array.isArray(playerControlledRegions?.Player1regions) ? [...playerControlledRegions.Player1regions] : [],
                 Player2regions: Array.isArray(playerControlledRegions?.Player2regions) ? [...playerControlledRegions.Player2regions] : [],
                 Player3regions: Array.isArray(playerControlledRegions?.Player3regions) ? [...playerControlledRegions.Player3regions] : []
             };
 
-            playerControlledRegions = regions;
-            window.regionValues = regionValues; // pokud používáš globální
+            playerControlledRegions = {
+                Player1regions: [...(regions?.Player1regions || [])],
+                Player2regions: [...(regions?.Player2regions || [])],
+                Player3regions: [...(regions?.Player3regions || [])]
+            };
+            window.playerControlledRegions = playerControlledRegions;
+            window.regionValues = { ...(regionValues || {}) };
+            try { window.regionValues && (regionValues = window.regionValues); } catch (_) {}
+            if (defenseBonuses) window.defenseBonuses = { ...defenseBonuses };
+            if (playerLives) window.playerLives = { ...playerLives };
+
+            if (bases) {
+                player1CurrentBase = bases[1] || '';
+                player2CurrentBase = bases[2] || '';
+                player3CurrentBase = bases[3] || '';
+                renderBasesFromSnapshot({ bases, playerLives: playerLives || window.playerLives, regions: playerControlledRegions });
+            }
+            if (scores && typeof updateScoreUI === 'function') updateScoreUI(scores);
 
             document.querySelectorAll(".pin-marker").forEach(pin => pin.remove());
+            if (pendingPins && Object.keys(pendingPins).length) {
+                renderPendingPinsFromSnapshot({ pendingPins });
+            }
 
             if (!allowPaint) {
-                // Před dokončením úvodní animace zachováme původní logiku.
                 colorizeTiles();
+                displayRegionValues();
                 return;
             }
 
             const wavePhase = currentPhase || window.currentPhase || '';
-            const waveBatch = animateRegionOwnershipChanges(previousRegions, regions, wavePhase)
+            const waveBatch = animateRegionOwnershipChanges(previousRegions, playerControlledRegions, wavePhase)
                 .catch(err => {
                     console.warn('⚠️ Region wave animation failed, using direct paint:', err);
+                    resetRegionVisualsForSnapshot();
                     colorizeTiles();
+                    displayRegionValues();
                 });
             trackRegionWaveBarrier(waveBatch);
             
