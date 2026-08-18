@@ -4776,3 +4776,300 @@ html {
     padding-inline: 7px !important;
   }
 }
+
+
+/* ============================================================
+   VLASTENEC — TABLET LOBBY FIT V2 (2026-08-18)
+   Stronger fit pass: covers 1366/1400px-wide tablets and uses
+   the actually visible viewport height, not only CSS 100vh.
+   ============================================================ */
+@media (min-width: 700px) and (max-width: 1400px) {
+  #lobby_container {
+    padding: 4px !important;
+    overflow: hidden !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  #lobby_window.lobby-shell-v2 {
+    width: calc(100vw - 8px) !important;
+    height: calc(var(--vl-visible-vh, 100dvh) - 8px) !important;
+    min-height: 0 !important;
+    max-height: none !important;
+    max-width: none !important;
+    grid-template-rows: auto minmax(0, 1fr) !important;
+    overflow: hidden !important;
+    border-radius: 14px !important;
+  }
+
+  .lobby-head-v2 {
+    min-height: 54px !important;
+    height: 54px !important;
+    box-sizing: border-box !important;
+    padding: 5px 10px !important;
+    gap: 10px !important;
+    overflow: hidden !important;
+  }
+
+  .lobby-head-v2 .lobby-logo {
+    width: 104px !important;
+    max-height: 28px !important;
+  }
+
+  .lobby-head-v2 .lobby-brand-block {
+    gap: 8px !important;
+  }
+
+  .lobby-head-v2 .player-identity-card {
+    min-width: 220px !important;
+    max-width: 285px !important;
+    grid-template-columns: 28px minmax(64px,1fr) auto !important;
+    gap: 5px !important;
+    padding: 4px 5px !important;
+    border-radius: 10px !important;
+  }
+
+  .lobby-head-v2 .player-identity-avatar {
+    width: 28px !important;
+    height: 28px !important;
+  }
+
+  .lobby-head-v2 .player-identity-login {
+    height: 28px !important;
+    padding-inline: 7px !important;
+  }
+
+  .lobby-layout-v2 {
+    min-height: 0 !important;
+    height: 100% !important;
+    overflow: hidden !important;
+    grid-template-columns:
+      minmax(155px, .74fr)
+      minmax(285px, 1.48fr)
+      minmax(175px, .82fr) !important;
+  }
+
+  .lobby-left-column,
+  .lobby-center-column,
+  .lobby-chat-panel-v2 {
+    min-height: 0 !important;
+    height: 100% !important;
+    box-sizing: border-box !important;
+    overflow: hidden !important;
+  }
+
+  .lobby-left-column {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 5px !important;
+    padding: 6px 0 6px 6px !important;
+  }
+
+  .lobby-center-column {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 5px !important;
+    padding: 6px !important;
+  }
+
+  .lobby-chat-panel-v2 {
+    padding: 7px 7px 6px !important;
+    gap: 5px !important;
+  }
+
+  .lobby-players-v2,
+  .lobby-invite-section,
+  .lobby-mode-info-section,
+  .lobby-categories-v2 {
+    padding: 7px !important;
+    border-radius: 12px !important;
+  }
+
+  .lobby-players-v2 {
+    flex: 0 0 auto !important;
+  }
+
+  .lobby-invite-section,
+  .lobby-mode-info-section {
+    flex: 1 1 0 !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+  }
+
+  .lobby-categories-v2 {
+    flex: 1 1 0 !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  .lobby-section-head,
+  .lobby-section-head.compact {
+    flex: 0 0 auto !important;
+    margin-bottom: 5px !important;
+  }
+
+  .lobby-category-grid-v2 {
+    flex: 1 1 0 !important;
+    min-height: 0 !important;
+    height: 0 !important; /* force the grid to consume only remaining flex space */
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    grid-template-rows: repeat(3, minmax(0, 1fr)) !important;
+    gap: 4px !important;
+    align-content: stretch !important;
+  }
+
+  .lobby-category-grid-v2 .lobby-cat-tile {
+    min-height: 0 !important;
+    height: 100% !important;
+    aspect-ratio: auto !important;
+    border-radius: 8px !important;
+  }
+
+  .lobby-category-grid-v2 .lobby-cat-tile {
+    grid-template-rows: minmax(0,1fr) 17px !important;
+  }
+
+  .lobby-category-grid-v2 .lobby-cat-name {
+    height: 17px !important;
+    min-height: 17px !important;
+    padding: 0 3px !important;
+  }
+
+  .lobby-player-list-v2 {
+    gap: 4px !important;
+  }
+
+  .lobby-player-list-v2 .lobby-player-card,
+  body.lobby-mode-random .lobby-player-card,
+  body.lobby-mode-bots .lobby-player-card {
+    min-height: 38px !important;
+    padding: 4px 6px !important;
+    grid-template-columns: 27px minmax(0, 1fr) minmax(28px, auto) !important;
+    gap: 5px !important;
+  }
+
+  .lobby-player-avatar {
+    width: 27px !important;
+    height: 27px !important;
+  }
+
+  .lobby-room-code-card {
+    padding: 6px 7px !important;
+    gap: 5px !important;
+  }
+
+  .lobby-icon-btn {
+    height: 26px !important;
+    padding-inline: 6px !important;
+  }
+
+  .lobby-invite-actions {
+    gap: 4px !important;
+    margin-top: 5px !important;
+  }
+
+  .lobby-invite-actions .lobby-btn {
+    height: 30px !important;
+  }
+
+  .lobby-invite-note {
+    display: none !important;
+  }
+
+  /* Most important tablet fix: reserve the footer row instead of
+     allowing the category grid to push it below the viewport. */
+  .lobby-actions-v2 {
+    flex: 0 0 46px !important;
+    min-height: 46px !important;
+    height: 46px !important;
+    box-sizing: border-box !important;
+    padding: 5px 7px !important;
+    gap: 7px !important;
+    overflow: hidden !important;
+    position: relative !important;
+    z-index: 2 !important;
+  }
+
+  .lobby-actions-v2 .lobby-ready-copy {
+    gap: 1px !important;
+  }
+
+  .lobby-actions-v2 .lobby-btn {
+    min-width: 94px !important;
+    height: 31px !important;
+    padding-inline: 7px !important;
+  }
+
+  .lobby-action-buttons {
+    gap: 4px !important;
+  }
+
+  .chat-panel-head,
+  .chat-tabs,
+  .modern-chat-compose {
+    flex: 0 0 auto !important;
+  }
+
+  #lobby_chat_messages.modern-chat-messages {
+    min-height: 0 !important;
+    overflow-y: auto !important;
+  }
+
+  .chat-tabs {
+    gap: 2px !important;
+    padding: 2px !important;
+  }
+
+  .chat-channel-tab {
+    padding: 5px 4px !important;
+  }
+
+  .modern-chat-compose {
+    grid-template-columns: minmax(0,1fr) 31px !important;
+    gap: 4px !important;
+  }
+
+  .modern-chat-compose input,
+  .modern-chat-compose button {
+    height: 31px !important;
+  }
+}
+
+/* Short landscape tablets need a second vertical compaction pass. */
+@media (min-width: 700px) and (max-width: 1400px) and (max-height: 820px) {
+  .lobby-head-v2 {
+    min-height: 48px !important;
+    height: 48px !important;
+    padding-block: 3px !important;
+  }
+
+  .lobby-head-v2 .lobby-logo { width: 96px !important; }
+
+  .lobby-left-column,
+  .lobby-center-column { gap: 4px !important; }
+
+  .lobby-player-list-v2 .lobby-player-card,
+  body.lobby-mode-random .lobby-player-card,
+  body.lobby-mode-bots .lobby-player-card {
+    min-height: 34px !important;
+  }
+
+  .lobby-player-avatar {
+    width: 24px !important;
+    height: 24px !important;
+  }
+
+  .lobby-actions-v2 {
+    flex-basis: 42px !important;
+    min-height: 42px !important;
+    height: 42px !important;
+  }
+
+  .lobby-actions-v2 .lobby-btn {
+    height: 29px !important;
+  }
+}
+
+/* 🧪 VLASTENEC FIX: tablet-lobby-fit-v2 */

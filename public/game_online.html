@@ -4,9 +4,22 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>VLASTENEC</title>
-  <link rel="stylesheet" href="mainstyle.css">
+  <link rel="stylesheet" href="mainstyle.css?v=tablet-lobby-v2">
   <script src="auth-client.js"></script>
   <script src="profile-store.js"></script>
+  <script>
+    // Keep tablet lobby sized to the *visible* browser viewport (browser chrome included).
+    (() => {
+      const syncVisibleViewport = () => {
+        const h = window.visualViewport?.height || window.innerHeight;
+        document.documentElement.style.setProperty('--vl-visible-vh', `${Math.round(h)}px`);
+      };
+      syncVisibleViewport();
+      window.addEventListener('resize', syncVisibleViewport, { passive: true });
+      window.addEventListener('orientationchange', () => setTimeout(syncVisibleViewport, 80), { passive: true });
+      window.visualViewport?.addEventListener('resize', syncVisibleViewport, { passive: true });
+    })();
+  </script>
 
   <style>
     /* === VLASTENEC: globální přepínač zvuku ve hře === */
