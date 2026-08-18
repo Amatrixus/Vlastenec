@@ -5095,7 +5095,6 @@ html {
     padding: 4px !important;
     margin: 0 !important;
     box-sizing: border-box !important;
-    display: flex !important;
     align-items: stretch !important;
     justify-content: stretch !important;
     overflow: hidden !important;
@@ -5185,3 +5184,18 @@ html {
 }
 
 /* 🧪 VLASTENEC FIX: tablet-lobby-fit-v4-chrome */
+
+
+/* ============================================================
+   VLASTENEC — LOBBY VISIBILITY SAFETY V1
+   Tablet/mobile fit must never override JS hiding the lobby.
+   ============================================================ */
+#lobby_container[style*="display: none"] {
+  display: none !important;
+}
+
+body.is-game-started #lobby_container {
+  display: none !important;
+}
+
+/* 🧪 VLASTENEC FIX: lobby-hide-after-start-v1 */
