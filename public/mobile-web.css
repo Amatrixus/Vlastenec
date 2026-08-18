@@ -1,0 +1,584 @@
+/* =========================================================
+   VLASTENEC — MOBILE WEB V1
+   Pouze portálové stránky. Herní obrazovku ani lobby nemění.
+   Breakpoint: telefony / malé phablety do 700 px.
+   ========================================================= */
+
+@media (max-width: 700px) {
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    overflow-x: hidden;
+  }
+
+  body {
+    width: 100%;
+    min-width: 0;
+    overflow-x: hidden;
+  }
+
+  img, svg, video, canvas { max-width: 100%; }
+  button, a, input, select, textarea { touch-action: manipulation; }
+
+  /* ---------- Sdílená homepage / portálová hlavička ---------- */
+  .portal-stage,
+  .portal-page-stage {
+    width: 100%;
+    min-height: 100dvh;
+    padding:
+      max(10px, env(safe-area-inset-top))
+      max(10px, env(safe-area-inset-right))
+      max(18px, env(safe-area-inset-bottom))
+      max(10px, env(safe-area-inset-left));
+  }
+
+  .portal-shell,
+  .portal-page-shell {
+    width: 100%;
+    height: auto;
+    min-height: calc(100dvh - 28px);
+    margin: 0;
+  }
+
+  .portal-header {
+    min-width: 0;
+    min-height: 58px;
+    height: auto;
+    padding: 7px 0 9px;
+    gap: 7px;
+    align-items: center;
+  }
+
+  .portal-brand {
+    flex: 0 1 auto;
+    min-width: 0;
+    gap: 0;
+  }
+
+  .portal-brand img { width: clamp(108px, 31vw, 128px); }
+  .portal-brand-divider,
+  .portal-brand-caption,
+  .online-chip { display: none !important; }
+
+  .portal-actions {
+    min-width: 0;
+    flex: 1 1 auto;
+    justify-content: flex-end;
+    gap: 2px;
+  }
+
+  .utility-link {
+    flex: 0 0 auto;
+    padding: 8px 5px;
+    font-size: 8px;
+    letter-spacing: .07em;
+    white-space: nowrap;
+  }
+
+  .utility-link.active::after {
+    left: 5px;
+    right: 5px;
+    bottom: 3px;
+  }
+
+  .profile-copy { display: none !important; }
+  .profile-chip {
+    flex: 0 0 38px;
+    width: 38px;
+    height: 38px;
+    padding: 3px;
+    margin-left: 2px;
+    justify-content: center;
+    border-radius: 11px;
+  }
+  .profile-chip img {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+  }
+
+  .portal-page-content {
+    width: 100% !important;
+    min-width: 0;
+    margin: 0 !important;
+    padding: 22px 0 40px !important;
+  }
+
+  .portal-lion {
+    top: -4vh;
+    right: -44vw;
+    width: 125vw;
+    height: 112vh;
+    opacity: .055;
+  }
+  .portal-grid { background-size: 34px 34px; }
+  .glow-left { width: 80vw; height: 80vw; left: -48vw; bottom: -34vw; }
+  .glow-right { width: 66vw; height: 66vw; right: -24vw; top: 18vh; }
+
+  /* ---------- HOMEPAGE ---------- */
+  .portal-stage .portal-shell {
+    display: grid;
+    grid-template-rows: auto auto;
+  }
+  .portal-stage .portal-main {
+    width: 100%;
+    padding: 22px 0 36px;
+    gap: 20px;
+  }
+  .portal-heading {
+    display: grid;
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+    align-items: start;
+  }
+  .portal-heading h1 {
+    max-width: 100%;
+    font-size: clamp(29px, 9vw, 37px) !important;
+    line-height: 1.02;
+    letter-spacing: -.038em;
+  }
+  .portal-lead {
+    max-width: 38rem;
+    justify-self: start;
+    margin: 0;
+    font-size: 12px !important;
+    line-height: 1.55;
+  }
+  .mode-grid {
+    width: 100%;
+    height: auto !important;
+    min-height: 0 !important;
+    grid-template-columns: 1fr !important;
+    gap: 13px;
+  }
+  .mode-card {
+    width: 100%;
+    min-height: clamp(285px, 78vw, 335px) !important;
+    border-radius: 16px;
+  }
+  .mode-card .mode-art {
+    width: 100%;
+    height: auto;
+    min-height: 100%;
+    object-fit: cover;
+    object-position: center 31%;
+  }
+  .mode-card::before {
+    background: linear-gradient(180deg, rgba(3,8,15,.04) 0%, rgba(3,8,15,.18) 37%, rgba(3,8,15,.94) 76%, #020a13 100%);
+  }
+  .mode-content {
+    padding: 0 18px 18px;
+  }
+  .mode-content h2 { font-size: 23px; }
+  .mode-content p {
+    min-height: 0;
+    margin: 7px 0 11px;
+    font-size: 11px;
+    line-height: 1.4;
+  }
+  .mode-kicker { margin-bottom: 5px; font-size: 7.5px; }
+  .mode-number { top: 13px; right: 14px; }
+  .mode-cta { font-size: 9.5px; }
+  .mode-cta b { width: 24px; height: 24px; }
+
+  /* Na dotykovém zařízení nesmí zůstat karta vizuálně "viset" v hover stavu. */
+  .mode-card:hover { transform: none; box-shadow: 0 16px 40px rgba(0,0,0,.16); }
+  .mode-card:hover .mode-art { transform: none; }
+
+  /* ---------- ŽEBŘÍČKY ---------- */
+  .leaderboard-page { width: 100% !important; padding-top: 22px !important; }
+  .leaderboard-page .hero {
+    grid-template-columns: 1fr !important;
+    gap: 18px;
+    margin-bottom: 20px;
+  }
+  .leaderboard-page .hero h1 {
+    font-size: clamp(31px, 9vw, 39px) !important;
+    line-height: 1.03;
+  }
+  .leaderboard-page .hero p { font-size: 11.5px; line-height: 1.55; }
+  .scope-switch {
+    width: 100%;
+    min-width: 0 !important;
+    grid-template-columns: 1fr 1fr;
+  }
+  .scope-tab { min-width: 0; padding: 12px 10px; }
+  .scope-tab small { font-size: 7px; }
+  .scope-tab strong { font-size: 11px; }
+
+  .control-bar {
+    width: 100%;
+    min-width: 0;
+    align-items: stretch;
+    flex-direction: column;
+    gap: 8px;
+    padding: 8px;
+  }
+  .view-tabs,
+  .period-tabs {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .view-tabs::-webkit-scrollbar,
+  .period-tabs::-webkit-scrollbar { display: none; }
+  .view-tab,
+  .period-tabs button { flex: 0 0 auto; white-space: nowrap; }
+
+  .overview-grid,
+  .category-results-grid { grid-template-columns: 1fr !important; gap: 12px; }
+  .podium { grid-template-columns: 1fr !important; gap: 8px; padding: 8px; }
+  .podium-card { min-height: 118px; }
+  .my-card { min-height: 145px; padding: 18px; }
+
+  .section-head {
+    min-height: 0;
+    padding: 15px 14px;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .section-head h2,
+  .records-head h2 { font-size: 18px; }
+  .section-head p { font-size: 9.5px; }
+  .table-count { flex: 0 0 auto; }
+
+  .table-wrap {
+    width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+  }
+  .ranking-table { min-width: 650px; }
+  .ranking-table th { padding: 9px 12px; }
+  .ranking-table td { padding: 12px; }
+
+  .category-grid {
+    grid-template-columns: repeat(2, minmax(0,1fr)) !important;
+    gap: 8px;
+    padding: 10px;
+  }
+  .category-button { border-radius: 10px; }
+  .category-button span { font-size: 7.5px; }
+  .records-grid { grid-template-columns: 1fr !important; gap: 9px; }
+  .record-card { min-height: 145px; padding: 17px; }
+  .coming-card { min-height: 0; padding: 28px 16px; }
+  .coming-card h2 { font-size: 22px; }
+  .coming-card > p { font-size: 11px; }
+  .coming-metrics { grid-template-columns: 1fr !important; margin-top: 20px; }
+  .nearby-row {
+    grid-template-columns: 42px minmax(0,1fr) 72px !important;
+    gap: 8px;
+    padding: 10px 13px;
+  }
+  .nearby-row .nearby-metric:last-child { display: none; }
+
+  /* ---------- PROFIL ---------- */
+  .profile-page { width: 100% !important; padding-top: 22px !important; }
+  .profile-page-actions {
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 7px;
+    margin-bottom: 10px;
+  }
+  .profile-storage-badge { margin-right: auto; }
+  .profile-back { min-height: 38px; padding: 0 12px; }
+
+  .profile-hero {
+    min-height: 0;
+    padding: 18px !important;
+    grid-template-columns: 64px minmax(0,1fr) !important;
+    gap: 14px !important;
+    align-items: center;
+  }
+  .profile-avatar {
+    width: 60px !important;
+    height: 60px !important;
+    border-radius: 17px !important;
+    font-size: 20px;
+  }
+  .profile-identity h1 { font-size: 26px; margin-bottom: 8px; }
+  .profile-level-line { gap: 7px; flex-wrap: wrap; font-size: 10px; }
+  .profile-xp {
+    grid-column: 1 / -1;
+    margin-top: 3px;
+  }
+  .profile-xp-head,
+  .profile-xp-foot { gap: 8px; }
+  .profile-xp-foot { font-size: 9px; }
+
+  .guest-note { margin: 10px 2px 14px; font-size: 9.5px; }
+  .stat-grid {
+    grid-template-columns: repeat(2, minmax(0,1fr)) !important;
+    gap: 8px !important;
+  }
+  .stat-card { min-height: 104px; padding: 14px !important; }
+  .stat-card strong { font-size: 25px; }
+
+  .profile-main-grid,
+  .profile-bottom-grid { grid-template-columns: 1fr !important; gap: 12px !important; }
+  .category-list,
+  .achievement-list { grid-template-columns: 1fr !important; }
+  .panel { border-radius: 16px; }
+  .profile-page .section-head { padding: 15px 16px; }
+
+  .match-row {
+    grid-template-columns: 42px minmax(0,1fr) 48px !important;
+    gap: 8px !important;
+  }
+  .match-opponents,
+  .match-date { display: none !important; }
+
+  /* ---------- PŘIHLÁŠENÍ / REGISTRACE ---------- */
+  .auth-content {
+    width: 100%;
+    min-height: 0 !important;
+    display: block;
+    padding-top: 22px !important;
+  }
+  .auth-card {
+    width: 100% !important;
+    max-width: none;
+    padding: 19px 16px 17px !important;
+    border-radius: 17px !important;
+  }
+  .auth-head h1 {
+    margin-top: 6px;
+    font-size: clamp(26px, 8vw, 31px) !important;
+  }
+  .auth-head p { margin-bottom: 14px; font-size: 11px; }
+  .auth-tabs { margin-bottom: 13px; }
+  .auth-tab { min-height: 40px; }
+  #login-form.is-active,
+  #register-form.is-active,
+  .password-grid { grid-template-columns: 1fr !important; }
+  #register-form > .password-grid { grid-column: 1 / -1 !important; }
+  .auth-form { gap: 10px; }
+  .auth-form input { min-height: 46px; }
+  .primary-button { min-height: 44px; }
+  .auth-existing {
+    grid-template-columns: 48px minmax(0,1fr) !important;
+    padding: 12px;
+  }
+  .auth-existing .primary-button,
+  .auth-existing .text-button {
+    grid-column: 1 / -1;
+    width: 100%;
+    min-height: 42px;
+  }
+  .auth-back { margin-top: 14px; padding: 5px 0; }
+
+  /* ---------- LIGA ---------- */
+  .league-page {
+    width: 100% !important;
+    max-width: none;
+    padding:
+      max(10px, env(safe-area-inset-top))
+      max(10px, env(safe-area-inset-right))
+      max(28px, env(safe-area-inset-bottom))
+      max(10px, env(safe-area-inset-left)) !important;
+  }
+  .league-topbar {
+    height: auto !important;
+    min-height: 58px;
+    padding: 5px 0 8px;
+    gap: 8px;
+  }
+  .league-brand img { width: 122px !important; }
+  .league-brand > span,
+  .league-utility { display: none !important; }
+  .league-top-actions { gap: 4px; }
+  .league-profile-chip {
+    min-width: 0;
+    width: 40px;
+    height: 40px;
+    padding: 3px;
+    justify-content: center;
+  }
+  .league-profile-chip .profile-copy { display: none !important; }
+  .league-profile-chip .profile-avatar {
+    width: 32px !important;
+    height: 32px !important;
+    font-size: 11px;
+  }
+
+  .league-intro {
+    margin-top: 20px;
+    align-items: flex-start !important;
+    flex-direction: column !important;
+    gap: 10px;
+  }
+  .league-intro h1 { font-size: clamp(31px, 9vw, 40px); }
+  .season-clock { width: 100%; text-align: left !important; }
+
+  .league-hero-grid,
+  .league-main-grid,
+  .league-lower-grid { grid-template-columns: 1fr !important; gap: 12px !important; }
+  .league-page .panel { border-radius: 16px; }
+  .rank-hero {
+    min-height: 0 !important;
+    grid-template-columns: 1fr !important;
+    padding: 20px 16px !important;
+    text-align: center;
+  }
+  .rank-crest { width: 108px !important; height: 120px !important; margin: 0 auto; }
+  .rank-copy p,
+  .rank-progress-wrap { margin-left: auto; margin-right: auto; }
+  .league-play { width: 100%; max-width: 360px; margin-left: auto; margin-right: auto; }
+
+  .season-summary { padding-bottom: 4px; }
+  .season-stat-grid { grid-template-columns: repeat(2,minmax(0,1fr)) !important; gap: 7px; }
+  .season-stat { min-width: 0; padding: 13px 10px; }
+  .season-profile-strip { grid-template-columns: 1fr !important; gap: 10px; }
+
+  .league-page .section-head {
+    min-height: 0;
+    padding: 15px 14px;
+    align-items: flex-start;
+    gap: 9px;
+  }
+  .leaderboard-tabs {
+    max-width: 100%;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .leaderboard-tabs::-webkit-scrollbar { display: none; }
+  .leaderboard-tabs button { white-space: nowrap; }
+
+  .division-track { grid-template-columns: repeat(2,minmax(0,1fr)) !important; gap: 8px; }
+  .leader-row { grid-template-columns: 34px minmax(0,1fr) 54px !important; }
+  .leader-division { display: none !important; }
+  .recent-row { grid-template-columns: 48px minmax(0,1fr) 54px !important; }
+  .match-score { display: none !important; }
+
+  .league-matchmaking { padding: 10px !important; }
+  .matchmaking-card {
+    width: 100%;
+    min-height: 0 !important;
+    padding: 25px 16px 20px !important;
+    border-radius: 16px !important;
+  }
+  .queue-facts { grid-template-columns: 1fr !important; }
+  .ready-actions { flex-direction: column; }
+  .ready-actions > * { width: 100%; min-width: 0; }
+
+  /* ---------- ÚVODNÍ LANDING ---------- */
+  .intro-stage {
+    width: 100%;
+    min-height: 100dvh;
+    padding:
+      max(10px, env(safe-area-inset-top))
+      max(10px, env(safe-area-inset-right))
+      max(18px, env(safe-area-inset-bottom))
+      max(10px, env(safe-area-inset-left)) !important;
+  }
+  .intro-shell {
+    width: 100% !important;
+    height: auto !important;
+    min-height: calc(100dvh - 28px);
+  }
+  .intro-content {
+    width: 100%;
+    height: auto !important;
+    min-height: 0;
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+  .intro-copy { padding: 24px 2px 4px !important; }
+  .intro-logo { width: min(300px, 78%) !important; margin-bottom: 20px !important; }
+  .intro-copy h1 {
+    font-size: clamp(30px, 9vw, 37px) !important;
+    line-height: 1.04;
+  }
+  .intro-lead { margin-top: 14px; font-size: 12px !important; line-height: 1.55; }
+  .intro-points {
+    max-width: none !important;
+    margin-top: 18px !important;
+    grid-template-columns: repeat(3,minmax(0,1fr)) !important;
+  }
+  .intro-point {
+    min-width: 0;
+    padding: 10px 7px !important;
+    text-align: center;
+  }
+  .intro-point + .intro-point {
+    border-top: 0 !important;
+    border-left: 1px solid rgba(255,255,255,.055) !important;
+    padding-left: 7px !important;
+  }
+  .intro-point strong { font-size: 9px; }
+  .intro-point span { font-size: 9px; line-height: 1.2; }
+  .intro-actions {
+    width: 100% !important;
+    margin-top: 18px !important;
+    justify-content: flex-start !important;
+    padding-right: 0 !important;
+  }
+  .intro-play {
+    width: min(220px, 66vw) !important;
+    min-height: 50px;
+  }
+  .intro-map-area {
+    width: 100%;
+    min-height: 240px !important;
+    height: 31vh !important;
+    max-height: 310px;
+    padding: 0 !important;
+  }
+  .intro-map-frame { width: 100% !important; height: 100% !important; }
+  .intro-map { width: min(520px, 100%) !important; max-height: 100% !important; }
+}
+
+@media (max-width: 390px) {
+  .portal-brand img { width: 105px; }
+  .utility-link { padding-left: 4px; padding-right: 4px; font-size: 7.5px; letter-spacing: .045em; }
+  .profile-chip { flex-basis: 36px; width: 36px; height: 36px; }
+  .profile-chip img { width: 28px; height: 28px; }
+
+  .mode-card { min-height: 280px !important; }
+  .mode-content h2 { font-size: 21px; }
+
+  .stat-grid { gap: 6px !important; }
+  .stat-card { padding: 12px !important; }
+  .stat-card strong { font-size: 22px; }
+
+  .season-stat-grid { grid-template-columns: 1fr 1fr !important; }
+  .division-track { grid-template-columns: 1fr 1fr !important; }
+
+  .intro-point { padding-left: 4px !important; padding-right: 4px !important; }
+  .intro-point + .intro-point { padding-left: 4px !important; }
+  .intro-point span { font-size: 8px; }
+}
+
+@media (max-width: 340px) {
+  .portal-header { gap: 3px; }
+  .portal-brand img { width: 94px; }
+  .utility-link { font-size: 7px; padding-left: 3px; padding-right: 3px; }
+  .profile-chip { flex-basis: 34px; width: 34px; height: 34px; }
+  .profile-chip img { width: 26px; height: 26px; }
+  .category-grid { grid-template-columns: 1fr !important; }
+}
+
+@media (max-width: 700px) and (orientation: landscape) and (max-height: 500px) {
+  /* Webové stránky zůstávají použitelné i naležato; samotná hra se bude řešit zvlášť. */
+  .portal-stage,
+  .portal-page-stage,
+  .league-page,
+  .intro-stage { padding-top: 7px !important; padding-bottom: 12px !important; }
+  .portal-header,
+  .league-topbar { min-height: 50px; }
+  .portal-page-content { padding-top: 16px !important; }
+  .portal-stage .portal-main { padding-top: 16px; }
+  .mode-card { min-height: 245px !important; }
+  .intro-map-area { height: 52vh !important; min-height: 210px !important; }
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .mode-card:hover,
+  .category-button:hover { transform: none !important; }
+}
