@@ -908,3 +908,51 @@
     line-height: 1.08 !important;
   }
 }
+
+/* ============================================================
+   VLASTENEC — MOBILE NUMERIC KEYPAD V1
+   Own keypad replaces the system keyboard in phone gameplay.
+   ============================================================ */
+@media (orientation: landscape) and (max-height: 600px) {
+  body.vl-phone-game.is-game-started #numinput2,
+  body.vl-phone-game.is-game-started #numinput3 {
+    top: 51% !important;
+    left: 19% !important;
+    width: 30% !important;
+    height: 18% !important;
+    min-height: 36px !important;
+    padding: 0 8px !important;
+    font-size: clamp(.84rem, 2.1vw, 1rem) !important;
+    text-align: center !important;
+  }
+
+  body.vl-phone-game.is-game-started #numsubmit2,
+  body.vl-phone-game.is-game-started #numsubmit3 {
+    top: 51% !important;
+    left: 51% !important;
+    width: 24% !important;
+    height: 18% !important;
+    min-height: 36px !important;
+    padding: 0 5px !important;
+    font-size: clamp(.62rem, 1.5vw, .78rem) !important;
+    line-height: 1.05 !important;
+  }
+
+  body.vl-phone-game.is-game-started .numeric-keypad {
+    top: 42% !important;
+    right: 1.5% !important;
+    width: 21.5% !important;
+    height: 56% !important;
+    gap: 3px !important;
+  }
+
+  body.vl-phone-game.is-game-started .numeric-keypad button {
+    border-radius: 5px !important;
+    font-size: clamp(.68rem, 1.75vw, .88rem) !important;
+  }
+
+  body.vl-phone-game.is-game-started .numeric-keypad .numeric-keypad-action {
+    font-size: clamp(.78rem, 1.9vw, .98rem) !important;
+  }
+}
+

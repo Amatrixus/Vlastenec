@@ -5199,3 +5199,96 @@ body.is-game-started #lobby_container {
 }
 
 /* 🧪 VLASTENEC FIX: lobby-hide-after-start-v1 */
+
+/* ============================================================
+   VLASTENEC — NUMERIC KEYPAD V1 (2026-08-18)
+   Shared desktop/tablet/mobile base. Mobile geometry is refined
+   in mobile-game.css; physical keyboard input remains available.
+   ============================================================ */
+
+#numinput2,
+#numinput3 {
+  top: 55% !important;
+  left: 29% !important;
+  width: 25% !important;
+  height: 13% !important;
+  box-sizing: border-box;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 8px;
+  background: #f4f4f4;
+  color: #111;
+  font-size: clamp(1rem, 1.7vw, 1.5rem);
+  font-weight: 700;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+#numsubmit2,
+#numsubmit3 {
+  top: 55% !important;
+  left: 56% !important;
+  width: 18% !important;
+  height: 13% !important;
+  box-sizing: border-box;
+  border: 0;
+  border-radius: 8px;
+  padding: 0 10px;
+  background-image: linear-gradient(rgb(57,54,54), 5%, rgb(19,18,18), 95%, rgb(57,54,54));
+  color: #fff;
+  font-size: clamp(.82rem, 1.2vw, 1.05rem);
+  cursor: pointer;
+}
+
+#numsubmit2:hover,
+#numsubmit3:hover {
+  filter: brightness(1.16);
+}
+
+.numeric-keypad {
+  position: absolute;
+  top: 43%;
+  right: 2.5%;
+  width: 18%;
+  height: 53%;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-rows: repeat(4, minmax(0, 1fr));
+  gap: clamp(3px, .45vw, 7px);
+  z-index: 6;
+  box-sizing: border-box;
+}
+
+.numeric-keypad button {
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: 1px solid rgba(255,255,255,.11);
+  border-radius: 7px;
+  background-image: linear-gradient(rgb(57,54,54), 5%, rgb(19,18,18), 95%, rgb(57,54,54));
+  color: #fff;
+  font: inherit;
+  font-size: clamp(.9rem, 1.45vw, 1.25rem);
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+}
+
+.numeric-keypad button:hover {
+  filter: brightness(1.18);
+}
+
+.numeric-keypad button:active {
+  transform: translateY(1px);
+  filter: brightness(1.35);
+}
+
+.numeric-keypad .numeric-keypad-action {
+  color: #efb07d;
+  font-size: clamp(1rem, 1.55vw, 1.35rem);
+}
+
