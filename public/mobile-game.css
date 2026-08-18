@@ -1447,3 +1447,88 @@ html.vl-map-renderer-v2.vl-map-v2-canvas-ready #map .region.unclickable {
     filter: none !important;
   }
 }
+
+
+/* ============================================================
+   VLASTENEC — TABLET HUD / CHAT POLISH V43
+   ============================================================ */
+@media (min-width: 700px) and (max-width: 1400px) {
+  /* Keep both rows on the exact same left-anchored six-column grid. */
+  body.vl-tablet-device.is-game-started #gamerounds,
+  body.vl-tablet-device.is-game-started #playersticks {
+    left: 0 !important;
+    right: auto !important;
+    width: 100% !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    box-sizing: border-box !important;
+    display: grid !important;
+    grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+    column-gap: 0 !important;
+    justify-content: stretch !important;
+  }
+
+  /* Round and order bundle start at the same left edge of each grid cell.
+     Their widths also match, so the middle stick stays under the centre of
+     the white round marker. */
+  body.vl-tablet-device.is-game-started #gamerounds .round,
+  body.vl-tablet-device.is-game-started #playersticks .bundle {
+    width: 62% !important;
+    margin: 0 !important;
+    justify-self: start !important;
+  }
+
+  body.vl-tablet-device.is-game-started #gamerounds .round {
+    align-self: center !important;
+  }
+
+  body.vl-tablet-device.is-game-started #playersticks .bundle {
+    display: flex !important;
+    align-items: stretch !important;
+    justify-content: center !important;
+    gap: 3% !important;
+    height: 100% !important;
+    text-align: center !important;
+    /* Optical compensation for the rightward visual lean of the sticks. */
+    transform: translateX(-5px) !important;
+  }
+
+  /* Selection of bases and conquest intentionally have no round/order HUD.
+     These rules come after the V42 grid rule so display:grid cannot resurrect it. */
+  body.vl-tablet-device.is-game-started #gameprogress[data-phase="base"] #gamerounds,
+  body.vl-tablet-device.is-game-started #gameprogress[data-phase="base"] #playersticks,
+  body.vl-tablet-device.is-game-started #gameprogress[data-phase="settle"] #gamerounds,
+  body.vl-tablet-device.is-game-started #gameprogress[data-phase="settle"] #playersticks,
+  body.vl-tablet-device.is-game-started #gameprogress[data-phase="conquest"] #gamerounds,
+  body.vl-tablet-device.is-game-started #gameprogress[data-phase="conquest"] #playersticks {
+    display: none !important;
+  }
+
+  /* Chat composer: the input is allowed to shrink and the send button owns a
+     fixed column, so neither element can push the button outside the drawer. */
+  body.vl-tablet-device.is-game-started #game_chat_drawer .modern-chat-compose {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) 40px !important;
+    gap: 6px !important;
+    overflow: hidden !important;
+  }
+
+  body.vl-tablet-device.is-game-started #game_chat_drawer .modern-chat-compose input {
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  body.vl-tablet-device.is-game-started #game_chat_drawer .modern-chat-compose button {
+    width: 40px !important;
+    min-width: 40px !important;
+    max-width: 40px !important;
+    box-sizing: border-box !important;
+    justify-self: end !important;
+  }
+}
