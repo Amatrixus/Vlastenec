@@ -507,6 +507,7 @@
     console.log('🧪 VLASTENEC FIX: in-game-sound-toggle-v1');
     console.log('🧪 VLASTENEC FIX: authoritative-refresh-v1');
     console.log('🧪 VLASTENEC FIX: responsive-game-clocks-v2-original-look');
+    console.log('🧪 VLASTENEC FIX: countdown-zero-responsive-fonts-v1');
 
     // --- Profil hráče: lokální statistiky od této verze ---
     const profileStore = window.VlastenecProfileStore || null;
@@ -808,7 +809,7 @@ function scheduleTransientRehydration(snapshot, attempt = 0) {
   // Aktivní otázka má přednost před výběrem regionu. Čas se nikdy nerestartuje:
   // snapshot nese deadline serveru a sem přichází pouze zbývající čas.
   if (q && Number(q.remainingMs) > 0) {
-    const seconds = Math.max(1, Math.ceil(Number(q.remainingMs) / 1000));
+    const seconds = Math.max(0.05, Number(q.remainingMs) / 1000);
     profileQuestionCategory = q.category || null;
     profileQuestionCanAnswer = q.isParticipant !== false;
 
@@ -945,7 +946,7 @@ function scheduleAuthoritativeVisualRender(snapshot, attempt = 0) {
 function rehydrateActiveTurn(turn) {
   if (!turn) return;
   const remainingMs = Number(turn.remainingMs) || 0;
-  const seconds = Math.max(1, Math.ceil(remainingMs / 1000));
+  const seconds = Math.max(0.05, remainingMs / 1000);
 
   if (turn.kind === 'expansion' && typeof highlightExpansionTurnStick === 'function') {
     highlightExpansionTurnStick(turn.player, turn.round);
@@ -5261,12 +5262,50 @@ if (regionValues && typeof regionValues === 'object') {
 
               
                 // Function to start the countdown - questions
-                function stopQuestionCountdown() {
+                // Deadline-based rendering keeps the number and SVG arc synchronized with real time.
+                // It also guarantees a real visual 0 at natural timeout instead of being stopped at 1
+                // by a server result arriving a few milliseconds before the old 1s interval tick.
+                function renderGameCountdownFrame(countdownElement, circle, remainingMs, durationMs, totalLength) {
+                    const safeDuration = Math.max(1, Number(durationMs) || 1);
+                    const safeRemaining = Math.max(0, Number(remainingMs) || 0);
+                    const visibleSeconds = safeRemaining <= 0 ? 0 : Math.ceil(safeRemaining / 1000);
+                    const remainingRatio = Math.max(0, Math.min(1, safeRemaining / safeDuration));
+
+                    countdownElement.textContent = String(visibleSeconds);
+                    circle.style.strokeDasharray = String(totalLength);
+                    circle.style.strokeDashoffset = String(totalLength * (1 - remainingRatio));
+                    return visibleSeconds;
+                }
+
+                function forceQuestionCountdownZero() {
+                    const countdownElement = document.getElementById('qcountdown');
+                    const circle = document.getElementById('qtimer');
+                    if (!countdownElement || !circle) return;
+                    const radius = parseFloat(circle.getAttribute('r')) || 45;
+                    const totalLength = 2 * Math.PI * radius;
+                    renderGameCountdownFrame(countdownElement, circle, 0, 1, totalLength);
+                }
+
+                function stopQuestionCountdown({ forceZero = false } = {}) {
+                    const state = window.__questionCountdownState;
+                    const now = performance.now();
+                    const naturallyExpired = !!state && (
+                        state.expired ||
+                        (Number(state.deadline) - now) <= 260
+                    );
+
+                    if (state?.raf) cancelAnimationFrame(state.raf);
+                    window.__questionCountdownState = null;
+
+                    // Backward-compatible cleanup in case an older interval survived a hot reload.
                     if (window.__questionCountdownInterval) {
                         clearInterval(window.__questionCountdownInterval);
                         window.__questionCountdownInterval = null;
                     }
+
+                    if (forceZero || naturallyExpired) forceQuestionCountdownZero();
                     stopTickSound();
+                    return forceZero || naturallyExpired;
                 }
 
                 function startCountdown(secondsAmount) {
@@ -5274,45 +5313,112 @@ if (regionValues && typeof regionValues === 'object') {
                     const circle = document.getElementById('qtimer');
                     if (!countdownElement || !circle) return;
 
-                    const initialSeconds = Math.max(1, Math.ceil(Number(secondsAmount) || 1));
-                    let seconds = initialSeconds;
+                    const durationMs = Math.max(50, (Number(secondsAmount) || 0) * 1000);
                     const radius = parseFloat(circle.getAttribute('r')) || 45;
                     const totalLength = 2 * Math.PI * radius;
 
                     stopQuestionCountdown();
-                    circle.style.strokeDasharray = totalLength;
-                    circle.style.strokeDashoffset = 0;
-                    countdownElement.textContent = seconds;
-                    playTickSound();
 
-                    window.__questionCountdownInterval = setInterval(function() {
-                        seconds -= 1;
-                        const remaining = Math.max(0, seconds);
-                        countdownElement.textContent = remaining;
-                        circle.style.strokeDashoffset = totalLength * (1 - remaining / initialSeconds);
+                    const state = {
+                        deadline: performance.now() + durationMs,
+                        durationMs,
+                        totalLength,
+                        lastVisibleSecond: null,
+                        expired: false,
+                        raf: null
+                    };
+                    window.__questionCountdownState = state;
 
-                        if (seconds > 0) playTickSound();
-                        if (seconds <= 0) {
-                            clearInterval(window.__questionCountdownInterval);
-                            window.__questionCountdownInterval = null;
-                            countdownElement.textContent = '0';
-                            stopTickSound();
+                    const draw = (now) => {
+                        if (window.__questionCountdownState !== state) return;
+                        const remainingMs = Math.max(0, state.deadline - now);
+                        const visibleSecond = renderGameCountdownFrame(
+                            countdownElement,
+                            circle,
+                            remainingMs,
+                            state.durationMs,
+                            state.totalLength
+                        );
+
+                        // Tick only when the displayed whole second changes.
+                        if (visibleSecond > 0 && visibleSecond !== state.lastVisibleSecond) {
+                            if (state.lastVisibleSecond !== null) playTickSound();
+                            state.lastVisibleSecond = visibleSecond;
                         }
-                    }, 1000);
+
+                        if (remainingMs <= 0) {
+                            state.expired = true;
+                            state.raf = null;
+                            forceQuestionCountdownZero();
+                            stopTickSound();
+                            return;
+                        }
+
+                        state.raf = requestAnimationFrame(draw);
+                    };
+
+                    // Preserve the old immediate first tick, then the RAF loop handles the rest.
+                    playTickSound();
+                    state.raf = requestAnimationFrame(draw);
                 }
 
 
 
 
 // Function to start the countdown - tile expansion, conquering
-function stopTileCountdown() {
+function forceTileCountdownZero() {
+    const countdownElement = document.getElementById('tilecountdown');
+    const circle = document.getElementById('tiletimer');
+    if (!countdownElement || !circle) return;
+    const radius = parseFloat(circle.getAttribute('r')) || 45;
+    const totalLength = 2 * Math.PI * radius;
+    renderGameCountdownFrame(countdownElement, circle, 0, 1, totalLength);
+}
+
+function scheduleTileCountdownHide(delay = 240) {
+    if (window.__tileCountdownHideTimer) clearTimeout(window.__tileCountdownHideTimer);
+    window.__tileCountdownHideTimer = setTimeout(() => {
+        const tileClockContainer = document.getElementById('tileclockcontainer');
+        if (tileClockContainer) tileClockContainer.style.display = 'none';
+        window.__tileCountdownHideTimer = null;
+    }, Math.max(0, Number(delay) || 0));
+}
+
+function stopTileCountdown({ immediate = false, forceZero = false } = {}) {
+    const tileClockContainer = document.getElementById('tileclockcontainer');
+    const state = window.__tileCountdownState;
+    const now = performance.now();
+    const naturallyExpired = !!state && (
+        state.expired ||
+        (Number(state.deadline) - now) <= 260
+    );
+
+    if (state?.raf) cancelAnimationFrame(state.raf);
+    window.__tileCountdownState = null;
+
+    // Backward-compatible cleanup in case an older interval survived a hot reload.
     if (window.__tileCountdownInterval) {
         clearInterval(window.__tileCountdownInterval);
         window.__tileCountdownInterval = null;
     }
+
+    if (window.__tileCountdownHideTimer) {
+        clearTimeout(window.__tileCountdownHideTimer);
+        window.__tileCountdownHideTimer = null;
+    }
+
     stopTickSound();
-    const tileClockContainer = document.getElementById('tileclockcontainer');
-    if (tileClockContainer) tileClockContainer.style.display = 'none';
+
+    if (!immediate && (forceZero || naturallyExpired)) {
+        forceTileCountdownZero();
+        if (tileClockContainer) tileClockContainer.style.display = 'flex';
+        // Keep zero on screen for a brief beat so it is actually perceptible.
+        scheduleTileCountdownHide(240);
+    } else if (tileClockContainer) {
+        tileClockContainer.style.display = 'none';
+    }
+
+    return forceZero || naturallyExpired;
 }
 
 function startCountdownTile(secondsAmount) {
@@ -5321,33 +5427,52 @@ function startCountdownTile(secondsAmount) {
     const tileClockContainer = document.getElementById('tileclockcontainer');
     if (!countdownElement || !circle || !tileClockContainer) return;
 
-    stopTileCountdown();
+    stopTileCountdown({ immediate: true });
     tileClockContainer.style.display = 'flex';
 
-    const initialSeconds = Math.max(1, Math.ceil(Number(secondsAmount) || 1));
-    let seconds = initialSeconds;
+    const durationMs = Math.max(50, (Number(secondsAmount) || 0) * 1000);
     const radius = parseFloat(circle.getAttribute('r')) || 45;
     const totalLength = 2 * Math.PI * radius;
+    const state = {
+        deadline: performance.now() + durationMs,
+        durationMs,
+        totalLength,
+        lastVisibleSecond: null,
+        expired: false,
+        raf: null
+    };
+    window.__tileCountdownState = state;
 
-    circle.style.strokeDasharray = totalLength;
-    circle.style.strokeDashoffset = 0;
-    countdownElement.textContent = seconds;
-    playTickSound();
+    const draw = (now) => {
+        if (window.__tileCountdownState !== state) return;
+        const remainingMs = Math.max(0, state.deadline - now);
+        const visibleSecond = renderGameCountdownFrame(
+            countdownElement,
+            circle,
+            remainingMs,
+            state.durationMs,
+            state.totalLength
+        );
 
-    window.__tileCountdownInterval = setInterval(() => {
-        seconds -= 1;
-        countdownElement.textContent = Math.max(0, seconds);
-        circle.style.strokeDashoffset = totalLength * (1 - Math.max(0, seconds) / initialSeconds);
-
-        if (seconds > 0) playTickSound();
-        if (seconds <= 0) {
-            clearInterval(window.__tileCountdownInterval);
-            window.__tileCountdownInterval = null;
-            countdownElement.textContent = '0';
-            stopTickSound();
-            tileClockContainer.style.display = 'none';
+        if (visibleSecond > 0 && visibleSecond !== state.lastVisibleSecond) {
+            if (state.lastVisibleSecond !== null) playTickSound();
+            state.lastVisibleSecond = visibleSecond;
         }
-    }, 1000);
+
+        if (remainingMs <= 0) {
+            state.expired = true;
+            state.raf = null;
+            forceTileCountdownZero();
+            stopTickSound();
+            scheduleTileCountdownHide(300);
+            return;
+        }
+
+        state.raf = requestAnimationFrame(draw);
+    };
+
+    playTickSound();
+    state.raf = requestAnimationFrame(draw);
 }
 
 
