@@ -529,6 +529,7 @@
     console.log('🧪 VLASTENEC FIX: countdown-zero-responsive-fonts-v1');
     console.log('🧪 VLASTENEC FIX: base-score-on-settle-v1');
     console.log('🧪 VLASTENEC FIX: start-sequence-sync-v1');
+    console.log('🧪 VLASTENEC FIX: start-sequence-stale-snapshot-v1');
 
     // --- Profil hráče: lokální statistiky od této verze ---
     const profileStore = window.VlastenecProfileStore || null;
@@ -1088,7 +1089,11 @@ function applySnapshotWhenReady(myNumber, snapshot, attempt = 0) {
     const lobby = document.getElementById('lobby_container');
     if (lobby) lobby.style.display = '';
     if (!uiOverlayRunning) hideOverlay();
-    __pendingSnapshot = { myNumber, snapshot };
+    // Předherní snapshot se po startu NESMÍ znovu použít. Dříve se ukládal
+    // do __pendingSnapshot a po dokončení animace se mu dokonce ručně změnilo
+    // hasStarted=true. Tím se po správně vykreslených základnách vrátil starý
+    // lobby stav (bases={}, scores=0) a základny i body zmizely.
+    __pendingSnapshot = null;
     if (typeof updateRoundClasses === 'function') {
       try { updateRoundClasses(0); } catch (_) {}
     }
@@ -1106,6 +1111,9 @@ function applySnapshotWhenReady(myNumber, snapshot, attempt = 0) {
     sessionStorage.getItem(animDoneKey(snapshot.roomId || currentRoomId)) !== '1';
 
   if (liveSettleSequence) {
+    // Jakmile už běží živý start hry, žádný dříve odložený lobby snapshot
+    // nesmí přežít do konce animace.
+    __pendingSnapshot = null;
     applyAuthoritativeSnapshotState(snapshot);
     if (typeof updateScoreUI === 'function' && snapshot?.scores) updateScoreUI(snapshot.scores);
     if (typeof updateScoreNames === 'function') updateScoreNames();
@@ -1171,17 +1179,20 @@ socket.on("stateSync", ({ myNumber, snapshot }) => {
   if (typeof updateScoreNames === 'function') updateScoreNames();
 });
 
-// === Jakmile se hra OPRAVDU spustí (po animaci rozdělení) → pokud byl odložený snapshot, aplikuj ho teď ===
-// Připoj to do své existující logiky po animaci startu:
+// === Po skutečném dokončení úvodní animace ===
+// Nikdy nerecyklujeme starý snapshot z lobby. Místo toho si vyžádáme nový
+// autoritativní stav přímo ze serveru. Tím se po rozdělení základen nemohou
+// vrátit bases={} / scores=0 z předherního snapshotu.
 window.addEventListener('gameStartedAfterAnimation', () => {
-      DBG('event gameStartedAfterAnimation');
+  DBG('event gameStartedAfterAnimation → request fresh authoritative snapshot');
+  allowPaint = true;
+  __pendingSnapshot = null;
 
-  allowPaint = true; // pro jistotu i tady
-  if (__pendingSnapshot && __pendingSnapshot.snapshot) {
-        DBG('apply pending snapshot AFTER animation');
-
-    __pendingSnapshot.snapshot.hasStarted = true;
-    applySnapshotWhenReady(__pendingSnapshot.myNumber, __pendingSnapshot.snapshot);
+  if (socket?.connected) {
+    // basesAnimationDone se emituje těsně před tímto eventem; Socket.IO zachová
+    // pořadí událostí na jednom spojení, takže server nejdřív zpracuje ACK
+    // animace a následně vrátí čerstvý stav.
+    socket.emit('requestStateSync');
   }
 });
 
@@ -1579,6 +1590,10 @@ window.addEventListener('gameStartedAfterAnimation', () => {
 
     console.log("🎮 Hra spuštěna");
     if (gameMode === 'liga') hideLeagueGameConnectOverlay();
+
+    // StartGame je hranice mezi lobby a živou hrou. Jakýkoli snapshot uložený
+    // před touto událostí je z definice zastaralý a nesmí být po animaci použit.
+    __pendingSnapshot = null;
 
     // --- ulož stavy pro animaci a re-render ---
     player1CurrentBase = bases[1];
