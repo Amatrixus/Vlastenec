@@ -5,8 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>VLASTENEC</title>
   <link rel="stylesheet" href="mainstyle.css?v=tablet-lobby-v4-chrome">
-  <link rel="stylesheet" href="mobile-game.css?v=mobile-game-v1">
-  <script src="mobile-game.js?v=mobile-game-v1" defer></script>
   <script src="auth-client.js"></script>
   <script src="profile-store.js"></script>
   <style id="vl-tablet-lobby-v4-inline">
@@ -575,7 +573,6 @@
     console.log('🧪 VLASTENEC FIX: base-score-on-settle-v1');
     console.log('🧪 VLASTENEC FIX: start-sequence-sync-v1');
     console.log('🧪 VLASTENEC FIX: start-sequence-stale-snapshot-v1');
-    console.log('🧪 VLASTENEC FIX: authoritative-lobby-rehydrate-v1');
 
     // --- Profil hráče: lokální statistiky od této verze ---
     const profileStore = window.VlastenecProfileStore || null;
@@ -4246,44 +4243,14 @@ if (regionValues && typeof regionValues === 'object') {
           }
           if (!snapshot.hasStarted && snapshot.roomId) {
             if (gameMode === 'random') showRandomLobby();
-
-            // Autoritativní rehydratace lobby. Dříve jsme zde jen vykreslili
-            // fallback jmen a čekali na samostatný lobby:state event. Pokud ten
-            // dorazil ještě během parsování velkého HTML, UI zůstalo viset na
-            // „Čekáme na hráče…“. Snapshot nyní nese kompletní lobbyState, takže
-            // stejný event obnoví hráče, boty, ready stav, status i start tlačítko.
-            if (snapshot.lobbyState) {
-              renderLobby(snapshot.lobbyState);
-              window.__vlastenecLobbyHydrated = true;
-              console.log('🧩 Lobby rebuilt from authoritative stateSync', {
-                roomId: snapshot.roomId,
-                mode: snapshot.lobbyState.mode,
-                players: snapshot.lobbyState.players?.map(p => ({
-                  seat: p.seat, name: p.name, controller: p.controller, connected: p.connected, ready: p.ready
-                }))
-              });
-            } else {
-              window.renderLobbyFallback(snapshot.allNames || {});
-            }
+            // server po resume pošle i lobby:state; fallback mezitím zobrazuje jména
+            window.renderLobbyFallback(snapshot.allNames || {});
           }
           if (snapshot.hasStarted) {
             document.body.classList.add('is-game-started');
             setGameDrawer(true);
           }
         });
-
-        // Jakmile jsou lobby listenery skutečně připojené, vyžádáme stav ještě
-        // jednou. Není potřeba čekat na window.load a nezáleží na rychlosti
-        // parsování HTML ani externích mobilních CSS/JS souborů.
-        (() => {
-          const hydrateLobbyNow = () => {
-            if (!document.body.classList.contains('is-game-started')) {
-              socket.emit('requestStateSync');
-            }
-          };
-          if (socket.connected) setTimeout(hydrateLobbyNow, 0);
-          else socket.once('connect', () => setTimeout(hydrateLobbyNow, 0));
-        })();
 
         socket.on('chat:history', msgs => {
           chatState.session = Array.isArray(msgs) ? msgs.slice(-200) : [];

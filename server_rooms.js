@@ -1,5 +1,3 @@
-console.log('🧪 VLASTENEC BUILD: 2026-08-18-authoritative-lobby-rehydrate-v1');
-console.log('🧪 VLASTENEC BUILD: 2026-08-18-mobile-lobby-state-race-v1');
 console.log('🧪 VLASTENEC BUILD: 2026-08-18-refresh-room-lifecycle-v1');
 console.log('🧪 VLASTENEC BUILD: 2026-08-18-start-sequence-sync-v1');
 console.log('🧪 VLASTENEC BUILD: 2026-08-18-base-score-on-settle-v1');
@@ -282,11 +280,7 @@ function buildRoomSnapshot(room, roomId, forSeat = null) {
     settings: room.settings || {},
     matchKind: room.matchKind || null,
     publicRoom: !!room.publicRoom,
-    ready: room.ready || { 1: false, 2: false, 3: false },
-    // Před startem posíláme kompletní autoritativní lobby přímo uvnitř
-    // stateSync. Klient tak není závislý na tom, zda samostatný lobby:state
-    // event dorazil až po připojení jeho listeneru.
-    lobbyState: !room.hasStarted ? buildLobbyState(room, roomId) : null
+    ready: room.ready || { 1: false, 2: false, 3: false }
   };
 }
 
@@ -3708,17 +3702,6 @@ io.on('connection', socket => {
       myNumber: seat,
       snapshot: buildRoomSnapshot(room, roomId, seat)
     });
-
-    // DŮLEŽITÉ PRO LOBBY: první lobby:state může dorazit ještě během parsování
-    // velkého game_online.html, tedy dřív, než je spodní lobby listener připojen.
-    // requestStateSync se volá znovu po window.load, takže v pre-game stavu
-    // pošleme zároveň i čerstvý lobby snapshot. Tím se botí/friends/random lobby
-    // vždy zrekonstruuje i po ztraceném prvním eventu.
-    if (!room.hasStarted && ['friends','bots','random'].includes(room.mode)) {
-      broadcastLobbyState(roomId);
-      console.log(`🧩 ${roomId}: fresh lobby:state po requestStateSync (${room.mode})`);
-    }
-
     console.log(`🔄 ${roomId}: fresh stateSync pro Player${seat}`);
   });
 
