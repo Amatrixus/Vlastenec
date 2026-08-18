@@ -1532,3 +1532,56 @@ html.vl-map-renderer-v2.vl-map-v2-canvas-ready #map .region.unclickable {
     justify-self: end !important;
   }
 }
+
+
+/* ============================================================
+   VLASTENEC — TABLET ROUND / ORDER ALIGNMENT V44
+   Even six-column distribution inside the progress box.
+   The first round starts on the same left edge as the phase title.
+   ============================================================ */
+@media (min-width: 700px) and (max-width: 1400px) {
+  body.vl-tablet-device.is-game-started #gamerounds,
+  body.vl-tablet-device.is-game-started #playersticks {
+    left: 0 !important;
+    right: auto !important;
+    width: 100% !important;
+    padding-left: 4% !important;
+    padding-right: 4% !important;
+    box-sizing: border-box !important;
+    display: grid !important;
+    grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+    column-gap: 0 !important;
+    justify-content: stretch !important;
+  }
+
+  body.vl-tablet-device.is-game-started #gamerounds .round,
+  body.vl-tablet-device.is-game-started #playersticks .bundle {
+    width: 62% !important;
+    margin: 0 !important;
+    justify-self: start !important;
+  }
+
+  body.vl-tablet-device.is-game-started #gamerounds .round {
+    align-self: center !important;
+  }
+
+  body.vl-tablet-device.is-game-started #playersticks .bundle {
+    display: flex !important;
+    align-items: stretch !important;
+    justify-content: center !important;
+    gap: 3% !important;
+    height: 100% !important;
+    text-align: center !important;
+    transform: translateX(-5px) !important;
+  }
+
+  /* Keep the phase-specific hiding from V43 authoritative. */
+  body.vl-tablet-device.is-game-started #gameprogress[data-phase="base"] #gamerounds,
+  body.vl-tablet-device.is-game-started #gameprogress[data-phase="base"] #playersticks,
+  body.vl-tablet-device.is-game-started #gameprogress[data-phase="settle"] #gamerounds,
+  body.vl-tablet-device.is-game-started #gameprogress[data-phase="settle"] #playersticks,
+  body.vl-tablet-device.is-game-started #gameprogress[data-phase="conquest"] #gamerounds,
+  body.vl-tablet-device.is-game-started #gameprogress[data-phase="conquest"] #playersticks {
+    display: none !important;
+  }
+}
