@@ -1,5 +1,5 @@
 /* ============================================================
-   VLASTENEC — MOBILE GAME SAFE V2 (2026-08-18)
+   VLASTENEC — MOBILE GAME SAFE V3.1 (2026-08-18)
    Isolated mobile-only gameplay layer.
    IMPORTANT: every gameplay rule is gated by BOTH:
      body.vl-phone-game.is-game-started
@@ -98,6 +98,12 @@
 
   body.vl-phone-game.is-game-started .pin-marker {
     width: clamp(18px, 2.8vw, 25px) !important;
+    /* Presentation only: never create/move/merge claim pins here. Keep any pin
+       produced by the original game renderer above the resized mobile map. */
+    z-index: 96 !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: none !important;
   }
 
   body.vl-phone-game.is-game-started .player-name {
@@ -571,5 +577,76 @@
   body.vl-phone-game.is-game-started .leavebutton,
   body.vl-phone-game.is-game-started .endgame-button {
     min-height: 42px;
+  }
+}
+
+/* ============================================================
+   VLASTENEC — MOBILE GAME SAFE V3.1 POLISH
+   Only applies to an already-started phone game. No lobby/server logic.
+   ============================================================ */
+@media (orientation: landscape) {
+  /* Slightly smaller base emblems + labels on the map. */
+  body.vl-phone-game.is-game-started #player1basevisual,
+  body.vl-phone-game.is-game-started #player2basevisual,
+  body.vl-phone-game.is-game-started #player3basevisual {
+    width: clamp(30px, 4.2vw, 40px) !important;
+    height: auto !important;
+  }
+
+  body.vl-phone-game.is-game-started .player-name,
+  body.vl-phone-game.is-game-started #player1basename,
+  body.vl-phone-game.is-game-started #player2basename,
+  body.vl-phone-game.is-game-started #player3basename {
+    padding: 1px 4px !important;
+    border-radius: 4px !important;
+    border-width: 1px !important;
+    font-size: clamp(.46rem, 1.08vw, .60rem) !important;
+    line-height: 1.05 !important;
+  }
+
+  /* Phase title needs breathing room from the top edge. */
+  body.vl-phone-game.is-game-started #gamephase {
+    box-sizing: border-box !important;
+    padding-top: clamp(3px, .7dvh, 5px) !important;
+  }
+
+  /* Duel names must stay readable above the actual question text. */
+  body.vl-phone-game.is-game-started #qplayers,
+  body.vl-phone-game.is-game-started #qplayerone,
+  body.vl-phone-game.is-game-started #qplayertwo {
+    z-index: 8 !important;
+  }
+
+  /* Move the question itself below the duel-name strip and compact the answer
+     zone. This applies equally cleanly when qplayers is hidden. */
+  body.vl-phone-game.is-game-started #qtext,
+  body.vl-phone-game.is-game-started #numerical_qtext,
+  body.vl-phone-game.is-game-started #numerical_qtext2,
+  body.vl-phone-game.is-game-started #numerical_correct {
+    top: 16% !important;
+    height: 24% !important;
+    padding-top: 1px !important;
+    padding-bottom: 1px !important;
+  }
+
+  body.vl-phone-game.is-game-started #optionrow1 {
+    top: 45% !important;
+    height: 15% !important;
+  }
+
+  body.vl-phone-game.is-game-started #optionrow2 {
+    top: 63% !important;
+    height: 15% !important;
+  }
+
+  body.vl-phone-game.is-game-started .option {
+    min-height: 34px !important;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    border-radius: 8px !important;
+  }
+
+  body.vl-phone-game.is-game-started .optioncover {
+    border-radius: 8px !important;
   }
 }

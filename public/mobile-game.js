@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const MARKER = '🧪 VLASTENEC FIX: mobile-game-safe-v2';
+  const MARKER = '🧪 VLASTENEC FIX: mobile-game-safe-v3.1-render-only-pins';
   console.log(MARKER);
 
   let wasGameActive = false;
@@ -94,7 +94,7 @@
       }
     });
 
-    document.addEventListener('fullscreenchange', () => { forceChatClosed(); syncFullscreenButton(); }, { passive: true });
+    document.addEventListener('fullscreenchange', () => { forceChatClosed(); syncFullscreenButton(); queuePinReflow(); }, { passive: true });
   }
 
   function syncFullscreenButton() {
@@ -108,6 +108,23 @@
 
   function collapseGameChatOnce() {
     forceChatClosed();
+  }
+
+  // Rendering-only mobile safeguard. The original game remains solely
+  // responsible for which player can claim which region and for creating or
+  // removing pin elements. We only ask its existing resize renderer to
+  // recalculate coordinates after Chrome changes the viewport/fullscreen.
+  function refreshExistingPinPositions() {
+    if (!document.body?.classList.contains('vl-phone-game')) return;
+    if (!document.body?.classList.contains('is-game-started')) return;
+    if (typeof window.updateAllPins !== 'function') return;
+    try { window.updateAllPins(); } catch (err) {
+      console.debug('[mobile-game] pin reflow skipped:', err?.message || err);
+    }
+  }
+
+  function queuePinReflow() {
+    [0, 80, 220, 500].forEach(ms => setTimeout(refreshExistingPinPositions, ms));
   }
 
   function syncMode() {
@@ -124,6 +141,7 @@
       requestAnimationFrame(() => {
         collapseGameChatOnce();
         try { window.VlastenecSound?.sync?.(); } catch (_) {}
+        queuePinReflow();
       });
     }
     wasGameActive = active;
@@ -143,12 +161,12 @@
     const observer = new MutationObserver(syncMode);
     observer.observe(document.body, { attributes: true, attributeFilter: ['class'] });
 
-    window.addEventListener('resize', syncMode, { passive: true });
+    window.addEventListener('resize', () => { syncMode(); queuePinReflow(); }, { passive: true });
     window.addEventListener('orientationchange', () => {
-      setTimeout(syncMode, 80);
-      setTimeout(syncMode, 300);
+      setTimeout(() => { syncMode(); queuePinReflow(); }, 80);
+      setTimeout(() => { syncMode(); queuePinReflow(); }, 300);
     }, { passive: true });
-    window.visualViewport?.addEventListener('resize', syncMode, { passive: true });
+    window.visualViewport?.addEventListener('resize', () => { syncMode(); queuePinReflow(); }, { passive: true });
   }
 
   if (document.readyState === 'loading') {
