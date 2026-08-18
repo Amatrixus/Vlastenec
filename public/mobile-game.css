@@ -1144,3 +1144,25 @@ body.vl-tablet-device.is-game-started #vl_tablet_fullscreen_btn:active {
     box-shadow: none !important;
   }
 }
+
+
+/* ============================================================
+   VLASTENEC — TABLET MAP RENDER COST REDUCTION V26
+   Preserve the original artwork/effects, but stop forcing the tablet renderer
+   into the most expensive SVG quality modes inherited from the source export.
+   ============================================================ */
+@media (min-width: 700px) and (max-width: 1400px) {
+  body.vl-tablet-device.is-game-started #map {
+    shape-rendering: auto !important;
+    image-rendering: auto !important;
+  }
+
+  body.vl-tablet-device.is-game-started #map .region {
+    shape-rendering: auto !important;
+    image-rendering: auto !important;
+  }
+
+  body.vl-tablet-device.is-game-started #map image {
+    image-rendering: auto !important;
+  }
+}
