@@ -1095,23 +1095,33 @@ body.vl-tablet-device.is-game-started #vl_tablet_fullscreen_btn:active {
 
 
 /* ============================================================
-   VLASTENEC — TABLET MOBILE-MAP GEOMETRY + TAP HIGHLIGHT FIX V17
-   Tablet keeps the desktop gameplay UI. Only #map uses the phone gameplay
-   geometry; touch/focus highlight removal from V15 is preserved.
+   VLASTENEC — TABLET PHONE-LIKE MAP RASTER GEOMETRY V18
+   Tablet keeps the desktop gameplay UI. Only the SVG map is constrained to the
+   same wide, height-limited rendering shape it naturally has on a landscape
+   phone. Region filters, colours, wave masks and game logic are untouched.
    ============================================================ */
 @media (min-width: 700px) and (max-width: 1400px) {
-  /* Keep the whole SVG viewBox inside the visible tablet game area. The SVG's
-     preserveAspectRatio="xMidYMid meet" guarantees that no map edge is cropped. */
   body.vl-tablet-device.is-game-started #map {
-    /* Exact geometry from the phone gameplay map. No other phone rule is
-       applied to tablet. */
     top: 1.5dvh !important;
     left: 4vw !important;
     width: 92vw !important;
-    height: 86dvh !important;
+
+    /* On a phone 92vw × 86dvh is a very wide viewport. On a 4:3 tablet the
+       same percentages made the SVG almost match the map's own aspect ratio,
+       so the filtered/masked map raster became dramatically larger. Keep the
+       phone-like wide viewport and cap the physical raster height instead. */
+    height: min(86dvh, 46vw, 540px) !important;
     max-width: none !important;
-    max-height: none !important;
+    max-height: 540px !important;
     overflow: visible !important;
+
+    /* Keep the whole SVG as one stable compositing surface. This changes no
+       visual property; it only gives the tablet renderer an explicit layer. */
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    will-change: transform;
   }
 
   /* Remove the blue WebKit/Chromium touch rectangle and focus outline without
