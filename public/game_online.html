@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>VLASTENEC</title>
   <link rel="stylesheet" href="mainstyle.css?v=tablet-lobby-v4-chrome">
-  <link rel="stylesheet" href="mobile-game.css?v=mobile-game-safe-v5">
+  <link rel="stylesheet" href="mobile-game.css?v=mobile-game-safe-v6">
   <script src="auth-client.js"></script>
   <script src="profile-store.js"></script>
   <style id="vl-tablet-lobby-v4-inline">
@@ -8629,10 +8629,12 @@ socket.on("destroyTower", ({ defender, remainingLives, uiToken, uiStage }) => {
     // tuto animaci schovat.
     stopQuestionCountdown();
     question.style.display = "block";
+    question.classList.add("tower-destroying");
     qplayers.style.display = "block";
-    // Při animaci boření věže nesmí být vidět žádná část MC odpovědí.
-    // Schováme celý panel, což přebije i případné mobilní styly jednotlivých .option.
-    choice_question.style.display = "none";
+
+    // Černý #qstrip zůstává viditelný. Schováme pouze obsah MC (text + dvě
+    // řady odpovědí + abort), aby při boření zůstalo tmavé pozadí otázky.
+    choice_question.style.display = "block";
     numerical_question_two.style.display = "none";
     numerical_question_three.style.display = "none";
     qtext.innerHTML = "";
@@ -8691,6 +8693,7 @@ socket.on("destroyTower", ({ defender, remainingLives, uiToken, uiStage }) => {
 
     guardedBattleUiTimeout(uiEpoch, () => {
         console.log("DESTROY TOWER - Zavírám okno");
+        question.classList.remove("tower-destroying");
         question.style.display = "none";
         choice_question.style.display = "none";
         qplayers.style.display = "none";
@@ -8700,6 +8703,7 @@ socket.on("destroyTower", ({ defender, remainingLives, uiToken, uiStage }) => {
 
         // Teprve nyní server smí spustit další otázku / převést základnu.
         ackBattleUiStage(uiToken, uiStage || "destroy_tower");
+        schedulePostTowerStateSync(uiEpoch);
     }, 6000);
 });
 
@@ -8984,6 +8988,14 @@ function beginBattleUiStage(label) {
     __battleUiEpoch += 1;
     window.__battleUiEpoch = __battleUiEpoch;
     window.__battleUiLabel = label;
+
+    // Jakmile dorazí jakákoli nová battle obrazovka, okamžitě zruš stav
+    // animace věže. Tím nemůže mobilní CSS schovat novou otázku.
+    const questionEl = document.getElementById("question");
+    if (questionEl && label !== "destroy_tower") {
+        questionEl.classList.remove("tower-destroying");
+    }
+
     stopQuestionCountdown();
 
     // Pojistka proti starému MC timeru.
@@ -9021,6 +9033,21 @@ function ackBattleUiStage(uiToken, stage) {
         stage
     });
     console.log(`✅ CLIENT UI ACK: ${stage} (${uiToken})`);
+}
+
+// Mobilní pojistka po animaci věže: pokud po ACKu ještě nepřišla žádná nová
+// battle obrazovka, vyžádáme si autoritativní snapshot. Snapshot už obsahuje
+// activeQuestion + remainingMs, takže případná opožděná MC se obnoví se
+// skutečně zbývajícím časem a nikoli s novým časovačem.
+function schedulePostTowerStateSync(towerEpoch) {
+    [450, 1400].forEach(delayMs => {
+        setTimeout(() => {
+            if (towerEpoch !== __battleUiEpoch) return; // nová otázka už normálně dorazila
+            if (!socket?.connected || !currentRoomId) return;
+            console.log(`🔄 Po věži stále čekám na další UI stage; žádám stateSync (+${delayMs} ms).`);
+            socket.emit('requestStateSync');
+        }, delayMs);
+    });
 }
 
 
@@ -9061,7 +9088,19 @@ function showMultipleChoice(qText, options, timeLimit, attacker, defender, attac
     clearPendingMultipleChoiceResultTimers();
     myAnswer = "";
 
-
+    // Tvrdý reset po případné animaci věže / starých MC výsledcích.
+    // Nová otázka musí být viditelná a klikací ještě před spuštěním countdownu.
+    question?.classList.remove("tower-destroying");
+    if (choice_question) choice_question.style.display = "block";
+    if (qtext) qtext.style.removeProperty("display");
+    [document.getElementById("optionrow1"), document.getElementById("optionrow2")].forEach(row => {
+        if (row) row.style.removeProperty("display");
+    });
+    [optioncover1, optioncover2, optioncover3, optioncover4].forEach(cover => {
+        if (!cover) return;
+        cover.style.display = "none";
+        cover.classList.remove("multipleblinker");
+    });
 
     document.querySelectorAll('.option').forEach(option => {
 
@@ -9144,6 +9183,9 @@ function showMultipleChoice(qText, options, timeLimit, attacker, defender, attac
         });
     }
 
+    // Vynutíme layout až po připojení listenerů. Na telefonech tím zabráníme
+    // tomu, aby browser odložil první vykreslení celé MC obrazovky za animaci.
+    void question?.offsetHeight;
     startCountdown(timeLimit);
 }
 
