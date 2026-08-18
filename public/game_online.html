@@ -6,6 +6,215 @@
   <link rel="stylesheet" href="mainstyle.css">
   <script src="auth-client.js"></script>
   <script src="profile-store.js"></script>
+
+  <style>
+    /* === VLASTENEC: globální přepínač zvuku ve hře === */
+    #soundtoggle {
+      position: fixed;
+      display: none;
+      margin: 0;
+      padding: 0;
+      border: 0;
+      outline: 0;
+      background: transparent;
+      cursor: pointer;
+      pointer-events: auto;
+      overflow: visible;
+      transform-origin: center;
+      transition: filter .16s ease, opacity .16s ease, transform .16s ease;
+    }
+    #soundtoggle:hover { filter: brightness(1.18); }
+    #soundtoggle:active { transform: scale(.94); }
+    #soundtoggle:focus-visible {
+      filter: brightness(1.25) drop-shadow(0 0 5px currentColor);
+    }
+    #soundtoggle path,
+    #soundtoggle line {
+      vector-effect: non-scaling-stroke;
+    }
+  </style>
+
+  <script>
+  (() => {
+    const STORAGE_KEY = 'vl_sound_enabled';
+    const trackedAudio = new Set();
+    const nativePlay = HTMLMediaElement.prototype.play;
+
+    function readEnabled() {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        return saved === null ? true : saved !== '0';
+      } catch (_) {
+        return true;
+      }
+    }
+
+    let enabled = readEnabled();
+
+    function trackAudio(el) {
+      if (!(el instanceof HTMLMediaElement)) return el;
+      trackedAudio.add(el);
+      if (!el.dataset.vlSoundTracked) {
+        el.dataset.vlSoundTracked = '1';
+        const forget = () => {
+          if (!el.isConnected && el.ended) trackedAudio.delete(el);
+        };
+        el.addEventListener('ended', forget, { passive: true });
+        el.addEventListener('error', forget, { passive: true });
+      }
+      el.muted = !enabled;
+      return el;
+    }
+
+    // Zachytí i zvuky vytvořené přes `new Audio(...).play()` a všechny existující
+    // HTML <audio> prvky. Díky tomu není potřeba upravovat každý efekt zvlášť.
+    HTMLMediaElement.prototype.play = function(...args) {
+      trackAudio(this);
+      if (!enabled) {
+        try { this.pause(); } catch (_) {}
+        try { this.currentTime = 0; } catch (_) {}
+        return Promise.resolve();
+      }
+      this.muted = false;
+      const result = nativePlay.apply(this, args);
+      if (result && typeof result.catch === 'function') result.catch(() => {});
+      return result;
+    };
+
+    function collectAudio() {
+      document.querySelectorAll('audio').forEach(trackAudio);
+    }
+
+    function stopAllAudio() {
+      collectAudio();
+      trackedAudio.forEach((audio) => {
+        try { audio.muted = true; } catch (_) {}
+        try { audio.pause(); } catch (_) {}
+        try { audio.currentTime = 0; } catch (_) {}
+      });
+    }
+
+    function unmuteAllAudio() {
+      collectAudio();
+      trackedAudio.forEach((audio) => {
+        try { audio.muted = false; } catch (_) {}
+      });
+    }
+
+    function soundIconMarkup(on) {
+      if (on) {
+        return `
+          <path fill="currentColor" d="M4.7 9.2h3.6l4.5-3.8c.8-.7 2-.1 2 .9v15.4c0 1-1.2 1.6-2 .9l-4.5-3.8H4.7c-.9 0-1.7-.8-1.7-1.7v-6.2c0-.9.8-1.7 1.7-1.7Z"/>
+          <path d="M18 9.1c1.4 1 2.2 2.7 2.2 4.9s-.8 3.9-2.2 4.9" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+          <path d="M20.8 6.1c2.2 1.8 3.5 4.4 3.5 7.9s-1.3 6.1-3.5 7.9" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>`;
+      }
+      return `
+        <path fill="currentColor" d="M4.7 9.2h3.6l4.5-3.8c.8-.7 2-.1 2 .9v15.4c0 1-1.2 1.6-2 .9l-4.5-3.8H4.7c-.9 0-1.7-.8-1.7-1.7v-6.2c0-.9.8-1.7 1.7-1.7Z"/>
+        <path d="m18.2 9.2 7.2 9.6M25.4 9.2l-7.2 9.6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/>`;
+    }
+
+    function renderToggle() {
+      const icon = document.getElementById('soundtoggle');
+      if (!icon) return;
+      icon.innerHTML = soundIconMarkup(enabled);
+      icon.setAttribute('aria-label', enabled ? 'Vypnout zvuk' : 'Zapnout zvuk');
+      icon.setAttribute('title', enabled ? 'Vypnout zvuk' : 'Zapnout zvuk');
+      icon.setAttribute('aria-pressed', enabled ? 'false' : 'true');
+    }
+
+    function syncToggleToLeaveIcon() {
+      const leave = document.getElementById('leave');
+      const icon = document.getElementById('soundtoggle');
+      if (!leave || !icon) return;
+
+      const rect = leave.getBoundingClientRect();
+      const css = getComputedStyle(leave);
+      const hidden = css.display === 'none' || css.visibility === 'hidden' || Number(css.opacity || 1) === 0 || rect.width < 2 || rect.height < 2;
+      if (hidden) {
+        icon.style.display = 'none';
+        return;
+      }
+
+      const gap = Math.max(7, Math.min(12, rect.width * 0.22));
+      icon.style.display = 'block';
+      icon.style.width = `${rect.width}px`;
+      icon.style.height = `${rect.height}px`;
+      icon.style.left = `${Math.max(6, rect.left - rect.width - gap)}px`;
+      icon.style.top = `${rect.top}px`;
+      icon.style.opacity = css.opacity || '1';
+      icon.style.zIndex = css.zIndex === 'auto' ? '1000' : css.zIndex;
+
+      const leaveColor = css.fill && css.fill !== 'none' ? css.fill : css.color;
+      if (leaveColor) icon.style.color = leaveColor;
+    }
+
+    function setEnabled(next) {
+      enabled = !!next;
+      try { localStorage.setItem(STORAGE_KEY, enabled ? '1' : '0'); } catch (_) {}
+      if (enabled) unmuteAllAudio();
+      else stopAllAudio();
+      renderToggle();
+      syncToggleToLeaveIcon();
+      window.dispatchEvent(new CustomEvent('vlastenec:sound-change', { detail: { enabled } }));
+    }
+
+    function toggle() {
+      setEnabled(!enabled);
+    }
+
+    window.VlastenecSound = {
+      get enabled() { return enabled; },
+      setEnabled,
+      toggle,
+      sync: syncToggleToLeaveIcon
+    };
+
+    // Autoplay prvky přidané později ztlumíme ještě před jejich běžným použitím.
+    const observer = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        for (const node of mutation.addedNodes) {
+          if (!(node instanceof Element)) continue;
+          if (node.matches?.('audio')) trackAudio(node);
+          node.querySelectorAll?.('audio').forEach(trackAudio);
+        }
+      }
+    });
+
+    function initSoundUi() {
+      collectAudio();
+      if (!enabled) stopAllAudio();
+      renderToggle();
+
+      const icon = document.getElementById('soundtoggle');
+      if (icon) {
+        icon.addEventListener('click', toggle);
+        icon.addEventListener('keydown', (event) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            toggle();
+          }
+        });
+      }
+
+      syncToggleToLeaveIcon();
+      requestAnimationFrame(syncToggleToLeaveIcon);
+      setTimeout(syncToggleToLeaveIcon, 250);
+      setTimeout(syncToggleToLeaveIcon, 1000);
+
+      window.addEventListener('resize', syncToggleToLeaveIcon, { passive: true });
+      window.addEventListener('scroll', syncToggleToLeaveIcon, { passive: true });
+
+      // #leave může během různých obrazovek měnit z-index/viditelnost přes CSS.
+      // Lehký průběžný sync udrží obě ikony vždy vedle sebe a na stejné vrstvě.
+      setInterval(syncToggleToLeaveIcon, 600);
+    }
+
+    observer.observe(document.documentElement, { childList: true, subtree: true });
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initSoundUi, { once: true });
+    else initSoundUi();
+  })();
+  </script>
+
 </head>
 <body>
 
@@ -294,6 +503,7 @@
     console.log('🧪 VLASTENEC CLIENT: league-matchmaking-v1');
     console.log('🧪 VLASTENEC FIX: endgame-names-v1');
     console.log('🧪 VLASTENEC CLIENT: endgame-stats-ui-v1');
+    console.log('🧪 VLASTENEC FIX: in-game-sound-toggle-v1');
 
     // --- Profil hráče: lokální statistiky od této verze ---
     const profileStore = window.VlastenecProfileStore || null;
@@ -3919,7 +4129,9 @@ if (regionValues && typeof regionValues === 'object') {
       })();
       </script>
 
-      <svg onclick="showLeavegameWindow()" id="leave" xmlns="http://www.w3.org/2000/svg" shape-rendering="geometricPrecision" text-rendering="geometricPrecision" image-rendering="optimizeQuality" fill-rule="evenodd" clip-rule="evenodd" viewBox="0 0 474 512.46"><path d="M249.71.13 12.08 35.6C5.46 36.59 0 43.43 0 50.23v418.88c0 6.77 5.39 9.38 12.08 10.31l237.63 32.97c6.68.92 12.08-7.77 12.08-14.63V10.44c0-6.86-5.53-11.28-12.08-10.31zm124.96 329.08-.01-34.07c-.58.17-1.2.27-1.83.27h-53.47c-3.55 0-6.45-2.96-6.45-6.45v-66.2c0-3.48 2.97-6.45 6.45-6.45h53.47c.63 0 1.24.1 1.82.27v-34.06c0-6.29 5.1-11.4 11.39-11.4 3.29 0 6.25 1.4 8.33 3.63l76.01 70.9c4.59 4.27 4.85 11.47.58 16.06l-76.95 75.59c-4.47 4.4-11.67 4.34-16.07-.13a11.439 11.439 0 0 1-3.27-7.96zm-87.26 129.54h31.02V345.46h25.37v113.9c0 6.77-2.8 12.95-7.27 17.44-4.47 4.52-10.67 7.31-17.49 7.31h-31.63v-25.36zm31.02-292.48V52.98h-31.02V27.62h31.63c6.81 0 13.01 2.79 17.49 7.27 4.47 4.48 7.27 10.68 7.27 17.49v113.89h-25.37zm-87.67 58.52-24.93-5.68v74.24l24.93-7.18v-61.38z"/></svg>
+      <svg id="soundtoggle" role="button" tabindex="0" aria-label="Vypnout zvuk" aria-pressed="false" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 28 28" focusable="true"></svg>
+
+       <svg onclick="showLeavegameWindow()" id="leave" xmlns="http://www.w3.org/2000/svg" shape-rendering="geometricPrecision" text-rendering="geometricPrecision" image-rendering="optimizeQuality" fill-rule="evenodd" clip-rule="evenodd" viewBox="0 0 474 512.46"><path d="M249.71.13 12.08 35.6C5.46 36.59 0 43.43 0 50.23v418.88c0 6.77 5.39 9.38 12.08 10.31l237.63 32.97c6.68.92 12.08-7.77 12.08-14.63V10.44c0-6.86-5.53-11.28-12.08-10.31zm124.96 329.08-.01-34.07c-.58.17-1.2.27-1.83.27h-53.47c-3.55 0-6.45-2.96-6.45-6.45v-66.2c0-3.48 2.97-6.45 6.45-6.45h53.47c.63 0 1.24.1 1.82.27v-34.06c0-6.29 5.1-11.4 11.39-11.4 3.29 0 6.25 1.4 8.33 3.63l76.01 70.9c4.59 4.27 4.85 11.47.58 16.06l-76.95 75.59c-4.47 4.4-11.67 4.34-16.07-.13a11.439 11.439 0 0 1-3.27-7.96zm-87.26 129.54h31.02V345.46h25.37v113.9c0 6.77-2.8 12.95-7.27 17.44-4.47 4.52-10.67 7.31-17.49 7.31h-31.63v-25.36zm31.02-292.48V52.98h-31.02V27.62h31.63c6.81 0 13.01 2.79 17.49 7.27 4.47 4.48 7.27 10.68 7.27 17.49v113.89h-25.37zm-87.67 58.52-24.93-5.68v74.24l24.93-7.18v-61.38z"/></svg>
 
 
 
