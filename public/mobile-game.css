@@ -1095,39 +1095,47 @@ body.vl-tablet-device.is-game-started #vl_tablet_fullscreen_btn:active {
 
 
 /* ============================================================
-   VLASTENEC — TABLET PHONE-LIKE MAP RASTER GEOMETRY V18
-   Tablet keeps the desktop gameplay UI. Only the SVG map is constrained to the
-   same wide, height-limited rendering shape it naturally has on a landscape
-   phone. Region filters, colours, wave masks and game logic are untouched.
+   VLASTENEC — TABLET MOBILE-MAP RUNTIME V19
+   Tablet keeps the desktop gameplay UI. Only the map and the viewport
+   environment in which that map is rendered mirror the working phone mode.
    ============================================================ */
-@media (min-width: 700px) and (max-width: 1400px) {
-  body.vl-tablet-device.is-game-started #map {
+@media (orientation: landscape) and (min-width: 700px) and (max-width: 1400px) {
+  /* This is the same viewport normalization used by phone gameplay. It changes
+     no HUD/base/question geometry; it only removes browser-page scrolling and
+     gives the SVG a stable visible viewport during resize/fullscreen changes. */
+  html:has(body.vl-mobile-map-runtime.is-game-started),
+  body.vl-mobile-map-runtime.is-game-started {
+    width: 100%;
+    height: 100%;
+    min-height: 100dvh;
+    margin: 0;
+    padding: 0;
+    overflow: hidden !important;
+    overscroll-behavior: none;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  body.vl-mobile-map-runtime.is-game-started {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Exact phone map geometry. No tablet-only transform, filter, compositing,
+     overflow or region styling is added here. */
+  body.vl-mobile-map-runtime.is-game-started #map {
     top: 1.5dvh !important;
     left: 4vw !important;
     width: 92vw !important;
-
-    /* On a phone 92vw × 86dvh is a very wide viewport. On a 4:3 tablet the
-       same percentages made the SVG almost match the map's own aspect ratio,
-       so the filtered/masked map raster became dramatically larger. Keep the
-       phone-like wide viewport and cap the physical raster height instead. */
-    height: min(86dvh, 46vw, 540px) !important;
+    height: 86dvh !important;
     max-width: none !important;
-    max-height: 540px !important;
-    overflow: visible !important;
-
-    /* Keep the whole SVG as one stable compositing surface. This changes no
-       visual property; it only gives the tablet renderer an explicit layer. */
-    -webkit-transform: translateZ(0);
-    transform: translateZ(0);
-    -webkit-backface-visibility: hidden;
-    backface-visibility: hidden;
-    will-change: transform;
+    max-height: none !important;
   }
 
-  /* Remove the blue WebKit/Chromium touch rectangle and focus outline without
-     changing region colouring, availability filters, hover logic or clicks. */
-  body.vl-tablet-device.is-game-started #map,
-  body.vl-tablet-device.is-game-started #map .region {
+  /* Touch/focus artifact suppression only; colouring/filters/waves remain the
+     original game implementation, exactly as on phone. */
+  body.vl-mobile-map-runtime.is-game-started #map,
+  body.vl-mobile-map-runtime.is-game-started #map .region {
     -webkit-tap-highlight-color: transparent !important;
     outline: none !important;
     -webkit-user-select: none;
@@ -1135,11 +1143,11 @@ body.vl-tablet-device.is-game-started #vl_tablet_fullscreen_btn:active {
     -webkit-touch-callout: none;
   }
 
-  body.vl-tablet-device.is-game-started #map:focus,
-  body.vl-tablet-device.is-game-started #map:focus-visible,
-  body.vl-tablet-device.is-game-started #map .region:focus,
-  body.vl-tablet-device.is-game-started #map .region:focus-visible,
-  body.vl-tablet-device.is-game-started #map .region:active {
+  body.vl-mobile-map-runtime.is-game-started #map:focus,
+  body.vl-mobile-map-runtime.is-game-started #map:focus-visible,
+  body.vl-mobile-map-runtime.is-game-started #map .region:focus,
+  body.vl-mobile-map-runtime.is-game-started #map .region:focus-visible,
+  body.vl-mobile-map-runtime.is-game-started #map .region:active {
     outline: none !important;
     box-shadow: none !important;
   }
