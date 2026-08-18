@@ -1,3 +1,4 @@
+console.log('🧪 VLASTENEC BUILD: 2026-08-18-authoritative-lobby-rehydrate-v1');
 console.log('🧪 VLASTENEC BUILD: 2026-08-18-mobile-lobby-state-race-v1');
 console.log('🧪 VLASTENEC BUILD: 2026-08-18-refresh-room-lifecycle-v1');
 console.log('🧪 VLASTENEC BUILD: 2026-08-18-start-sequence-sync-v1');
@@ -281,7 +282,11 @@ function buildRoomSnapshot(room, roomId, forSeat = null) {
     settings: room.settings || {},
     matchKind: room.matchKind || null,
     publicRoom: !!room.publicRoom,
-    ready: room.ready || { 1: false, 2: false, 3: false }
+    ready: room.ready || { 1: false, 2: false, 3: false },
+    // Před startem posíláme kompletní autoritativní lobby přímo uvnitř
+    // stateSync. Klient tak není závislý na tom, zda samostatný lobby:state
+    // event dorazil až po připojení jeho listeneru.
+    lobbyState: !room.hasStarted ? buildLobbyState(room, roomId) : null
   };
 }
 
