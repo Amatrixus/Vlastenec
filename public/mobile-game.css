@@ -1144,3 +1144,13 @@ body.vl-tablet-device.is-game-started #vl_tablet_fullscreen_btn:active {
     box-shadow: none !important;
   }
 }
+
+/* ============================================================
+   VLASTENEC — MAP RENDERER V2 TEST LAYER V32
+   Used only when game_online.html is opened with ?mapv2=1.
+   ============================================================ */
+#region-wave-v2-layer,
+#region-wave-v2-layer .region-wave-v2-instance,
+#region-wave-v2-layer .region-wave-v2-overlay {
+  pointer-events: none !important;
+}
