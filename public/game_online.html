@@ -4,9 +4,26 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>VLASTENEC</title>
-  <link rel="stylesheet" href="mainstyle.css?v=tablet-lobby-v3-chrome">
+  <link rel="stylesheet" href="mainstyle.css?v=tablet-lobby-v4-chrome">
   <script src="auth-client.js"></script>
   <script src="profile-store.js"></script>
+  <style id="vl-tablet-lobby-v4-inline">
+    @media (min-width:700px) and (max-width:1400px) {
+      #lobby_container { inset:auto !important; top:0 !important; left:0 !important; right:auto !important; bottom:auto !important; width:var(--vl-visible-vw,100dvw) !important; height:var(--vl-visible-vh,100dvh) !important; min-height:0 !important; max-height:none !important; margin:0 !important; padding:4px !important; box-sizing:border-box !important; align-items:stretch !important; justify-content:stretch !important; overflow:hidden !important; }
+      #lobby_window.lobby-shell-v2 { width:100% !important; height:100% !important; min-width:0 !important; min-height:0 !important; max-width:none !important; max-height:none !important; margin:0 !important; box-sizing:border-box !important; grid-template-rows:auto minmax(0,1fr) !important; overflow:hidden !important; }
+      .lobby-layout-v2 { min-width:0 !important; min-height:0 !important; max-height:none !important; overflow:hidden !important; }
+      .lobby-left-column,.lobby-center-column,.lobby-chat-panel-v2 { min-height:0 !important; overflow:hidden !important; box-sizing:border-box !important; }
+      .lobby-center-column { display:grid !important; grid-template-rows:minmax(0,1fr) 46px !important; align-content:stretch !important; }
+      .lobby-categories-v2 { min-height:0 !important; height:auto !important; overflow:hidden !important; box-sizing:border-box !important; }
+      .lobby-category-grid-v2 { min-height:0 !important; height:100% !important; }
+      .lobby-actions-v2 { min-height:46px !important; height:46px !important; max-height:46px !important; margin:0 !important; box-sizing:border-box !important; align-self:end !important; overflow:hidden !important; }
+      #lobby_chat_messages.modern-chat-messages { min-height:0 !important; overflow-y:auto !important; }
+    }
+    @media (min-width:700px) and (max-width:1400px) and (max-height:820px) {
+      .lobby-center-column { grid-template-rows:minmax(0,1fr) 42px !important; }
+      .lobby-actions-v2 { min-height:42px !important; height:42px !important; max-height:42px !important; }
+    }
+  </style>
   <script>
     // Tablet lobby must use the *visible* Chrome viewport, not the larger
     // layout viewport hidden partly behind the browser toolbars.
@@ -552,6 +569,7 @@
     console.log('🧪 VLASTENEC FIX: responsive-game-clocks-v2-original-look');
     console.log('🧪 VLASTENEC FIX: countdown-zero-responsive-fonts-v1');
     console.log('🧪 VLASTENEC FIX: tablet-lobby-fit-v3-chrome');
+    console.log('🧪 VLASTENEC FIX: tablet-lobby-fit-v4-chrome');
     console.log('🧪 VLASTENEC FIX: base-score-on-settle-v1');
     console.log('🧪 VLASTENEC FIX: start-sequence-sync-v1');
     console.log('🧪 VLASTENEC FIX: start-sequence-stale-snapshot-v1');
