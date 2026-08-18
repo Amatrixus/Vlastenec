@@ -1585,3 +1585,11 @@ html.vl-map-renderer-v2.vl-map-v2-canvas-ready #map .region.unclickable {
     display: none !important;
   }
 }
+
+
+/* VLASTENEC — TABLET STICK SPACING V45 */
+@media (min-width: 700px) and (max-width: 1400px) {
+  body.vl-tablet-device.is-game-started #playersticks .bundle {
+    gap: 4.5% !important;
+  }
+}
