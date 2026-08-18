@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>VLASTENEC</title>
   <link rel="stylesheet" href="mainstyle.css?v=numeric-keypad-v2">
-  <link rel="preload" as="image" href="texture4.jpg">
   <link rel="stylesheet" href="mobile-game.css?v=tablet-render-auto-v26">
   <script src="auth-client.js"></script>
   <script src="profile-store.js"></script>
@@ -2881,8 +2880,10 @@ if (regionValues && typeof regionValues === 'object') {
             
             
              
-                <pattern id="texture" patternUnits="userSpaceOnUse" width="100%" height="100%">
-                  <image href="texture4.jpg" x="-50%" y="" width="200% " height="200%" />
+                <pattern id="texture" patternUnits="userSpaceOnUse" width="3508" height="2480.4">
+                  <!-- V27 diagnostic: no raster texture is loaded. Keep the same pattern ID
+                       so ownership/region logic remains untouched. -->
+                  <rect x="0" y="0" width="3508" height="2480.4" fill="#b8aa88" />
                 </pattern>
               
             
@@ -10916,7 +10917,7 @@ function showNumericResultsForThree(correctAnswer, answers, uiToken, uiStage = "
 
 	<script>console.log("🧪 VLASTENEC FIX: numeric-timeout-input-v1");</script>
     <script>console.log('🧪 VLASTENEC FIX: chat-turn-stick-v1');</script>
-    <script>console.log('🧪 VLASTENEC FIX: tablet-smaller-map-v24');</script>
+    <script>console.log('🧪 VLASTENEC FIX: tablet-no-texture-v27');</script>
     <script>
     (() => {
         // Tablet keeps the normal desktop gameplay. This class is ONLY a device
