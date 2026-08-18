@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>VLASTENEC</title>
   <link rel="stylesheet" href="mainstyle.css?v=numeric-keypad-v2">
-  <link rel="stylesheet" href="mobile-game.css?v=map-renderer-v2-v41-default-tablet-type">
+  <link rel="stylesheet" href="mobile-game.css?v=map-renderer-v2-v42-tablet-polish">
   <script src="auth-client.js"></script>
   <script src="profile-store.js"></script>
   <style id="vl-tablet-lobby-v4-inline">
@@ -7471,7 +7471,11 @@ function startCountdownTile(secondsAmount) {
                       // Add event listeners for mouse enter and leave
                       region.addEventListener('mouseenter', () => {
                           // Apply hover effect when mouse enters the region
-                          if (region.id !== mybase && !region.classList.contains('unavailable')) {
+                          if (
+                              !document.body.classList.contains('vl-tablet-device') &&
+                              region.id !== mybase &&
+                              !region.classList.contains('unavailable')
+                          ) {
                               region.style.filter = 'brightness(120%)';
                           }
                       });
@@ -7536,14 +7540,23 @@ function startCountdownTile(secondsAmount) {
                   document.querySelectorAll('.region').forEach(region => {
                       region.addEventListener('mouseenter', () => {
                           // Apply hover effect when mouse enters the region
-                          if (region.id !== mybase && !region.classList.contains('unavailable')) {
+                          if (
+                              !document.body.classList.contains('vl-tablet-device') &&
+                              region.id !== mybase &&
+                              !region.classList.contains('unavailable')
+                          ) {
                               region.style.filter = 'brightness(100%)';
                           }
                       });
 
                       region.addEventListener('mouseleave', () => {
                           // Remove hover effect when mouse leaves the region
-                          if (region.id !== mybase && !controlledRegions.includes(region.id) && !region.classList.contains('unavailable')) {
+                          if (
+                              !document.body.classList.contains('vl-tablet-device') &&
+                              region.id !== mybase &&
+                              !controlledRegions.includes(region.id) &&
+                              !region.classList.contains('unavailable')
+                          ) {
                               region.style.filter = 'brightness(100%)';
                           }
                       });
@@ -8493,7 +8506,11 @@ document.querySelectorAll(".region").forEach(region => {
                                                                                   region.addEventListener('mouseenter', () => {
                                                                                       // Apply hover effect when mouse enters the region
                                                                                       
-                                                                                      if (region.id !== mybase  && !region.classList.contains('unavailable')) {
+                                                                                      if (
+                                                                                          !document.body.classList.contains('vl-tablet-device') &&
+                                                                                          region.id !== mybase &&
+                                                                                          !region.classList.contains('unavailable')
+                                                                                      ) {
                                                                                             region.style.filter = 'brightness(120%)';
                                                                                       }
                                                                                       
@@ -8513,7 +8530,12 @@ document.querySelectorAll(".region").forEach(region => {
                                                                                       var controlledRegions = playerControlledRegions['Myregions'] || [];
 
 
-                                                                                      if (region.id !== mybase && !controlledRegions.includes(region.id) && !region.classList.contains('unavailable')) {
+                                                                                      if (
+                                                                                          !document.body.classList.contains('vl-tablet-device') &&
+                                                                                          region.id !== mybase &&
+                                                                                          !controlledRegions.includes(region.id) &&
+                                                                                          !region.classList.contains('unavailable')
+                                                                                      ) {
                                                                                         region.style.filter = 'brightness(100%)';
                                                                                       }
                                                                                   });
@@ -9251,6 +9273,15 @@ function installBattleHoverDelegation() {
         const target = event.target instanceof Element ? event.target.closest(".region") : null;
         if (!target || !window.__battleSelectionActive || !window.__battleTargetIds.has(target.id)) return;
 
+        // Tablets intentionally have no persistent hover state. Touch Chromium
+        // can keep :hover alive after a tap and repaint it later during overlays.
+        if (document.body.classList.contains('vl-tablet-device')) {
+            target.style.removeProperty("filter");
+            target.style.removeProperty("opacity");
+            delete target.dataset.battleHover;
+            return;
+        }
+
         // pointerover bublá; při skutečném vstupu do regionu zvýrazníme aktuální SVG path.
         if (event.relatedTarget instanceof Node && target.contains(event.relatedTarget)) return;
         target.style.setProperty("filter", "brightness(140%) saturate(115%)", "important");
@@ -9578,11 +9609,19 @@ socket.on("removeAnswerOptions", () => {
 
 // 🔹 Funkce pro zvýraznění
 function highlightRegion(e) {
+    if (document.body.classList.contains('vl-tablet-device')) {
+        e.target.style.removeProperty("filter");
+        return;
+    }
     e.target.style.filter = "brightness(120%)";
 }
 
 // 🔹 Funkce pro návrat k normálu
 function resetRegion(e) {
+    if (document.body.classList.contains('vl-tablet-device')) {
+        e.target.style.removeProperty("filter");
+        return;
+    }
     e.target.style.filter = "brightness(100%)";
 }
 

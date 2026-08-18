@@ -1103,11 +1103,11 @@ body.vl-tablet-device.is-game-started #vl_tablet_fullscreen_btn:active {
   /* Normal tablet view: deliberately smaller than V15 (90vw × 78dvh). */
   body.vl-tablet-device.is-game-started #map {
     top: 13dvh !important;
-    left: 8vw !important;
-    width: 84vw !important;
-    height: 72dvh !important;
-    max-width: 84vw !important;
-    max-height: 72dvh !important;
+    left: 6vw !important;
+    width: 88vw !important;
+    height: 75dvh !important;
+    max-width: 88vw !important;
+    max-height: 75dvh !important;
     overflow: hidden !important;
   }
 
@@ -1117,11 +1117,11 @@ body.vl-tablet-device.is-game-started #vl_tablet_fullscreen_btn:active {
   html:fullscreen body.vl-tablet-device.is-game-started #map,
   html:-webkit-full-screen body.vl-tablet-device.is-game-started #map {
     top: 12dvh !important;
-    left: 7vw !important;
-    width: 86vw !important;
-    height: 74dvh !important;
-    max-width: 86vw !important;
-    max-height: 74dvh !important;
+    left: 5vw !important;
+    width: 90vw !important;
+    height: 77dvh !important;
+    max-width: 90vw !important;
+    max-height: 77dvh !important;
   }
 
   /* Remove only the blue WebKit/Chromium touch rectangle. Region colours,
@@ -1360,5 +1360,90 @@ html.vl-map-renderer-v2.vl-map-v2-canvas-ready #map .region.unclickable {
   body.vl-tablet-device.is-game-started #numsubmit2,
   body.vl-tablet-device.is-game-started #numsubmit3 {
     font-size: .90rem !important;
+  }
+}
+
+
+/* ============================================================
+   VLASTENEC — TABLET HUD / TOUCH POLISH V42
+   Presentation-only. No region availability, ownership or turn logic changes.
+   ============================================================ */
+@media (min-width: 700px) and (max-width: 1400px) {
+  /* Phase title starts at the left side of its own panel instead of being
+     horizontally centred across the whole progress box. */
+  body.vl-tablet-device.is-game-started #gamephase {
+    width: 100% !important;
+    padding-left: 4% !important;
+    padding-right: 2% !important;
+    box-sizing: border-box !important;
+    justify-content: flex-start !important;
+    text-align: left !important;
+  }
+
+  /* Rounds and turn-order bundles share one exact six-column geometry.
+     Therefore the middle stick of each bundle is mathematically below the
+     centre of the matching round marker. */
+  body.vl-tablet-device.is-game-started #gamerounds,
+  body.vl-tablet-device.is-game-started #playersticks {
+    left: 0 !important;
+    right: auto !important;
+    width: 100% !important;
+    padding-left: 10% !important;
+    padding-right: 0 !important;
+    box-sizing: border-box !important;
+    display: grid !important;
+    grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+    column-gap: 0 !important;
+    justify-content: stretch !important;
+  }
+
+  body.vl-tablet-device.is-game-started #gamerounds {
+    align-items: center !important;
+  }
+
+  body.vl-tablet-device.is-game-started #playersticks {
+    align-items: stretch !important;
+  }
+
+  body.vl-tablet-device.is-game-started #gamerounds .round {
+    top: auto !important;
+    width: 62% !important;
+    height: 30% !important;
+    margin: 0 !important;
+    justify-self: center !important;
+    align-self: center !important;
+    flex: none !important;
+  }
+
+  body.vl-tablet-device.is-game-started #playersticks .bundle {
+    display: flex !important;
+    align-items: stretch !important;
+    justify-content: center !important;
+    gap: 3% !important;
+    width: 100% !important;
+    height: 100% !important;
+    margin: 0 !important;
+    justify-self: center !important;
+    text-align: center !important;
+
+    /* The geometry is centred first; this small extra left shift compensates
+       the visual rightward lean caused by skew(-15deg,-15deg). */
+    transform: translateX(-5px) !important;
+  }
+
+  body.vl-tablet-device.is-game-started #playersticks .bundle .stick {
+    flex: 0 0 6% !important;
+    width: 6% !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+
+  /* A touch screen has no meaningful persistent hover. Chromium can retain
+     :hover after a tap and later repaint it during a question. In the Canvas
+     renderer the SVG path is only the outline/hitbox, so suppressing filter
+     here changes presentation only, never availability or clicks. */
+  html.vl-map-renderer-v2 body.vl-tablet-device.is-game-started #map .region:hover,
+  html.vl-map-renderer-v2 body.vl-tablet-device.is-game-started #map .region.battle-selectable:hover {
+    filter: none !important;
   }
 }
