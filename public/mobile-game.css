@@ -1146,11 +1146,24 @@ body.vl-tablet-device.is-game-started #vl_tablet_fullscreen_btn:active {
 }
 
 /* ============================================================
-   VLASTENEC — MAP RENDERER V2 TEST LAYER V32
+   VLASTENEC — MAP RENDERER V2.1 TEST LAYERS V33
    Used only when game_online.html is opened with ?mapv2=1.
    ============================================================ */
 #region-wave-v2-layer,
 #region-wave-v2-layer .region-wave-v2-instance,
 #region-wave-v2-layer .region-wave-v2-overlay {
+  pointer-events: none !important;
+}
+
+
+/* V2.1: gameplay classes stay authoritative, but Android/Chromium no longer
+   has to run CSS brightness() directly on complex SVG region paths. */
+html.vl-map-renderer-v2 #map .region.unavailable,
+html.vl-map-renderer-v2 #map .region.unclickable {
+  filter: none !important;
+}
+
+#region-state-v2-layer,
+#region-state-v2-layer .region-state-v2-overlay {
   pointer-events: none !important;
 }

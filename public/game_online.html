@@ -787,6 +787,10 @@ function resetRegionVisualsForSnapshot() {
     region.classList.remove('unavailable', 'battle-selectable');
     delete region.dataset.battleHover;
   });
+
+  if (window.__mapRendererV2Enabled && typeof scheduleRegionStateV2Render === 'function') {
+    scheduleRegionStateV2Render();
+  }
 }
 
 function hideBaseForSeat(seat) {
@@ -5027,12 +5031,13 @@ if (regionValues && typeof regionValues === 'object') {
         window.__regionWaveJobs = window.__regionWaveJobs || new Map();
         window.__regionWaveSeq = window.__regionWaveSeq || 0;
 
-        // Map Renderer V2 is opt-in while we validate it. Without ?mapv2=1 the
+        // Map Renderer V2.1 is opt-in while we validate it. Without ?mapv2=1 the
         // exact original V24 renderer below remains active.
         const MAP_RENDERER_V2_ENABLED = new URLSearchParams(window.location.search).get('mapv2') === '1';
         window.__mapRendererV2Enabled = MAP_RENDERER_V2_ENABLED;
         window.__regionWaveV2Epoch = Number(window.__regionWaveV2Epoch || 0);
-        console.log(`🗺️ Map Renderer: ${MAP_RENDERER_V2_ENABLED ? 'V2' : 'legacy V24'}`);
+        document.documentElement.classList.toggle('vl-map-renderer-v2', MAP_RENDERER_V2_ENABLED);
+        console.log(`🗺️ Map Renderer: ${MAP_RENDERER_V2_ENABLED ? 'V2.1' : 'legacy V24'}`);
 
         function regionOwnerMap(regionsState) {
             const owners = new Map();
@@ -5238,16 +5243,22 @@ if (regionValues && typeof regionValues === 'object') {
         }
 
         // ============================================================
-        // VLASTENEC — MAP RENDERER V2 (opt-in with ?mapv2=1)
+        // VLASTENEC — MAP RENDERER V2.1 (opt-in with ?mapv2=1)
         //
-        // Goal: preserve the exact ownership result and timing while cutting the
-        // temporary SVG transaction from two path clones + mask + clipPath down to
-        // ONE path clone at a time:
-        //   - free-region fill: new colour is painted on the real region underneath;
-        //     one neutral clone with a growing circular MASK hole reveals it.
-        //   - battle clear: neutral is painted underneath; one old-colour clone with
-        //     a shrinking circular CLIP contracts to the centre.
-        // No game/server/selection state is changed by these helpers.
+        // Rendering only. Server/game/selection state is untouched.
+        //
+        // Wave model:
+        //   - the real region keeps the BASE fill (neutral/old state),
+        //   - one temporary overlay carries the OTHER fill,
+        //   - a circular clip on the overlay and an inverse circular mask on the
+        //     real region make the two paints disjoint (no alpha blending / bleed),
+        //   - after the wave completes, the temporary geometry is removed and the
+        //     real region receives the authoritative final fill.
+        //
+        // Unavailable-state model:
+        //   - gameplay classes remain on the real .region,
+        //   - CSS brightness() is suppressed only in V2,
+        //   - a separate non-interactive state layer provides the dark appearance.
         // ============================================================
 
         function ensureRegionWaveV2Layer() {
@@ -5264,6 +5275,22 @@ if (regionValues && typeof regionValues === 'object') {
             return layer;
         }
 
+        function ensureRegionStateV2Layer() {
+            const mapSvg = document.getElementById('map');
+            if (!mapSvg) return null;
+            let layer = mapSvg.querySelector('#region-state-v2-layer');
+            if (!layer) {
+                layer = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                layer.setAttribute('id', 'region-state-v2-layer');
+                layer.setAttribute('pointer-events', 'none');
+                layer.setAttribute('aria-hidden', 'true');
+                const waveLayer = mapSvg.querySelector('#region-wave-v2-layer');
+                if (waveLayer) mapSvg.insertBefore(layer, waveLayer);
+                else mapSvg.appendChild(layer);
+            }
+            return layer;
+        }
+
         function isRegionWaveV2EpochCurrent(epoch) {
             return Number(epoch) === Number(window.__regionWaveV2Epoch || 0);
         }
@@ -5276,6 +5303,16 @@ if (regionValues && typeof regionValues === 'object') {
             if (!mapSvg) return;
             mapSvg.querySelector('#region-wave-v2-layer')?.replaceChildren();
             mapSvg.querySelectorAll('[data-vl-wave-v2-def="1"]').forEach(node => node.remove());
+            // A cancelled wave may have put an inverse mask directly on the real
+            // region. Always restore it so no visual transaction can leak across
+            // an authoritative state reset.
+            mapSvg.querySelectorAll('.region[data-vl-wave-v2-masked="1"]').forEach(region => {
+                const previous = region.dataset.vlWaveV2PreviousMask || '';
+                if (previous) region.setAttribute('mask', previous);
+                else region.removeAttribute('mask');
+                delete region.dataset.vlWaveV2PreviousMask;
+                delete region.dataset.vlWaveV2Masked;
+            });
         }
 
         function styleRegionWaveV2Overlay(clone, regionEl, fill) {
@@ -5289,10 +5326,9 @@ if (regionValues && typeof regionValues === 'object') {
             const cs = getComputedStyle(regionEl);
             clone.style.opacity = cs.opacity || '1';
             clone.style.fillOpacity = cs.fillOpacity || '1';
-            // The real region stays visible and keeps the one authoritative outline.
-            // Temporary paint therefore carries fill only, avoiding doubled borders.
-            clone.style.stroke = 'none';
-            clone.style.strokeWidth = '0';
+            clone.style.strokeOpacity = cs.strokeOpacity || '1';
+            clone.style.stroke = cs.stroke || clone.style.stroke;
+            clone.style.strokeWidth = cs.strokeWidth || clone.style.strokeWidth;
             clone.style.fill = fill;
             clone.setAttribute('aria-hidden', 'true');
         }
@@ -5307,9 +5343,7 @@ if (regionValues && typeof regionValues === 'object') {
             };
         }
 
-        // Fill transition: real path already contains the final colour. A single
-        // neutral overlay has a circular transparent hole that grows outward.
-        function makeRegionWaveV2Reveal(regionEl, newFill, neutralFill, epoch) {
+        function makeRegionWaveV2Split(regionEl, baseFill, overlayFill, initialRadius, epoch) {
             const defs = ensureRegionWaveDefs();
             const layer = ensureRegionWaveV2Layer();
             if (!defs || !layer || !regionEl || !isRegionWaveV2EpochCurrent(epoch)) return null;
@@ -5317,11 +5351,16 @@ if (regionValues && typeof regionValues === 'object') {
             const svgNS = 'http://www.w3.org/2000/svg';
             const { bbox, cx, cy, maxRadius } = regionWaveV2Geometry(regionEl);
             const uid = `${Date.now()}-${++window.__regionWaveSeq}`;
-            const maskId = `region-wave-v2-reveal-${uid}`;
+            const clipId = `region-wave-v2-clip-${uid}`;
+            const maskId = `region-wave-v2-mask-${uid}`;
             const pad = maxRadius * 1.15;
 
-            const overlay = regionEl.cloneNode(true);
-            styleRegionWaveV2Overlay(overlay, regionEl, neutralFill);
+            // Real region = base paint. Hide exactly the circular part occupied by
+            // the overlay so two 0.7-opacity paints never blend with each other.
+            setRegionVisualFill(regionEl, baseFill);
+            const previousMask = regionEl.getAttribute('mask') || '';
+            regionEl.dataset.vlWaveV2PreviousMask = previousMask;
+            regionEl.dataset.vlWaveV2Masked = '1';
 
             const mask = document.createElementNS(svgNS, 'mask');
             mask.setAttribute('id', maskId);
@@ -5339,58 +5378,32 @@ if (regionValues && typeof regionValues === 'object') {
             rect.setAttribute('height', String(bbox.height + pad * 2));
             rect.setAttribute('fill', 'white');
 
-            const hole = document.createElementNS(svgNS, 'circle');
-            hole.setAttribute('cx', String(cx));
-            hole.setAttribute('cy', String(cy));
-            hole.setAttribute('r', '0');
-            hole.setAttribute('fill', 'black');
-
+            const holeCircle = document.createElementNS(svgNS, 'circle');
+            holeCircle.setAttribute('cx', String(cx));
+            holeCircle.setAttribute('cy', String(cy));
+            holeCircle.setAttribute('r', String(initialRadius));
+            holeCircle.setAttribute('fill', 'black');
             mask.appendChild(rect);
-            mask.appendChild(hole);
+            mask.appendChild(holeCircle);
             defs.appendChild(mask);
-            overlay.setAttribute('mask', `url(#${maskId})`);
-
-            const instance = document.createElementNS(svgNS, 'g');
-            instance.classList.add('region-wave-v2-instance');
-            instance.setAttribute('data-region-id', regionEl.id || '');
-            instance.setAttribute('data-wave-epoch', String(epoch));
-            instance.appendChild(overlay);
-            layer.appendChild(instance);
-
-            // State already says this region belongs to the new owner. Paint that
-            // final state underneath; the neutral overlay keeps the visual start
-            // identical until the hole opens.
-            setRegionVisualFill(regionEl, newFill);
-
-            return { epoch, instance, mask, circle: hole, maxRadius };
-        }
-
-        // Battle clear: real path becomes neutral underneath. One old-colour clone
-        // is clipped by a circle that shrinks to the centre, matching the legacy
-        // old-colour contraction without an additional inverse mask layer.
-        function makeRegionWaveV2Contract(regionEl, oldFill, neutralFill, epoch) {
-            const defs = ensureRegionWaveDefs();
-            const layer = ensureRegionWaveV2Layer();
-            if (!defs || !layer || !regionEl || !isRegionWaveV2EpochCurrent(epoch)) return null;
-
-            const svgNS = 'http://www.w3.org/2000/svg';
-            const { cx, cy, maxRadius } = regionWaveV2Geometry(regionEl);
-            const uid = `${Date.now()}-${++window.__regionWaveSeq}`;
-            const clipId = `region-wave-v2-contract-${uid}`;
-
-            const overlay = regionEl.cloneNode(true);
-            styleRegionWaveV2Overlay(overlay, regionEl, oldFill);
+            regionEl.setAttribute('mask', `url(#${maskId})`);
 
             const clip = document.createElementNS(svgNS, 'clipPath');
             clip.setAttribute('id', clipId);
             clip.setAttribute('clipPathUnits', 'userSpaceOnUse');
             clip.setAttribute('data-vl-wave-v2-def', '1');
-            const circle = document.createElementNS(svgNS, 'circle');
-            circle.setAttribute('cx', String(cx));
-            circle.setAttribute('cy', String(cy));
-            circle.setAttribute('r', String(maxRadius));
-            clip.appendChild(circle);
+            const clipCircle = document.createElementNS(svgNS, 'circle');
+            clipCircle.setAttribute('cx', String(cx));
+            clipCircle.setAttribute('cy', String(cy));
+            clipCircle.setAttribute('r', String(initialRadius));
+            clip.appendChild(clipCircle);
             defs.appendChild(clip);
+
+            const overlay = regionEl.cloneNode(true);
+            overlay.removeAttribute('mask');
+            delete overlay.dataset.vlWaveV2PreviousMask;
+            delete overlay.dataset.vlWaveV2Masked;
+            styleRegionWaveV2Overlay(overlay, regionEl, overlayFill);
             overlay.setAttribute('clip-path', `url(#${clipId})`);
 
             const instance = document.createElementNS(svgNS, 'g');
@@ -5400,28 +5413,38 @@ if (regionValues && typeof regionValues === 'object') {
             instance.appendChild(overlay);
             layer.appendChild(instance);
 
-            setRegionVisualFill(regionEl, neutralFill);
-            return { epoch, instance, clip, circle, maxRadius };
+            return {
+                epoch, regionEl, previousMask, instance, mask, clip,
+                maskCircle: holeCircle, clipCircle, maxRadius
+            };
         }
 
         function removeRegionWaveV2Part(parts) {
             if (!parts) return;
+            if (parts.regionEl) {
+                if (parts.previousMask) parts.regionEl.setAttribute('mask', parts.previousMask);
+                else parts.regionEl.removeAttribute('mask');
+                delete parts.regionEl.dataset.vlWaveV2PreviousMask;
+                delete parts.regionEl.dataset.vlWaveV2Masked;
+            }
             parts.instance?.remove();
             parts.mask?.remove();
             parts.clip?.remove();
         }
 
-        function animateRegionWaveV2Circle(circle, from, to, duration, easing, epoch) {
+        function animateRegionWaveV2Circles(circles, from, to, duration, easing, epoch) {
+            const live = (Array.isArray(circles) ? circles : [circles]).filter(Boolean);
             return new Promise(resolve => {
                 const started = performance.now();
                 function frame(now) {
-                    if (!isRegionWaveV2EpochCurrent(epoch) || !circle?.isConnected) {
+                    if (!isRegionWaveV2EpochCurrent(epoch) || live.some(circle => !circle.isConnected)) {
                         resolve(false);
                         return;
                     }
                     const raw = Math.min(1, (now - started) / Math.max(1, duration));
                     const k = easing ? easing(raw) : raw;
-                    circle.setAttribute('r', String(from + (to - from) * k));
+                    const radius = String(from + (to - from) * k);
+                    live.forEach(circle => circle.setAttribute('r', radius));
                     if (raw < 1) requestAnimationFrame(frame);
                     else resolve(true);
                 }
@@ -5433,18 +5456,23 @@ if (regionValues && typeof regionValues === 'object') {
             if (!regionEl || !newFill) return;
             const epoch = Number(window.__regionWaveV2Epoch || 0);
             const neutral = neutralRegionFill(regionEl);
-            const part = makeRegionWaveV2Reveal(regionEl, newFill, neutral, epoch);
+            const part = makeRegionWaveV2Split(regionEl, neutral, newFill, 0, epoch);
             if (!part) {
                 if (isRegionWaveV2EpochCurrent(epoch)) setRegionVisualFill(regionEl, newFill);
                 return;
             }
 
+            let completed = false;
             try {
-                await animateRegionWaveV2Circle(
-                    part.circle, 0, part.maxRadius, REGION_WAVE.fillMs, easeOutCubic, epoch
+                completed = await animateRegionWaveV2Circles(
+                    [part.maskCircle, part.clipCircle],
+                    0, part.maxRadius, REGION_WAVE.fillMs, easeOutCubic, epoch
                 );
             } finally {
                 removeRegionWaveV2Part(part);
+            }
+            if (completed && isRegionWaveV2EpochCurrent(epoch)) {
+                setRegionVisualFill(regionEl, newFill);
             }
         }
 
@@ -5452,19 +5480,25 @@ if (regionValues && typeof regionValues === 'object') {
             if (!regionEl || !oldFill || !newFill) return;
             const epoch = Number(window.__regionWaveV2Epoch || 0);
             const neutral = neutralRegionFill(regionEl);
-            const oldPart = makeRegionWaveV2Contract(regionEl, oldFill, neutral, epoch);
+            const oldPart = makeRegionWaveV2Split(regionEl, neutral, oldFill, REGION_WAVE.radiusPadding, epoch);
 
             if (!oldPart) {
                 if (isRegionWaveV2EpochCurrent(epoch)) setRegionVisualFill(regionEl, neutral);
             } else {
+                // initialRadius above is replaced by the exact geometry radius here;
+                // both circles must start fully outside the region.
+                oldPart.maskCircle.setAttribute('r', String(oldPart.maxRadius));
+                oldPart.clipCircle.setAttribute('r', String(oldPart.maxRadius));
                 try {
-                    await animateRegionWaveV2Circle(
-                        oldPart.circle, oldPart.maxRadius, 0,
+                    await animateRegionWaveV2Circles(
+                        [oldPart.maskCircle, oldPart.clipCircle],
+                        oldPart.maxRadius, 0,
                         REGION_WAVE.clearMs, easeInCubic, epoch
                     );
                 } finally {
                     removeRegionWaveV2Part(oldPart);
                 }
+                if (isRegionWaveV2EpochCurrent(epoch)) setRegionVisualFill(regionEl, neutral);
             }
 
             if (!isRegionWaveV2EpochCurrent(epoch)) return;
@@ -5472,6 +5506,61 @@ if (regionValues && typeof regionValues === 'object') {
             if (!isRegionWaveV2EpochCurrent(epoch)) return;
             const liveRegion = regionEl.id ? document.getElementById(regionEl.id) : regionEl;
             await waveFillRegionV2(liveRegion || regionEl, newFill);
+        }
+
+        let regionStateV2Raf = 0;
+        function renderRegionStateV2Layer() {
+            regionStateV2Raf = 0;
+            if (!MAP_RENDERER_V2_ENABLED) return;
+            const layer = ensureRegionStateV2Layer();
+            if (!layer) return;
+            const frag = document.createDocumentFragment();
+            document.querySelectorAll('#map .region').forEach(regionEl => {
+                if (!regionEl.classList.contains('unavailable') && !regionEl.classList.contains('unclickable')) return;
+                const overlay = regionEl.cloneNode(true);
+                overlay.removeAttribute('id');
+                overlay.removeAttribute('mask');
+                overlay.removeAttribute('clip-path');
+                overlay.className.baseVal = 'region-state-v2-overlay';
+                overlay.style.pointerEvents = 'none';
+                overlay.style.cursor = 'default';
+                overlay.style.filter = 'none';
+                overlay.style.fill = '#000';
+                overlay.style.fillOpacity = '1';
+                overlay.style.opacity = '0.78';
+                overlay.style.stroke = 'none';
+                overlay.style.strokeWidth = '0';
+                overlay.setAttribute('aria-hidden', 'true');
+                frag.appendChild(overlay);
+            });
+            layer.replaceChildren(frag);
+        }
+
+        function scheduleRegionStateV2Render() {
+            if (!MAP_RENDERER_V2_ENABLED || regionStateV2Raf) return;
+            regionStateV2Raf = requestAnimationFrame(renderRegionStateV2Layer);
+        }
+
+        function installRegionStateV2Observer() {
+            if (!MAP_RENDERER_V2_ENABLED || window.__regionStateV2Observer) return;
+            const mapSvg = document.getElementById('map');
+            if (!mapSvg) return;
+            const observer = new MutationObserver(mutations => {
+                if (mutations.some(m => m.type === 'attributes' && m.attributeName === 'class' && m.target?.classList?.contains('region'))) {
+                    scheduleRegionStateV2Render();
+                }
+            });
+            observer.observe(mapSvg, { subtree: true, attributes: true, attributeFilter: ['class'] });
+            window.__regionStateV2Observer = observer;
+            scheduleRegionStateV2Render();
+        }
+
+        if (MAP_RENDERER_V2_ENABLED) {
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', installRegionStateV2Observer, { once: true });
+            } else {
+                installRegionStateV2Observer();
+            }
         }
 
         async function waveFillRegion(regionEl, newFill) {
