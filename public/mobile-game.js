@@ -1,18 +1,22 @@
 (() => {
   'use strict';
 
-  const MARKER = '🧪 VLASTENEC FIX: mobile-map-runtime-v19';
+  const MARKER = '🧪 VLASTENEC FIX: mobile-game-tablet-v20';
   console.log(MARKER);
 
   let wasGameActive = false;
   let uiBuilt = false;
 
-  function phoneLikeViewport() {
+  function mobileGameplayViewport() {
     const coarse = window.matchMedia?.('(pointer: coarse)').matches ?? false;
     const shortSide = Math.min(window.innerWidth || 9999, window.innerHeight || 9999);
-    // Explicitly exclude tablets. In landscape, modern phones are normally
-    // <= 600 CSS px on the short side; tablets are substantially taller/wider.
-    return coarse && shortSide <= 600;
+    const phone = coarse && shortSide <= 600;
+    const tablet = document.body?.classList.contains('vl-tablet-device') ?? false;
+
+    // V20: tablets intentionally use the exact same gameplay presentation as phones.
+    // Lobby remains untouched because every mobile gameplay rule is also gated by
+    // body.is-game-started in mobile-game.css.
+    return phone || tablet;
   }
 
   function forceChatClosed() {
@@ -45,8 +49,8 @@
     gate.setAttribute('aria-live', 'polite');
     gate.innerHTML = `
       <div class="vl-rotate-icon" aria-hidden="true">↻</div>
-      <strong>Otočte telefon na šířku</strong>
-      <span>Samotná hra je na telefonu navržená pro režim landscape.</span>`;
+      <strong>Otočte zařízení na šířku</strong>
+      <span>Samotná hra je navržená pro režim landscape.</span>`;
     document.body.appendChild(gate);
 
     const fullscreen = document.createElement('button');
@@ -117,9 +121,7 @@
   function refreshExistingPinPositions() {
     const body = document.body;
     if (!body) return;
-    const mapRuntime = body.classList.contains('vl-phone-game') ||
-                       body.classList.contains('vl-mobile-map-runtime');
-    if (!mapRuntime) return;
+    if (!body.classList.contains('vl-phone-game')) return;
     if (!body.classList.contains('is-game-started')) return;
     if (typeof window.updateAllPins !== 'function') return;
     try { window.updateAllPins(); } catch (err) {
@@ -133,14 +135,12 @@
 
   function syncMode() {
     if (!document.body) return;
-    const phone = phoneLikeViewport();
-    const tabletMapRuntime = !phone && document.body.classList.contains('vl-tablet-device');
-    document.body.classList.toggle('vl-phone-game', phone);
-    // Tablet keeps desktop gameplay UI. This separate class opts ONLY the map
-    // into the same viewport/reflow environment used by the phone renderer.
-    document.body.classList.toggle('vl-mobile-map-runtime', tabletMapRuntime);
+    const mobile = mobileGameplayViewport();
+    document.body.classList.toggle('vl-phone-game', mobile);
+    // Remove the V19 hybrid marker if it survives a hot reload/cache transition.
+    document.body.classList.remove('vl-mobile-map-runtime');
 
-    const active = phone && document.body.classList.contains('is-game-started');
+    const active = mobile && document.body.classList.contains('is-game-started');
     if (active && !wasGameActive) {
       // This is deliberately the ONLY gameplay-state side effect in this file,
       // and it occurs only after the existing client has already marked the match
@@ -154,7 +154,7 @@
     }
     wasGameActive = active;
 
-    if (phone) {
+    if (mobile) {
       try { window.VlastenecSound?.sync?.(); } catch (_) {}
     }
     syncFullscreenButton();
