@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>VLASTENEC</title>
   <link rel="stylesheet" href="mainstyle.css?v=numeric-keypad-v2">
-  <link rel="stylesheet" href="mobile-game.css?v=mobile-game-safe-v9">
+  <link rel="stylesheet" href="mobile-game.css?v=mobile-game-safe-v10">
   <script src="auth-client.js"></script>
   <script src="profile-store.js"></script>
   <style id="vl-tablet-lobby-v4-inline">
@@ -4920,7 +4920,7 @@ if (regionValues && typeof regionValues === 'object') {
                 nameEl.innerHTML = displayName;
                 nameEl.style.position = 'absolute';
                 nameEl.style.left = `${centerX}px`;
-                nameEl.style.top = `${centerY - (document.body.classList.contains('vl-phone-game') ? 22 : 30)}px`;
+                nameEl.style.top = `${centerY - ((document.body.classList.contains('vl-phone-game') || document.body.classList.contains('vl-tablet-game')) ? 22 : 30)}px`;
                 nameEl.style.transform = 'translate(-50%, -50%)';
                 nameEl.style.zIndex = '4';
                 nameEl.style.opacity = '1';
@@ -7297,8 +7297,10 @@ function startCountdownTile(secondsAmount) {
                 // Na telefonu mohou mobilní prohlížeče při vytížení sloučit více timerů
                 // do jednoho renderu; proto čistě vizuálně řadíme animace pinů za sebe
                 // v přesném pořadí, v jakém sem dorazily ze serveru.
-                const isPhoneGame = document.body?.classList.contains("vl-phone-game") &&
-                                    document.body?.classList.contains("is-game-started");
+                const isPhoneGame = (
+                                        document.body?.classList.contains("vl-phone-game") ||
+                                        document.body?.classList.contains("vl-tablet-game")
+                                    ) && document.body?.classList.contains("is-game-started");
 
                 if (isPhoneGame) {
                     window.__vlMobilePinRevealChain = window.__vlMobilePinRevealChain || Promise.resolve();
@@ -8685,6 +8687,17 @@ socket.on("showBaseMini", ({ defender, lives }) => {
 socket.on("destroyTower", ({ defender, remainingLives, uiToken, uiStage }) => {
     const uiEpoch = beginBattleUiStage("destroy_tower");
     const baseMini = document.getElementById("basevisualmini");
+    const qstripEl = document.getElementById("qstrip");
+
+    // Černý pás je během ničení věže samostatný vizuální prvek. Vynutíme
+    // jeho vykreslení i inline, protože některé mobilní prohlížeče při rychlé
+    // výměně question-stage zpozdily/optimalizovaly překreslení samotného #qstrip.
+    if (qstripEl) {
+        qstripEl.style.display = "block";
+        qstripEl.style.visibility = "visible";
+        qstripEl.style.opacity = "1";
+        qstripEl.style.backgroundColor = "rgb(39, 34, 34)";
+    }
 
     // Během animace věže nesmí spectator overlay zakrývat dění.
     abortTemporarilyHidden = true;
@@ -8772,7 +8785,14 @@ socket.on("destroyTower", ({ defender, remainingLives, uiToken, uiStage }) => {
 
         // Teprve nyní server smí spustit další otázku / převést základnu.
         ackBattleUiStage(uiToken, uiStage || "destroy_tower");
-        schedulePostTowerStateSync(uiEpoch);
+
+        // Pojistný stateSync je potřeba jen mezi prvními dvěma věžemi, kdy má
+        // následovat další otázka. Po pádu poslední věže by mohl snapshot doběhnout
+        // dřív než updateRegions a "předmalovat" převod celé základny, čímž by
+        // klient přišel o rozdíl starý→nový vlastník potřebný pro vlnovou animaci.
+        if (Number(remainingLives) > 0) {
+            schedulePostTowerStateSync(uiEpoch);
+        }
     }, 6000);
 });
 
@@ -8788,8 +8808,23 @@ socket.on("hideBaseMini", () => {
 
 
 socket.on("playerLoses", ({defender}) => {
-    hideBaseForSeat(Number(defender));
-    applyBaseLivesVisual(Number(defender), 0);
+    const defeatedSeat = Number(defender);
+    const defeatedKey = `Player${defeatedSeat}regions`;
+
+    // Čistě vizuální snapshot původních území poraženého hráče. Při pádu základny
+    // server převede všechna jeho pole najednou; tento seznam zajistí, že i kdyby
+    // mezitím dorazil jiný autoritativní snapshot, updateRegions stále dokáže
+    // animovat starou barvu → novou barvu na každém převáděném poli.
+    window.__pendingBaseDefeatWave = {
+        defender: defeatedSeat,
+        regionIds: Array.isArray(playerControlledRegions?.[defeatedKey])
+            ? [...playerControlledRegions[defeatedKey]]
+            : [],
+        createdAt: performance.now()
+    };
+
+    hideBaseForSeat(defeatedSeat);
+    applyBaseLivesVisual(defeatedSeat, 0);
     console.log("Hráč", defender, "prohrál.");
 });
 
@@ -9011,6 +9046,49 @@ async function enableConquestSelection(timeLeft = 10) {
                 Player2regions: Array.isArray(playerControlledRegions?.Player2regions) ? [...playerControlledRegions.Player2regions] : [],
                 Player3regions: Array.isArray(playerControlledRegions?.Player3regions) ? [...playerControlledRegions.Player3regions] : []
             };
+
+            // Při převzetí celé základny může být více regionů převedeno v jediném
+            // serverovém kroku. Obnovíme pro animaci jejich poslední známý původní
+            // stav poraženého hráče, aniž bychom měnili autoritativní herní data.
+            const defeatWave = window.__pendingBaseDefeatWave;
+            if (defeatWave && performance.now() - Number(defeatWave.createdAt || 0) < 15000) {
+                const defeatedSeat = Number(defeatWave.defender);
+                const defeatedKey = `Player${defeatedSeat}regions`;
+                const rememberedIds = Array.isArray(defeatWave.regionIds) ? defeatWave.regionIds : [];
+
+                const nextOwnerByRegion = new Map();
+                [1, 2, 3].forEach(seat => {
+                    const ids = regions?.[`Player${seat}regions`];
+                    if (Array.isArray(ids)) ids.forEach(id => nextOwnerByRegion.set(String(id), seat));
+                });
+
+                const actuallyTransferred = rememberedIds
+                    .map(String)
+                    .filter(id => {
+                        const nextOwner = Number(nextOwnerByRegion.get(id) || 0);
+                        return nextOwner > 0 && nextOwner !== defeatedSeat;
+                    });
+
+                if (actuallyTransferred.length) {
+                    // Odeber je z případných nových vlastníků v "previous" obrazu
+                    // a vrať je poraženému. animateRegionOwnershipChanges pak
+                    // vykreslí standardní battle transfer wave na každém poli.
+                    [1, 2, 3].forEach(seat => {
+                        const key = `Player${seat}regions`;
+                        previousRegions[key] = (previousRegions[key] || [])
+                            .filter(id => !actuallyTransferred.includes(String(id)));
+                    });
+                    previousRegions[defeatedKey] = Array.from(new Set([
+                        ...(previousRegions[defeatedKey] || []),
+                        ...actuallyTransferred
+                    ]));
+
+                    console.log(`🌊 Připravuji vlnový převod celé základny P${defeatedSeat}:`, actuallyTransferred);
+                    window.__pendingBaseDefeatWave = null;
+                }
+            } else if (defeatWave) {
+                window.__pendingBaseDefeatWave = null;
+            }
 
             playerControlledRegions = {
                 Player1regions: [...(regions?.Player1regions || [])],
@@ -10854,7 +10932,38 @@ function showNumericResultsForThree(correctAnswer, answers, uiToken, uiStage = "
 
 	<script>console.log("🧪 VLASTENEC FIX: numeric-timeout-input-v1");</script>
     <script>console.log('🧪 VLASTENEC FIX: chat-turn-stick-v1');</script>
-    <script>console.log('🧪 VLASTENEC FIX: mobile-game-safe-v4-ui-polish');</script>
+    <script>console.log('🧪 VLASTENEC FIX: mobile-game-safe-v10-tablet-layout');</script>
+    <script>
+    (() => {
+        // Tablet používá stejný herní layout jako telefon, ale lobby zůstává
+        // nedotčené díky existující podmínce .is-game-started v mobile-game.css.
+        // Samostatná třída nezasahuje do logiky mobile-game.js pro telefony.
+        const syncTabletGameplayClass = () => {
+            const body = document.body;
+            if (!body) return;
+
+            const screenW = Number(window.screen?.width || window.innerWidth || 0);
+            const screenH = Number(window.screen?.height || window.innerHeight || 0);
+            const shortSide = Math.min(screenW, screenH);
+            const longSide = Math.max(screenW, screenH);
+            const coarsePointer = !!window.matchMedia?.("(pointer: coarse)")?.matches;
+            const touchPoints = Number(navigator.maxTouchPoints || 0);
+
+            // CSS-pixel rozměry běžných tabletů (včetně iPadů a Android tabletů).
+            // Horní limit chrání běžný desktop s dotykovým monitorem.
+            const isTablet = (coarsePointer || touchPoints > 1) &&
+                             shortSide >= 600 &&
+                             longSide <= 1600;
+
+            body.classList.toggle("vl-tablet-game", isTablet);
+        };
+
+        syncTabletGameplayClass();
+        window.addEventListener("resize", syncTabletGameplayClass, { passive: true });
+        window.addEventListener("orientationchange", () => setTimeout(syncTabletGameplayClass, 80), { passive: true });
+        window.visualViewport?.addEventListener("resize", syncTabletGameplayClass, { passive: true });
+    })();
+    </script>
     <script src="mobile-game.js?v=mobile-game-safe-v4"></script>
 </body>
 
