@@ -2,6 +2,7 @@
 <html lang="cs">
 <head>
   <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>VLASTENEC</title>
   <link rel="stylesheet" href="mainstyle.css">
   <script src="auth-client.js"></script>
@@ -505,6 +506,7 @@
     console.log('🧪 VLASTENEC CLIENT: endgame-stats-ui-v1');
     console.log('🧪 VLASTENEC FIX: in-game-sound-toggle-v1');
     console.log('🧪 VLASTENEC FIX: authoritative-refresh-v1');
+    console.log('🧪 VLASTENEC FIX: responsive-game-clocks-v1');
 
     // --- Profil hráče: lokální statistiky od této verze ---
     const profileStore = window.VlastenecProfileStore || null;
@@ -1813,45 +1815,17 @@ if (regionValues && typeof regionValues === 'object') {
       <div id="cover"></div>
 
 
-    <div id="tileclockcontainer">
+    <div id="tileclockcontainer" aria-live="polite">
+      <div id="tileprompt">Vyberte políčko!</div>
 
-                    <div id="tileprompt">
-
-                            
-
-                        Vyberte políčko!
-
-                    </div>
-
-                    <div id="tilecountdown"></div> 
-
-
-                    <svg id="tilecircle" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-                        <!-- ✅ Černý vyplněný kruh jako pozadí -->
-                        <circle id="tilebackground" cx="50" cy="50" r="45" fill="black"/>
-                        
-                        <!-- ✅ Modrý grafický odpočet (kruhová čára) -->
-                        <circle id="tiletimer" cx="50" cy="50" r="45" stroke="skyblue" stroke-width="4" fill="none" />
-                    </svg>
-                    
-
-                    <style>
-                    
-                                #tiletimer{
-
-                                stroke-width: 4%;
-                                stroke-dasharray: 113%; /* Circumference of the circle (2 * π * r) */
-                                stroke-dashoffset: 0%; /* Start with no offset */
-
-                                }
-                    </style>
-
-                    
-
-
+      <div id="tileclockring" class="game-clock-ring" aria-label="Čas na výběr políčka">
+        <svg id="tilecircle" class="game-clock-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+          <circle id="tilebackground" class="game-clock-background" cx="50" cy="50" r="45" />
+          <circle id="tiletimer" class="game-clock-progress" cx="50" cy="50" r="45" />
+        </svg>
+        <div id="tilecountdown" class="game-clock-number"></div>
+      </div>
     </div>
-
-
 
 
 
@@ -1865,34 +1839,17 @@ if (regionValues && typeof regionValues === 'object') {
 
       <div id="question">
 
-          <div id="qprompt">
+          <div id="questionclockcontainer" aria-live="polite">
+            <div id="qprompt">Vyberte správnou odpověď!</div>
 
-            
-
-              Vyberte správnou odpověď!
-
+            <div id="questionclockring" class="game-clock-ring" aria-label="Čas na odpověď">
+              <svg id="qcircle" class="game-clock-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+                <circle id="qbackground" class="game-clock-background" cx="50" cy="50" r="45" />
+                <circle id="qtimer" class="game-clock-progress" cx="50" cy="50" r="45" />
+              </svg>
+              <div id="qcountdown" class="game-clock-number"></div>
+            </div>
           </div>
-
-
-
-
-          <svg id="qcircle" xmlns="http://www.w3.org/2000/svg">
-            <!-- Circle representing the countdown -->
-            <circle id="qtimer" cx="19%" cy="49%" r="18%" />
-        </svg>
-
-        <style>
-       
-                    #qtimer{
-
-                    stroke-width: 4%;
-                    stroke-dasharray: 113%; /* Circumference of the circle (2 * π * r) */
-                    stroke-dashoffset: 0%; /* Start with no offset */
-
-                    }
-        </style>
-      
-        <div id="qcountdown"></div>
 
  
 <audio id="tick-sound" preload="auto">
@@ -1908,21 +1865,6 @@ if (regionValues && typeof regionValues === 'object') {
   <source src="thud.ogg" type="audio/ogg">
   Your browser does not support the audio element.
 </audio>
-
-
-
-
-
-
-
-
-
-
-
-
-        <svg version="1.1" id="qbackground" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="122.88px" height="122.88px" viewBox="0 0 122.88 122.88" enable-background="new 0 0 122.88 122.88" xml:space="preserve"><g><path fill-rule="evenodd" clip-rule="evenodd" d="M61.438,0c33.93,0,61.441,27.512,61.441,61.441 c0,33.929-27.512,61.438-61.441,61.438C27.512,122.88,0,95.37,0,61.441C0,27.512,27.512,0,61.438,0L61.438,0z"/></g></svg>
-
-
           <div id="qstrip">
 
             <svg
@@ -5328,20 +5270,26 @@ if (regionValues && typeof regionValues === 'object') {
                 }
 
                 function startCountdown(secondsAmount) {
-                    var countdownElement = document.getElementById('qcountdown');
-                    var circle = document.getElementById('qtimer');
-                    var initial_seconds = secondsAmount;
-                    var seconds = secondsAmount;
+                    const countdownElement = document.getElementById('qcountdown');
+                    const circle = document.getElementById('qtimer');
+                    if (!countdownElement || !circle) return;
+
+                    const initialSeconds = Math.max(1, Math.ceil(Number(secondsAmount) || 1));
+                    let seconds = initialSeconds;
+                    const radius = parseFloat(circle.getAttribute('r')) || 45;
+                    const totalLength = 2 * Math.PI * radius;
 
                     stopQuestionCountdown();
+                    circle.style.strokeDasharray = totalLength;
+                    circle.style.strokeDashoffset = 0;
                     countdownElement.textContent = seconds;
-                    circle.style.strokeDashoffset = (113 / initial_seconds) * (initial_seconds - seconds) + '%';
                     playTickSound();
 
                     window.__questionCountdownInterval = setInterval(function() {
-                        seconds--;
-                        countdownElement.textContent = seconds;
-                        circle.style.strokeDashoffset = (113 / initial_seconds) * (initial_seconds - seconds) + '%';
+                        seconds -= 1;
+                        const remaining = Math.max(0, seconds);
+                        countdownElement.textContent = remaining;
+                        circle.style.strokeDashoffset = totalLength * (1 - remaining / initialSeconds);
 
                         if (seconds > 0) playTickSound();
                         if (seconds <= 0) {

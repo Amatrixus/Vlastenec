@@ -266,134 +266,239 @@ filter: brightness(20%);
 
 
 
-#qprompt{
+/* ============================================================
+   VLASTENEC — RESPONSIVE GAME CLOCKS V1 (2026-08-18)
+   Question and tile-selection clocks share one stable SVG geometry.
+   Text + timer are one layout unit, so resize cannot pull them apart.
+   ============================================================ */
 
-  position: absolute;
-  width: 26%;
-  height: 8%;
-  top: 20%;
-  background-color: rgb(39, 34, 34);
-  left: 37%;
-  color: white;
-  font-size: 20px;
-  line-height: 255%;
-
+:root {
+  --game-clock-size: clamp(78px, 7.2vw, 108px);
+  --game-clock-bg: rgb(16, 17, 20);
+  --game-clock-panel: rgb(39, 34, 34);
+  --game-clock-accent: skyblue;
 }
 
-#qcircle{
-  position: absolute;
-  height: 13.5%;
-
-  top: 17%;
-  left: 60%;
-  z-index:9;
+/* Shared clock anatomy. SVG and number always occupy the exact same square. */
+.game-clock-ring {
+  position: relative;
+  width: var(--game-clock-size);
+  height: var(--game-clock-size);
+  flex: 0 0 var(--game-clock-size);
+  aspect-ratio: 1 / 1;
+  z-index: 2;
 }
 
-
-#qbackground{
+.game-clock-svg {
   position: absolute;
-  width: 13.5%;
-  height: 13.5%;
-  top: 17%;
-  left: 57%;
-  z-index: 8;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
 }
 
-#qtimer{
+.game-clock-background {
+  fill: var(--game-clock-bg);
+  stroke: rgba(255,255,255,.09);
+  stroke-width: 2;
+}
 
+.game-clock-progress {
   fill: none;
-  stroke: skyblue;
-  
-  transition: stroke-dashoffset 1s linear; /* Smooth transition for the disappearance */
-  z-index: 10;
-
+  stroke: var(--game-clock-accent);
+  stroke-width: 4;
+  stroke-linecap: round;
+  transform: rotate(-90deg);
+  transform-origin: 50% 50%;
+  transition: stroke-dashoffset 1s linear;
 }
 
-
-#qcountdown{
-
+.game-clock-number {
   position: absolute;
-  width: 13%;
-  height: 13%;
-  top: 20.5%;
-  left: 57.25%;
-  font-size: 20px;
-  line-height: 255%;
-  z-index:9;
-  color: white;
-
-}
-
-
-
-#tileclockcontainer {
-  position: absolute;
-  display: none;
-  right: 8%;
-  top: 10%;
-  width: 25%;
-  height: 15%;
-  background-color: transparent;
-  
-  align-items: center;
-  justify-content: flex-end; /* ✅ Zarovnání doprava */
+  inset: 0;
+  display: grid;
+  place-items: center;
+  margin: 0;
+  padding: 0;
+  color: #fff;
+  font-size: clamp(18px, 1.55vw, 24px);
+  font-weight: 700;
+  line-height: 1;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
   z-index: 3;
 }
 
-
-#tileprompt{
-
+/* ---------- Question clock: centred above the question strip ---------- */
+#questionclockcontainer {
   position: absolute;
-  width: 60%;
-  height: 50%;
-  top: 20%;
-  background-color: rgb(39, 34, 34);
-  
-  color: white;
-  font-size: 20px;
-  line-height: 255%;
-  padding-left: 20%;
-
+  left: 50%;
+  top: clamp(92px, 17vh, 175px);
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: max-content;
+  max-width: calc(100vw - 32px);
+  height: auto;
+  z-index: 12;
+  pointer-events: none;
 }
 
-/* ✅ Kruh (SVG) správně zarovnaný */
-#tilecircle {
+#qprompt {
+  position: relative;
+  left: auto;
+  top: auto;
+  width: auto;
+  min-width: clamp(230px, 25vw, 390px);
+  height: auto;
+  min-height: clamp(50px, 5vw, 66px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  margin: 0 calc(var(--game-clock-size) * -0.12) 0 0;
+  padding: 12px calc(var(--game-clock-size) * .27) 12px clamp(18px, 2vw, 30px);
+  border-radius: 12px 0 0 12px;
+  background: var(--game-clock-panel);
+  color: #fff;
+  font-size: clamp(14px, 1.25vw, 20px);
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+  box-shadow: 0 10px 28px rgba(0,0,0,.2);
+  z-index: 1;
+}
+
+#questionclockring {
+  margin-left: 0;
+}
+
+#qcircle,
+#qtimer,
+#qbackground,
+#qcountdown {
+  /* Geometry is owned by the shared classes above. */
+}
+
+/* ---------- Tile-selection clock: keeps its original top-right role ---------- */
+#tileclockcontainer {
   position: absolute;
-  right: 0;
-  top: 50%;
-  transform: translate(50%, -50%);
-  height: 100%;
-  width: 30%;
-  z-index: 9;
+  display: none;
+  right: clamp(18px, 6vw, 110px);
+  top: clamp(72px, 10vh, 118px);
+  width: max-content;
+  max-width: calc(100vw - 32px);
+  height: auto;
+  align-items: center;
+  justify-content: flex-end;
+  z-index: 35;
+  pointer-events: none;
 }
 
-/* ✅ Grafický odpočet (čára v kruhu) */
-#tiletimer {
-  fill: none;
-  stroke: skyblue;
-  stroke-width: 4%;
-  stroke-dasharray: 113%;
-  stroke-dashoffset: 0%;
-  transition: stroke-dashoffset 1s linear;
-  z-index: 10;
-}
-
-
-/* ✅ Černý kruh na pozadí */
-#tilebackground {
-  z-index: 8;
-}
-
-/* ✅ Číslo odpočtu přesně na kruh */
-#tilecountdown {
-  position: absolute;
-  right: 0;
-  top: 50%;
-  transform: translate(50%, -50%);
-  font-size: 20px;
-  color: white;
-  z-index: 11; /* ✅ Aby bylo číslo nad kruhem */
+#tileprompt {
+  position: relative;
+  left: auto;
+  top: auto;
+  width: auto;
+  min-width: clamp(175px, 18vw, 270px);
+  height: auto;
+  min-height: clamp(48px, 4.8vw, 64px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  margin: 0 calc(var(--game-clock-size) * -0.12) 0 0;
+  padding: 12px calc(var(--game-clock-size) * .27) 12px clamp(16px, 1.7vw, 26px);
+  border-radius: 12px 0 0 12px;
+  background: var(--game-clock-panel);
+  color: #fff;
+  font-size: clamp(14px, 1.25vw, 20px);
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
   text-align: center;
+  box-shadow: 0 10px 28px rgba(0,0,0,.2);
+  z-index: 1;
+}
+
+#tilecircle,
+#tiletimer,
+#tilebackground,
+#tilecountdown {
+  /* Geometry is owned by the shared classes above. */
+}
+
+/* Tablet landscape + portrait. Keep the clock readable without letting it
+   collide with viewport edges; the prompt and ring still remain one unit. */
+@media (max-width: 1024px) {
+  :root {
+    --game-clock-size: clamp(76px, 9vw, 96px);
+  }
+
+  #tileclockcontainer {
+    right: clamp(14px, 3.5vw, 38px);
+    top: max(68px, calc(env(safe-area-inset-top) + 52px));
+  }
+
+  #questionclockcontainer {
+    top: clamp(82px, 15vh, 145px);
+  }
+
+  #qprompt {
+    min-width: clamp(220px, 38vw, 340px);
+  }
+
+  #tileprompt {
+    min-width: clamp(165px, 27vw, 235px);
+  }
+}
+
+@media (max-width: 680px) {
+  :root {
+    --game-clock-size: clamp(70px, 18vw, 86px);
+  }
+
+  #questionclockcontainer {
+    top: max(72px, calc(env(safe-area-inset-top) + 56px));
+    max-width: calc(100vw - 20px);
+  }
+
+  #qprompt {
+    min-width: 0;
+    width: min(58vw, 280px);
+    white-space: normal;
+    font-size: clamp(13px, 3.2vw, 16px);
+  }
+
+  #tileclockcontainer {
+    right: max(10px, env(safe-area-inset-right));
+    top: max(62px, calc(env(safe-area-inset-top) + 48px));
+    max-width: calc(100vw - 20px);
+  }
+
+  #tileprompt {
+    min-width: 0;
+    width: min(47vw, 210px);
+    white-space: normal;
+    font-size: clamp(13px, 3.2vw, 16px);
+  }
+}
+
+@media (max-height: 650px) and (orientation: landscape) {
+  :root {
+    --game-clock-size: clamp(66px, 11vh, 82px);
+  }
+
+  #questionclockcontainer {
+    top: clamp(56px, 12vh, 78px);
+  }
+
+  #tileclockcontainer {
+    top: clamp(52px, 9vh, 70px);
+  }
 }
 
 
