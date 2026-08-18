@@ -5037,7 +5037,7 @@ if (regionValues && typeof regionValues === 'object') {
         window.__mapRendererV2Enabled = MAP_RENDERER_V2_ENABLED;
         window.__regionWaveV2Epoch = Number(window.__regionWaveV2Epoch || 0);
         document.documentElement.classList.toggle('vl-map-renderer-v2', MAP_RENDERER_V2_ENABLED);
-        console.log(`🗺️ Map Renderer: ${MAP_RENDERER_V2_ENABLED ? 'V2.2' : 'legacy V24'}`);
+        console.log(`🗺️ Map Renderer: ${MAP_RENDERER_V2_ENABLED ? 'V2.3 canvas-fill' : 'legacy V24'}`);
 
         function regionOwnerMap(regionsState) {
             const owners = new Map();
@@ -5243,7 +5243,7 @@ if (regionValues && typeof regionValues === 'object') {
         }
 
         // ============================================================
-        // VLASTENEC — MAP RENDERER V2.2 (opt-in with ?mapv2=1)
+        // VLASTENEC — MAP RENDERER V2.3 (opt-in with ?mapv2=1)
         //
         // Rendering only. Server/game/selection state is untouched.
         //
@@ -5317,6 +5317,32 @@ if (regionValues && typeof regionValues === 'object') {
             clone.style.filter = 'none';
             clone.style.opacity = '1';
             clone.style.fill = fill;
+            // Border is rendered once by a dedicated top outline clone so it
+            // cannot disappear underneath the moving colour.
+            clone.style.stroke = 'none';
+            clone.style.strokeWidth = '0';
+            clone.setAttribute('aria-hidden', 'true');
+        }
+
+        function styleRegionWaveV2OutlineClone(clone, regionEl) {
+            clone.removeAttribute('id');
+            clone.removeAttribute('mask');
+            clone.removeAttribute('clip-path');
+            clone.classList.remove('region', 'battle-selectable', 'unavailable', 'unclickable');
+            clone.classList.add('region-wave-v2-outline');
+            clone.style.pointerEvents = 'none';
+            clone.style.cursor = 'default';
+            clone.style.filter = 'none';
+            clone.style.opacity = '1';
+            clone.style.fill = 'none';
+            clone.style.fillOpacity = '0';
+            const cs = getComputedStyle(regionEl);
+            clone.style.stroke = cs.stroke || '#000';
+            clone.style.strokeOpacity = cs.strokeOpacity || '1';
+            clone.style.strokeWidth = cs.strokeWidth || '1px';
+            clone.style.strokeLinecap = cs.strokeLinecap || 'butt';
+            clone.style.strokeLinejoin = cs.strokeLinejoin || 'miter';
+            clone.style.strokeMiterlimit = cs.strokeMiterlimit || '4';
             clone.setAttribute('aria-hidden', 'true');
         }
 
@@ -5376,8 +5402,14 @@ if (regionValues && typeof regionValues === 'object') {
             styleRegionWaveV2ColourClone(colourClone, overlayFill);
             colourClone.setAttribute('clip-path', `url(#${clipId})`);
 
+            const outlineClone = regionEl.cloneNode(true);
+            styleRegionWaveV2OutlineClone(outlineClone, regionEl);
+
             instance.appendChild(baseClone);
             instance.appendChild(colourClone);
+            // Always last: the original black border remains intact for the
+            // complete duration of the wave.
+            instance.appendChild(outlineClone);
             layer.appendChild(instance);
 
             const previousVisibility = regionEl.style.visibility || '';
@@ -5472,9 +5504,24 @@ if (regionValues && typeof regionValues === 'object') {
         }
 
         // ------------------------------------------------------------
-        // V2.2 unavailable-state canvas
+        // V2.3 single-canvas region fill renderer
         // ------------------------------------------------------------
+        // Chrome/Android can tile a large SVG compositing surface. The V2.3
+        // renderer keeps SVG paths for geometry, stroke and pointer hit-testing,
+        // but paints every static region fill into ONE compact canvas whose
+        // backing store covers only the actual region bounds (not the oversized
+        // transparent SVG viewport). The backing surface is intentionally capped
+        // below 1k px on its longest side.
         let regionStateV2Raf = 0;
+        const REGION_CANVAS_V2_MAX_BACKING = 960;
+        const REGION_CANVAS_V2_PAD = 12;
+        const regionTextureV2Image = new Image();
+        regionTextureV2Image.decoding = 'async';
+        regionTextureV2Image.src = 'texture4.jpg';
+        regionTextureV2Image.addEventListener('load', () => scheduleRegionStateV2Render(), { once: true });
+        regionTextureV2Image.addEventListener('error', () => {
+            console.warn('[map-v2] texture4.jpg could not be loaded for canvas fill; keeping SVG fill fallback.');
+        }, { once: true });
 
         function ensureRegionStateV2Canvas() {
             let canvas = document.getElementById('region-state-v2-canvas');
@@ -5487,6 +5534,74 @@ if (regionValues && typeof regionValues === 'object') {
             return canvas;
         }
 
+        function regionFillV2Inline(regionEl) {
+            const inlineFill = String(regionEl?.style?.fill || '').trim();
+            if (!inlineFill || inlineFill.includes('url(')) return null;
+            return inlineFill;
+        }
+
+        function regionVisualFilterV2(regionEl) {
+            if (regionEl.classList.contains('unavailable') || regionEl.classList.contains('unclickable')) {
+                return 'brightness(20%)';
+            }
+            const inline = String(regionEl.style.getPropertyValue('filter') || '').trim();
+            return inline && inline !== 'none' ? inline : 'none';
+        }
+
+        function regionCanvasV2Bounds(regions) {
+            let left = Infinity, top = Infinity, right = -Infinity, bottom = -Infinity;
+            regions.forEach(regionEl => {
+                const r = regionEl.getBoundingClientRect();
+                if (!Number.isFinite(r.left) || r.width <= 0 || r.height <= 0) return;
+                left = Math.min(left, r.left);
+                top = Math.min(top, r.top);
+                right = Math.max(right, r.right);
+                bottom = Math.max(bottom, r.bottom);
+            });
+            if (!Number.isFinite(left)) return null;
+            return {
+                left: left - REGION_CANVAS_V2_PAD,
+                top: top - REGION_CANVAS_V2_PAD,
+                right: right + REGION_CANVAS_V2_PAD,
+                bottom: bottom + REGION_CANVAS_V2_PAD,
+                width: (right - left) + REGION_CANVAS_V2_PAD * 2,
+                height: (bottom - top) + REGION_CANVAS_V2_PAD * 2
+            };
+        }
+
+        function setCanvasV2Transform(ctx, ctm, bounds, scale) {
+            ctx.setTransform(
+                scale * ctm.a, scale * ctm.b,
+                scale * ctm.c, scale * ctm.d,
+                scale * (ctm.e - bounds.left),
+                scale * (ctm.f - bounds.top)
+            );
+        }
+
+        function paintNeutralTextureV2(ctx, mapSvg, regionEl, path, bounds, scale) {
+            const regionCtm = regionEl.getScreenCTM?.();
+            const mapCtm = mapSvg.getScreenCTM?.();
+            const vb = mapSvg.viewBox?.baseVal;
+            if (!regionCtm || !mapCtm || !vb || !regionTextureV2Image.complete || !regionTextureV2Image.naturalWidth) return false;
+
+            ctx.save();
+            setCanvasV2Transform(ctx, regionCtm, bounds, scale);
+            ctx.clip(path, 'evenodd');
+
+            // Equivalent to the legacy pattern: one user-space tile the size of
+            // the SVG viewport, with texture4.jpg spanning 200% and shifted -50%.
+            setCanvasV2Transform(ctx, mapCtm, bounds, scale);
+            ctx.drawImage(
+                regionTextureV2Image,
+                vb.x - vb.width * 0.5,
+                vb.y,
+                vb.width * 2,
+                vb.height * 2
+            );
+            ctx.restore();
+            return true;
+        }
+
         function renderRegionStateV2Canvas() {
             regionStateV2Raf = 0;
             if (!MAP_RENDERER_V2_ENABLED) return;
@@ -5494,50 +5609,78 @@ if (regionValues && typeof regionValues === 'object') {
             const canvas = ensureRegionStateV2Canvas();
             if (!mapSvg || !canvas) return;
 
-            const rect = mapSvg.getBoundingClientRect();
-            if (rect.width <= 0 || rect.height <= 0) {
+            const regions = [...document.querySelectorAll('#map .region')];
+            const bounds = regionCanvasV2Bounds(regions);
+            if (!bounds || bounds.width <= 0 || bounds.height <= 0) {
+                canvas.style.display = 'none';
+                return;
+            }
+
+            // Do not replace the legacy fills until the neutral texture is ready.
+            // This prevents a blank flash during initial load.
+            if (!regionTextureV2Image.complete || !regionTextureV2Image.naturalWidth) {
+                document.documentElement.classList.remove('vl-map-v2-canvas-ready');
                 canvas.style.display = 'none';
                 return;
             }
 
             const dpr = Math.max(1, Number(window.devicePixelRatio || 1));
-            const pxW = Math.max(1, Math.round(rect.width * dpr));
-            const pxH = Math.max(1, Math.round(rect.height * dpr));
+            const safeScale = Math.min(
+                dpr,
+                REGION_CANVAS_V2_MAX_BACKING / Math.max(1, bounds.width),
+                REGION_CANVAS_V2_MAX_BACKING / Math.max(1, bounds.height)
+            );
+            const backingScale = Math.max(0.5, safeScale);
+            const pxW = Math.max(1, Math.round(bounds.width * backingScale));
+            const pxH = Math.max(1, Math.round(bounds.height * backingScale));
+
             if (canvas.width !== pxW) canvas.width = pxW;
             if (canvas.height !== pxH) canvas.height = pxH;
             canvas.style.display = 'block';
-            canvas.style.left = `${rect.left + window.scrollX}px`;
-            canvas.style.top = `${rect.top + window.scrollY}px`;
-            canvas.style.width = `${rect.width}px`;
-            canvas.style.height = `${rect.height}px`;
+            canvas.style.left = `${bounds.left + window.scrollX}px`;
+            canvas.style.top = `${bounds.top + window.scrollY}px`;
+            canvas.style.width = `${bounds.width}px`;
+            canvas.style.height = `${bounds.height}px`;
+            canvas.dataset.backingScale = backingScale.toFixed(3);
+            canvas.dataset.backingSize = `${pxW}x${pxH}`;
 
             const ctx = canvas.getContext('2d');
             if (!ctx) return;
             ctx.setTransform(1, 0, 0, 1, 0, 0);
             ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
 
-            document.querySelectorAll('#map .region').forEach(regionEl => {
-                if (!regionEl.classList.contains('unavailable') && !regionEl.classList.contains('unclickable')) return;
+            for (const regionEl of regions) {
                 const d = regionEl.getAttribute('d');
                 const ctm = regionEl.getScreenCTM?.();
-                if (!d || !ctm || typeof Path2D !== 'function') return;
+                if (!d || !ctm || typeof Path2D !== 'function') continue;
+
                 try {
                     const path = new Path2D(d);
+                    const fill = regionFillV2Inline(regionEl);
+                    const computedOpacity = parseFloat(getComputedStyle(regionEl).opacity);
+                    const opacity = Number.isFinite(computedOpacity) ? computedOpacity : 0.7;
+
                     ctx.save();
-                    ctx.setTransform(
-                        dpr * ctm.a, dpr * ctm.b,
-                        dpr * ctm.c, dpr * ctm.d,
-                        dpr * (ctm.e - rect.left),
-                        dpr * (ctm.f - rect.top)
-                    );
-                    ctx.globalAlpha = 0.78;
-                    ctx.fillStyle = '#000';
-                    ctx.fill(path, 'evenodd');
+                    ctx.globalAlpha = opacity;
+                    ctx.filter = regionVisualFilterV2(regionEl);
+
+                    if (fill) {
+                        setCanvasV2Transform(ctx, ctm, bounds, backingScale);
+                        ctx.fillStyle = fill;
+                        ctx.fill(path, 'evenodd');
+                    } else {
+                        paintNeutralTextureV2(ctx, mapSvg, regionEl, path, bounds, backingScale);
+                    }
                     ctx.restore();
                 } catch (err) {
-                    console.debug('[map-v2] canvas state path skipped:', regionEl.id, err?.message || err);
+                    console.debug('[map-v2] canvas fill path skipped:', regionEl.id, err?.message || err);
                 }
-            });
+            }
+
+            // Only after one complete canvas paint do we make SVG fills transparent.
+            document.documentElement.classList.add('vl-map-v2-canvas-ready');
         }
 
         function scheduleRegionStateV2Render() {
@@ -5549,13 +5692,18 @@ if (regionValues && typeof regionValues === 'object') {
             if (!MAP_RENDERER_V2_ENABLED || window.__regionStateV2Observer) return;
             const mapSvg = document.getElementById('map');
             if (!mapSvg) return;
+
             const observer = new MutationObserver(mutations => {
-                if (mutations.some(m => m.type === 'attributes' && m.attributeName === 'class' && m.target?.classList?.contains('region'))) {
+                if (mutations.some(m => {
+                    if (m.type !== 'attributes' || !m.target?.classList?.contains('region')) return false;
+                    return m.attributeName === 'class' || m.attributeName === 'style';
+                })) {
                     scheduleRegionStateV2Render();
                 }
             });
-            observer.observe(mapSvg, { subtree: true, attributes: true, attributeFilter: ['class'] });
+            observer.observe(mapSvg, { subtree: true, attributes: true, attributeFilter: ['class', 'style'] });
             window.__regionStateV2Observer = observer;
+
             window.addEventListener('resize', scheduleRegionStateV2Render, { passive: true });
             window.addEventListener('orientationchange', scheduleRegionStateV2Render, { passive: true });
             document.addEventListener('fullscreenchange', () => {
@@ -5564,6 +5712,10 @@ if (regionValues && typeof regionValues === 'object') {
                 setTimeout(scheduleRegionStateV2Render, 250);
             }, { passive: true });
             window.visualViewport?.addEventListener('resize', scheduleRegionStateV2Render, { passive: true });
+            if (typeof ResizeObserver === 'function') {
+                window.__regionStateV2ResizeObserver = new ResizeObserver(scheduleRegionStateV2Render);
+                window.__regionStateV2ResizeObserver.observe(mapSvg);
+            }
             scheduleRegionStateV2Render();
         }
 

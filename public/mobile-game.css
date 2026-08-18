@@ -1147,20 +1147,34 @@ body.vl-tablet-device.is-game-started #vl_tablet_fullscreen_btn:active {
 
 
 /* ============================================================
-   VLASTENEC — MAP RENDERER V2.2 TEST LAYERS V34
-   Used only when game_online.html is opened with ?mapv2=1.
+   VLASTENEC — MAP RENDERER V2.3 / V35
+   Static region fills are painted into one compact Canvas below the SVG.
+   SVG remains responsible for black outlines, hit-testing and wave geometry.
    ============================================================ */
 #region-wave-v2-layer,
 #region-wave-v2-layer .region-wave-v2-instance,
 #region-wave-v2-layer .region-wave-v2-base,
-#region-wave-v2-layer .region-wave-v2-colour {
+#region-wave-v2-layer .region-wave-v2-colour,
+#region-wave-v2-layer .region-wave-v2-outline {
   pointer-events: none !important;
 }
 
-/* Gameplay classes remain authoritative, but V2.2 paints their dark visual
-   state on one Canvas layer rather than filtering complex SVG paths. */
-html.vl-map-renderer-v2 #map .region.unavailable,
-html.vl-map-renderer-v2 #map .region.unclickable {
+/* While canvas is not ready, the legacy SVG fill remains visible as a safe
+   fallback. Once ready, only the fill becomes effectively transparent; the
+   original region stroke and pointer geometry stay in the SVG. */
+html.vl-map-renderer-v2.vl-map-v2-canvas-ready #map {
+  z-index: 3 !important;
+  filter: none !important;
+}
+
+html.vl-map-renderer-v2.vl-map-v2-canvas-ready #map .region {
+  fill: rgba(0, 0, 0, 0.001) !important;
+}
+
+/* Gameplay classes remain authoritative. Their visual brightness is reproduced
+   by the canvas renderer rather than by an SVG filter over a complex path. */
+html.vl-map-renderer-v2.vl-map-v2-canvas-ready #map .region.unavailable,
+html.vl-map-renderer-v2.vl-map-v2-canvas-ready #map .region.unclickable {
   filter: none !important;
 }
 
@@ -1171,5 +1185,7 @@ html.vl-map-renderer-v2 #map .region.unclickable {
   padding: 0;
   border: 0;
   pointer-events: none !important;
-  z-index: 3;
+  z-index: 2;
+  /* Same map silhouette shadow, now attached to the compact fill surface. */
+  filter: drop-shadow(5px 5px 4px #000000);
 }
