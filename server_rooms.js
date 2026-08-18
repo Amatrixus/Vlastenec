@@ -1,3 +1,4 @@
+console.log('🧪 VLASTENEC BUILD: 2026-08-18-refresh-room-lifecycle-v1');
 console.log('🧪 VLASTENEC BUILD: 2026-08-18-start-sequence-sync-v1');
 console.log('🧪 VLASTENEC BUILD: 2026-08-18-base-score-on-settle-v1');
 console.log('🧪 VLASTENEC BUILD: 2026-08-18-authoritative-refresh-v1');
@@ -3615,6 +3616,14 @@ io.on('connection', socket => {
     if (!room) return socket.emit("resume:error", { message: "room not found" });
     if (expectedMode && room.mode !== expectedMode) return socket.emit("resume:error", { message: "room mode mismatch" });
 
+    // Obranná kompatibilita se starší verzí: pokud byla rozehraná non-league room
+    // chybně označena jako zavřená jen kvůli transientnímu disconnectu, reconnect ji
+    // smí znovu otevřít. V nové verzi se tento stav už při F5 vůbec nevytváří.
+    if (room.__closed === true && room.hasStarted && room.mode !== 'liga') {
+      room.__closed = false;
+      console.warn(`🛟 ${roomId}: resume zrušil stale __closed u rozehrané hry.`);
+    }
+
     const entry = Object.entries(room.playerTokens).find(([seat, t]) => t === token);
     if (!entry) return socket.emit("resume:error", { message: "player not recognized" });
 
@@ -3636,6 +3645,7 @@ io.on('connection', socket => {
 
     // když byl dočasně bot → vrať člověka k volantu
     room.seatControllers[seat] = "human";
+    console.log(`♻️ ${roomId}: Player${seat} resumed (phase=${room.phase}, round=${room.round || 0}, activeTurn=${room.activeTurn?.kind || 'none'}, activeQuestion=${room.activeQuestion?.kind || 'none'}).`);
 
     // zruš grace timeout (viz níž)
     const prevTO = room.reconnectHolds.get(seat);
@@ -4004,10 +4014,19 @@ socket.on("disconnect", async () => {
   io.to(roomId).emit("updatePlayers", { allNames, displayNames, seatControllers: room.seatControllers });
   io.to(roomId).emit("updateScores", { scores: room.scores });
 
-  // když je room opravdu prázdná (všechna sedadla bez id a živých socketů), pak uklidit
-  if (room.players.every(p => !p || p.id == null)) {
-    markRoomClosed?.(roomId);
-    // delete rooms[roomId]; // mazat jen když fakt chceš
+  // DŮLEŽITÉ PRO REFRESH/RECONNECT:
+  // U rozehrané hry nesmí krátké odpojení posledního lidského socketu označit
+  // místnost jako __closed. V režimu s boty jsou oba boti přirozeně bez socket.id,
+  // takže při obyčejném F5 bývají na zlomek sekundy všechny tři id == null.
+  // Starší kód v ten okamžik zavřel room a běžící async scénář se při nejbližším
+  // isRoomAlive() guardu ukončil. Místnost pak po reconnectu sice existovala, ale
+  // už neměl kdo pokračovat otázkou / dalším kolem.
+  //
+  // Rozehranou non-league hru proto necháváme živou. Sedadlo už výše převzal bot
+  // a po resume se vrátí člověku. Úklid pre-game místností se řeší v samostatných
+  // větvích výše; ligový reconnect má vlastní 90s logiku.
+  if (room.hasStarted && room.mode !== 'liga') {
+    console.log(`🛟 ${roomId}: dočasně bez lidského socketu; room zůstává živá (phase=${room.phase}, round=${room.round || 0}).`);
   }
 });
 
