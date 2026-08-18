@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>VLASTENEC</title>
   <link rel="stylesheet" href="mainstyle.css?v=numeric-keypad-v2">
-  <link rel="stylesheet" href="mobile-game.css?v=tablet-map-fit-v14">
+  <link rel="stylesheet" href="mobile-game.css?v=tablet-svg-render-v16">
   <script src="auth-client.js"></script>
   <script src="profile-store.js"></script>
   <style id="vl-tablet-lobby-v4-inline">
@@ -2882,6 +2882,26 @@ if (regionValues && typeof regionValues === 'object') {
             
             
              
+                <!-- Tablet renderer stabilization: visually equivalent replacements for
+                     CSS brightness() on individual SVG paths. Explicit filter bounds avoid
+                     path/tile clipping seen on some tablet renderers. -->
+                <filter id="vlTabletBrightness20" x="-12%" y="-12%" width="124%" height="124%"
+                        filterUnits="objectBoundingBox" color-interpolation-filters="sRGB">
+                  <feColorMatrix type="matrix" values="
+                    0.2 0   0   0 0
+                    0   0.2 0   0 0
+                    0   0   0.2 0 0
+                    0   0   0   1 0" />
+                </filter>
+                <filter id="vlTabletBrightness120" x="-12%" y="-12%" width="124%" height="124%"
+                        filterUnits="objectBoundingBox" color-interpolation-filters="sRGB">
+                  <feColorMatrix type="matrix" values="
+                    1.2 0   0   0 0
+                    0   1.2 0   0 0
+                    0   0   1.2 0 0
+                    0   0   0   1 0" />
+                </filter>
+
                 <pattern id="texture" patternUnits="userSpaceOnUse" width="100%" height="100%">
                   <image href="texture4.jpg" x="-50%" y="" width="200% " height="200%" />
                 </pattern>

@@ -1109,7 +1109,7 @@ body.vl-tablet-device.is-game-started #vl_tablet_fullscreen_btn:active {
     height: 78dvh !important;
     max-width: 90vw !important;
     max-height: 78dvh !important;
-    overflow: hidden !important;
+    overflow: visible !important;
   }
 
   /* Remove the blue WebKit/Chromium touch rectangle and focus outline without
@@ -1130,5 +1130,39 @@ body.vl-tablet-device.is-game-started #vl_tablet_fullscreen_btn:active {
   body.vl-tablet-device.is-game-started #map .region:active {
     outline: none !important;
     box-shadow: none !important;
+  }
+}
+
+
+/* ============================================================
+   VLASTENEC — TABLET SVG RENDER STABILITY V16
+   Rendering-only workaround. No region state, colour, opacity, timing,
+   selection or wave logic changes.
+   ============================================================ */
+@media (min-width: 700px) and (max-width: 1400px) {
+  /* CSS brightness() on individual paths of the large scaled map can be
+     raster-clipped by tablet renderers. These shared SVG filters reproduce
+     the same 20%/120% RGB multiplication with an explicit filter region. */
+  body.vl-tablet-device.is-game-started #map .region.unavailable,
+  body.vl-tablet-device.is-game-started #map .region.unclickable {
+    filter: url(#vlTabletBrightness20) !important;
+  }
+
+  /* Existing JS uses inline brightness(120%) for the exact same hover effect.
+     Keep the appearance but route it through the stable SVG filter on tablet. */
+  body.vl-tablet-device.is-game-started #map .region[style*="brightness(120%)"] {
+    filter: url(#vlTabletBrightness120) !important;
+  }
+
+  /* brightness(100%) is mathematically a no-op. Avoid allocating a filtered
+     SVG surface for it on tablet while preserving the exact rendered image. */
+  body.vl-tablet-device.is-game-started #map .region[style*="brightness(100%)"]:not(.unavailable):not(.unclickable) {
+    filter: none !important;
+  }
+
+  /* Dynamic wave clones are already filter:none inline; keep that explicit
+     in the tablet layer so the animated clipPath/mask never inherits a path filter. */
+  body.vl-tablet-device.is-game-started #map .region-wave-overlay {
+    filter: none !important;
   }
 }
