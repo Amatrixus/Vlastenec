@@ -1100,25 +1100,35 @@ body.vl-tablet-device.is-game-started #vl_tablet_fullscreen_btn:active {
    is made smaller to give the SVG more breathing room in normal and fullscreen.
    ============================================================ */
 @media (min-width: 700px) and (max-width: 1400px) {
-  /* Normal tablet view: deliberately smaller than V15 (90vw × 78dvh). */
+  /* V30: the SVG viewport itself now matches the map viewBox ratio.
+     In V24/V29 the visible map was height-limited by preserveAspectRatio="meet",
+     but the SVG viewport was much wider than the actual map (1120×455 CSS px on
+     the tested tablet). That made Chromium rasterize/composite a large empty
+     letterboxed surface around the map. Keep the SAME visible map scale as V24,
+     but shrink the SVG viewport to the actual 3508:2480.4 aspect ratio. */
   body.vl-tablet-device.is-game-started #map {
     top: 8dvh !important;
-    left: 8vw !important;
-    width: 84vw !important;
+    left: 0 !important;
+    right: 0 !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    width: 101.829dvh !important; /* 72dvh × (3508 / 2480.4) */
     height: 72dvh !important;
     max-width: 84vw !important;
     max-height: 72dvh !important;
     overflow: hidden !important;
   }
 
-  /* Fullscreen still gets extra room around the SVG instead of expanding it
-     to the edges. It may grow slightly versus the normal view, but remains
-     clearly smaller than the old tablet map. */
+  /* Same rule in fullscreen: visible map height stays at V24's 74dvh, while
+     the backing SVG viewport no longer contains the large horizontal padding. */
   html:fullscreen body.vl-tablet-device.is-game-started #map,
   html:-webkit-full-screen body.vl-tablet-device.is-game-started #map {
     top: 7dvh !important;
-    left: 7vw !important;
-    width: 86vw !important;
+    left: 0 !important;
+    right: 0 !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    width: 104.657dvh !important; /* 74dvh × (3508 / 2480.4) */
     height: 74dvh !important;
     max-width: 86vw !important;
     max-height: 74dvh !important;

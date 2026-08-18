@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>VLASTENEC</title>
   <link rel="stylesheet" href="mainstyle.css?v=numeric-keypad-v2">
-  <link rel="stylesheet" href="mobile-game.css?v=tablet-batched-map-paint-v28">
+  <link rel="stylesheet" href="mobile-game.css?v=tablet-aspect-ratio-v30">
   <script src="auth-client.js"></script>
   <script src="profile-store.js"></script>
   <style id="vl-tablet-lobby-v4-inline">
@@ -11054,6 +11054,20 @@ function showNumericResultsForThree(correctAnswer, answers, uiToken, uiStage = "
 
       const state = { fps: 'měřím…' };
 
+      function getGpuRenderer() {
+        try {
+          const canvas = document.createElement('canvas');
+          const gl = canvas.getContext('webgl2') || canvas.getContext('webgl');
+          if (!gl) return 'WebGL unavailable';
+          const ext = gl.getExtension('WEBGL_debug_renderer_info');
+          if (ext) return gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) || 'unknown';
+          return gl.getParameter(gl.RENDERER) || 'unknown';
+        } catch (_) {
+          return 'unavailable';
+        }
+      }
+      const gpuRenderer = getGpuRenderer();
+
       function num(v, digits = 1) {
         return Number.isFinite(v) ? Number(v).toFixed(digits) : 'n/a';
       }
@@ -11069,6 +11083,7 @@ function showNumericResultsForThree(correctAnswer, answers, uiToken, uiStage = "
           'VLASTENEC RENDER DEBUG',
           `UA: ${navigator.userAgent}`,
           `platform: ${navigator.platform || 'n/a'}`,
+          `GPU: ${gpuRenderer}`,
           `DPR: ${dpr}`,
           `screen: ${screen.width}×${screen.height} CSS px`,
           `inner: ${innerWidth}×${innerHeight}`,
