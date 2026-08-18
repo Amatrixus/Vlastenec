@@ -956,3 +956,71 @@
   }
 }
 
+
+/* ============================================================
+   VLASTENEC — MOBILE GAME SAFE V9 POLISH
+   Keypad submit, duel-name height and tower strip visibility.
+   ============================================================ */
+@media (orientation: landscape) and (max-height: 600px) {
+  /* The old standalone submit remains only as an invisible JS bridge. */
+  body.vl-phone-game.is-game-started #numsubmit2,
+  body.vl-phone-game.is-game-started #numsubmit3 {
+    display: none !important;
+  }
+
+  /* More room for the written value now that submit moved into the keypad. */
+  body.vl-phone-game.is-game-started #numinput2,
+  body.vl-phone-game.is-game-started #numinput3 {
+    top: 53% !important;
+    left: 22% !important;
+    width: 47% !important;
+    height: 18% !important;
+  }
+
+  body.vl-phone-game.is-game-started .numeric-keypad {
+    top: 42% !important;
+    right: 1.5% !important;
+    width: 21.5% !important;
+    height: 56% !important;
+    gap: 3px !important;
+  }
+
+  body.vl-phone-game.is-game-started .numeric-keypad .numeric-keypad-submit {
+    color: #fff !important;
+    background: linear-gradient(180deg, #42b95f 0%, #23873d 100%) !important;
+    border-color: rgba(173,255,194,.48) !important;
+    font-size: clamp(.84rem, 2vw, 1.02rem) !important;
+  }
+
+  /* Duel cards now reach exactly to the top edge of the black question bar. */
+  body.vl-phone-game.is-game-started #qplayers {
+    height: 16% !important;
+  }
+
+  body.vl-phone-game.is-game-started #qplayerone,
+  body.vl-phone-game.is-game-started #qplayertwo {
+    top: 0 !important;
+    height: 100% !important;
+  }
+
+  /* Tower destruction must retain the dark answer/question strip on phone.
+     Force its paint properties as well as display so no earlier mobile rule
+     or transition can make it transparent/invisible. */
+  body.vl-phone-game.is-game-started #question.tower-destroying #qstrip {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    background-color: rgb(39, 34, 34) !important;
+  }
+
+  body.vl-phone-game.is-game-started #question.tower-destroying #choice_question {
+    display: block !important;
+  }
+
+  body.vl-phone-game.is-game-started #question.tower-destroying #qtext,
+  body.vl-phone-game.is-game-started #question.tower-destroying #optionrow1,
+  body.vl-phone-game.is-game-started #question.tower-destroying #optionrow2,
+  body.vl-phone-game.is-game-started #question.tower-destroying #abort {
+    display: none !important;
+  }
+}

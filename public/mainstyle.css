@@ -5292,3 +5292,48 @@ body.is-game-started #lobby_container {
   font-size: clamp(1rem, 1.55vw, 1.35rem);
 }
 
+
+/* ============================================================
+   VLASTENEC — NUMERIC KEYPAD V2 (2026-08-18)
+   Compact shared layout. Submit lives inside the keypad as ✓.
+   ============================================================ */
+.numeric-entry-submit-bridge {
+  display: none !important;
+}
+
+#numinput2,
+#numinput3 {
+  top: 62% !important;
+  left: 29% !important;
+  width: 31% !important;
+  height: 15% !important;
+}
+
+.numeric-keypad {
+  top: 51% !important;
+  right: 2.5% !important;
+  width: 15% !important;
+  height: 45% !important;
+  gap: clamp(3px, .34vw, 6px) !important;
+}
+
+.numeric-keypad button {
+  font-size: clamp(.82rem, 1.15vw, 1.08rem) !important;
+  border-radius: 6px !important;
+}
+
+.numeric-keypad .numeric-keypad-action {
+  font-size: clamp(.9rem, 1.28vw, 1.18rem) !important;
+}
+
+.numeric-keypad .numeric-keypad-submit {
+  color: #fff !important;
+  background: linear-gradient(180deg, #42b95f 0%, #23873d 100%) !important;
+  border-color: rgba(173,255,194,.45) !important;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.08), 0 0 12px rgba(54,190,89,.15);
+  font-size: clamp(1rem, 1.4vw, 1.3rem) !important;
+}
+
+.numeric-keypad .numeric-keypad-submit:hover {
+  filter: brightness(1.12);
+}

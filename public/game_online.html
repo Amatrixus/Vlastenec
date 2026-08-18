@@ -4,8 +4,8 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>VLASTENEC</title>
-  <link rel="stylesheet" href="mainstyle.css?v=numeric-keypad-v1">
-  <link rel="stylesheet" href="mobile-game.css?v=mobile-game-safe-v8">
+  <link rel="stylesheet" href="mainstyle.css?v=numeric-keypad-v2">
+  <link rel="stylesheet" href="mobile-game.css?v=mobile-game-safe-v9">
   <script src="auth-client.js"></script>
   <script src="profile-store.js"></script>
   <style id="vl-tablet-lobby-v4-inline">
@@ -2247,7 +2247,7 @@ if (regionValues && typeof regionValues === 'object') {
 
 
                                         <input id="numinput2" class="numeric-entry-input" type="text" inputmode="none" autocomplete="off" spellcheck="false" aria-label="Číselná odpověď">
-                                        <input id="numsubmit2" class="numeric-entry-submit" type="submit" value="Odeslat odpověď">
+                                        <button id="numsubmit2" class="numeric-entry-submit-bridge" type="button" hidden aria-hidden="true" tabindex="-1"></button>
 
                                         <div class="numeric-keypad" id="numkeypad2" data-target="numinput2" aria-label="Číselník odpovědi">
                                           <button type="button" data-num-key="1">1</button>
@@ -2261,7 +2261,7 @@ if (regionValues && typeof regionValues === 'object') {
                                           <button type="button" data-num-key="9">9</button>
                                           <button type="button" class="numeric-keypad-action" data-num-action="backspace" aria-label="Smazat poslední číslici">←</button>
                                           <button type="button" data-num-key="0">0</button>
-                                          <button type="button" class="numeric-keypad-action" data-num-action="clear" aria-label="Smazat celou odpověď">×</button>
+                                          <button type="button" class="numeric-keypad-submit" data-num-action="submit" aria-label="Odeslat odpověď">✓</button>
                                         </div>
 
                                         
@@ -2303,7 +2303,7 @@ if (regionValues && typeof regionValues === 'object') {
 
 
                                       <input id="numinput3" class="numeric-entry-input" type="text" inputmode="none" autocomplete="off" spellcheck="false" aria-label="Číselná odpověď">
-                                      <input id="numsubmit3" class="numeric-entry-submit" type="submit" value="Odeslat odpověď">
+                                      <button id="numsubmit3" class="numeric-entry-submit-bridge" type="button" hidden aria-hidden="true" tabindex="-1"></button>
 
                                       <div class="numeric-keypad" id="numkeypad3" data-target="numinput3" aria-label="Číselník odpovědi">
                                         <button type="button" data-num-key="1">1</button>
@@ -2317,7 +2317,7 @@ if (regionValues && typeof regionValues === 'object') {
                                         <button type="button" data-num-key="9">9</button>
                                         <button type="button" class="numeric-keypad-action" data-num-action="backspace" aria-label="Smazat poslední číslici">←</button>
                                         <button type="button" data-num-key="0">0</button>
-                                        <button type="button" class="numeric-keypad-action" data-num-action="clear" aria-label="Smazat celou odpověď">×</button>
+                                        <button type="button" class="numeric-keypad-submit" data-num-action="submit" aria-label="Odeslat odpověď">✓</button>
                                       </div>
 
                                       
@@ -9848,6 +9848,10 @@ function initNumericKeypads() {
                 input.value = String(input.value || "").slice(0, -1);
             } else if (action === "clear") {
                 input.value = "";
+            } else if (action === "submit") {
+                const suffix = String(keypad.dataset.target || "").replace(/^numinput/, "");
+                document.getElementById(`numsubmit${suffix}`)?.click();
+                return;
             }
 
             input.dispatchEvent(new Event("input", { bubbles: true }));
