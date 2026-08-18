@@ -758,7 +758,7 @@
 }
 
 /* ============================================================
-   VLASTENEC — MOBILE GAME SAFE V6 POLISH (2026-08-18)
+   VLASTENEC — MOBILE GAME SAFE V7 POLISH (2026-08-18)
    Presentation-only mobile gameplay fixes.
    No lobby, socket, selection or ownership rules are changed here.
    ============================================================ */
@@ -798,8 +798,9 @@
 
   body.vl-phone-game.is-game-started #playersticks .bundle {
     /* Flex odstraní whitespace mezi inline-block kolíky. Prostřední kolík je tak
-       matematicky ve středu bundle/round sloupce. Malý posun vlevo kompenzuje
-       optický posun doprava způsobený skew(-15deg,-15deg). */
+       matematicky ve středu bundle/round sloupce. Výraznější posun vlevo kompenzuje
+       optický posun doprava způsobený skew(-15deg,-15deg), aby prostřední
+       kolík vizuálně seděl ve středu bílé round čárky. */
     display: flex !important;
     align-items: stretch !important;
     justify-content: center !important;
@@ -809,7 +810,7 @@
     margin: 0 !important;
     justify-self: center !important;
     text-align: center !important;
-    transform: translateX(-2px) !important;
+    transform: translateX(-4px) !important;
   }
 
   body.vl-phone-game.is-game-started #playersticks .bundle .stick {
