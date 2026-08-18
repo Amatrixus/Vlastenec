@@ -2,7 +2,7 @@
    VLASTENEC — MOBILE GAME SAFE V5 (2026-08-18)
    Isolated compact-touch gameplay layer for phones and tablets.
    IMPORTANT: every gameplay rule is gated by BOTH:
-     body:is(.vl-phone-game, .vl-tablet-game).is-game-started
+     body.vl-phone-game.is-game-started
    so this file cannot restyle or interfere with the lobby.
    ============================================================ */
 
@@ -14,7 +14,7 @@
 /* Portrait is intentionally blocked only AFTER the match has started.
    Lobby remains untouched and may be used normally in portrait. */
 @media (orientation: portrait) {
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #vl_mobile_rotate_gate {
+  body.vl-phone-game.is-game-started #vl_mobile_rotate_gate {
     position: fixed;
     inset: 0;
     z-index: 30000;
@@ -33,7 +33,7 @@
     font-family: "Segoe UI", system-ui, sans-serif;
   }
 
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #vl_mobile_rotate_gate .vl-rotate-icon {
+  body.vl-phone-game.is-game-started #vl_mobile_rotate_gate .vl-rotate-icon {
     width: 62px;
     height: 62px;
     display: grid;
@@ -46,12 +46,12 @@
     line-height: 1;
   }
 
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #vl_mobile_rotate_gate strong {
+  body.vl-phone-game.is-game-started #vl_mobile_rotate_gate strong {
     font-size: 1.2rem;
     font-weight: 700;
   }
 
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #vl_mobile_rotate_gate span {
+  body.vl-phone-game.is-game-started #vl_mobile_rotate_gate span {
     max-width: 300px;
     color: rgba(255,255,255,.62);
     font-size: .82rem;
@@ -59,11 +59,11 @@
   }
 }
 
-/* Phone landscape gameplay. Tablets are intentionally excluded by the
-   JS-applied .vl-phone-game class, so the known-good tablet layout remains. */
+/* Phone landscape gameplay. Tablets are intentionally excluded from the
+   JS-applied .vl-phone-game class and keep the desktop gameplay layout. */
 @media (orientation: landscape) and (max-height: 1100px) {
-  html:has(body:is(.vl-phone-game, .vl-tablet-game).is-game-started),
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started {
+  html:has(body.vl-phone-game.is-game-started),
+  body.vl-phone-game.is-game-started {
     width: 100%;
     height: 100%;
     min-height: 100dvh;
@@ -75,13 +75,13 @@
     text-size-adjust: 100%;
   }
 
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started {
+  body.vl-phone-game.is-game-started {
     touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
   }
 
   /* -------------------- Map: give it the screen -------------------- */
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #map {
+  body.vl-phone-game.is-game-started #map {
     top: 1.5dvh !important;
     left: 4vw !important;
     width: 92vw !important;
@@ -90,13 +90,13 @@
     max-height: none !important;
   }
 
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started .region-value {
+  body.vl-phone-game.is-game-started .region-value {
     padding: 1px 3px;
     font-size: clamp(.66rem, 1.65vw, .82rem) !important;
     border-radius: 3px;
   }
 
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started .pin-marker {
+  body.vl-phone-game.is-game-started .pin-marker {
     width: clamp(18px, 2.8vw, 25px) !important;
     /* Presentation only: never create/move/merge claim pins here. Keep any pin
        produced by the original game renderer above the resized mobile map. */
@@ -106,7 +106,7 @@
     pointer-events: none !important;
   }
 
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started .player-name {
+  body.vl-phone-game.is-game-started .player-name {
     padding: 2px 5px;
     border-radius: 5px;
     border-width: 1px;
@@ -116,7 +116,7 @@
   /* -------------------- Phase HUD: keep the desktop position --------------------
      Desktop intentionally reserves the bottom-right corner for phase/round/order.
      On phones we keep that exact composition and only make its typography denser. */
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #gameprogress {
+  body.vl-phone-game.is-game-started #gameprogress {
     position: fixed !important;
     top: auto !important;
     right: 0 !important;
@@ -133,45 +133,45 @@
     -webkit-backdrop-filter: none;
   }
 
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #gamephase {
+  body.vl-phone-game.is-game-started #gamephase {
     font-size: clamp(.56rem, 1.35vw, .72rem) !important;
     line-height: 1.05 !important;
     white-space: nowrap;
   }
 
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #gamerounds {
+  body.vl-phone-game.is-game-started #gamerounds {
     font-size: clamp(.52rem, 1.15vw, .66rem) !important;
   }
 
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #playersticks {
+  body.vl-phone-game.is-game-started #playersticks {
     font-size: clamp(.48rem, 1.05vw, .60rem) !important;
   }
 
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started .round {
+  body.vl-phone-game.is-game-started .round {
     width: 12% !important;
     height: 30% !important;
     margin-right: 2% !important;
   }
 
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started .bundle {
+  body.vl-phone-game.is-game-started .bundle {
     width: 12% !important;
     margin-right: 2% !important;
     font-size: .48rem !important;
   }
 
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started .stick {
+  body.vl-phone-game.is-game-started .stick {
     width: 6% !important;
   }
 
   /* -------------------- Player score cards --------------------
      Keep the rightmost 28% free for the desktop-positioned phase HUD. */
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started {
+  body.vl-phone-game.is-game-started {
     --vl-mobile-score-radius: 9px;
   }
 
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #myscore,
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #player2score,
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #player3score {
+  body.vl-phone-game.is-game-started #myscore,
+  body.vl-phone-game.is-game-started #player2score,
+  body.vl-phone-game.is-game-started #player3score {
     position: fixed !important;
     bottom: 0 !important;
     box-sizing: border-box;
@@ -180,7 +180,7 @@
     overflow: hidden;
   }
 
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #myscore {
+  body.vl-phone-game.is-game-started #myscore {
     left: 2vw !important;
     width: 24vw !important;
     height: 14dvh !important;
@@ -188,7 +188,7 @@
     max-height: 60px;
   }
 
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #player2score {
+  body.vl-phone-game.is-game-started #player2score {
     left: 27vw !important;
     width: 21vw !important;
     height: 13dvh !important;
@@ -196,7 +196,7 @@
     max-height: 57px;
   }
 
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #player3score {
+  body.vl-phone-game.is-game-started #player3score {
     left: 49vw !important;
     width: 21vw !important;
     height: 13dvh !important;
@@ -204,9 +204,9 @@
     max-height: 57px;
   }
 
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #myscorename,
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #player2scorename,
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #player3scorename {
+  body.vl-phone-game.is-game-started #myscorename,
+  body.vl-phone-game.is-game-started #player2scorename,
+  body.vl-phone-game.is-game-started #player3scorename {
     height: 46% !important;
     display: flex;
     align-items: center;
@@ -222,9 +222,9 @@
     border-radius: var(--vl-mobile-score-radius) var(--vl-mobile-score-radius) 0 0 !important;
   }
 
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #myscorenumber,
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #player2scorenumber,
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #player3scorenumber {
+  body.vl-phone-game.is-game-started #myscorenumber,
+  body.vl-phone-game.is-game-started #player2scorenumber,
+  body.vl-phone-game.is-game-started #player3scorenumber {
     height: 54% !important;
     display: flex;
     align-items: center;
@@ -234,7 +234,7 @@
   }
 
   /* -------------------- Chat: collapsed until requested -------------------- */
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #game_chat_toggle {
+  body.vl-phone-game.is-game-started #game_chat_toggle {
     position: fixed !important;
     display: grid !important;
     place-items: center;
@@ -251,7 +251,7 @@
     -webkit-backdrop-filter: blur(8px);
   }
 
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #game_chat_drawer {
+  body.vl-phone-game.is-game-started #game_chat_drawer {
     position: fixed !important;
     display: grid !important;
     top: max(8px, env(safe-area-inset-top)) !important;
@@ -278,30 +278,30 @@
     z-index: 146 !important;
   }
 
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #game_chat_drawer.open {
+  body.vl-phone-game.is-game-started #game_chat_drawer.open {
     transform: translateX(0) !important;
     opacity: 1 !important;
     pointer-events: auto !important;
   }
 
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #game_chat_drawer .game-chat-head {
+  body.vl-phone-game.is-game-started #game_chat_drawer .game-chat-head {
     display: flex !important;
     grid-row: 1;
     align-items: center;
     min-height: 0;
   }
 
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #game_chat_drawer .game-chat-head strong {
+  body.vl-phone-game.is-game-started #game_chat_drawer .game-chat-head strong {
     font-size: .72rem !important;
   }
 
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #game_chat_close {
+  body.vl-phone-game.is-game-started #game_chat_close {
     display: block !important;
     font-size: 1.25rem !important;
     line-height: 1 !important;
   }
 
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #game_chat_drawer .modern-chat-messages {
+  body.vl-phone-game.is-game-started #game_chat_drawer .modern-chat-messages {
     grid-row: 2 !important;
     min-height: 0 !important;
     padding: 3px 5px !important;
@@ -309,40 +309,40 @@
     overflow-y: auto !important;
   }
 
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #game_chat_drawer .modern-chat-compose {
+  body.vl-phone-game.is-game-started #game_chat_drawer .modern-chat-compose {
     grid-row: 3 !important;
     display: grid !important;
     grid-template-columns: minmax(0,1fr) 42px !important;
     gap: 5px !important;
   }
 
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #game_chat_drawer .modern-chat-compose input,
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #game_chat_drawer .modern-chat-compose button {
+  body.vl-phone-game.is-game-started #game_chat_drawer .modern-chat-compose input,
+  body.vl-phone-game.is-game-started #game_chat_drawer .modern-chat-compose button {
     height: 36px !important;
   }
 
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #game_chat_drawer .modern-chat-compose input {
+  body.vl-phone-game.is-game-started #game_chat_drawer .modern-chat-compose input {
     padding: 0 8px !important;
     font-size: 16px !important; /* prevents browser zoom on focus */
   }
 
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #game_chat_drawer .modern-chat-compose button {
+  body.vl-phone-game.is-game-started #game_chat_drawer .modern-chat-compose button {
     width: 42px !important;
     font-size: .9rem !important;
   }
 
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #game_chat_drawer .modern-chat-line {
+  body.vl-phone-game.is-game-started #game_chat_drawer .modern-chat-line {
     padding: 2px 1px !important;
   }
 
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #game_chat_drawer .modern-chat-meta strong,
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #game_chat_drawer .modern-chat-text {
+  body.vl-phone-game.is-game-started #game_chat_drawer .modern-chat-meta strong,
+  body.vl-phone-game.is-game-started #game_chat_drawer .modern-chat-text {
     font-size: .6rem !important;
     line-height: 1.2 !important;
   }
 
   /* -------------------- Top-right controls -------------------- */
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #leave {
+  body.vl-phone-game.is-game-started #leave {
     position: fixed !important;
     top: max(8px, env(safe-area-inset-top)) !important;
     right: max(8px, env(safe-area-inset-right)) !important;
@@ -351,11 +351,11 @@
     z-index: 150 !important;
   }
 
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #soundtoggle {
+  body.vl-phone-game.is-game-started #soundtoggle {
     z-index: 150 !important;
   }
 
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #vl_mobile_fullscreen_btn {
+  body.vl-phone-game.is-game-started #vl_mobile_fullscreen_btn {
     position: fixed;
     display: grid;
     place-items: center;
@@ -376,17 +376,17 @@
     -webkit-backdrop-filter: blur(5px);
   }
 
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #vl_mobile_fullscreen_btn:active {
+  body.vl-phone-game.is-game-started #vl_mobile_fullscreen_btn:active {
     transform: scale(.94);
   }
 
   /* -------------------- Tile-selection timer -------------------- */
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started {
+  body.vl-phone-game.is-game-started {
     --tile-clock-size: 52px;
     --question-clock-size: 56px;
   }
 
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #tileclockcontainer {
+  body.vl-phone-game.is-game-started #tileclockcontainer {
     top: 3dvh !important;
     right: 15vw !important;
     width: 32vw !important;
@@ -394,7 +394,7 @@
     min-height: 58px;
   }
 
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #tileprompt {
+  body.vl-phone-game.is-game-started #tileprompt {
     top: 22% !important;
     width: 64% !important;
     height: 50% !important;
@@ -407,7 +407,7 @@
   }
 
   /* -------------------- Question timer + question stage -------------------- */
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #qprompt {
+  body.vl-phone-game.is-game-started #qprompt {
     left: 34% !important;
     top: 2.5% !important;
     width: 32% !important;
@@ -421,28 +421,28 @@
     line-height: 1.1 !important;
   }
 
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #questionclockring {
+  body.vl-phone-game.is-game-started #questionclockring {
     left: 66.5% !important;
     top: 8.5% !important;
   }
 
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #qstrip {
+  body.vl-phone-game.is-game-started #qstrip {
     /* Shorter stage: it no longer runs almost to the bottom player HUD. */
     top: 18% !important;
     height: 59% !important;
   }
 
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #qplayers {
+  body.vl-phone-game.is-game-started #qplayers {
     height: 21% !important;
   }
 
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #qplayerone,
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #qplayertwo {
+  body.vl-phone-game.is-game-started #qplayerone,
+  body.vl-phone-game.is-game-started #qplayertwo {
     height: 55% !important;
     top: 0 !important;
   }
 
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started .qplayername {
+  body.vl-phone-game.is-game-started .qplayername {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -450,10 +450,10 @@
     font-size: clamp(.6rem, 1.45vw, .75rem) !important;
   }
 
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #qtext,
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #numerical_qtext,
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #numerical_qtext2,
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #numerical_correct {
+  body.vl-phone-game.is-game-started #qtext,
+  body.vl-phone-game.is-game-started #numerical_qtext,
+  body.vl-phone-game.is-game-started #numerical_qtext2,
+  body.vl-phone-game.is-game-started #numerical_correct {
     top: 4% !important;
     height: 30% !important;
     box-sizing: border-box;
@@ -465,17 +465,17 @@
     line-height: 1.18 !important;
   }
 
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #optionrow1 {
+  body.vl-phone-game.is-game-started #optionrow1 {
     top: 43% !important;
     height: 19% !important;
   }
 
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #optionrow2 {
+  body.vl-phone-game.is-game-started #optionrow2 {
     top: 68% !important;
     height: 19% !important;
   }
 
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started .option {
+  body.vl-phone-game.is-game-started .option {
     height: 100% !important;
     min-height: 46px;
     box-sizing: border-box;
@@ -490,19 +490,19 @@
     -webkit-user-select: none;
   }
 
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started .optioncover {
+  body.vl-phone-game.is-game-started .optioncover {
     border-radius: 10px !important;
   }
 
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #abort {
+  body.vl-phone-game.is-game-started #abort {
     width: 7% !important;
   }
 
   /* -------------------- Numerical input: finger-sized controls -------------------- */
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #numinput2,
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #numinput3,
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #numsubmit2,
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #numsubmit3 {
+  body.vl-phone-game.is-game-started #numinput2,
+  body.vl-phone-game.is-game-started #numinput3,
+  body.vl-phone-game.is-game-started #numsubmit2,
+  body.vl-phone-game.is-game-started #numsubmit3 {
     top: 45% !important;
     width: 27% !important;
     height: 16% !important;
@@ -511,27 +511,27 @@
     border-radius: 8px;
   }
 
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #numinput2,
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #numinput3 {
+  body.vl-phone-game.is-game-started #numinput2,
+  body.vl-phone-game.is-game-started #numinput3 {
     left: 22% !important;
     padding: 0 10px;
     font-size: 16px !important; /* no mobile input zoom */
   }
 
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #numsubmit2,
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #numsubmit3 {
+  body.vl-phone-game.is-game-started #numsubmit2,
+  body.vl-phone-game.is-game-started #numsubmit3 {
     left: 51% !important;
     font-size: clamp(.74rem, 1.8vw, .9rem) !important;
   }
 
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #num3answerarea,
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #num2answerarea {
+  body.vl-phone-game.is-game-started #num3answerarea,
+  body.vl-phone-game.is-game-started #num2answerarea {
     top: 42% !important;
     height: 58% !important;
   }
 
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started .num3answerbox,
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started .num2answerbox {
+  body.vl-phone-game.is-game-started .num3answerbox,
+  body.vl-phone-game.is-game-started .num2answerbox {
     width: 27% !important;
     height: 48% !important;
     top: 15% !important;
@@ -540,8 +540,8 @@
     border-radius: 8px !important;
   }
 
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started .numanswer,
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started .num2answer {
+  body.vl-phone-game.is-game-started .numanswer,
+  body.vl-phone-game.is-game-started .num2answer {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -549,33 +549,33 @@
     line-height: 1.15 !important;
   }
 
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started .numansweruser,
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started .num2answeruser,
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started .numanswertime,
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started .num2answertime {
+  body.vl-phone-game.is-game-started .numansweruser,
+  body.vl-phone-game.is-game-started .num2answeruser,
+  body.vl-phone-game.is-game-started .numanswertime,
+  body.vl-phone-game.is-game-started .num2answertime {
     font-size: .58rem !important;
   }
 
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #numerical_correct2 {
+  body.vl-phone-game.is-game-started #numerical_correct2 {
     width: 27% !important;
     font-size: clamp(.9rem, 2.3vw, 1.15rem) !important;
     line-height: 1.2 !important;
   }
 
   /* -------------------- Result / leave dialogs -------------------- */
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #leavegamewindow {
+  body.vl-phone-game.is-game-started #leavegamewindow {
     width: min(520px, 78vw) !important;
     max-height: 84dvh !important;
     box-sizing: border-box;
   }
 
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #endgamewindow {
+  body.vl-phone-game.is-game-started #endgamewindow {
     width: min(860px, 90vw) !important;
     max-height: 88dvh !important;
   }
 
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started .leavebutton,
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started .endgame-button {
+  body.vl-phone-game.is-game-started .leavebutton,
+  body.vl-phone-game.is-game-started .endgame-button {
     min-height: 42px;
   }
 }
@@ -586,17 +586,17 @@
    ============================================================ */
 @media (orientation: landscape) {
   /* Slightly smaller base emblems + labels on the map. */
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #player1basevisual,
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #player2basevisual,
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #player3basevisual {
+  body.vl-phone-game.is-game-started #player1basevisual,
+  body.vl-phone-game.is-game-started #player2basevisual,
+  body.vl-phone-game.is-game-started #player3basevisual {
     width: clamp(30px, 4.2vw, 40px) !important;
     height: auto !important;
   }
 
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started .player-name,
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #player1basename,
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #player2basename,
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #player3basename {
+  body.vl-phone-game.is-game-started .player-name,
+  body.vl-phone-game.is-game-started #player1basename,
+  body.vl-phone-game.is-game-started #player2basename,
+  body.vl-phone-game.is-game-started #player3basename {
     padding: 1px 4px !important;
     border-radius: 4px !important;
     border-width: 1px !important;
@@ -605,48 +605,48 @@
   }
 
   /* Phase title needs breathing room from the top edge. */
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #gamephase {
+  body.vl-phone-game.is-game-started #gamephase {
     box-sizing: border-box !important;
     padding-top: clamp(3px, .7dvh, 5px) !important;
   }
 
   /* Duel names must stay readable above the actual question text. */
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #qplayers,
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #qplayerone,
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #qplayertwo {
+  body.vl-phone-game.is-game-started #qplayers,
+  body.vl-phone-game.is-game-started #qplayerone,
+  body.vl-phone-game.is-game-started #qplayertwo {
     z-index: 8 !important;
   }
 
   /* Move the question itself below the duel-name strip and compact the answer
      zone. This applies equally cleanly when qplayers is hidden. */
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #qtext,
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #numerical_qtext,
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #numerical_qtext2,
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #numerical_correct {
+  body.vl-phone-game.is-game-started #qtext,
+  body.vl-phone-game.is-game-started #numerical_qtext,
+  body.vl-phone-game.is-game-started #numerical_qtext2,
+  body.vl-phone-game.is-game-started #numerical_correct {
     top: 16% !important;
     height: 24% !important;
     padding-top: 1px !important;
     padding-bottom: 1px !important;
   }
 
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #optionrow1 {
+  body.vl-phone-game.is-game-started #optionrow1 {
     top: 45% !important;
     height: 15% !important;
   }
 
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #optionrow2 {
+  body.vl-phone-game.is-game-started #optionrow2 {
     top: 63% !important;
     height: 15% !important;
   }
 
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started .option {
+  body.vl-phone-game.is-game-started .option {
     min-height: 34px !important;
     padding-top: 0 !important;
     padding-bottom: 0 !important;
     border-radius: 8px !important;
   }
 
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started .optioncover {
+  body.vl-phone-game.is-game-started .optioncover {
     border-radius: 8px !important;
   }
 }
@@ -660,7 +660,7 @@
 @media (orientation: landscape) {
   /* Phase title: start at the left edge of its own box instead of inheriting
      the desktop 10% left padding/right alignment. */
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #gamephase {
+  body.vl-phone-game.is-game-started #gamephase {
     left: 0 !important;
     right: auto !important;
     width: 100% !important;
@@ -671,7 +671,7 @@
 
   /* Round markers: the desktop rule nudges them upward with top:-15%.
      On a phone, make the rounds row a real flex row and center the white bars. */
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #gamerounds {
+  body.vl-phone-game.is-game-started #gamerounds {
     left: 0 !important;
     right: auto !important;
     width: 100% !important;
@@ -683,7 +683,7 @@
     gap: 2% !important;
   }
 
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #gamerounds .round {
+  body.vl-phone-game.is-game-started #gamerounds .round {
     top: auto !important;
     margin-right: 0 !important;
     flex: 0 0 12% !important;
@@ -694,25 +694,25 @@
 
   /* MC answers: v3.1 became too shallow. Reuse the available lower question
      area with fuller rows while keeping the duel names/question clear above. */
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #optionrow1 {
+  body.vl-phone-game.is-game-started #optionrow1 {
     top: 43% !important;
     height: 20% !important;
   }
 
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #optionrow2 {
+  body.vl-phone-game.is-game-started #optionrow2 {
     top: 66% !important;
     height: 20% !important;
   }
 
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started .option {
+  body.vl-phone-game.is-game-started .option {
     height: 100% !important;
     min-height: 40px !important;
     padding: 0 8px !important;
   }
 
   /* Correct numerical answer: center the value in its grey result tile. */
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #numerical_correct2,
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #numerical_correct {
+  body.vl-phone-game.is-game-started #numerical_correct2,
+  body.vl-phone-game.is-game-started #numerical_correct {
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
@@ -722,8 +722,8 @@
 
   /* Numerical result footer: name at lower-left, response time at lower-right,
      both vertically centered within the bottom 30% of the answer card. */
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started .numansweruser,
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started .num2answeruser {
+  body.vl-phone-game.is-game-started .numansweruser,
+  body.vl-phone-game.is-game-started .num2answeruser {
     position: absolute !important;
     left: 0 !important;
     bottom: 0 !important;
@@ -740,8 +740,8 @@
     text-overflow: ellipsis !important;
   }
 
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started .numanswertime,
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started .num2answertime {
+  body.vl-phone-game.is-game-started .numanswertime,
+  body.vl-phone-game.is-game-started .num2answertime {
     position: absolute !important;
     right: 0 !important;
     bottom: 0 !important;
@@ -765,8 +765,8 @@
 @media (orientation: landscape) {
   /* Round bars and player-order bundles share the exact same six columns.
      This keeps one bundle centered directly below one round marker. */
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #gamerounds,
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #playersticks {
+  body.vl-phone-game.is-game-started #gamerounds,
+  body.vl-phone-game.is-game-started #playersticks {
     left: 0 !important;
     right: auto !important;
     width: 100% !important;
@@ -779,15 +779,15 @@
     justify-content: stretch !important;
   }
 
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #gamerounds {
+  body.vl-phone-game.is-game-started #gamerounds {
     align-items: center !important;
   }
 
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #playersticks {
+  body.vl-phone-game.is-game-started #playersticks {
     align-items: stretch !important;
   }
 
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #gamerounds .round {
+  body.vl-phone-game.is-game-started #gamerounds .round {
     top: auto !important;
     width: 62% !important;
     height: 30% !important;
@@ -796,7 +796,7 @@
     flex: none !important;
   }
 
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #playersticks .bundle {
+  body.vl-phone-game.is-game-started #playersticks .bundle {
     /* Flex odstraní whitespace mezi inline-block kolíky. Prostřední kolík je tak
        matematicky ve středu bundle/round sloupce. Výraznější posun vlevo kompenzuje
        optický posun doprava způsobený skew(-15deg,-15deg), aby prostřední
@@ -813,7 +813,7 @@
     transform: translateX(-4px) !important;
   }
 
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #playersticks .bundle .stick {
+  body.vl-phone-game.is-game-started #playersticks .bundle .stick {
     flex: 0 0 clamp(2px, .28vw, 3px) !important;
     width: clamp(2px, .28vw, 3px) !important;
     margin-left: 0 !important;
@@ -822,35 +822,35 @@
 
   /* Base selection and conquest have no round/order HUD. The data-phase
      attribute is maintained by game_online.html also after refresh/reconnect. */
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #gameprogress[data-phase="base"] #gamerounds,
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #gameprogress[data-phase="base"] #playersticks,
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #gameprogress[data-phase="settle"] #gamerounds,
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #gameprogress[data-phase="settle"] #playersticks,
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #gameprogress[data-phase="conquest"] #gamerounds,
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #gameprogress[data-phase="conquest"] #playersticks {
+  body.vl-phone-game.is-game-started #gameprogress[data-phase="base"] #gamerounds,
+  body.vl-phone-game.is-game-started #gameprogress[data-phase="base"] #playersticks,
+  body.vl-phone-game.is-game-started #gameprogress[data-phase="settle"] #gamerounds,
+  body.vl-phone-game.is-game-started #gameprogress[data-phase="settle"] #playersticks,
+  body.vl-phone-game.is-game-started #gameprogress[data-phase="conquest"] #gamerounds,
+  body.vl-phone-game.is-game-started #gameprogress[data-phase="conquest"] #playersticks {
     display: none !important;
   }
 
   /* Multiple choice: slightly taller answer rows than V4. The 2% gap between
      rows leaves a precise midpoint for the spectator abort icon. */
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #optionrow1 {
+  body.vl-phone-game.is-game-started #optionrow1 {
     top: 43% !important;
     height: 22% !important;
   }
 
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #optionrow2 {
+  body.vl-phone-game.is-game-started #optionrow2 {
     top: 67% !important;
     height: 22% !important;
   }
 
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started .option {
+  body.vl-phone-game.is-game-started .option {
     height: 100% !important;
     min-height: 42px !important;
     padding: 0 8px !important;
   }
 
   /* row1 ends at 65%, row2 starts at 67% -> exact midpoint is 66%. */
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #abort {
+  body.vl-phone-game.is-game-started #abort {
     top: 66% !important;
     left: 50% !important;
     width: 7% !important;
@@ -859,20 +859,20 @@
 
   /* Tower destruction: keep the black #qstrip visible, but hide only the MC
      content. This also beats the mobile .option { display:flex !important }. */
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #question.tower-destroying #qstrip,
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #question.tower-destroying #choice_question {
+  body.vl-phone-game.is-game-started #question.tower-destroying #qstrip,
+  body.vl-phone-game.is-game-started #question.tower-destroying #choice_question {
     display: block !important;
   }
 
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #question.tower-destroying #qtext,
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #question.tower-destroying #optionrow1,
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #question.tower-destroying #optionrow2,
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #question.tower-destroying #abort {
+  body.vl-phone-game.is-game-started #question.tower-destroying #qtext,
+  body.vl-phone-game.is-game-started #question.tower-destroying #optionrow1,
+  body.vl-phone-game.is-game-started #question.tower-destroying #optionrow2,
+  body.vl-phone-game.is-game-started #question.tower-destroying #abort {
     display: none !important;
   }
 
   /* Numeric duel result: attacker | correct answer | defender in one row. */
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #num2answerarea {
+  body.vl-phone-game.is-game-started #num2answerarea {
     display: flex !important;
     align-items: flex-start !important;
     justify-content: center !important;
@@ -881,7 +881,7 @@
     box-sizing: border-box !important;
   }
 
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #num2answerarea .num2answerbox {
+  body.vl-phone-game.is-game-started #num2answerarea .num2answerbox {
     position: relative !important;
     flex: 0 0 28% !important;
     width: 28% !important;
@@ -892,7 +892,7 @@
     top: 10% !important;
   }
 
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #num2answerarea #numerical_correct2 {
+  body.vl-phone-game.is-game-started #num2answerarea #numerical_correct2 {
     position: relative !important;
     flex: 0 0 25% !important;
     width: 25% !important;
@@ -914,8 +914,8 @@
    Own keypad replaces the system keyboard in phone gameplay.
    ============================================================ */
 @media (orientation: landscape) and (max-height: 1100px) {
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #numinput2,
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #numinput3 {
+  body.vl-phone-game.is-game-started #numinput2,
+  body.vl-phone-game.is-game-started #numinput3 {
     top: 51% !important;
     left: 19% !important;
     width: 30% !important;
@@ -926,8 +926,8 @@
     text-align: center !important;
   }
 
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #numsubmit2,
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #numsubmit3 {
+  body.vl-phone-game.is-game-started #numsubmit2,
+  body.vl-phone-game.is-game-started #numsubmit3 {
     top: 51% !important;
     left: 51% !important;
     width: 24% !important;
@@ -938,7 +938,7 @@
     line-height: 1.05 !important;
   }
 
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started .numeric-keypad {
+  body.vl-phone-game.is-game-started .numeric-keypad {
     top: 42% !important;
     right: 1.5% !important;
     width: 21.5% !important;
@@ -946,12 +946,12 @@
     gap: 3px !important;
   }
 
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started .numeric-keypad button {
+  body.vl-phone-game.is-game-started .numeric-keypad button {
     border-radius: 5px !important;
     font-size: clamp(.68rem, 1.75vw, .88rem) !important;
   }
 
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started .numeric-keypad .numeric-keypad-action {
+  body.vl-phone-game.is-game-started .numeric-keypad .numeric-keypad-action {
     font-size: clamp(.78rem, 1.9vw, .98rem) !important;
   }
 }
@@ -963,21 +963,21 @@
    ============================================================ */
 @media (orientation: landscape) and (max-height: 1100px) {
   /* The old standalone submit remains only as an invisible JS bridge. */
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #numsubmit2,
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #numsubmit3 {
+  body.vl-phone-game.is-game-started #numsubmit2,
+  body.vl-phone-game.is-game-started #numsubmit3 {
     display: none !important;
   }
 
   /* More room for the written value now that submit moved into the keypad. */
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #numinput2,
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #numinput3 {
+  body.vl-phone-game.is-game-started #numinput2,
+  body.vl-phone-game.is-game-started #numinput3 {
     top: 53% !important;
     left: 22% !important;
     width: 47% !important;
     height: 18% !important;
   }
 
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started .numeric-keypad {
+  body.vl-phone-game.is-game-started .numeric-keypad {
     top: 42% !important;
     right: 1.5% !important;
     width: 21.5% !important;
@@ -985,7 +985,7 @@
     gap: 3px !important;
   }
 
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started .numeric-keypad .numeric-keypad-submit {
+  body.vl-phone-game.is-game-started .numeric-keypad .numeric-keypad-submit {
     color: #fff !important;
     background: linear-gradient(180deg, #42b95f 0%, #23873d 100%) !important;
     border-color: rgba(173,255,194,.48) !important;
@@ -993,12 +993,12 @@
   }
 
   /* Duel cards now reach exactly to the top edge of the black question bar. */
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #qplayers {
+  body.vl-phone-game.is-game-started #qplayers {
     height: 16% !important;
   }
 
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #qplayerone,
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #qplayertwo {
+  body.vl-phone-game.is-game-started #qplayerone,
+  body.vl-phone-game.is-game-started #qplayertwo {
     top: 0 !important;
     height: 100% !important;
   }
@@ -1006,35 +1006,35 @@
   /* Tower destruction must retain the dark answer/question strip on phone.
      Force its paint properties as well as display so no earlier mobile rule
      or transition can make it transparent/invisible. */
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #question.tower-destroying #qstrip {
+  body.vl-phone-game.is-game-started #question.tower-destroying #qstrip {
     display: block !important;
     visibility: visible !important;
     opacity: 1 !important;
     background-color: rgb(39, 34, 34) !important;
   }
 
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #question.tower-destroying #choice_question {
+  body.vl-phone-game.is-game-started #question.tower-destroying #choice_question {
     display: block !important;
   }
 
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #question.tower-destroying #qtext,
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #question.tower-destroying #optionrow1,
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #question.tower-destroying #optionrow2,
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #question.tower-destroying #abort {
+  body.vl-phone-game.is-game-started #question.tower-destroying #qtext,
+  body.vl-phone-game.is-game-started #question.tower-destroying #optionrow1,
+  body.vl-phone-game.is-game-started #question.tower-destroying #optionrow2,
+  body.vl-phone-game.is-game-started #question.tower-destroying #abort {
     display: none !important;
   }
 }
 
 
 /* ============================================================
-   VLASTENEC — MOBILE/TABLET GAME SAFE V10 POLISH
-   Tower backdrop hardening + tablet reuse of compact gameplay.
+   VLASTENEC — MOBILE GAME SAFE V11 POLISH
+   Tower backdrop hardening; tablet uses desktop gameplay again.
    ============================================================ */
 @media (orientation: landscape) and (max-height: 1100px) {
   /* Dedicated painted layer behind the tower animation. This does not depend on
      #qstrip being repainted by the browser, so the dark answer band is guaranteed
      to remain visible during destroyTower even on mobile GPU-composited layers. */
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #question.tower-destroying::before {
+  body.vl-phone-game.is-game-started #question.tower-destroying::before {
     content: "";
     position: absolute;
     left: 0;
@@ -1048,7 +1048,7 @@
     pointer-events: none;
   }
 
-  body:is(.vl-phone-game, .vl-tablet-game).is-game-started #question.tower-destroying #qstrip {
+  body.vl-phone-game.is-game-started #question.tower-destroying #qstrip {
     display: block !important;
     visibility: visible !important;
     opacity: 1 !important;
@@ -1056,37 +1056,39 @@
   }
 }
 
-/* Tablets use the same compact composition, but can afford slightly larger
-   controls/text. Lobby is unaffected because every rule still requires
-   .is-game-started. */
-@media (orientation: landscape) and (min-height: 601px) and (max-height: 1100px) {
-  body.vl-tablet-game.is-game-started {
-    --question-clock-size: clamp(66px, 8.5dvh, 92px);
-    --tile-clock-size: clamp(62px, 8dvh, 86px);
-  }
 
-  body.vl-tablet-game.is-game-started #gamephase {
-    font-size: clamp(.72rem, 1.15vw, .92rem) !important;
-  }
 
-  body.vl-tablet-game.is-game-started #myscorename,
-  body.vl-tablet-game.is-game-started #player2scorename,
-  body.vl-tablet-game.is-game-started #player3scorename {
-    font-size: clamp(.68rem, 1vw, .86rem) !important;
-  }
+/* ============================================================
+   VLASTENEC — TABLET DESKTOP LAYOUT + FULLSCREEN ONLY (V11)
+   Tablet gameplay remains identical to desktop. This is the sole tablet-only
+   gameplay addition.
+   ============================================================ */
+#vl_tablet_fullscreen_btn {
+  display: none;
+}
 
-  body.vl-tablet-game.is-game-started #myscorenumber,
-  body.vl-tablet-game.is-game-started #player2scorenumber,
-  body.vl-tablet-game.is-game-started #player3scorenumber {
-    font-size: clamp(.92rem, 1.35vw, 1.15rem) !important;
-  }
+body.vl-tablet-device.is-game-started #vl_tablet_fullscreen_btn {
+  position: fixed;
+  display: grid;
+  place-items: center;
+  top: 2%;
+  right: 14%;
+  width: clamp(38px, 5vw, 52px);
+  height: clamp(38px, 5vw, 52px);
+  padding: 0;
+  border: 0;
+  border-radius: 9px;
+  background: rgba(0,0,0,.48);
+  color: rgba(255,255,255,.76);
+  font-size: clamp(22px, 2.5vw, 30px);
+  line-height: 1;
+  cursor: pointer;
+  z-index: 150;
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  touch-action: manipulation;
+}
 
-  body.vl-tablet-game.is-game-started .option {
-    min-height: 50px !important;
-    font-size: clamp(.88rem, 1.45vw, 1.08rem) !important;
-  }
-
-  body.vl-tablet-game.is-game-started .numeric-keypad button {
-    font-size: clamp(.9rem, 1.35vw, 1.12rem) !important;
-  }
+body.vl-tablet-device.is-game-started #vl_tablet_fullscreen_btn:active {
+  transform: scale(.94);
 }
