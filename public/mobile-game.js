@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const MARKER = '🧪 VLASTENEC FIX: mobile-game-safe-v3.1-render-only-pins';
+  const MARKER = '🧪 VLASTENEC FIX: mobile-game-safe-v4-ui-polish';
   console.log(MARKER);
 
   let wasGameActive = false;

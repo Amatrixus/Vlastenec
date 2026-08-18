@@ -1,5 +1,5 @@
 /* ============================================================
-   VLASTENEC — MOBILE GAME SAFE V3.1 (2026-08-18)
+   VLASTENEC — MOBILE GAME SAFE V4 (2026-08-18)
    Isolated mobile-only gameplay layer.
    IMPORTANT: every gameplay rule is gated by BOTH:
      body.vl-phone-game.is-game-started
@@ -648,5 +648,111 @@
 
   body.vl-phone-game.is-game-started .optioncover {
     border-radius: 8px !important;
+  }
+}
+
+
+/* ============================================================
+   VLASTENEC — MOBILE GAME SAFE V4 POLISH
+   Presentation-only refinements requested after v3.1.
+   No lobby, socket, selection or ownership rules are changed here.
+   ============================================================ */
+@media (orientation: landscape) {
+  /* Phase title: start at the left edge of its own box instead of inheriting
+     the desktop 10% left padding/right alignment. */
+  body.vl-phone-game.is-game-started #gamephase {
+    left: 0 !important;
+    right: auto !important;
+    width: 100% !important;
+    padding: clamp(3px, .7dvh, 5px) clamp(6px, 1vw, 10px) 0 !important;
+    box-sizing: border-box !important;
+    text-align: left !important;
+  }
+
+  /* Round markers: the desktop rule nudges them upward with top:-15%.
+     On a phone, make the rounds row a real flex row and center the white bars. */
+  body.vl-phone-game.is-game-started #gamerounds {
+    left: 0 !important;
+    right: auto !important;
+    width: 100% !important;
+    padding: 0 clamp(6px, 1vw, 10px) !important;
+    box-sizing: border-box !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: 2% !important;
+  }
+
+  body.vl-phone-game.is-game-started #gamerounds .round {
+    top: auto !important;
+    margin-right: 0 !important;
+    flex: 0 0 12% !important;
+    width: 12% !important;
+    height: 30% !important;
+    vertical-align: middle !important;
+  }
+
+  /* MC answers: v3.1 became too shallow. Reuse the available lower question
+     area with fuller rows while keeping the duel names/question clear above. */
+  body.vl-phone-game.is-game-started #optionrow1 {
+    top: 43% !important;
+    height: 20% !important;
+  }
+
+  body.vl-phone-game.is-game-started #optionrow2 {
+    top: 66% !important;
+    height: 20% !important;
+  }
+
+  body.vl-phone-game.is-game-started .option {
+    height: 100% !important;
+    min-height: 40px !important;
+    padding: 0 8px !important;
+  }
+
+  /* Correct numerical answer: center the value in its grey result tile. */
+  body.vl-phone-game.is-game-started #numerical_correct2,
+  body.vl-phone-game.is-game-started #numerical_correct {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-sizing: border-box !important;
+    line-height: 1.08 !important;
+  }
+
+  /* Numerical result footer: name at lower-left, response time at lower-right,
+     both vertically centered within the bottom 30% of the answer card. */
+  body.vl-phone-game.is-game-started .numansweruser,
+  body.vl-phone-game.is-game-started .num2answeruser {
+    position: absolute !important;
+    left: 0 !important;
+    bottom: 0 !important;
+    width: 66% !important;
+    height: 30% !important;
+    padding: 0 0 0 7px !important;
+    box-sizing: border-box !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    line-height: 1 !important;
+    white-space: nowrap !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  body.vl-phone-game.is-game-started .numanswertime,
+  body.vl-phone-game.is-game-started .num2answertime {
+    position: absolute !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 34% !important;
+    height: 30% !important;
+    padding: 0 6px 0 0 !important;
+    box-sizing: border-box !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    line-height: 1 !important;
+    text-align: right !important;
   }
 }
