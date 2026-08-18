@@ -1095,25 +1095,37 @@ body.vl-tablet-device.is-game-started #vl_tablet_fullscreen_btn:active {
 
 
 /* ============================================================
-   VLASTENEC — TABLET MAP FIT + TAP HIGHLIGHT FIX V15
-   V11 desktop-like tablet gameplay is preserved. Only the map viewport and
-   touch/focus highlight behaviour are changed.
+   VLASTENEC — TABLET SMALLER MAP + TAP HIGHLIGHT FIX V24
+   Full original map/region rendering is preserved. Only the tablet map viewport
+   is made smaller to give the SVG more breathing room in normal and fullscreen.
    ============================================================ */
 @media (min-width: 700px) and (max-width: 1400px) {
-  /* Keep the whole SVG viewBox inside the visible tablet game area. The SVG's
-     preserveAspectRatio="xMidYMid meet" guarantees that no map edge is cropped. */
+  /* Normal tablet view: deliberately smaller than V15 (90vw × 78dvh). */
   body.vl-tablet-device.is-game-started #map {
-    top: 6dvh !important;
-    left: 5vw !important;
-    width: 90vw !important;
-    height: 78dvh !important;
-    max-width: 90vw !important;
-    max-height: 78dvh !important;
+    top: 8dvh !important;
+    left: 8vw !important;
+    width: 84vw !important;
+    height: 72dvh !important;
+    max-width: 84vw !important;
+    max-height: 72dvh !important;
     overflow: hidden !important;
   }
 
-  /* Remove the blue WebKit/Chromium touch rectangle and focus outline without
-     changing region colouring, availability filters, hover logic or clicks. */
+  /* Fullscreen still gets extra room around the SVG instead of expanding it
+     to the edges. It may grow slightly versus the normal view, but remains
+     clearly smaller than the old tablet map. */
+  html:fullscreen body.vl-tablet-device.is-game-started #map,
+  html:-webkit-full-screen body.vl-tablet-device.is-game-started #map {
+    top: 7dvh !important;
+    left: 7vw !important;
+    width: 86vw !important;
+    height: 74dvh !important;
+    max-width: 86vw !important;
+    max-height: 74dvh !important;
+  }
+
+  /* Remove only the blue WebKit/Chromium touch rectangle. Region colours,
+     filters, backgrounds, opacity and wave animation remain original. */
   body.vl-tablet-device.is-game-started #map,
   body.vl-tablet-device.is-game-started #map .region {
     -webkit-tap-highlight-color: transparent !important;
@@ -1130,46 +1142,5 @@ body.vl-tablet-device.is-game-started #vl_tablet_fullscreen_btn:active {
   body.vl-tablet-device.is-game-started #map .region:active {
     outline: none !important;
     box-shadow: none !important;
-  }
-}
-
-
-/* ============================================================
-   VLASTENEC — TABLET REGION RENDERER V23
-   Rendering only. Same game state, colours and wave timings.
-   Avoid CSS filters on individual SVG paths and avoid the mask+double-clone
-   wave pipeline that is unstable on the tablet renderer.
-   ============================================================ */
-@media (min-width: 700px) and (max-width: 1400px) {
-  /* Base region alpha is .7. On the dark game background, .14 preserves the
-     same 20% visual intensity as brightness(20%) without allocating an SVG
-     filter surface for each path. */
-  body.vl-tablet-device.is-game-started #map .region {
-    filter: none !important;
-  }
-
-  body.vl-tablet-device.is-game-started #map .region.unavailable,
-  body.vl-tablet-device.is-game-started #map .region.unclickable {
-    opacity: .14 !important;
-  }
-
-  /* brightness(100%) is the normal .7 alpha; brightness(120%) is represented
-     by .84 (= .7 × 1.2). This keeps the existing hover feedback filter-free. */
-  body.vl-tablet-device.is-game-started #map .region[style*="brightness(100%)"]:not(.unavailable):not(.unclickable) {
-    opacity: .7 !important;
-  }
-
-  body.vl-tablet-device.is-game-started #map .region.battle-selectable:hover,
-  body.vl-tablet-device.is-game-started #map .region[style*="brightness(120%)"]:not(.unavailable):not(.unclickable) {
-    opacity: .84 !important;
-  }
-
-  body.vl-tablet-device.is-game-started #map .region.battle-selectable {
-    transition: opacity 120ms ease !important;
-  }
-
-  body.vl-tablet-device.is-game-started #map .region-wave-overlay {
-    filter: none !important;
-    pointer-events: none !important;
   }
 }

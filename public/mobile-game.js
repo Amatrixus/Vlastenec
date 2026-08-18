@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const MARKER = '🧪 VLASTENEC FIX: mobile-map-runtime-v19';
+  const MARKER = '🧪 VLASTENEC FIX: mobile-game-safe-v4-ui-polish';
   console.log(MARKER);
 
   let wasGameActive = false;
@@ -115,12 +115,8 @@
   // removing pin elements. We only ask its existing resize renderer to
   // recalculate coordinates after Chrome changes the viewport/fullscreen.
   function refreshExistingPinPositions() {
-    const body = document.body;
-    if (!body) return;
-    const mapRuntime = body.classList.contains('vl-phone-game') ||
-                       body.classList.contains('vl-mobile-map-runtime');
-    if (!mapRuntime) return;
-    if (!body.classList.contains('is-game-started')) return;
+    if (!document.body?.classList.contains('vl-phone-game')) return;
+    if (!document.body?.classList.contains('is-game-started')) return;
     if (typeof window.updateAllPins !== 'function') return;
     try { window.updateAllPins(); } catch (err) {
       console.debug('[mobile-game] pin reflow skipped:', err?.message || err);
@@ -134,11 +130,7 @@
   function syncMode() {
     if (!document.body) return;
     const phone = phoneLikeViewport();
-    const tabletMapRuntime = !phone && document.body.classList.contains('vl-tablet-device');
     document.body.classList.toggle('vl-phone-game', phone);
-    // Tablet keeps desktop gameplay UI. This separate class opts ONLY the map
-    // into the same viewport/reflow environment used by the phone renderer.
-    document.body.classList.toggle('vl-mobile-map-runtime', tabletMapRuntime);
 
     const active = phone && document.body.classList.contains('is-game-started');
     if (active && !wasGameActive) {
