@@ -1095,47 +1095,32 @@ body.vl-tablet-device.is-game-started #vl_tablet_fullscreen_btn:active {
 
 
 /* ============================================================
-   VLASTENEC — TABLET MOBILE-MAP RUNTIME V19
-   Tablet keeps the desktop gameplay UI. Only the map and the viewport
-   environment in which that map is rendered mirror the working phone mode.
+   VLASTENEC — TABLET OUTER MAP FILTER TEST V22
+   V11 desktop-like tablet gameplay is preserved. Only the map viewport and
+   touch/focus highlight behaviour are changed.
    ============================================================ */
-@media (orientation: landscape) and (min-width: 700px) and (max-width: 1400px) {
-  /* This is the same viewport normalization used by phone gameplay. It changes
-     no HUD/base/question geometry; it only removes browser-page scrolling and
-     gives the SVG a stable visible viewport during resize/fullscreen changes. */
-  html:has(body.vl-mobile-map-runtime.is-game-started),
-  body.vl-mobile-map-runtime.is-game-started {
-    width: 100%;
-    height: 100%;
-    min-height: 100dvh;
-    margin: 0;
-    padding: 0;
+@media (min-width: 700px) and (max-width: 1400px) {
+  /* Keep the whole SVG viewBox inside the visible tablet game area. The SVG's
+     preserveAspectRatio="xMidYMid meet" guarantees that no map edge is cropped. */
+  body.vl-tablet-device.is-game-started #map {
+    top: 6dvh !important;
+    left: 5vw !important;
+    width: 90vw !important;
+    height: 78dvh !important;
+    max-width: 90vw !important;
+    max-height: 78dvh !important;
     overflow: hidden !important;
-    overscroll-behavior: none;
-    -webkit-text-size-adjust: 100%;
-    text-size-adjust: 100%;
+
+    /* V22 diagnostic: the desktop stylesheet puts drop-shadow() on the whole
+       SVG while child regions also use filters/masks. Disable only the OUTER
+       SVG filter on tablets; region effects and all game logic stay untouched. */
+    filter: none !important;
   }
 
-  body.vl-mobile-map-runtime.is-game-started {
-    touch-action: manipulation;
-    -webkit-tap-highlight-color: transparent;
-  }
-
-  /* Exact phone map geometry. No tablet-only transform, filter, compositing,
-     overflow or region styling is added here. */
-  body.vl-mobile-map-runtime.is-game-started #map {
-    top: 1.5dvh !important;
-    left: 4vw !important;
-    width: 92vw !important;
-    height: 86dvh !important;
-    max-width: none !important;
-    max-height: none !important;
-  }
-
-  /* Touch/focus artifact suppression only; colouring/filters/waves remain the
-     original game implementation, exactly as on phone. */
-  body.vl-mobile-map-runtime.is-game-started #map,
-  body.vl-mobile-map-runtime.is-game-started #map .region {
+  /* Remove the blue WebKit/Chromium touch rectangle and focus outline without
+     changing region colouring, availability filters, hover logic or clicks. */
+  body.vl-tablet-device.is-game-started #map,
+  body.vl-tablet-device.is-game-started #map .region {
     -webkit-tap-highlight-color: transparent !important;
     outline: none !important;
     -webkit-user-select: none;
@@ -1143,11 +1128,11 @@ body.vl-tablet-device.is-game-started #vl_tablet_fullscreen_btn:active {
     -webkit-touch-callout: none;
   }
 
-  body.vl-mobile-map-runtime.is-game-started #map:focus,
-  body.vl-mobile-map-runtime.is-game-started #map:focus-visible,
-  body.vl-mobile-map-runtime.is-game-started #map .region:focus,
-  body.vl-mobile-map-runtime.is-game-started #map .region:focus-visible,
-  body.vl-mobile-map-runtime.is-game-started #map .region:active {
+  body.vl-tablet-device.is-game-started #map:focus,
+  body.vl-tablet-device.is-game-started #map:focus-visible,
+  body.vl-tablet-device.is-game-started #map .region:focus,
+  body.vl-tablet-device.is-game-started #map .region:focus-visible,
+  body.vl-tablet-device.is-game-started #map .region:active {
     outline: none !important;
     box-shadow: none !important;
   }
