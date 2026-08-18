@@ -508,6 +508,7 @@
     console.log('🧪 VLASTENEC FIX: authoritative-refresh-v1');
     console.log('🧪 VLASTENEC FIX: responsive-game-clocks-v2-original-look');
     console.log('🧪 VLASTENEC FIX: countdown-zero-responsive-fonts-v1');
+    console.log('🧪 VLASTENEC FIX: base-score-on-settle-v1');
 
     // --- Profil hráče: lokální statistiky od této verze ---
     const profileStore = window.VlastenecProfileStore || null;
@@ -7792,6 +7793,7 @@ document.querySelectorAll(".region").forEach(region => {
                         thudSound.play();
                         settlePlayer1();
                         colorizeBaseRegion(1);
+                        socket.emit("baseSettled", { playerNumber: 1 });
 
                        
                     }, 2000);
@@ -7801,6 +7803,7 @@ document.querySelectorAll(".region").forEach(region => {
                         thudSound.play();
                         settlePlayer2();
                         colorizeBaseRegion(2);
+                        socket.emit("baseSettled", { playerNumber: 2 });
 
                         
                     }, 4000); // Delay of 2000 milliseconds (2 seconds)
@@ -7811,6 +7814,7 @@ document.querySelectorAll(".region").forEach(region => {
                         thudSound.play();
                         settlePlayer3();
                         colorizeBaseRegion(3);
+                        socket.emit("baseSettled", { playerNumber: 3 });
 
                         
                     }, 6000); // Delay of 4000 milliseconds (2 seconds after the previous couplet)

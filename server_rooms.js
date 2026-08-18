@@ -1,3 +1,4 @@
+console.log('🧪 VLASTENEC BUILD: 2026-08-18-base-score-on-settle-v1');
 console.log('🧪 VLASTENEC BUILD: 2026-08-18-authoritative-refresh-v1');
 console.log('🧪 VLASTENEC BUILD: 2026-08-18-mc-human-timing-v1');
 const express = require('express');
@@ -749,6 +750,39 @@ function fillMissingLobbySeatsWithBots(roomId) {
   broadcastLobbyState(roomId);
 }
 
+function awardBaseSettlementScore(roomId, seat, source = 'client') {
+  const room = rooms[roomId];
+  seat = Number(seat);
+  if (!room || !isRoomAlive(roomId) || ![1, 2, 3].includes(seat)) return false;
+
+  if (room.phase !== 'settle') {
+    console.log(`↩️ ${roomId}: základna Player${seat} bez bodů mimo settle (${room.phase}) [${source}]`);
+    return false;
+  }
+
+  sanitizeRoomRegionState(room, roomId);
+  room.baseScoreSettled = room.baseScoreSettled || { 1: false, 2: false, 3: false };
+  if (room.baseScoreSettled[seat]) return false;
+
+  const baseRegion = room.bases?.[seat];
+  const regionKey = `Player${seat}regions`;
+  if (!REGION_ID_SET.has(baseRegion)) {
+    console.warn(`⚠️ ${roomId}: nelze připsat základnu Player${seat} – neplatný region ${String(baseRegion)} [${source}]`);
+    return false;
+  }
+  if (!Array.isArray(room.regions?.[regionKey]) || !room.regions[regionKey].includes(baseRegion)) {
+    console.warn(`⚠️ ${roomId}: nelze připsat základnu Player${seat} – region už mu nepatří [${source}]`);
+    return false;
+  }
+
+  room.baseScoreSettled[seat] = true;
+  room.regionValues[baseRegion] = 1000;
+  room.scores = calculateScores(room.regions, room.regionValues, room.defenseBonuses);
+  io.to(roomId).emit('updateScores', { scores: room.scores });
+  console.log(`🏰 ${roomId}: Player${seat} vykreslen ${baseRegion} → +1000 bodů [${source}]`);
+  return true;
+}
+
 function startRoomGame(roomId) {
   const room = rooms[roomId];
   if (!room || room.hasStarted || !isRoomAlive(roomId)) return false;
@@ -764,12 +798,13 @@ function startRoomGame(roomId) {
   room.regions.Player2regions = [room.bases[2]];
   room.regions.Player3regions = [room.bases[3]];
 
-  // Základny jsou herní stav serveru, ne vedlejší efekt klientské animace.
-  // Hodnotu 1000 nastavíme autoritativně hned při startu, takže F5 nikdy
-  // nemůže pomocí baseSettled znovu „oživit“ už poraženou základnu.
-  room.regionValues[room.bases[1]] = 1000;
-  room.regionValues[room.bases[2]] = 1000;
-  room.regionValues[room.bases[3]] = 1000;
+  // Vlastnictví základen vzniká autoritativně hned, ale body až v okamžiku
+  // jejich úvodního vykreslení. Díky tomu začínají všichni na 0 a postupně
+  // dostanou 1000 bodů ve stejné chvíli, kdy se jejich základna objeví.
+  room.regionValues[room.bases[1]] = 0;
+  room.regionValues[room.bases[2]] = 0;
+  room.regionValues[room.bases[3]] = 0;
+  room.baseScoreSettled = { 1: false, 2: false, 3: false };
   room.scores = calculateScores(room.regions, room.regionValues, room.defenseBonuses);
 
   room.hasStarted = true;
@@ -1812,6 +1847,13 @@ async function runGameScenario(roomId) {
       io.to(roomId).emit("runClientScenario", { action: "basesSettle" });
        if (!await delayAlive(roomId, 8000)) return; // 🔴 NEW
 
+       // Nouzová pojistka: v normálním běhu klient potvrdí každou základnu
+       // přesně při jejím vykreslení (2/4/6 s). Kdyby během settle nikdo
+       // nebyl připojený nebo ACK nedorazil, před přechodem do expansion
+       // dorovnáme chybějící základny, aby herní stav nezůstal bez 1000 bodů.
+       for (let seat = 1; seat <= 3; seat++) {
+         awardBaseSettlementScore(roomId, seat, 'settle-fallback');
+       }
 
        room.phase ="expansion" 
   //INTRO K ROZŠIŘOVÁNÍ
@@ -3590,9 +3632,6 @@ io.on('connection', socket => {
 
 
   socket.on("baseSettled", ({ playerNumber } = {}) => {
-    // baseSettled smí měnit pouze místnost, ke které patří tento socket.
-    // Původní verze procházela VŠECHNY rooms, takže event z jiné rozehrané
-    // hry mohl v lobby jiné room vytvořit room.regionValues[undefined] = 1000.
     const roomId = socket.data?.joinedRoom || socket.data?.roomId;
     const room = roomId ? rooms[roomId] : null;
     if (!room || !isRoomAlive(roomId)) {
@@ -3600,42 +3639,12 @@ io.on('connection', socket => {
       return;
     }
 
-    const seat = Number(playerNumber);
-    if (![1, 2, 3].includes(seat)) {
-      console.warn(`⚠️ baseSettled ignorován – neplatné číslo hráče: ${playerNumber}`);
-      return;
-    }
-
-    sanitizeRoomRegionState(room, roomId);
-
-    const regionKey = `Player${seat}regions`;
-    const baseRegion = room.bases?.[seat];
-
-    // Kritická validace: na mapu se nesmí zapsat undefined ani jiný cizí klíč.
-    if (!REGION_ID_SET.has(baseRegion)) {
-      console.warn(`⚠️ baseSettled ignorován v ${roomId} – Player${seat} nemá platnou základnu (${String(baseRegion)}).`);
-      return;
-    }
-
-    // Kompatibilita se staršími klienty: baseSettled je dovoleno pouze během
-    // úvodní fáze a NIKDY nesmí region znovu přidat hráči. Vlastnictví už
-    // vytvořil server v startRoomGame().
-    if (room.phase !== 'settle') {
-      console.log(`↩️ ${roomId}: baseSettled Player${seat} ignorován mimo settle (${room.phase}).`);
-      return;
-    }
-    if (!Array.isArray(room.regions[regionKey]) || !room.regions[regionKey].includes(baseRegion)) {
-      console.warn(`⚠️ ${roomId}: baseSettled Player${seat} ignorován – základna už není jeho území.`);
-      return;
-    }
-
-    room.regionValues[baseRegion] = 1000;
-    room.scores = calculateScores(room.regions, room.regionValues, room.defenseBonuses);
-
-    io.to(roomId).emit("updateScores", { scores: room.scores });
-    console.log(`✅ ${roomId}: potvrzena základna Player${seat} ${baseRegion} (1000 bodů)`);
+    // Událost už není součástí settlePlayerX()/rehydratace. Klient ji posílá
+    // pouze z úvodní animace ve chvíli, kdy se konkrétní základna vykreslí.
+    // Helper je idempotentní, takže 2–3 klienti mohou potvrdit stejnou základnu
+    // a skóre se přičte pouze jednou.
+    awardBaseSettlementScore(roomId, playerNumber, `socket:${socket.id}`);
   });
-
 
 
 
