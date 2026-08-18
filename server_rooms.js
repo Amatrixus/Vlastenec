@@ -1,4 +1,5 @@
 console.log('🧪 VLASTENEC BUILD: 2026-08-18-authoritative-refresh-v1');
+console.log('🧪 VLASTENEC BUILD: 2026-08-18-mc-human-timing-v1');
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
@@ -39,6 +40,7 @@ const PORT = process.env.PORT || 3000;
   server.listen(PORT, '0.0.0.0', () => {
     console.log('Server běží na', PORT);
     console.log('🧪 VLASTENEC BUILD: 2026-08-18-authoritative-refresh-v1');
+    console.log('🧪 VLASTENEC BUILD: 2026-08-18-mc-human-timing-v1');
   });
 })();
 
@@ -1027,6 +1029,34 @@ function randInt(a, b) { // včetně
   return a + Math.floor(Math.random() * (b - a + 1));
 }
 
+// Multiple-choice: bot odpovídá převážně v běžném lidském tempu.
+// Velmi rychlá reakce je možná, ale je záměrně vzácná. Limit otázky je 10 s,
+// proto jsou všechny intervaly bezpečně pod deadlinem.
+function botMultipleChoiceResponseDelayMs() {
+  const roll = Math.random();
+  if (roll < 0.03) return randInt(850, 1500);      // 3 %: blesková odpověď
+  if (roll < 0.20) return randInt(1800, 3200);     // 17 %: rychlejší člověk
+  if (roll < 0.78) return randInt(3200, 6000);     // 58 %: běžná reakce
+  if (roll < 0.96) return randInt(6000, 8100);     // 18 %: rozmyšlení
+  return randInt(8100, 9300);                      // 4 %: těsně před limitem
+}
+
+function allChoiceParticipantsAnswered(room) {
+  const participants = Array.isArray(room?.currentQuestionParticipants)
+    ? room.currentQuestionParticipants
+    : [];
+  return participants.length > 0 && participants.every(seat => room.answers?.[seat] !== undefined);
+}
+
+function maybeFinishMultipleChoiceQuestion(roomId) {
+  const room = rooms[roomId];
+  if (!room || room.currentQuestionType !== 'choice') return false;
+  if (!allChoiceParticipantsAnswered(room)) return false;
+  if (typeof room.choiceFinalize !== 'function') return false;
+  room.choiceFinalize('all_answered');
+  return true;
+}
+
 // Numerické otázky: bot obvykle odpovídá v lidském tempu, jen vzácně velmi rychle.
 function botNumericResponseDelayMs() {
   const roll = Math.random();
@@ -1287,11 +1317,10 @@ function runMultipleChoice(roomId, participatingPlayers = [1, 2, 3]) {
     const questionEventBase = `q-${randomUUID()}`;
     console.log(`🧠 MC otázka z kategorie: ${question.category}`);
 
-    const correctPlayers = [];
-
     room.answers = {};
     room.currentQuestionType = 'choice';
     room.currentQuestionParticipants = [...participatingPlayers];
+    room.choiceQuestionToken = questionEventBase;
 
     const isDuel = participatingPlayers.length === 2;
     const attacker = isDuel ? participatingPlayers[0] : null;
@@ -1313,6 +1342,57 @@ function runMultipleChoice(roomId, participatingPlayers = [1, 2, 3]) {
       deadline: questionDeadline
     };
 
+    let finished = false;
+    let timeoutHandle = null;
+
+    const finalize = async (reason = 'timeout') => {
+      if (finished) return;
+      finished = true;
+      if (timeoutHandle) clearTimeout(timeoutHandle);
+
+      const liveRoom = rooms[roomId];
+      if (!liveRoom || !isRoomAlive(roomId) || liveRoom.choiceQuestionToken !== questionEventBase) {
+        return resolve([]);
+      }
+
+      const correctPlayers = [];
+      for (const player of participatingPlayers) {
+        if (liveRoom.answers?.[player] === question.correct) {
+          correctPlayers.push(Number(player));
+        }
+      }
+
+      const profileDetails = {};
+      participatingPlayers.forEach(seat => {
+        profileDetails[seat] = {
+          success: liveRoom.answers?.[seat] === question.correct,
+          answered: liveRoom.answers?.[seat] !== undefined
+        };
+      });
+      queueQuestionProfileEvents(liveRoom, questionEventBase, question.category, 'choice', participatingPlayers, profileDetails);
+
+      if (reason === 'all_answered') {
+        console.log(`⚡ MC ${roomId}: odpověděli všichni účastníci (${participatingPlayers.join(', ')}), vyhodnocuji hned.`);
+      }
+
+      // Od této chvíle už další kliknutí ani opožděné botí timery nesmí do otázky zasáhnout.
+      liveRoom.currentQuestionType = null;
+      liveRoom.currentQuestionParticipants = [];
+      liveRoom.activeQuestion = null;
+      liveRoom.choiceFinalize = null;
+      liveRoom.choiceQuestionTimer = null;
+      liveRoom.choiceQuestionToken = null;
+
+      await emitBattleUiAndWait(roomId, "multipleChoiceResults", {
+        correctAnswer: question.correct,
+        answersByPlayer: liveRoom.answers
+      }, 'multiple_choice_results', 7000);
+
+      resolve(correctPlayers);
+    };
+
+    room.choiceFinalize = finalize;
+
     // Pošli otázku všem (canAnswer = jen účastníci)
     room.players.forEach((p, index) => {
       if (!p || !p.id) return;
@@ -1330,74 +1410,41 @@ function runMultipleChoice(roomId, participatingPlayers = [1, 2, 3]) {
       });
     });
 
-    // BOT odpovědi
+    // BOT odpovědi – přirozenější reakční doba. Jakmile odpoví poslední účastník,
+    // stejná cesta jako u numerických otázek otázku okamžitě vyhodnotí.
     try {
       const BOT_CORRECT_PROB = 0.55;
-      const BOT_MIN_DELAY_MS = 600;
-      const BOT_MAX_DELAY_MS = 2200;
 
       participatingPlayers.forEach((seat) => {
         if (!isBot(room, seat)) return;
-        const botDelay = randInt(BOT_MIN_DELAY_MS, BOT_MAX_DELAY_MS);
+        const botDelay = botMultipleChoiceResponseDelayMs();
 
         setTimeout(() => {
           const r = rooms[roomId];
           if (!r || !isRoomAlive(roomId)) return;
+          if (r.currentQuestionType !== 'choice' || r.choiceQuestionToken !== questionEventBase) return;
           if (!isBot(r, seat)) return;
           if (r.answers?.[seat] !== undefined) return;
 
           const indices = question.options.map((_, i) => i);
-          const wrong   = indices.filter(i => i !== question.correct);
+          const wrong = indices.filter(i => i !== question.correct);
           const shouldBeCorrect = Math.random() < BOT_CORRECT_PROB;
-
-          // jediná proměnná pick (žádné stínění)
-          let pick = shouldBeCorrect
+          const pick = shouldBeCorrect
             ? question.correct
             : (wrong.length ? wrong[randInt(0, wrong.length - 1)] : question.correct);
 
           r.answers = r.answers || {};
           r.answers[seat] = pick;
-          console.log(`🤖 BOT ${seat} odpověděl MC: ${pick}`);
+          console.log(`🤖 BOT ${seat} odpověděl MC: ${pick} po ${Date.now() - questionStartedAt} ms`);
+          maybeFinishMultipleChoiceQuestion(roomId);
         }, botDelay);
       });
     } catch (e) { console.warn('BOT MC error', e); }
 
-    // ⏲️ Timeout + vyhodnocení. runMultipleChoice se vrátí až ve chvíli,
-    // kdy klienti skutečně zavřeli obrazovku s výsledky (ne podle odhadu času).
-    setTimeout(async () => {
-      if (!isRoomAlive(roomId)) return resolve([]);
-
-      for (const player in room.answers) {
-        if (room.answers[player] === question.correct) {
-          correctPlayers.push(Number(player));
-        }
-      }
-
-      const profileDetails = {};
-      participatingPlayers.forEach(seat => {
-        profileDetails[seat] = {
-          success: room.answers?.[seat] === question.correct,
-          answered: room.answers?.[seat] !== undefined
-        };
-      });
-      queueQuestionProfileEvents(room,questionEventBase,question.category,'choice',participatingPlayers,profileDetails);
-
-      // Odpovědi už nepřijímáme, ale výsledek zatím zůstává na obrazovce.
-      room.currentQuestionType = null;
-      room.currentQuestionParticipants = [];
-      room.activeQuestion = null;
-
-      await emitBattleUiAndWait(roomId, "multipleChoiceResults", {
-        correctAnswer: question.correct,
-        answersByPlayer: room.answers
-      }, 'multiple_choice_results', 7000);
-
-      resolve(correctPlayers);
-    }, 10000);
+    timeoutHandle = setTimeout(() => finalize('timeout'), 10000);
+    room.choiceQuestionTimer = timeoutHandle;
   });
 }
-
-
 
 
 function runNumericQuestionForTwo(roomId, [player1, player2]) {
@@ -4039,6 +4086,7 @@ socket.on("playerAnswered", ({ room: requestedRoomId, player, answerIndex }) => 
   if (room.answers[seat] === undefined) {
     room.answers[seat] = answer;
     console.log(`✏️ Hráč ${seat} v ${roomId} odpověděl: ${answer}`);
+    maybeFinishMultipleChoiceQuestion(roomId);
   }
 });
 
