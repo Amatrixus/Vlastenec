@@ -1095,7 +1095,7 @@ body.vl-tablet-device.is-game-started #vl_tablet_fullscreen_btn:active {
 
 
 /* ============================================================
-   VLASTENEC — TABLET MAP FIT + TAP HIGHLIGHT FIX V13
+   VLASTENEC — TABLET MAP FIT + TAP HIGHLIGHT FIX V14
    V11 desktop-like tablet gameplay is preserved. Only the map viewport and
    touch/focus highlight behaviour are changed.
    ============================================================ */
@@ -1103,12 +1103,12 @@ body.vl-tablet-device.is-game-started #vl_tablet_fullscreen_btn:active {
   /* Keep the whole SVG viewBox inside the visible tablet game area. The SVG's
      preserveAspectRatio="xMidYMid meet" guarantees that no map edge is cropped. */
   body.vl-tablet-device.is-game-started #map {
-    top: 4dvh !important;
-    left: 3vw !important;
-    width: 94vw !important;
-    height: 82dvh !important;
-    max-width: 94vw !important;
-    max-height: 82dvh !important;
+    top: 6dvh !important;
+    left: 5vw !important;
+    width: 90vw !important;
+    height: 78dvh !important;
+    max-width: 90vw !important;
+    max-height: 78dvh !important;
     overflow: visible !important;
   }
 
