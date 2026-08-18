@@ -3,45 +3,48 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#09131f" />
+  <meta name="theme-color" content="#120d0a" />
   <title>VLASTENEC — Žebříčky</title>
   <link rel="stylesheet" href="leaderboards.css" />
+  <link rel="stylesheet" href="portal-header.css" />
   <script src="auth-client.js"></script>
 </head>
 <body>
-  <div class="lb-backdrop" aria-hidden="true">
-    <div class="lb-lion"></div>
-    <div class="lb-glow lb-glow-a"></div>
-    <div class="lb-glow lb-glow-b"></div>
-    <div class="lb-grid"></div>
+  <div class="portal-backdrop" aria-hidden="true">
+    <div class="portal-lion"></div>
+    <div class="portal-glow glow-left"></div>
+    <div class="portal-glow glow-right"></div>
+    <div class="portal-grid"></div>
   </div>
 
-  <header class="site-header">
-    <a class="site-brand" href="homepage.html" aria-label="Vlastenec — hlavní stránka">
-      <img src="logo.svg" alt="Vlastenec" />
-      <span class="brand-divider"></span>
-      <span class="brand-caption">Vědomostní strategie</span>
-    </a>
+  <div class="portal-page-stage">
+    <div class="portal-page-shell">
+      <header class="portal-header">
+        <a class="portal-brand" href="homepage.html" aria-label="Vlastenec — hlavní stránka">
+          <img src="logo.svg" alt="Vlastenec" />
+          <span class="portal-brand-divider"></span>
+          <span class="portal-brand-caption">Vědomostní strategie</span>
+        </a>
 
-    <nav class="site-actions" aria-label="Uživatelská nabídka">
-      <div class="online-chip" title="Aktuálně připojení klienti">
-        <span class="online-dot" aria-hidden="true"></span>
-        <strong id="online-count">—</strong>
-        <span>online</span>
-      </div>
-      <a class="utility-link active" href="leaderboards.html">Žebříčky</a>
-      <a class="utility-link" href="settings.html">Nastavení</a>
-      <button id="profile-chip" class="profile-chip" type="button">
-        <span class="profile-copy">
-          <strong id="profile-name">Přihlásit se</strong>
-          <small id="profile-meta">Ukládej postup a výsledky</small>
-        </span>
-        <img src="avatar.png" alt="" />
-      </button>
-    </nav>
-  </header>
+        <nav class="portal-actions" aria-label="Uživatelská nabídka">
+          <div class="online-chip" title="Aktuálně připojení klienti">
+            <span class="online-dot" aria-hidden="true"></span>
+            <strong id="online-count">—</strong>
+            <span>online</span>
+          </div>
+          <a class="utility-link active" href="leaderboards.html">Žebříčky</a>
+          <a class="utility-link" href="settings.html">Nastavení</a>
+          <button id="profile-chip" class="profile-chip" type="button">
+            <span class="profile-copy">
+              <strong id="profile-name">Přihlásit se</strong>
+              <small id="profile-meta">Ukládej postup a výsledky</small>
+            </span>
+            <img src="avatar.png" alt="" />
+          </button>
+        </nav>
+      </header>
 
-  <main class="leaderboard-page">
+      <main class="leaderboard-page portal-page-content">
     <section class="hero">
       <div class="hero-copy">
         <div class="eyebrow"><span></span> ŽEBŘÍČKY · ČESKÁ REPUBLIKA</div>
@@ -183,7 +186,9 @@
       </div>
       <div id="records-grid" class="records-grid"></div>
     </section>
-  </main>
+      </main>
+    </div>
+  </div>
 
   <script src="/socket.io/socket.io.js"></script>
   <script src="leaderboards-client.js"></script>

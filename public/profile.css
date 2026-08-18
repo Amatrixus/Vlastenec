@@ -40,3 +40,72 @@ a{color:inherit;text-decoration:none}
 @media(max-width:760px){.profile-page{width:min(100% - 24px,1440px);padding-top:12px}.profile-topbar{height:auto;min-height:56px}.profile-brand span,.profile-storage-badge{display:none}.profile-hero{grid-template-columns:70px 1fr;padding:18px}.profile-avatar{width:64px;height:64px;border-radius:18px}.profile-xp{grid-column:1/-1}.stat-grid{grid-template-columns:repeat(2,1fr)}.category-list,.achievement-list{grid-template-columns:1fr}.profile-bottom-grid{grid-template-columns:1fr}.match-row{grid-template-columns:52px 1fr 54px 55px}.match-opponents,.match-date{display:none}}
 
 @media(max-width:760px){.profile-bg::before{width:95vw;right:-30vw;opacity:.07}}
+
+/* =========================================================
+   HOMEPAGE VISUAL ALIGNMENT
+   ========================================================= */
+.profile-page-actions{
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:9px;
+  margin:0 0 13px;
+}
+.profile-storage-badge{
+  padding:7px 10px;
+  border-color:rgba(230,111,23,.20);
+  background:rgba(230,111,23,.08);
+  color:var(--orange-light,#ffad5f);
+}
+.profile-back{
+  height:34px;
+  padding:0 13px;
+  border:1px solid rgba(255,255,255,.085);
+  border-radius:9px;
+  background:rgba(22,16,12,.34);
+  color:rgba(249,244,236,.66);
+  backdrop-filter:blur(10px);
+}
+.profile-back:hover{
+  border-color:rgba(255,173,95,.18);
+  background:rgba(30,20,14,.46);
+  color:#fff;
+}
+.panel{
+  border-color:rgba(255,255,255,.085);
+  background:
+    linear-gradient(145deg,rgba(255,255,255,.022),transparent 44%),
+    linear-gradient(145deg,rgba(27,20,16,.86),rgba(12,10,9,.82));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.025),0 24px 70px rgba(0,0,0,.20);
+}
+.stat-card,
+.category-card,
+.achievement-card,
+.mode-row,
+.match-row{
+  background:rgba(22,16,12,.46);
+}
+.profile-hero:after{
+  border-color:rgba(230,111,23,.08);
+  box-shadow:0 0 0 50px rgba(230,111,23,.018),0 0 0 100px rgba(230,111,23,.012);
+}
+.profile-kicker,.section-kicker{color:#ff9e4a}
+.xp-bar,.mini-track i{background:linear-gradient(90deg,#c9560e,#ffad5f)}
+.profile-avatar{
+  border-color:rgba(230,111,23,.28);
+  background:linear-gradient(145deg,rgba(230,111,23,.22),rgba(230,111,23,.06));
+  color:#ffb26c;
+}
+.achievement-card.unlocked{
+  border-color:rgba(230,111,23,.16);
+  background:linear-gradient(145deg,rgba(230,111,23,.055),rgba(255,255,255,.02));
+}
+.achievement-card.unlocked .achievement-icon{
+  border-color:rgba(230,111,23,.25);
+  background:rgba(230,111,23,.11);
+}
+
+@media(max-width:760px){
+  .profile-page-actions{margin-bottom:11px}
+  .profile-storage-badge{display:none}
+}

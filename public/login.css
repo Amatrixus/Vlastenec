@@ -1,1 +1,191 @@
-:root{--orange:#f28b2b;--orange2:#ffad58;--bg:#17100c;--panel:rgba(19,15,13,.82);--line:rgba(255,255,255,.09);--text:#f7f2ec;--muted:rgba(255,255,255,.48);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color-scheme:dark}*{box-sizing:border-box}html,body{min-height:100%;margin:0}body{background:radial-gradient(circle at 14% 40%,rgba(242,139,43,.18),transparent 32%),linear-gradient(135deg,#201209,#120e0c 58%,#0d0c0b);color:var(--text)}button,input{font:inherit}.auth-backdrop{position:fixed;inset:0;pointer-events:none;overflow:hidden}.auth-lion{position:absolute;inset:-8% -4% -8% 38%;background:url('lion.svg') center/contain no-repeat;opacity:.085;filter:brightness(2.2) sepia(1) saturate(.7);transform:rotate(-2deg)}.auth-page{width:min(100% - 32px,1180px);min-height:100vh;margin:auto;display:grid;grid-template-rows:auto 1fr;padding:28px 0 42px;position:relative;z-index:1}.auth-brand{display:flex;align-items:center;gap:18px;width:max-content;text-decoration:none;color:rgba(255,255,255,.4);font-size:10px;font-weight:900;letter-spacing:.18em}.auth-brand img{width:180px;max-height:46px}.auth-card{width:min(100%,560px);align-self:center;padding:30px;border:1px solid var(--line);border-radius:24px;background:linear-gradient(145deg,rgba(31,24,20,.92),rgba(13,12,11,.9));box-shadow:0 28px 90px rgba(0,0,0,.35);backdrop-filter:blur(20px)}.auth-kicker{color:var(--orange2);font-size:10px;font-weight:900;letter-spacing:.2em}.auth-head h1{margin:8px 0 8px;font-size:32px;line-height:1.05}.auth-head p{margin:0 0 24px;color:var(--muted);line-height:1.55;font-size:13px}.auth-warning{margin:0 0 18px;padding:12px 14px;border:1px solid rgba(255,176,84,.22);border-radius:12px;background:rgba(242,139,43,.08);color:#ffc88e;font-size:12px;line-height:1.45}.auth-tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:5px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.06);border-radius:12px;margin-bottom:20px}.auth-tab{height:38px;border:0;border-radius:9px;background:transparent;color:rgba(255,255,255,.42);cursor:pointer;font-weight:850;font-size:11px}.auth-tab.is-active{background:rgba(242,139,43,.13);color:#ffb469;box-shadow:inset 0 0 0 1px rgba(242,139,43,.18)}.auth-form{display:none;gap:15px}.auth-form.is-active{display:grid}.auth-form label{display:grid;gap:7px}.auth-form label>span{font-size:10px;font-weight:850;letter-spacing:.08em;color:rgba(255,255,255,.62)}.auth-form label>small{font-size:9px;color:rgba(255,255,255,.3)}.auth-form input{width:100%;height:46px;padding:0 13px;border:1px solid rgba(255,255,255,.09);border-radius:11px;background:rgba(0,0,0,.22);color:#fff;outline:none;transition:.15s}.auth-form input:focus{border-color:rgba(242,139,43,.55);box-shadow:0 0 0 3px rgba(242,139,43,.08)}.password-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.form-error{min-height:17px;color:#ff8e7d;font-size:11px;line-height:1.4}.primary-button{height:42px;padding:0 18px;border:1px solid rgba(255,173,88,.48);border-radius:10px;background:linear-gradient(180deg,#ff9d3f,#df7418);color:#1b0e05;font-weight:950;cursor:pointer;box-shadow:0 8px 25px rgba(242,139,43,.13)}.primary-button:hover{filter:brightness(1.06)}.primary-button:disabled{opacity:.55;cursor:wait}.primary-button.wide{width:100%;height:48px;margin-top:2px}.text-button{height:38px;border:0;background:transparent;color:rgba(255,255,255,.48);cursor:pointer}.auth-back{display:block;margin-top:22px;color:rgba(255,255,255,.35);text-decoration:none;font-size:11px}.auth-back:hover{color:#fff}.auth-existing{display:grid;grid-template-columns:54px 1fr auto;gap:12px;align-items:center;padding:16px;border:1px solid rgba(242,139,43,.15);border-radius:16px;background:rgba(242,139,43,.055)}.auth-existing-avatar{width:52px;height:52px;border-radius:14px;display:grid;place-items:center;background:linear-gradient(145deg,#ff9d3f,#8f4310);color:#170c05;font-weight:950;font-size:20px}.auth-existing small{display:block;color:#f1a45e;font-size:8px;font-weight:900;letter-spacing:.14em}.auth-existing strong{display:block;margin-top:4px;font-size:18px}.auth-existing .text-button{grid-column:3}@media(max-width:640px){.auth-page{padding-top:18px}.auth-brand img{width:150px}.auth-card{padding:22px;border-radius:20px}.auth-head h1{font-size:27px}.password-grid{grid-template-columns:1fr}.auth-lion{inset:5% -20% 10% 15%;opacity:.055}.auth-existing{grid-template-columns:48px 1fr}.auth-existing .primary-button,.auth-existing .text-button{grid-column:1/-1;width:100%}}
+:root{
+  --orange:#e66f17;
+  --orange2:#ffad5f;
+  --bg:#120d0a;
+  --panel:rgba(17,15,14,.88);
+  --line:rgba(255,255,255,.085);
+  --text:#f9f4ec;
+  --muted:rgba(249,244,236,.54);
+  font-family:"Segoe UI",system-ui,-apple-system,BlinkMacSystemFont,sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+button,input{font:inherit}
+
+/* Obsah zůstává ve stejném portálovém rámu jako homepage,
+   samotná karta je vycentrovaná v prostoru pod hlavičkou. */
+.auth-content{
+  min-height:calc(100vh - 68px - clamp(56px,6vw,104px));
+  display:grid;
+  place-items:center;
+}
+.auth-card{
+  width:min(100%,760px);
+  padding:24px 30px 22px;
+  border:1px solid rgba(255,255,255,.10);
+  border-radius:22px;
+  background:
+    linear-gradient(145deg,rgba(255,255,255,.025),transparent 40%),
+    linear-gradient(145deg,rgba(31,22,17,.92),rgba(13,11,10,.91));
+  box-shadow:0 28px 90px rgba(0,0,0,.30),inset 0 1px 0 rgba(255,255,255,.035);
+  backdrop-filter:blur(20px) saturate(112%);
+  -webkit-backdrop-filter:blur(20px) saturate(112%);
+}
+.auth-kicker{
+  color:var(--orange2);
+  font-size:9px;
+  font-weight:900;
+  letter-spacing:.19em;
+}
+.auth-head h1{
+  margin:7px 0 6px;
+  font-size:30px;
+  line-height:1.05;
+  letter-spacing:-.035em;
+}
+.auth-head p{
+  max-width:620px;
+  margin:0 0 17px;
+  color:var(--muted);
+  line-height:1.5;
+  font-size:12px;
+}
+.auth-warning{
+  margin:0 0 14px;
+  padding:10px 13px;
+  border:1px solid rgba(255,176,84,.22);
+  border-radius:11px;
+  background:rgba(230,111,23,.08);
+  color:#ffc88e;
+  font-size:11px;
+  line-height:1.45;
+}
+.auth-tabs{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:5px;
+  padding:4px;
+  background:rgba(255,255,255,.035);
+  border:1px solid rgba(255,255,255,.06);
+  border-radius:11px;
+  margin-bottom:15px;
+}
+.auth-tab{
+  height:36px;
+  border:0;
+  border-radius:8px;
+  background:transparent;
+  color:rgba(255,255,255,.42);
+  cursor:pointer;
+  font-weight:850;
+  font-size:10px;
+}
+.auth-tab.is-active{
+  background:rgba(230,111,23,.13);
+  color:#ffb469;
+  box-shadow:inset 0 0 0 1px rgba(230,111,23,.18);
+}
+.auth-form{display:none;gap:12px}
+.auth-form.is-active{display:grid}
+.auth-form label{display:grid;gap:6px;min-width:0}
+.auth-form label>span{
+  font-size:9px;
+  font-weight:850;
+  letter-spacing:.08em;
+  color:rgba(255,255,255,.62);
+}
+.auth-form label>small{font-size:8px;color:rgba(255,255,255,.30)}
+.auth-form input{
+  width:100%;
+  height:43px;
+  padding:0 12px;
+  border:1px solid rgba(255,255,255,.09);
+  border-radius:10px;
+  background:rgba(0,0,0,.22);
+  color:#fff;
+  outline:none;
+  transition:.15s;
+}
+.auth-form input:focus{
+  border-color:rgba(230,111,23,.55);
+  box-shadow:0 0 0 3px rgba(230,111,23,.08);
+}
+
+/* Přihlášení: dvě pole vedle sebe = karta je nižší a širší. */
+#login-form.is-active{grid-template-columns:1fr 1fr}
+#login-form .form-error,
+#login-form .primary-button{grid-column:1/-1}
+
+/* Registrace využívá šířku stejně: jméno + e-mail vedle sebe,
+   hesla jsou druhý kompaktní řádek. */
+#register-form.is-active{grid-template-columns:1fr 1fr}
+#register-form>.form-error,
+#register-form>.primary-button,
+#register-form>.password-grid{grid-column:1/-1}
+.password-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form-error{min-height:14px;color:#ff8e7d;font-size:10px;line-height:1.35}
+.primary-button{
+  height:41px;
+  padding:0 18px;
+  border:1px solid rgba(255,173,95,.48);
+  border-radius:10px;
+  background:linear-gradient(180deg,#ff9d3f,#df7418);
+  color:#1b0e05;
+  font-weight:950;
+  cursor:pointer;
+  box-shadow:0 8px 25px rgba(230,111,23,.13);
+}
+.primary-button:hover{filter:brightness(1.06)}
+.primary-button:disabled{opacity:.55;cursor:wait}
+.primary-button.wide{width:100%;height:45px;margin-top:0}
+.text-button{height:36px;border:0;background:transparent;color:rgba(255,255,255,.48);cursor:pointer}
+.auth-back{
+  display:block;
+  width:max-content;
+  margin-top:15px;
+  color:rgba(255,255,255,.35);
+  text-decoration:none;
+  font-size:10px;
+}
+.auth-back:hover{color:#fff}
+.auth-existing{
+  display:grid;
+  grid-template-columns:50px minmax(0,1fr) auto auto;
+  gap:11px;
+  align-items:center;
+  padding:13px 14px;
+  border:1px solid rgba(230,111,23,.15);
+  border-radius:14px;
+  background:rgba(230,111,23,.055);
+}
+.auth-existing-avatar{
+  width:48px;
+  height:48px;
+  border-radius:13px;
+  display:grid;
+  place-items:center;
+  background:linear-gradient(145deg,#ff9d3f,#8f4310);
+  color:#170c05;
+  font-weight:950;
+  font-size:18px;
+}
+.auth-existing small{display:block;color:#f1a45e;font-size:8px;font-weight:900;letter-spacing:.14em}
+.auth-existing strong{display:block;margin-top:3px;font-size:17px}
+
+/* Důležitá pojistka: author CSS nesmí přebít HTML atribut hidden. */
+.auth-existing[hidden],
+#auth-forms[hidden],
+.auth-warning[hidden]{display:none!important}
+
+@media(max-width:760px){
+  .auth-content{min-height:0;place-items:start center}
+  .auth-card{width:min(100%,620px);padding:22px;border-radius:19px}
+  .auth-head h1{font-size:27px}
+  #login-form.is-active,
+  #register-form.is-active,
+  .password-grid{grid-template-columns:1fr}
+  #register-form>.password-grid{grid-column:auto}
+  .auth-existing{grid-template-columns:48px 1fr}
+  .auth-existing .primary-button,
+  .auth-existing .text-button{grid-column:1/-1;width:100%}
+}

@@ -3,19 +3,47 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#17100c">
+  <meta name="theme-color" content="#120d0a">
   <title>Přihlášení | VLASTENEC</title>
   <link rel="stylesheet" href="login.css">
+  <link rel="stylesheet" href="portal-header.css">
   <script src="auth-client.js"></script>
 </head>
-<body>
-  <div class="auth-backdrop" aria-hidden="true"><div class="auth-lion"></div></div>
-  <main class="auth-page">
-    <a class="auth-brand" href="homepage.html" aria-label="Vlastenec – hlavní stránka">
-      <img src="logo.svg" alt="Vlastenec">
-      <span>HRÁČSKÝ ÚČET</span>
-    </a>
+<body data-portal-page="login">
+  <div class="portal-backdrop" aria-hidden="true">
+    <div class="portal-lion"></div>
+    <div class="portal-glow glow-left"></div>
+    <div class="portal-glow glow-right"></div>
+    <div class="portal-grid"></div>
+  </div>
 
+  <div class="portal-page-stage">
+    <div class="portal-page-shell">
+      <header class="portal-header">
+        <a class="portal-brand" href="homepage.html" aria-label="Vlastenec — hlavní stránka">
+          <img src="logo.svg" alt="Vlastenec">
+          <span class="portal-brand-divider"></span>
+          <span class="portal-brand-caption">Vědomostní strategie</span>
+        </a>
+        <nav class="portal-actions" aria-label="Uživatelská nabídka">
+          <div class="online-chip" title="Aktuálně připojení klienti">
+            <span class="online-dot" aria-hidden="true"></span>
+            <strong data-portal-online-count>—</strong>
+            <span>online</span>
+          </div>
+          <a class="utility-link" href="leaderboards.html">Žebříčky</a>
+          <a class="utility-link" href="settings.html">Nastavení</a>
+          <button class="profile-chip" type="button" data-portal-profile-chip>
+            <span class="profile-copy">
+              <strong data-portal-profile-name>Přihlásit se</strong>
+              <small data-portal-profile-meta>Ukládej postup a výsledky</small>
+            </span>
+            <img src="avatar.png" alt="">
+          </button>
+        </nav>
+      </header>
+
+      <main class="auth-content portal-page-content">
     <section class="auth-card" aria-labelledby="auth-title">
       <div class="auth-head">
         <span class="auth-kicker">VLASTENEC</span>
@@ -72,7 +100,12 @@
 
       <a class="auth-back" href="homepage.html">← Zpět na hlavní stránku</a>
     </section>
-  </main>
+      </main>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="portal-page-header.js"></script>
   <script src="login.js"></script>
 </body>
 </html>

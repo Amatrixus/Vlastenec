@@ -4,6 +4,11 @@
   const qs = new URLSearchParams(location.search);
   const next = window.VlastenecAuth?.safeNext(qs.get('next')) || 'homepage.html';
 
+  // Výchozí stav musí být vždy formulář. Přihlášený panel se smí
+  // zobrazit až po skutečně potvrzeném auth stavu ze serveru.
+  if ($('auth-existing')) $('auth-existing').hidden = true;
+  if ($('auth-forms')) $('auth-forms').hidden = false;
+
   function initials(name) {
     return String(name || '?').trim().split(/\s+/).slice(0,2).map(x => x[0] || '').join('').toUpperCase() || '?';
   }
@@ -89,6 +94,11 @@
       $('auth-existing').hidden = false;
       $('existing-name').textContent = auth.user.displayName;
       $('existing-avatar').textContent = initials(auth.user.displayName);
+    } else {
+      $('auth-existing').hidden = true;
+      $('auth-forms').hidden = false;
+      $('existing-name').textContent = '';
+      $('existing-avatar').textContent = '';
     }
   })();
 })();
