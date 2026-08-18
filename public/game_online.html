@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>VLASTENEC</title>
   <link rel="stylesheet" href="mainstyle.css?v=numeric-keypad-v2">
-  <link rel="stylesheet" href="mobile-game.css?v=tablet-polish-v12">
+  <link rel="stylesheet" href="mobile-game.css?v=tablet-map-fit-v13">
   <script src="auth-client.js"></script>
   <script src="profile-store.js"></script>
   <style id="vl-tablet-lobby-v4-inline">
@@ -2808,6 +2808,7 @@ if (regionValues && typeof regionValues === 'object') {
           height="1578.08pt"
           style="shape-rendering:geometricPrecision; text-rendering:geometricPrecision; image-rendering:optimizeQuality; fill-rule:evenodd; clip-rule:evenodd"
           viewBox="0 0 3508 2480.4"
+          preserveAspectRatio="xMidYMid meet"
           id="map"
           sodipodi:version="0.32"
           inkscape:version="1.1.1 (3bf5ae0d25, 2021-09-20)"
@@ -9886,11 +9887,10 @@ function prepareNumericEntryInput(input) {
     input.setAttribute("autocomplete", "off");
     input.setAttribute("spellcheck", "false");
 
-    // Touch phones and tablets use the in-game keypad and must not summon the
-    // large system keyboard over the board. A physical desktop keyboard remains
-    // fully editable because desktop has neither device marker.
-    input.readOnly = document.body.classList.contains("vl-phone-game") ||
-                     document.body.classList.contains("vl-tablet-device");
+    // Only the phone layout suppresses the system keyboard. Tablets return to
+    // desktop-style behavior: the custom keypad remains available, but tapping
+    // the field may also open the native keyboard.
+    input.readOnly = document.body.classList.contains("vl-phone-game");
 
     input.oninput = () => {
         const clean = String(input.value || "").replace(/[^\d]/g, "");
@@ -10929,7 +10929,7 @@ function showNumericResultsForThree(correctAnswer, answers, uiToken, uiStage = "
 
 	<script>console.log("🧪 VLASTENEC FIX: numeric-timeout-input-v1");</script>
     <script>console.log('🧪 VLASTENEC FIX: chat-turn-stick-v1');</script>
-    <script>console.log('🧪 VLASTENEC FIX: tablet-responsive-polish-v12');</script>
+    <script>console.log('🧪 VLASTENEC FIX: tablet-map-fit-tap-highlight-v13');</script>
     <script>
     (() => {
         // Tablet keeps the normal desktop gameplay. This class is ONLY a device
@@ -10950,15 +10950,6 @@ function showNumericResultsForThree(correctAnswer, answers, uiToken, uiStage = "
                              longSide <= 1600;
 
             body.classList.toggle("vl-tablet-device", isTablet);
-
-            // Large inline SVGs can be rendered with browser-specific viewport
-            // behaviour on tablets. Force a full-map "meet" fit so the Czech map
-            // is never cropped at the left/right edges.
-            const map = document.getElementById("map");
-            if (map && isTablet) {
-                map.setAttribute("preserveAspectRatio", "xMidYMid meet");
-                map.setAttribute("focusable", "false");
-            }
         };
 
         const ensureTabletFullscreenButton = () => {
