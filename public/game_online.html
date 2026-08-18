@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>VLASTENEC</title>
   <link rel="stylesheet" href="mainstyle.css?v=numeric-keypad-v2">
-  <link rel="stylesheet" href="mobile-game.css?v=map-renderer-v2-safe-v32">
+  <link rel="stylesheet" href="mobile-game.css?v=map-renderer-v2-v37-wave-shade-tablet-down">
   <script src="auth-client.js"></script>
   <script src="profile-store.js"></script>
   <style id="vl-tablet-lobby-v4-inline">
@@ -5037,7 +5037,7 @@ if (regionValues && typeof regionValues === 'object') {
         window.__mapRendererV2Enabled = MAP_RENDERER_V2_ENABLED;
         window.__regionWaveV2Epoch = Number(window.__regionWaveV2Epoch || 0);
         document.documentElement.classList.toggle('vl-map-renderer-v2', MAP_RENDERER_V2_ENABLED);
-        console.log(`🗺️ Map Renderer: ${MAP_RENDERER_V2_ENABLED ? 'V2.3 canvas-fill' : 'legacy V24'}`);
+        console.log(`🗺️ Map Renderer: ${MAP_RENDERER_V2_ENABLED ? 'V2.3.1 canvas-fill' : 'legacy V24'}`);
 
         function regionOwnerMap(regionsState) {
             const owners = new Map();
@@ -5243,7 +5243,7 @@ if (regionValues && typeof regionValues === 'object') {
         }
 
         // ============================================================
-        // VLASTENEC — MAP RENDERER V2.4 / V36 (opt-in with ?mapv2=1)
+        // VLASTENEC — MAP RENDERER V2.3 (opt-in with ?mapv2=1)
         //
         // Rendering only. Server/game/selection state is untouched.
         //
@@ -5261,12 +5261,6 @@ if (regionValues && typeof regionValues === 'object') {
         //   - darkening is painted on one HTML canvas above the SVG. This bypasses
         //     Chromium's per-SVG-path filter/overlay compositor entirely.
         // ============================================================
-
-        // Regions currently rendered by the temporary SVG wave must be omitted
-        // from the static Canvas fill. Otherwise the 0.7-alpha wave blends with
-        // the old Canvas colour/texture underneath and looks lighter than its
-        // final Canvas-rendered shade.
-        const regionWaveV2CanvasIsolated = new Set();
 
         function ensureRegionWaveV2Layer() {
             const mapSvg = document.getElementById('map');
@@ -5294,8 +5288,6 @@ if (regionValues && typeof regionValues === 'object') {
             if (!mapSvg) return;
             mapSvg.querySelector('#region-wave-v2-layer')?.replaceChildren();
             mapSvg.querySelectorAll('[data-vl-wave-v2-def="1"]').forEach(node => node.remove());
-            regionWaveV2CanvasIsolated.clear();
-            if (typeof scheduleRegionStateV2Render === 'function') scheduleRegionStateV2Render();
             // A cancelled visual transaction may have hidden the live region.
             mapSvg.querySelectorAll('.region[data-vl-wave-v2-hidden="1"]').forEach(region => {
                 region.style.visibility = region.dataset.vlWaveV2PreviousVisibility || '';
@@ -5354,6 +5346,18 @@ if (regionValues && typeof regionValues === 'object') {
             clone.setAttribute('aria-hidden', 'true');
         }
 
+        function regionWaveV2Shade(fill) {
+            // V37: only the moving colour is shaded slightly darker.
+            // No filter, opacity or canvas/layer behaviour changes.
+            const key = String(fill || '').trim().toLowerCase();
+            const shades = {
+                blue: '#0000eb',
+                red: '#eb0000',
+                white: '#ebebeb'
+            };
+            return shades[key] || fill;
+        }
+
         function styleRegionWaveV2ColourClone(clone, fill) {
             clone.removeAttribute('id');
             clone.removeAttribute('mask');
@@ -5364,7 +5368,7 @@ if (regionValues && typeof regionValues === 'object') {
             clone.style.filter = 'none';
             clone.style.opacity = '1';
             clone.style.fillOpacity = '1';
-            clone.style.fill = fill;
+            clone.style.fill = regionWaveV2Shade(fill);
             // The base clone owns the border. The moving colour must not draw a
             // second border through the middle of the wave.
             clone.style.stroke = 'none';
@@ -5463,21 +5467,9 @@ if (regionValues && typeof regionValues === 'object') {
             if (!regionEl || !newFill) return;
             const epoch = Number(window.__regionWaveV2Epoch || 0);
             const neutral = neutralRegionFill(regionEl);
-            const regionKey = String(regionEl.id || '');
-
-            // The static Canvas normally owns the region fill in V2.3. During the
-            // wave we remove THIS region from that Canvas first, so the temporary
-            // SVG wave is composited directly over the same page background as the
-            // final Canvas colour. This keeps the wave shade pixel-consistent with
-            // the final shade and removes the end-of-wave brightness flash.
-            if (regionKey) regionWaveV2CanvasIsolated.add(regionKey);
-            flushRegionStateV2CanvasNow();
-
             const part = makeRegionWaveV2Split(regionEl, neutral, newFill, 0, epoch);
             if (!part) {
                 if (isRegionWaveV2EpochCurrent(epoch)) setRegionVisualFill(regionEl, newFill);
-                if (regionKey) regionWaveV2CanvasIsolated.delete(regionKey);
-                flushRegionStateV2CanvasNow();
                 return;
             }
 
@@ -5487,18 +5479,11 @@ if (regionValues && typeof regionValues === 'object') {
                     part.clipCircle, 0, part.maxRadius,
                     REGION_WAVE.fillMs, easeOutCubic, epoch
                 );
-
-                if (completed && isRegionWaveV2EpochCurrent(epoch)) {
-                    // Commit the actual state while the full-radius wave still
-                    // covers the region. Repaint Canvas synchronously, then remove
-                    // the temporary SVG group in the same task: no intermediate
-                    // frame with double alpha and no colour pop.
-                    setRegionVisualFill(regionEl, newFill);
-                }
             } finally {
-                if (regionKey) regionWaveV2CanvasIsolated.delete(regionKey);
-                flushRegionStateV2CanvasNow();
                 removeRegionWaveV2Part(part);
+            }
+            if (completed && isRegionWaveV2EpochCurrent(epoch)) {
+                setRegionVisualFill(regionEl, newFill);
             }
         }
 
@@ -5506,17 +5491,10 @@ if (regionValues && typeof regionValues === 'object') {
             if (!regionEl || !oldFill || !newFill) return;
             const epoch = Number(window.__regionWaveV2Epoch || 0);
             const neutral = neutralRegionFill(regionEl);
-            const regionKey = String(regionEl.id || '');
-
-            // Old colour retracts without the static Canvas copy underneath.
-            if (regionKey) regionWaveV2CanvasIsolated.add(regionKey);
-            flushRegionStateV2CanvasNow();
             const oldPart = makeRegionWaveV2Split(regionEl, neutral, oldFill, 0, epoch);
 
             if (!oldPart) {
                 if (isRegionWaveV2EpochCurrent(epoch)) setRegionVisualFill(regionEl, neutral);
-                if (regionKey) regionWaveV2CanvasIsolated.delete(regionKey);
-                flushRegionStateV2CanvasNow();
             } else {
                 oldPart.clipCircle.setAttribute('r', String(oldPart.maxRadius));
                 try {
@@ -5524,13 +5502,10 @@ if (regionValues && typeof regionValues === 'object') {
                         oldPart.clipCircle, oldPart.maxRadius, 0,
                         REGION_WAVE.clearMs, easeInCubic, epoch
                     );
-                    if (isRegionWaveV2EpochCurrent(epoch)) setRegionVisualFill(regionEl, neutral);
                 } finally {
-                    // Restore the neutral Canvas fill for the intended neutral pause.
-                    if (regionKey) regionWaveV2CanvasIsolated.delete(regionKey);
-                    flushRegionStateV2CanvasNow();
                     removeRegionWaveV2Part(oldPart);
                 }
+                if (isRegionWaveV2EpochCurrent(epoch)) setRegionVisualFill(regionEl, neutral);
             }
 
             if (!isRegionWaveV2EpochCurrent(epoch)) return;
@@ -5541,7 +5516,7 @@ if (regionValues && typeof regionValues === 'object') {
         }
 
         // ------------------------------------------------------------
-        // V2.4 single-canvas region fill renderer
+        // V2.3 single-canvas region fill renderer
         // ------------------------------------------------------------
         // Chrome/Android can tile a large SVG compositing surface. The V2.3
         // renderer keeps SVG paths for geometry, stroke and pointer hit-testing,
@@ -5550,16 +5525,6 @@ if (regionValues && typeof regionValues === 'object') {
         // transparent SVG viewport). The backing surface is intentionally capped
         // below 1k px on its longest side.
         let regionStateV2Raf = 0;
-
-        function flushRegionStateV2CanvasNow() {
-            if (!MAP_RENDERER_V2_ENABLED) return;
-            if (regionStateV2Raf) {
-                cancelAnimationFrame(regionStateV2Raf);
-                regionStateV2Raf = 0;
-            }
-            renderRegionStateV2Canvas();
-        }
-
         const REGION_CANVAS_V2_MAX_BACKING = 960;
         const REGION_CANVAS_V2_PAD = 12;
         const regionTextureV2Image = new Image();
@@ -5699,7 +5664,6 @@ if (regionValues && typeof regionValues === 'object') {
             ctx.imageSmoothingQuality = 'high';
 
             for (const regionEl of regions) {
-                if (regionWaveV2CanvasIsolated.has(String(regionEl.id || ''))) continue;
                 const d = regionEl.getAttribute('d');
                 const ctm = regionEl.getScreenCTM?.();
                 if (!d || !ctm || typeof Path2D !== 'function') continue;
