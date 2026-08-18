@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const MARKER = '🧪 VLASTENEC FIX: mobile-game-safe-v1';
+  const MARKER = '🧪 VLASTENEC FIX: mobile-game-safe-v2';
   console.log(MARKER);
 
   let wasGameActive = false;
@@ -13,6 +13,26 @@
     // Explicitly exclude tablets. In landscape, modern phones are normally
     // <= 600 CSS px on the short side; tablets are substantially taller/wider.
     return coarse && shortSide <= 600;
+  }
+
+  function forceChatClosed() {
+    const drawer = document.getElementById('game_chat_drawer');
+    if (!drawer) return;
+    drawer.classList.remove('open');
+    drawer.setAttribute('aria-hidden', 'true');
+  }
+
+  function guardFullscreenTouch() {
+    const toggle = document.getElementById('game_chat_toggle');
+    if (toggle) toggle.style.pointerEvents = 'none';
+
+    // Some mobile Chromium builds re-target the end of a touch sequence while
+    // the viewport is being rebuilt for fullscreen. Keep the chat firmly closed
+    // through that transition so the fullscreen tap can never become a chat tap.
+    [0, 80, 220, 450, 750].forEach(ms => setTimeout(forceChatClosed, ms));
+    setTimeout(() => {
+      if (toggle) toggle.style.pointerEvents = '';
+    }, 800);
   }
 
   function buildUi() {
@@ -37,11 +57,23 @@
     fullscreen.setAttribute('title', 'Celá obrazovka');
     document.body.appendChild(fullscreen);
 
-    fullscreen.addEventListener('click', async () => {
+    // Stop the fullscreen gesture here. This prevents the same tap/pointer
+    // sequence from reaching the nearby game UI while Chromium rebuilds the viewport.
+    fullscreen.addEventListener('pointerdown', (event) => {
+      event.stopPropagation();
+    }, { passive: true });
+
+    fullscreen.addEventListener('click', async (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      guardFullscreenTouch();
+      forceChatClosed();
+
       try {
         if (document.fullscreenElement) {
           await document.exitFullscreen?.();
           try { screen.orientation?.unlock?.(); } catch (_) {}
+          guardFullscreenTouch();
           return;
         }
 
@@ -53,13 +85,16 @@
             await root.requestFullscreen();
           }
           try { await screen.orientation?.lock?.('landscape'); } catch (_) {}
+          guardFullscreenTouch();
         }
       } catch (err) {
         console.debug('[mobile-game] fullscreen unavailable:', err?.message || err);
+      } finally {
+        forceChatClosed();
       }
     });
 
-    document.addEventListener('fullscreenchange', syncFullscreenButton, { passive: true });
+    document.addEventListener('fullscreenchange', () => { forceChatClosed(); syncFullscreenButton(); }, { passive: true });
   }
 
   function syncFullscreenButton() {
@@ -72,10 +107,7 @@
   }
 
   function collapseGameChatOnce() {
-    const drawer = document.getElementById('game_chat_drawer');
-    if (!drawer) return;
-    drawer.classList.remove('open');
-    drawer.setAttribute('aria-hidden', 'true');
+    forceChatClosed();
   }
 
   function syncMode() {
