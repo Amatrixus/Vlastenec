@@ -1,197 +1,127 @@
 (() => {
   'use strict';
 
-  const MARKER = '🧪 VLASTENEC FIX: mobile-game-landscape-hud-v1.1-lobby-safe';
+  const MARKER = '🧪 VLASTENEC FIX: mobile-game-safe-v1';
   console.log(MARKER);
 
-  const state = {
-    dismissedLandscapeGate: false,
-    fullscreenAttempted: false,
-    mobileActive: false
-  };
+  let wasGameActive = false;
+  let uiBuilt = false;
 
-  function coarsePointer() {
-    try { return matchMedia('(pointer: coarse)').matches || navigator.maxTouchPoints > 0; }
-    catch (_) { return navigator.maxTouchPoints > 0; }
+  function phoneLikeViewport() {
+    const coarse = window.matchMedia?.('(pointer: coarse)').matches ?? false;
+    const shortSide = Math.min(window.innerWidth || 9999, window.innerHeight || 9999);
+    // Explicitly exclude tablets. In landscape, modern phones are normally
+    // <= 600 CSS px on the short side; tablets are substantially taller/wider.
+    return coarse && shortSide <= 600;
   }
 
-  function isHandsetViewport() {
-    const w = window.visualViewport?.width || window.innerWidth || screen.width || 0;
-    const h = window.visualViewport?.height || window.innerHeight || screen.height || 0;
-    const shortSide = Math.min(w, h);
-    const longSide = Math.max(w, h);
-    return coarsePointer() && shortSide <= 540 && longSide <= 1100;
-  }
+  function buildUi() {
+    if (uiBuilt || !document.body) return;
+    uiBuilt = true;
 
-  function isPortrait() {
-    try { return matchMedia('(orientation: portrait)').matches; }
-    catch (_) { return window.innerHeight > window.innerWidth; }
-  }
-
-  function isFullscreen() {
-    return !!(document.fullscreenElement || document.webkitFullscreenElement);
-  }
-
-  function ensureGate() {
-    let gate = document.getElementById('vl_mobile_game_gate');
-    if (gate) return gate;
-
-    gate = document.createElement('div');
-    gate.id = 'vl_mobile_game_gate';
-    gate.setAttribute('role', 'dialog');
-    gate.setAttribute('aria-modal', 'true');
-    gate.setAttribute('aria-labelledby', 'vl_mobile_game_gate_title');
+    const gate = document.createElement('div');
+    gate.id = 'vl_mobile_rotate_gate';
+    gate.setAttribute('role', 'status');
+    gate.setAttribute('aria-live', 'polite');
     gate.innerHTML = `
-      <section class="vl-mobile-game-gate-card">
-        <div id="vl_mobile_game_gate_icon" class="vl-mobile-game-gate-icon" aria-hidden="true">↻</div>
-        <h2 id="vl_mobile_game_gate_title">Otočte telefon na šířku</h2>
-        <p id="vl_mobile_game_gate_copy">Samotná hra je na telefonu navržená pro režim na šířku.</p>
-        <div class="vl-mobile-game-gate-actions">
-          <button id="vl_mobile_fullscreen_btn" type="button">Celá obrazovka</button>
-          <button id="vl_mobile_continue_btn" type="button">Pokračovat bez fullscreenu</button>
-        </div>
-      </section>`;
+      <div class="vl-rotate-icon" aria-hidden="true">↻</div>
+      <strong>Otočte telefon na šířku</strong>
+      <span>Samotná hra je na telefonu navržená pro režim landscape.</span>`;
     document.body.appendChild(gate);
 
-    gate.querySelector('#vl_mobile_fullscreen_btn')?.addEventListener('click', async () => {
-      state.fullscreenAttempted = true;
-      await enterFullscreenAndLandscape();
-      // If browser cannot rotate automatically, portrait gate intentionally stays.
-      if (!isPortrait()) {
-        state.dismissedLandscapeGate = true;
-        syncMobileGameUi();
-      } else {
-        syncMobileGameUi();
+    const fullscreen = document.createElement('button');
+    fullscreen.id = 'vl_mobile_fullscreen_btn';
+    fullscreen.type = 'button';
+    fullscreen.textContent = '⛶';
+    fullscreen.setAttribute('aria-label', 'Celá obrazovka');
+    fullscreen.setAttribute('title', 'Celá obrazovka');
+    document.body.appendChild(fullscreen);
+
+    fullscreen.addEventListener('click', async () => {
+      try {
+        if (document.fullscreenElement) {
+          await document.exitFullscreen?.();
+          try { screen.orientation?.unlock?.(); } catch (_) {}
+          return;
+        }
+
+        const root = document.documentElement;
+        if (root.requestFullscreen) {
+          try {
+            await root.requestFullscreen({ navigationUI: 'hide' });
+          } catch (_) {
+            await root.requestFullscreen();
+          }
+          try { await screen.orientation?.lock?.('landscape'); } catch (_) {}
+        }
+      } catch (err) {
+        console.debug('[mobile-game] fullscreen unavailable:', err?.message || err);
       }
     });
 
-    gate.querySelector('#vl_mobile_continue_btn')?.addEventListener('click', () => {
-      state.dismissedLandscapeGate = true;
-      syncMobileGameUi();
-    });
-
-    return gate;
+    document.addEventListener('fullscreenchange', syncFullscreenButton, { passive: true });
   }
 
-  async function requestFullscreen() {
-    if (isFullscreen()) return true;
-    const target = document.documentElement;
-    const fn = target.requestFullscreen || target.webkitRequestFullscreen;
-    if (!fn) return false;
-    try {
-      await fn.call(target);
-      return true;
-    } catch (_) {
-      return false;
-    }
+  function syncFullscreenButton() {
+    const btn = document.getElementById('vl_mobile_fullscreen_btn');
+    if (!btn) return;
+    const active = !!document.fullscreenElement;
+    btn.textContent = active ? '×' : '⛶';
+    btn.setAttribute('aria-label', active ? 'Ukončit celou obrazovku' : 'Celá obrazovka');
+    btn.setAttribute('title', active ? 'Ukončit celou obrazovku' : 'Celá obrazovka');
   }
 
-  async function lockLandscape() {
-    try {
-      if (screen.orientation?.lock) {
-        await screen.orientation.lock('landscape');
-        return true;
-      }
-    } catch (_) {}
-    return false;
-  }
-
-  async function enterFullscreenAndLandscape() {
-    // Most mobile browsers only allow fullscreen from a user gesture.
-    // The gate button is therefore the authoritative entry point.
-    await requestFullscreen();
-    await lockLandscape();
-    setTimeout(syncMobileGameUi, 80);
-    setTimeout(syncMobileGameUi, 320);
-  }
-
-  function closeGameChatOnMobile() {
+  function collapseGameChatOnce() {
     const drawer = document.getElementById('game_chat_drawer');
     if (!drawer) return;
     drawer.classList.remove('open');
     drawer.setAttribute('aria-hidden', 'true');
   }
 
-  function updateGateContent(portrait) {
-    const gate = ensureGate();
-    const icon = gate.querySelector('#vl_mobile_game_gate_icon');
-    const title = gate.querySelector('#vl_mobile_game_gate_title');
-    const copy = gate.querySelector('#vl_mobile_game_gate_copy');
-    const fsButton = gate.querySelector('#vl_mobile_fullscreen_btn');
+  function syncMode() {
+    if (!document.body) return;
+    const phone = phoneLikeViewport();
+    document.body.classList.toggle('vl-phone-game', phone);
 
-    if (portrait) {
-      if (icon) icon.textContent = '↻';
-      if (title) title.textContent = 'Otočte telefon na šířku';
-      if (copy) copy.textContent = 'Samotná hra je na telefonu navržená pro režim na šířku. Tlačítko níže se zároveň pokusí spustit fullscreen.';
-      if (fsButton) fsButton.textContent = 'Fullscreen a otočit';
-    } else {
-      if (icon) icon.textContent = '⛶';
-      if (title) title.textContent = 'Hrát na celé obrazovce';
-      if (copy) copy.textContent = 'Fullscreen schová lišty prohlížeče a dá mapě maximum prostoru.';
-      if (fsButton) fsButton.textContent = 'Spustit fullscreen';
+    const active = phone && document.body.classList.contains('is-game-started');
+    if (active && !wasGameActive) {
+      // This is deliberately the ONLY gameplay-state side effect in this file,
+      // and it occurs only after the existing client has already marked the match
+      // as started. Lobby creation/join/state is never touched.
+      collapseGameChatOnce();
+      requestAnimationFrame(() => {
+        collapseGameChatOnce();
+        try { window.VlastenecSound?.sync?.(); } catch (_) {}
+      });
     }
-  }
+    wasGameActive = active;
 
-  function syncMobileGameUi() {
-    const started = document.body.classList.contains('is-game-started');
-    const handset = isHandsetViewport();
-    state.mobileActive = started && handset;
-
-    document.body.classList.toggle('vl-mobile-game-active', state.mobileActive);
-
-    if (!state.mobileActive) {
-      document.body.classList.remove('vl-mobile-game-portrait', 'vl-mobile-game-gate-open');
-      return;
+    if (phone) {
+      try { window.VlastenecSound?.sync?.(); } catch (_) {}
     }
-
-    closeGameChatOnMobile();
-
-    const portrait = isPortrait();
-    document.body.classList.toggle('vl-mobile-game-portrait', portrait);
-    updateGateContent(portrait);
-
-    const shouldShowLandscapeIntro = !portrait && !isFullscreen() && !state.dismissedLandscapeGate;
-    const shouldShowGate = portrait || shouldShowLandscapeIntro;
-    document.body.classList.toggle('vl-mobile-game-gate-open', shouldShowGate);
-
-    // Sound icon is positioned from the leave icon's actual box.
-    requestAnimationFrame(() => window.VlastenecSound?.sync?.());
+    syncFullscreenButton();
   }
-
 
   function init() {
-    // V lobby neděláme vůbec nic do DOMu ani do tlačítek. Mobilní vrstva se
-    // aktivuje teprve ve chvíli, kdy core game přidá body.is-game-started.
-    // Tím je lobby zcela izolovaná od fullscreen/orientation logiky.
-    const bodyObserver = new MutationObserver((mutations) => {
-      if (mutations.some(m => m.attributeName === 'class')) syncMobileGameUi();
-    });
-    bodyObserver.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+    buildUi();
+    syncMode();
 
-    const phase = document.getElementById('gamephase');
-    if (phase) {
-      new MutationObserver(() => {
-        if (state.mobileActive) requestAnimationFrame(() => window.VlastenecSound?.sync?.());
-      }).observe(phase, { childList: true, subtree: true, characterData: true });
-    }
+    // Observe only the body class used by the already-existing game client.
+    // No socket listeners, no lobby listeners, no room logic, no monkeypatching.
+    const observer = new MutationObserver(syncMode);
+    observer.observe(document.body, { attributes: true, attributeFilter: ['class'] });
 
-    const onViewportChange = () => {
-      syncMobileGameUi();
-      requestAnimationFrame(() => window.VlastenecSound?.sync?.());
-    };
-
-    window.addEventListener('resize', onViewportChange, { passive: true });
+    window.addEventListener('resize', syncMode, { passive: true });
     window.addEventListener('orientationchange', () => {
-      setTimeout(onViewportChange, 80);
-      setTimeout(onViewportChange, 320);
+      setTimeout(syncMode, 80);
+      setTimeout(syncMode, 300);
     }, { passive: true });
-    window.visualViewport?.addEventListener('resize', onViewportChange, { passive: true });
-    document.addEventListener('fullscreenchange', onViewportChange);
-    document.addEventListener('webkitfullscreenchange', onViewportChange);
-
-    syncMobileGameUi();
+    window.visualViewport?.addEventListener('resize', syncMode, { passive: true });
   }
 
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init, { once: true });
-  else init();
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init, { once: true });
+  } else {
+    init();
+  }
 })();

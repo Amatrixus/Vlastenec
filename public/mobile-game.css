@@ -1,454 +1,584 @@
 /* ============================================================
-   VLASTENEC — MOBILE GAME LANDSCAPE HUD V1 (2026-08-18)
-   Phase 1: orientation gate + fullscreen entry + compact in-game HUD.
-   Lobby and question layouts intentionally remain unchanged.
+   VLASTENEC — MOBILE GAME SAFE V1 (2026-08-18)
+   Isolated mobile-only gameplay layer.
+   IMPORTANT: every gameplay rule is gated by BOTH:
+     body.vl-phone-game.is-game-started
+   so this file cannot restyle or interfere with the lobby.
    ============================================================ */
 
-#vl_mobile_game_gate {
-  display: none;
-}
-
-body.vl-mobile-game-active.vl-mobile-game-gate-open #vl_mobile_game_gate {
-  position: fixed;
-  inset: 0;
-  z-index: 25000;
-  display: grid;
-  place-items: center;
-  box-sizing: border-box;
-  padding:
-    max(18px, env(safe-area-inset-top))
-    max(18px, env(safe-area-inset-right))
-    max(18px, env(safe-area-inset-bottom))
-    max(18px, env(safe-area-inset-left));
-  background:
-    radial-gradient(circle at 72% 26%, rgba(242,139,43,.20), transparent 36%),
-    linear-gradient(145deg, rgba(16,13,11,.985), rgba(29,19,13,.985));
-  color: #fff;
-  font-family: inherit;
-}
-
-.vl-mobile-game-gate-card {
-  width: min(88vw, 520px);
-  box-sizing: border-box;
-  padding: 24px 26px 22px;
-  border: 1px solid rgba(255,255,255,.10);
-  border-radius: 18px;
-  background: rgba(15,14,13,.88);
-  box-shadow: 0 24px 70px rgba(0,0,0,.52), inset 0 1px 0 rgba(255,255,255,.045);
-  text-align: center;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-}
-
-.vl-mobile-game-gate-icon {
-  width: 58px;
-  height: 58px;
-  margin: 0 auto 13px;
-  display: grid;
-  place-items: center;
-  border-radius: 15px;
-  background: rgba(242,139,43,.12);
-  border: 1px solid rgba(242,139,43,.28);
-  color: #f39a43;
-  font-size: 31px;
-  line-height: 1;
-}
-
-.vl-mobile-game-gate-card h2 {
-  margin: 0;
-  color: #fff;
-  font-size: clamp(20px, 4.2vw, 27px);
-  line-height: 1.12;
-  font-weight: 760;
-}
-
-.vl-mobile-game-gate-card p {
-  margin: 9px auto 0;
-  max-width: 420px;
-  color: rgba(255,255,255,.62);
-  font-size: clamp(12px, 2.5vw, 15px);
-  line-height: 1.45;
-}
-
-.vl-mobile-game-gate-actions {
-  display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 9px;
-  margin-top: 18px;
-}
-
-.vl-mobile-game-gate-actions button {
-  min-height: 44px;
-  padding: 0 18px;
-  border-radius: 10px;
-  border: 1px solid rgba(255,255,255,.10);
-  font: inherit;
-  font-size: 14px;
-  font-weight: 730;
-  cursor: pointer;
-}
-
+#vl_mobile_rotate_gate,
 #vl_mobile_fullscreen_btn {
-  background: linear-gradient(135deg, #f39a43, #dc6e13);
-  color: #17100a;
-  border-color: rgba(255,163,75,.45);
-}
-
-#vl_mobile_continue_btn {
-  background: rgba(255,255,255,.055);
-  color: rgba(255,255,255,.78);
-}
-
-body.vl-mobile-game-portrait #vl_mobile_continue_btn {
   display: none;
 }
 
-body.vl-mobile-game-portrait #vl_mobile_fullscreen_btn {
-  min-width: 210px;
+/* Portrait is intentionally blocked only AFTER the match has started.
+   Lobby remains untouched and may be used normally in portrait. */
+@media (orientation: portrait) {
+  body.vl-phone-game.is-game-started #vl_mobile_rotate_gate {
+    position: fixed;
+    inset: 0;
+    z-index: 30000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    padding: max(24px, env(safe-area-inset-top)) max(24px, env(safe-area-inset-right)) max(24px, env(safe-area-inset-bottom)) max(24px, env(safe-area-inset-left));
+    box-sizing: border-box;
+    background:
+      radial-gradient(circle at 50% 42%, rgba(229,116,29,.18), transparent 38%),
+      rgba(7,8,9,.97);
+    color: #fff;
+    text-align: center;
+    font-family: "Segoe UI", system-ui, sans-serif;
+  }
+
+  body.vl-phone-game.is-game-started #vl_mobile_rotate_gate .vl-rotate-icon {
+    width: 62px;
+    height: 62px;
+    display: grid;
+    place-items: center;
+    border: 1px solid rgba(255,255,255,.12);
+    border-radius: 18px;
+    background: rgba(255,255,255,.055);
+    color: #ef8a31;
+    font-size: 34px;
+    line-height: 1;
+  }
+
+  body.vl-phone-game.is-game-started #vl_mobile_rotate_gate strong {
+    font-size: 1.2rem;
+    font-weight: 700;
+  }
+
+  body.vl-phone-game.is-game-started #vl_mobile_rotate_gate span {
+    max-width: 300px;
+    color: rgba(255,255,255,.62);
+    font-size: .82rem;
+    line-height: 1.45;
+  }
 }
 
-/* Handset landscape only. Tablet landscape remains on its existing layout. */
-@media (pointer: coarse) and (orientation: landscape) and (max-height: 600px) and (max-width: 1100px) {
-  html,
-  body.vl-mobile-game-active {
+/* Phone landscape gameplay. Tablets are intentionally excluded by the
+   JS-applied .vl-phone-game class, so the known-good tablet layout remains. */
+@media (orientation: landscape) and (max-height: 600px) {
+  html:has(body.vl-phone-game.is-game-started),
+  body.vl-phone-game.is-game-started {
     width: 100%;
     height: 100%;
     min-height: 100dvh;
     margin: 0;
+    padding: 0;
     overflow: hidden !important;
     overscroll-behavior: none;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
   }
 
-  body.vl-mobile-game-active {
-    --vl-mobile-safe-top: max(6px, env(safe-area-inset-top));
-    --vl-mobile-safe-right: max(8px, env(safe-area-inset-right));
-    --vl-mobile-safe-bottom: max(5px, env(safe-area-inset-bottom));
-    --vl-mobile-safe-left: max(8px, env(safe-area-inset-left));
+  body.vl-phone-game.is-game-started {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
   }
 
-  /* Map gets almost the whole viewport. HUD floats above it. */
-  body.vl-mobile-game-active #map {
-    top: 2.5% !important;
-    left: 3% !important;
-    width: 94% !important;
-    height: 88% !important;
+  /* -------------------- Map: give it the screen -------------------- */
+  body.vl-phone-game.is-game-started #map {
+    top: 1.5dvh !important;
+    left: 4vw !important;
+    width: 92vw !important;
+    height: 86dvh !important;
     max-width: none !important;
     max-height: none !important;
   }
 
-  body.vl-mobile-game-active #cover {
-    position: fixed;
-    inset: 0;
+  body.vl-phone-game.is-game-started .region-value {
+    padding: 1px 3px;
+    font-size: clamp(.66rem, 1.65vw, .82rem) !important;
+    border-radius: 3px;
   }
 
-  /* --- Chat: compact button by default; drawer only on demand. --- */
-  body.vl-mobile-game-active #game_chat_toggle {
+  body.vl-phone-game.is-game-started .pin-marker {
+    width: clamp(18px, 2.8vw, 25px) !important;
+  }
+
+  body.vl-phone-game.is-game-started .player-name {
+    padding: 2px 5px;
+    border-radius: 5px;
+    border-width: 1px;
+    font-size: clamp(.55rem, 1.3vw, .7rem) !important;
+  }
+
+  /* -------------------- Compact phase HUD -------------------- */
+  body.vl-phone-game.is-game-started #gameprogress {
+    position: fixed !important;
+    top: max(4px, env(safe-area-inset-top)) !important;
+    right: 31vw !important;
+    bottom: auto !important;
+    width: 38vw !important;
+    height: 13dvh !important;
+    min-height: 48px !important;
+    max-height: 62px !important;
+    z-index: 130 !important;
+    overflow: visible;
+    background: rgba(0,0,0,.58);
+    border-radius: 0 0 10px 10px;
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+  }
+
+  body.vl-phone-game.is-game-started #gamephase {
+    right: 0 !important;
+    width: 100% !important;
+    height: 33% !important;
+    padding-left: 0 !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: clamp(.72rem, 1.8vw, .9rem) !important;
+    line-height: 1 !important;
+    text-align: center;
+    white-space: nowrap;
+  }
+
+  body.vl-phone-game.is-game-started #gamerounds,
+  body.vl-phone-game.is-game-started #playersticks {
+    right: 0 !important;
+    width: 100% !important;
+    padding-left: 0 !important;
+  }
+
+  body.vl-phone-game.is-game-started #gamerounds {
+    top: 33% !important;
+    height: 31% !important;
+  }
+
+  body.vl-phone-game.is-game-started #playersticks {
+    top: 65% !important;
+    height: 35% !important;
+    font-size: .7rem !important;
+  }
+
+  body.vl-phone-game.is-game-started .round {
+    top: 8% !important;
+    width: 11.5% !important;
+    height: 34% !important;
+    margin-right: 2.2% !important;
+  }
+
+  body.vl-phone-game.is-game-started .bundle {
+    width: 11.5% !important;
+    margin-right: 2.2% !important;
+    font-size: .55rem !important;
+  }
+
+  body.vl-phone-game.is-game-started .stick {
+    width: 10% !important;
+  }
+
+  /* -------------------- Player score cards -------------------- */
+  body.vl-phone-game.is-game-started #myscore,
+  body.vl-phone-game.is-game-started #player2score,
+  body.vl-phone-game.is-game-started #player3score {
+    position: fixed !important;
+    bottom: 0 !important;
+    box-sizing: border-box;
+    z-index: 130 !important;
+    border-radius: 9px 9px 0 0 !important;
+    overflow: hidden;
+  }
+
+  body.vl-phone-game.is-game-started #myscore {
+    left: 3vw !important;
+    width: 30vw !important;
+    height: 14dvh !important;
+    min-height: 50px;
+    max-height: 62px;
+  }
+
+  body.vl-phone-game.is-game-started #player2score {
+    left: 35vw !important;
+    width: 30vw !important;
+    height: 13dvh !important;
+    min-height: 47px;
+    max-height: 58px;
+  }
+
+  body.vl-phone-game.is-game-started #player3score {
+    left: 67vw !important;
+    width: 30vw !important;
+    height: 13dvh !important;
+    min-height: 47px;
+    max-height: 58px;
+  }
+
+  body.vl-phone-game.is-game-started #myscorename,
+  body.vl-phone-game.is-game-started #player2scorename,
+  body.vl-phone-game.is-game-started #player3scorename {
+    height: 46% !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1.05 !important;
+    padding: 0 4px;
+    box-sizing: border-box;
+    font-size: clamp(.68rem, 1.85vw, .9rem) !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  body.vl-phone-game.is-game-started #myscorenumber,
+  body.vl-phone-game.is-game-started #player2scorenumber,
+  body.vl-phone-game.is-game-started #player3scorenumber {
+    height: 54% !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1 !important;
+    font-size: clamp(.86rem, 2.2vw, 1.08rem) !important;
+  }
+
+  /* -------------------- Chat: collapsed until requested -------------------- */
+  body.vl-phone-game.is-game-started #game_chat_toggle {
     position: fixed !important;
     display: grid !important;
     place-items: center;
-    top: var(--vl-mobile-safe-top) !important;
-    left: var(--vl-mobile-safe-left) !important;
+    top: max(8px, env(safe-area-inset-top)) !important;
+    left: max(8px, env(safe-area-inset-left)) !important;
     right: auto !important;
     bottom: auto !important;
-    width: 42px !important;
-    height: 42px !important;
-    min-width: 42px !important;
-    min-height: 42px !important;
-    padding: 0 !important;
+    width: 40px !important;
+    height: 40px !important;
     border-radius: 11px !important;
-    z-index: 142 !important;
-    background: rgba(0,0,0,.72) !important;
-    border: 1px solid rgba(255,255,255,.10) !important;
-    box-shadow: 0 7px 18px rgba(0,0,0,.30) !important;
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
-  }
-
-  body.vl-mobile-game-active #game_chat_toggle .game-chat-icon {
-    font-size: 18px !important;
-  }
-
-  body.vl-mobile-game-active #game_chat_toggle .game-chat-unread {
-    top: -5px !important;
-    right: -5px !important;
-    min-width: 17px !important;
-    height: 17px !important;
-    font-size: 9px !important;
-    line-height: 17px !important;
-  }
-
-  body.vl-mobile-game-active #game_chat_drawer {
-    position: fixed !important;
-    display: grid !important;
-    top: var(--vl-mobile-safe-top) !important;
-    left: var(--vl-mobile-safe-left) !important;
-    right: auto !important;
-    bottom: auto !important;
-    width: min(39vw, 320px) !important;
-    height: min(54dvh, 218px) !important;
-    min-width: 250px !important;
-    min-height: 150px !important;
-    padding: 7px 8px 8px !important;
-    grid-template-columns: 1fr !important;
-    grid-template-rows: 26px 34px minmax(0, 1fr) !important;
-    gap: 5px !important;
-    border: 1px solid rgba(255,255,255,.10) !important;
-    border-radius: 12px !important;
-    background: rgba(0,0,0,.88) !important;
-    box-shadow: 8px 12px 32px rgba(0,0,0,.42) !important;
     z-index: 145 !important;
-    transform: translateX(calc(-100% - 18px)) !important;
-    opacity: 0 !important;
-    pointer-events: none !important;
-    transition: transform .18s ease, opacity .16s ease !important;
+    background: rgba(8,9,10,.84) !important;
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
   }
 
-  body.vl-mobile-game-active #game_chat_drawer.open {
+  body.vl-phone-game.is-game-started #game_chat_drawer {
+    position: fixed !important;
+    display: grid !important;
+    top: max(8px, env(safe-area-inset-top)) !important;
+    left: max(8px, env(safe-area-inset-left)) !important;
+    right: auto !important;
+    bottom: auto !important;
+    width: min(43vw, 350px) !important;
+    height: min(55dvh, 220px) !important;
+    min-width: 250px;
+    min-height: 150px;
+    box-sizing: border-box !important;
+    padding: 8px !important;
+    grid-template-rows: 28px minmax(0, 1fr) 36px !important;
+    gap: 5px !important;
+    border: 1px solid rgba(255,255,255,.10) !important;
+    border-radius: 12px !important;
+    background: rgba(6,7,8,.93) !important;
+    box-shadow: 0 16px 42px rgba(0,0,0,.48) !important;
+    backdrop-filter: blur(10px) !important;
+    -webkit-backdrop-filter: blur(10px) !important;
+    transform: translateX(calc(-100% - 24px)) !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    z-index: 146 !important;
+  }
+
+  body.vl-phone-game.is-game-started #game_chat_drawer.open {
     transform: translateX(0) !important;
     opacity: 1 !important;
     pointer-events: auto !important;
   }
 
-  body.vl-mobile-game-active #game_chat_drawer .game-chat-head {
-    grid-row: 1 !important;
+  body.vl-phone-game.is-game-started #game_chat_drawer .game-chat-head {
     display: flex !important;
+    grid-row: 1;
     align-items: center;
-    justify-content: space-between;
-    min-height: 0 !important;
+    min-height: 0;
   }
 
-  body.vl-mobile-game-active #game_chat_drawer .game-chat-head strong {
-    font-size: 11px !important;
+  body.vl-phone-game.is-game-started #game_chat_drawer .game-chat-head strong {
+    font-size: .72rem !important;
   }
 
-  body.vl-mobile-game-active #game_chat_close {
-    display: grid !important;
-    place-items: center;
-    width: 25px !important;
-    height: 25px !important;
-    padding: 0 !important;
-    font-size: 19px !important;
+  body.vl-phone-game.is-game-started #game_chat_close {
+    display: block !important;
+    font-size: 1.25rem !important;
     line-height: 1 !important;
   }
 
-  body.vl-mobile-game-active #game_chat_drawer .modern-chat-compose {
+  body.vl-phone-game.is-game-started #game_chat_drawer .modern-chat-messages {
     grid-row: 2 !important;
-    grid-template-columns: 1fr 42px !important;
+    min-height: 0 !important;
+    padding: 3px 5px !important;
+    border-radius: 7px !important;
+    overflow-y: auto !important;
+  }
+
+  body.vl-phone-game.is-game-started #game_chat_drawer .modern-chat-compose {
+    grid-row: 3 !important;
+    display: grid !important;
+    grid-template-columns: minmax(0,1fr) 42px !important;
     gap: 5px !important;
   }
 
-  body.vl-mobile-game-active #game_chat_drawer .modern-chat-compose input,
-  body.vl-mobile-game-active #game_chat_drawer .modern-chat-compose button {
-    height: 34px !important;
-    min-height: 34px !important;
+  body.vl-phone-game.is-game-started #game_chat_drawer .modern-chat-compose input,
+  body.vl-phone-game.is-game-started #game_chat_drawer .modern-chat-compose button {
+    height: 36px !important;
   }
 
-  body.vl-mobile-game-active #game_chat_drawer .modern-chat-compose input {
+  body.vl-phone-game.is-game-started #game_chat_drawer .modern-chat-compose input {
     padding: 0 8px !important;
-    font-size: 11px !important;
+    font-size: 16px !important; /* prevents browser zoom on focus */
   }
 
-  body.vl-mobile-game-active #game_chat_drawer .modern-chat-compose button {
+  body.vl-phone-game.is-game-started #game_chat_drawer .modern-chat-compose button {
     width: 42px !important;
-    font-size: 14px !important;
+    font-size: .9rem !important;
   }
 
-  body.vl-mobile-game-active #game_chat_drawer .modern-chat-messages {
-    grid-row: 3 !important;
-    padding: 3px 5px !important;
-  }
-
-  body.vl-mobile-game-active #game_chat_drawer .modern-chat-line {
+  body.vl-phone-game.is-game-started #game_chat_drawer .modern-chat-line {
     padding: 2px 1px !important;
   }
 
-  body.vl-mobile-game-active #game_chat_drawer .modern-chat-meta strong,
-  body.vl-mobile-game-active #game_chat_drawer .modern-chat-text {
-    font-size: 10px !important;
+  body.vl-phone-game.is-game-started #game_chat_drawer .modern-chat-meta strong,
+  body.vl-phone-game.is-game-started #game_chat_drawer .modern-chat-text {
+    font-size: .6rem !important;
+    line-height: 1.2 !important;
   }
 
-  /* --- Compact phase / round / order HUD at the top centre. --- */
-  body.vl-mobile-game-active #gameprogress {
+  /* -------------------- Top-right controls -------------------- */
+  body.vl-phone-game.is-game-started #leave {
     position: fixed !important;
-    top: var(--vl-mobile-safe-top) !important;
-    left: 50% !important;
-    right: auto !important;
-    bottom: auto !important;
-    width: min(39vw, 360px) !important;
-    height: 58px !important;
-    transform: translateX(-50%) !important;
-    border-radius: 0 0 11px 11px !important;
-    overflow: hidden !important;
-    background: rgba(0,0,0,.64) !important;
-    box-shadow: 0 7px 18px rgba(0,0,0,.22) !important;
+    top: max(8px, env(safe-area-inset-top)) !important;
+    right: max(8px, env(safe-area-inset-right)) !important;
+    width: 34px !important;
+    height: 34px !important;
+    z-index: 150 !important;
+  }
+
+  body.vl-phone-game.is-game-started #soundtoggle {
+    z-index: 150 !important;
+  }
+
+  body.vl-phone-game.is-game-started #vl_mobile_fullscreen_btn {
+    position: fixed;
+    display: grid;
+    place-items: center;
+    top: max(8px, env(safe-area-inset-top));
+    right: calc(max(8px, env(safe-area-inset-right)) + 84px);
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    border: 0;
+    border-radius: 8px;
+    background: rgba(0,0,0,.52);
+    color: rgba(255,255,255,.72);
+    font-size: 22px;
+    line-height: 1;
+    cursor: pointer;
+    z-index: 150;
     backdrop-filter: blur(5px);
     -webkit-backdrop-filter: blur(5px);
-    z-index: 138 !important;
-    transition: none !important;
   }
 
-  body.vl-mobile-game-active #gamephase {
-    box-sizing: border-box !important;
+  body.vl-phone-game.is-game-started #vl_mobile_fullscreen_btn:active {
+    transform: scale(.94);
+  }
+
+  /* -------------------- Tile-selection timer -------------------- */
+  body.vl-phone-game.is-game-started {
+    --tile-clock-size: 52px;
+    --question-clock-size: 56px;
+  }
+
+  body.vl-phone-game.is-game-started #tileclockcontainer {
+    top: 3dvh !important;
+    right: 15vw !important;
+    width: 32vw !important;
+    height: 17dvh !important;
+    min-height: 58px;
+  }
+
+  body.vl-phone-game.is-game-started #tileprompt {
+    top: 22% !important;
+    width: 64% !important;
+    height: 50% !important;
+    padding-left: 18% !important;
+    display: flex;
+    align-items: center;
+    box-sizing: content-box;
+    font-size: clamp(.72rem, 1.8vw, .9rem) !important;
+    line-height: 1 !important;
+  }
+
+  /* -------------------- Question timer + question stage -------------------- */
+  body.vl-phone-game.is-game-started #qprompt {
+    left: 34% !important;
+    top: 2.5% !important;
+    width: 32% !important;
+    height: 12% !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    padding: 0 22px 0 8px !important;
+    font-size: clamp(.7rem, 1.7vw, .86rem) !important;
+    line-height: 1.1 !important;
+  }
+
+  body.vl-phone-game.is-game-started #questionclockring {
+    left: 66.5% !important;
+    top: 8.5% !important;
+  }
+
+  body.vl-phone-game.is-game-started #qstrip {
+    top: 20% !important;
+    height: 72% !important;
+  }
+
+  body.vl-phone-game.is-game-started #qplayers {
+    height: 20% !important;
+  }
+
+  body.vl-phone-game.is-game-started #qplayerone,
+  body.vl-phone-game.is-game-started #qplayertwo {
+    height: 55% !important;
     top: 0 !important;
-    left: 0 !important;
-    right: auto !important;
-    width: 100% !important;
-    height: 22px !important;
-    padding: 0 7px !important;
-    line-height: 22px !important;
-    text-align: center !important;
-    font-size: 12px !important;
-    font-weight: 720 !important;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    background: linear-gradient(to right, transparent, rgba(0,0,0,.72) 20%, rgba(0,0,0,.72) 80%, transparent) !important;
-    transition: none !important;
   }
 
-  body.vl-mobile-game-active #gamerounds {
-    box-sizing: border-box !important;
-    top: 23px !important;
-    left: 0 !important;
-    right: auto !important;
-    width: 100% !important;
-    height: 14px !important;
-    padding: 0 8px !important;
-    background: transparent !important;
-    font-size: 0 !important;
-    white-space: nowrap;
+  body.vl-phone-game.is-game-started .qplayername {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1 !important;
+    font-size: clamp(.6rem, 1.45vw, .75rem) !important;
   }
 
-  body.vl-mobile-game-active #gamerounds .round {
-    top: 2px !important;
-    width: 11.5% !important;
-    height: 6px !important;
-    margin: 0 2% 0 0 !important;
-    border-radius: 99px;
+  body.vl-phone-game.is-game-started #qtext,
+  body.vl-phone-game.is-game-started #numerical_qtext,
+  body.vl-phone-game.is-game-started #numerical_qtext2,
+  body.vl-phone-game.is-game-started #numerical_correct {
+    top: 4% !important;
+    height: 32% !important;
+    box-sizing: border-box;
+    padding: 0 7vw;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    font-size: clamp(.98rem, 2.75vw, 1.35rem) !important;
+    line-height: 1.18 !important;
   }
 
-  body.vl-mobile-game-active #playersticks {
-    box-sizing: border-box !important;
-    top: 38px !important;
-    left: 0 !important;
-    right: auto !important;
-    width: 100% !important;
-    height: 18px !important;
-    padding: 0 8px !important;
-    font-size: 0 !important;
-    white-space: nowrap;
+  body.vl-phone-game.is-game-started #optionrow1 {
+    top: 42% !important;
+    height: 25% !important;
   }
 
-  body.vl-mobile-game-active #playersticks .bundle {
-    top: 0 !important;
-    width: 11.5% !important;
-    height: 17px !important;
-    margin: 0 2% 0 0 !important;
-    font-size: 0 !important;
+  body.vl-phone-game.is-game-started #optionrow2 {
+    top: 70% !important;
+    height: 25% !important;
   }
 
-  body.vl-mobile-game-active #playersticks .stick {
-    top: 2px !important;
-    width: 11% !important;
-    height: 13px !important;
-    margin: 0 2px 0 0 !important;
+  body.vl-phone-game.is-game-started .option {
+    height: 100% !important;
+    min-height: 46px;
+    box-sizing: border-box;
+    padding: 0 9px;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    font-size: clamp(.76rem, 1.95vw, .98rem) !important;
+    line-height: 1.12 !important;
+    border-radius: 10px !important;
+    user-select: none;
+    -webkit-user-select: none;
   }
 
-  /* Phases without round/order data collapse to a single compact title bar. */
-  body.vl-mobile-game-active #gameprogress:has(#gamerounds[style*="display: none"]) {
-    height: 34px !important;
+  body.vl-phone-game.is-game-started .optioncover {
+    border-radius: 10px !important;
   }
 
-  body.vl-mobile-game-active #gameprogress:has(#gamerounds[style*="display: none"]) #gamephase {
-    height: 34px !important;
-    line-height: 34px !important;
-    font-size: 13px !important;
+  body.vl-phone-game.is-game-started #abort {
+    width: 7% !important;
   }
 
-  /* --- Bottom player score cards: readable, but no longer eat the map. --- */
-  body.vl-mobile-game-active #myscore,
-  body.vl-mobile-game-active #player2score,
-  body.vl-mobile-game-active #player3score {
-    position: fixed !important;
-    bottom: var(--vl-mobile-safe-bottom) !important;
+  /* -------------------- Numerical input: finger-sized controls -------------------- */
+  body.vl-phone-game.is-game-started #numinput2,
+  body.vl-phone-game.is-game-started #numinput3,
+  body.vl-phone-game.is-game-started #numsubmit2,
+  body.vl-phone-game.is-game-started #numsubmit3 {
+    top: 45% !important;
     width: 27% !important;
-    height: 50px !important;
-    border-radius: 9px 9px 0 0 !important;
-    overflow: hidden !important;
-    background: rgba(0,0,0,.67) !important;
-    box-shadow: 0 -5px 15px rgba(0,0,0,.18) !important;
-    z-index: 139 !important;
+    height: 16% !important;
+    min-height: 44px !important;
+    box-sizing: border-box;
+    border-radius: 8px;
   }
 
-  body.vl-mobile-game-active #myscore { left: 7% !important; }
-  body.vl-mobile-game-active #player2score { left: 36.5% !important; }
-  body.vl-mobile-game-active #player3score { left: 66% !important; }
-
-  body.vl-mobile-game-active #myscorename,
-  body.vl-mobile-game-active #player2scorename,
-  body.vl-mobile-game-active #player3scorename {
-    height: 25px !important;
-    line-height: 25px !important;
-    border-radius: 9px 9px 0 0 !important;
-    font-size: 12px !important;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+  body.vl-phone-game.is-game-started #numinput2,
+  body.vl-phone-game.is-game-started #numinput3 {
+    left: 22% !important;
+    padding: 0 10px;
+    font-size: 16px !important; /* no mobile input zoom */
   }
 
-  body.vl-mobile-game-active #myscorenumber,
-  body.vl-mobile-game-active #player2scorenumber,
-  body.vl-mobile-game-active #player3scorenumber {
-    height: 25px !important;
-    line-height: 25px !important;
-    font-size: 14px !important;
+  body.vl-phone-game.is-game-started #numsubmit2,
+  body.vl-phone-game.is-game-started #numsubmit3 {
+    left: 51% !important;
+    font-size: clamp(.74rem, 1.8vw, .9rem) !important;
   }
 
-  /* --- Exit + sound remain matching touch targets. --- */
-  body.vl-mobile-game-active #leave {
-    position: fixed !important;
-    top: var(--vl-mobile-safe-top) !important;
-    right: var(--vl-mobile-safe-right) !important;
-    width: 40px !important;
-    height: 40px !important;
-    min-width: 40px !important;
-    min-height: 40px !important;
-    z-index: 150 !important;
+  body.vl-phone-game.is-game-started #num3answerarea,
+  body.vl-phone-game.is-game-started #num2answerarea {
+    top: 42% !important;
+    height: 58% !important;
   }
 
-  body.vl-mobile-game-active #soundtoggle {
-    z-index: 150 !important;
+  body.vl-phone-game.is-game-started .num3answerbox,
+  body.vl-phone-game.is-game-started .num2answerbox {
+    width: 27% !important;
+    height: 48% !important;
+    top: 15% !important;
+    margin-left: 2% !important;
+    margin-right: 2% !important;
+    border-radius: 8px !important;
   }
 
-  /* Value labels are important, but desktop sizing is too large on a phone. */
-  body.vl-mobile-game-active .region-value {
-    padding: 2px 4px !important;
-    font-size: 11px !important;
-    border-radius: 3px !important;
+  body.vl-phone-game.is-game-started .numanswer,
+  body.vl-phone-game.is-game-started .num2answer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: clamp(.9rem, 2.3vw, 1.15rem) !important;
+    line-height: 1.15 !important;
   }
 
-  body.vl-mobile-game-active .pin-marker {
-    width: 22px !important;
+  body.vl-phone-game.is-game-started .numansweruser,
+  body.vl-phone-game.is-game-started .num2answeruser,
+  body.vl-phone-game.is-game-started .numanswertime,
+  body.vl-phone-game.is-game-started .num2answertime {
+    font-size: .58rem !important;
   }
 
-  body.vl-mobile-game-active #game_chat_drawer,
-  body.vl-mobile-game-active #game_chat_toggle,
-  body.vl-mobile-game-active #gameprogress,
-  body.vl-mobile-game-active #myscore,
-  body.vl-mobile-game-active #player2score,
-  body.vl-mobile-game-active #player3score,
-  body.vl-mobile-game-active #leave,
-  body.vl-mobile-game-active #soundtoggle {
-    pointer-events: auto !important;
+  body.vl-phone-game.is-game-started #numerical_correct2 {
+    width: 27% !important;
+    font-size: clamp(.9rem, 2.3vw, 1.15rem) !important;
+    line-height: 1.2 !important;
   }
-}
 
-/* Portrait handset: the game is intentionally blocked, lobby is not. */
-@media (pointer: coarse) and (orientation: portrait) and (max-width: 700px) {
-  body.vl-mobile-game-active.vl-mobile-game-portrait {
-    overflow: hidden !important;
+  /* -------------------- Result / leave dialogs -------------------- */
+  body.vl-phone-game.is-game-started #leavegamewindow {
+    width: min(520px, 78vw) !important;
+    max-height: 84dvh !important;
+    box-sizing: border-box;
+  }
+
+  body.vl-phone-game.is-game-started #endgamewindow {
+    width: min(860px, 90vw) !important;
+    max-height: 88dvh !important;
+  }
+
+  body.vl-phone-game.is-game-started .leavebutton,
+  body.vl-phone-game.is-game-started .endgame-button {
+    min-height: 42px;
   }
 }
