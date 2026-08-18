@@ -1102,7 +1102,7 @@ body.vl-tablet-device.is-game-started #vl_tablet_fullscreen_btn:active {
 @media (min-width: 700px) and (max-width: 1400px) {
   /* Normal tablet view: deliberately smaller than V15 (90vw × 78dvh). */
   body.vl-tablet-device.is-game-started #map {
-    top: 10dvh !important;
+    top: 13dvh !important;
     left: 8vw !important;
     width: 84vw !important;
     height: 72dvh !important;
@@ -1116,7 +1116,7 @@ body.vl-tablet-device.is-game-started #vl_tablet_fullscreen_btn:active {
      clearly smaller than the old tablet map. */
   html:fullscreen body.vl-tablet-device.is-game-started #map,
   html:-webkit-full-screen body.vl-tablet-device.is-game-started #map {
-    top: 9dvh !important;
+    top: 12dvh !important;
     left: 7vw !important;
     width: 86vw !important;
     height: 74dvh !important;
@@ -1147,7 +1147,7 @@ body.vl-tablet-device.is-game-started #vl_tablet_fullscreen_btn:active {
 
 
 /* ============================================================
-   VLASTENEC — MAP RENDERER V2.3.1 / V37
+   VLASTENEC — MAP RENDERER V2.4 / V41
    Static region fills are painted into one compact Canvas below the SVG.
    SVG remains responsible for black outlines, hit-testing and wave geometry.
    ============================================================ */
@@ -1195,3 +1195,170 @@ html.vl-map-renderer-v2.vl-map-v2-canvas-ready #map .region.unclickable {
    VLASTENEC — V37 TABLET POSITION TUNE
    Map size is unchanged from V35; only vertical position moves down by 2dvh.
    ============================================================ */
+
+
+/* ============================================================
+   VLASTENEC — TABLET TYPOGRAPHY / V41
+   Slightly smaller gameplay text. Text-only boxes use real flex centering
+   instead of large line-heights so shrinking does not shift the baseline.
+   Desktop and phone layouts are untouched.
+   ============================================================ */
+@media (min-width: 700px) and (max-width: 1400px) {
+  /* Map labels / player labels */
+  body.vl-tablet-device.is-game-started .region-value {
+    font-size: 1.08rem !important;
+    line-height: 1 !important;
+  }
+
+  body.vl-tablet-device.is-game-started .player-name {
+    font-size: .76rem !important;
+    line-height: 1.05 !important;
+  }
+
+  body.vl-tablet-device.is-game-started #player1basename,
+  body.vl-tablet-device.is-game-started #player2basename,
+  body.vl-tablet-device.is-game-started #player3basename {
+    font-size: .88rem !important;
+    line-height: 1.05 !important;
+  }
+
+  /* Score panels */
+  body.vl-tablet-device.is-game-started #myscorename,
+  body.vl-tablet-device.is-game-started #myscorenumber,
+  body.vl-tablet-device.is-game-started #player2scorename,
+  body.vl-tablet-device.is-game-started #player2scorenumber,
+  body.vl-tablet-device.is-game-started #player3scorename,
+  body.vl-tablet-device.is-game-started #player3scorenumber {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    line-height: 1.05 !important;
+  }
+
+  body.vl-tablet-device.is-game-started #myscorename,
+  body.vl-tablet-device.is-game-started #myscorenumber {
+    font-size: 1.60rem !important;
+  }
+
+  body.vl-tablet-device.is-game-started #player2scorename,
+  body.vl-tablet-device.is-game-started #player3scorename {
+    font-size: 1.08rem !important;
+  }
+
+  body.vl-tablet-device.is-game-started #player2scorenumber,
+  body.vl-tablet-device.is-game-started #player3scorenumber {
+    font-size: 1.34rem !important;
+  }
+
+  /* Progress / phase */
+  body.vl-tablet-device.is-game-started #gamephase {
+    width: 100% !important;
+    padding-left: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 1.60rem !important;
+    line-height: 1.05 !important;
+    text-align: center !important;
+  }
+
+  body.vl-tablet-device.is-game-started #gamerounds,
+  body.vl-tablet-device.is-game-started #playersticks {
+    font-size: 1.60rem !important;
+  }
+
+  body.vl-tablet-device.is-game-started #playersticks .bundle {
+    font-size: .66rem !important;
+    line-height: 1.05 !important;
+  }
+
+  /* Question/timer labels */
+  body.vl-tablet-device.is-game-started #qprompt {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 1.08rem !important;
+    line-height: 1.05 !important;
+  }
+
+  body.vl-tablet-device.is-game-started #tileprompt {
+    display: flex !important;
+    align-items: center !important;
+    font-size: 1.08rem !important;
+    line-height: 1.05 !important;
+  }
+
+  body.vl-tablet-device.is-game-started .qplayername {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 1.08rem !important;
+    line-height: 1.05 !important;
+  }
+
+  /* Main question and numerical result strips */
+  body.vl-tablet-device.is-game-started #qtext,
+  body.vl-tablet-device.is-game-started #numerical_qtext,
+  body.vl-tablet-device.is-game-started #numerical_qtext2,
+  body.vl-tablet-device.is-game-started #numerical_correct {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 220% !important;
+    line-height: 1.08 !important;
+    box-sizing: border-box !important;
+  }
+
+  body.vl-tablet-device.is-game-started #numerical_correct2 {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 220% !important;
+    line-height: 1.08 !important;
+  }
+
+  /* Multiple choice */
+  body.vl-tablet-device.is-game-started .option {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 1.50rem !important;
+    line-height: 1.12 !important;
+    text-align: center !important;
+  }
+
+  /* Numerical answers */
+  body.vl-tablet-device.is-game-started .numanswer,
+  body.vl-tablet-device.is-game-started .num2answer {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 190% !important;
+    line-height: 1.08 !important;
+  }
+
+  body.vl-tablet-device.is-game-started .numansweruser,
+  body.vl-tablet-device.is-game-started .num2answeruser {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: .88rem !important;
+    line-height: 1 !important;
+  }
+
+  body.vl-tablet-device.is-game-started .numanswertime,
+  body.vl-tablet-device.is-game-started .num2answertime {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-end !important;
+    font-size: .78rem !important;
+    line-height: 1 !important;
+  }
+
+  body.vl-tablet-device.is-game-started #numinput2,
+  body.vl-tablet-device.is-game-started #numinput3,
+  body.vl-tablet-device.is-game-started #numsubmit2,
+  body.vl-tablet-device.is-game-started #numsubmit3 {
+    font-size: .90rem !important;
+  }
+}
