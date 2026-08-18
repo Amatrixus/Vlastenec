@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const MARKER = '🧪 VLASTENEC FIX: mobile-game-landscape-hud-v1';
+  const MARKER = '🧪 VLASTENEC FIX: mobile-game-landscape-hud-v1.1-lobby-safe';
   console.log(MARKER);
 
   const state = {
@@ -158,25 +158,11 @@
     requestAnimationFrame(() => window.VlastenecSound?.sync?.());
   }
 
-  function installStartGestureHints() {
-    // These are best-effort only. The actual gate remains the reliable fallback.
-    const tryEarlyFullscreen = async (event) => {
-      if (!isHandsetViewport()) return;
-      // Do not steal fullscreen for unrelated clicks or while already fullscreen.
-      const id = event.currentTarget?.id || '';
-      if (!['lobby_start_btn'].includes(id)) return;
-      state.fullscreenAttempted = true;
-      await requestFullscreen();
-      await lockLandscape();
-    };
-
-    document.getElementById('lobby_start_btn')?.addEventListener('click', tryEarlyFullscreen, { capture: true });
-  }
 
   function init() {
-    ensureGate();
-    installStartGestureHints();
-
+    // V lobby neděláme vůbec nic do DOMu ani do tlačítek. Mobilní vrstva se
+    // aktivuje teprve ve chvíli, kdy core game přidá body.is-game-started.
+    // Tím je lobby zcela izolovaná od fullscreen/orientation logiky.
     const bodyObserver = new MutationObserver((mutations) => {
       if (mutations.some(m => m.attributeName === 'class')) syncMobileGameUi();
     });
