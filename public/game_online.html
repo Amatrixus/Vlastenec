@@ -5243,7 +5243,7 @@ if (regionValues && typeof regionValues === 'object') {
         }
 
         // ============================================================
-        // VLASTENEC — MAP RENDERER V2.3.2 / V38 (opt-in with ?mapv2=1)
+        // VLASTENEC — MAP RENDERER V2.3.3 / V39 (opt-in with ?mapv2=1)
         //
         // Rendering only. Server/game/selection state is untouched.
         //
@@ -5463,8 +5463,37 @@ if (regionValues && typeof regionValues === 'object') {
             });
         }
 
+        function clearRegionInteractiveHighlightV2(regionEl) {
+            if (!regionEl) return;
+
+            const inlineFilter = String(regionEl.style.getPropertyValue('filter') || '').toLowerCase();
+            const battleHoverActive = regionEl.dataset.battleHover === '1';
+            const interactiveHighlight =
+                inlineFilter.includes('brightness(120%)') ||
+                inlineFilter.includes('brightness(140%)') ||
+                inlineFilter.includes('saturate(115%)') ||
+                battleHoverActive;
+
+            if (!interactiveHighlight) return;
+
+            // V39: selection hover is purely an input affordance. Once ownership
+            // painting begins, it must not affect the wave or the backing canvas.
+            regionEl.style.removeProperty('filter');
+            if (battleHoverActive) {
+                // Battle hover also forces opacity:1 !important. Leaving it in place
+                // would make the wave visibly lighter than the final 0.7-opacity fill.
+                regionEl.style.removeProperty('opacity');
+                delete regionEl.dataset.battleHover;
+            }
+
+            // The V2 canvas may still contain the highlighted frame. Repaint it
+            // synchronously before the temporary wave group is created.
+            if (MAP_RENDERER_V2_ENABLED) renderRegionStateV2Canvas();
+        }
+
         async function waveFillRegionV2(regionEl, newFill) {
             if (!regionEl || !newFill) return;
+            clearRegionInteractiveHighlightV2(regionEl);
             const epoch = Number(window.__regionWaveV2Epoch || 0);
             const neutral = neutralRegionFill(regionEl);
             const part = makeRegionWaveV2Split(regionEl, neutral, newFill, 0, epoch);
@@ -5498,6 +5527,7 @@ if (regionValues && typeof regionValues === 'object') {
 
         async function waveTransferRegionV2(regionEl, oldFill, newFill) {
             if (!regionEl || !oldFill || !newFill) return;
+            clearRegionInteractiveHighlightV2(regionEl);
             const epoch = Number(window.__regionWaveV2Epoch || 0);
             const neutral = neutralRegionFill(regionEl);
             const oldPart = makeRegionWaveV2Split(regionEl, neutral, oldFill, 0, epoch);
