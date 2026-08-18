@@ -4,20 +4,31 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>VLASTENEC</title>
-  <link rel="stylesheet" href="mainstyle.css?v=tablet-lobby-v2">
+  <link rel="stylesheet" href="mainstyle.css?v=tablet-lobby-v3-chrome">
   <script src="auth-client.js"></script>
   <script src="profile-store.js"></script>
   <script>
-    // Keep tablet lobby sized to the *visible* browser viewport (browser chrome included).
+    // Tablet lobby must use the *visible* Chrome viewport, not the larger
+    // layout viewport hidden partly behind the browser toolbars.
     (() => {
       const syncVisibleViewport = () => {
-        const h = window.visualViewport?.height || window.innerHeight;
-        document.documentElement.style.setProperty('--vl-visible-vh', `${Math.round(h)}px`);
+        const vv = window.visualViewport;
+        const h = vv?.height || window.innerHeight;
+        const w = vv?.width  || window.innerWidth;
+        const root = document.documentElement;
+        root.style.setProperty('--vl-visible-vh', `${Math.round(h)}px`);
+        root.style.setProperty('--vl-visible-vw', `${Math.round(w)}px`);
       };
       syncVisibleViewport();
+      requestAnimationFrame(syncVisibleViewport);
+      window.addEventListener('load', syncVisibleViewport, { once: true });
       window.addEventListener('resize', syncVisibleViewport, { passive: true });
-      window.addEventListener('orientationchange', () => setTimeout(syncVisibleViewport, 80), { passive: true });
+      window.addEventListener('orientationchange', () => {
+        setTimeout(syncVisibleViewport, 80);
+        setTimeout(syncVisibleViewport, 300);
+      }, { passive: true });
       window.visualViewport?.addEventListener('resize', syncVisibleViewport, { passive: true });
+      window.visualViewport?.addEventListener('scroll', syncVisibleViewport, { passive: true });
     })();
   </script>
 
@@ -540,6 +551,7 @@
     console.log('🧪 VLASTENEC FIX: authoritative-refresh-v1');
     console.log('🧪 VLASTENEC FIX: responsive-game-clocks-v2-original-look');
     console.log('🧪 VLASTENEC FIX: countdown-zero-responsive-fonts-v1');
+    console.log('🧪 VLASTENEC FIX: tablet-lobby-fit-v3-chrome');
     console.log('🧪 VLASTENEC FIX: base-score-on-settle-v1');
     console.log('🧪 VLASTENEC FIX: start-sequence-sync-v1');
     console.log('🧪 VLASTENEC FIX: start-sequence-stale-snapshot-v1');
