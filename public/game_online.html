@@ -5037,7 +5037,7 @@ if (regionValues && typeof regionValues === 'object') {
         window.__mapRendererV2Enabled = MAP_RENDERER_V2_ENABLED;
         window.__regionWaveV2Epoch = Number(window.__regionWaveV2Epoch || 0);
         document.documentElement.classList.toggle('vl-map-renderer-v2', MAP_RENDERER_V2_ENABLED);
-        console.log(`🗺️ Map Renderer: ${MAP_RENDERER_V2_ENABLED ? 'V2.3.1 canvas-fill' : 'legacy V24'}`);
+        console.log(`🗺️ Map Renderer: ${MAP_RENDERER_V2_ENABLED ? 'V2.4 canvas-wave' : 'legacy V24'}`);
 
         function regionOwnerMap(regionsState) {
             const owners = new Map();
@@ -5288,6 +5288,7 @@ if (regionValues && typeof regionValues === 'object') {
             if (!mapSvg) return;
             mapSvg.querySelector('#region-wave-v2-layer')?.replaceChildren();
             mapSvg.querySelectorAll('[data-vl-wave-v2-def="1"]').forEach(node => node.remove());
+            if (typeof regionWaveV2CanvasAnimations !== 'undefined') regionWaveV2CanvasAnimations.clear();
             // A cancelled visual transaction may have hidden the live region.
             mapSvg.querySelectorAll('.region[data-vl-wave-v2-hidden="1"]').forEach(region => {
                 region.style.visibility = region.dataset.vlWaveV2PreviousVisibility || '';
@@ -5491,69 +5492,123 @@ if (regionValues && typeof regionValues === 'object') {
             if (MAP_RENDERER_V2_ENABLED) renderRegionStateV2Canvas();
         }
 
+        // V40: the V2 wave itself is painted into the SAME compact Canvas as
+        // the final region state. This removes the unavoidable double-alpha
+        // composition that occurred when a 0.7-opacity SVG wave sat above the
+        // already-painted neutral Canvas region.
+        const regionWaveV2CanvasAnimations = new Map();
+
+        function regionWaveV2CanvasKey(regionEl) {
+            return String(regionEl?.id || '');
+        }
+
+        function setRegionWaveV2CanvasAnimation(regionEl, state) {
+            const key = regionWaveV2CanvasKey(regionEl);
+            if (!key) return false;
+            regionWaveV2CanvasAnimations.set(key, state);
+            return true;
+        }
+
+        function clearRegionWaveV2CanvasAnimation(regionEl) {
+            const key = regionWaveV2CanvasKey(regionEl);
+            if (key) regionWaveV2CanvasAnimations.delete(key);
+        }
+
+        function animateRegionWaveV2CanvasRadius(regionEl, state, from, to, duration, easing, epoch) {
+            return new Promise(resolve => {
+                const started = performance.now();
+                function frame(now) {
+                    if (!isRegionWaveV2EpochCurrent(epoch) || !regionEl?.isConnected) {
+                        clearRegionWaveV2CanvasAnimation(regionEl);
+                        renderRegionStateV2Canvas();
+                        resolve(false);
+                        return;
+                    }
+                    const raw = Math.min(1, (now - started) / Math.max(1, duration));
+                    const k = easing ? easing(raw) : raw;
+                    state.radius = from + (to - from) * k;
+                    renderRegionStateV2Canvas();
+                    if (raw < 1) requestAnimationFrame(frame);
+                    else resolve(true);
+                }
+                requestAnimationFrame(frame);
+            });
+        }
+
         async function waveFillRegionV2(regionEl, newFill) {
             if (!regionEl || !newFill) return;
             clearRegionInteractiveHighlightV2(regionEl);
+
             const epoch = Number(window.__regionWaveV2Epoch || 0);
             const neutral = neutralRegionFill(regionEl);
-            const part = makeRegionWaveV2Split(regionEl, neutral, newFill, 0, epoch);
-            if (!part) {
+            const { cx, cy, maxRadius } = regionWaveV2Geometry(regionEl);
+            const state = {
+                epoch,
+                mode: 'fill',
+                baseFill: neutral,
+                overlayFill: newFill,
+                cx, cy,
+                radius: 0,
+                maxRadius
+            };
+
+            if (!setRegionWaveV2CanvasAnimation(regionEl, state)) {
                 if (isRegionWaveV2EpochCurrent(epoch)) {
                     setRegionVisualFill(regionEl, newFill);
-                    if (MAP_RENDERER_V2_ENABLED) renderRegionStateV2Canvas();
+                    renderRegionStateV2Canvas();
                 }
                 return;
             }
 
+            renderRegionStateV2Canvas();
             let completed = false;
             try {
-                completed = await animateRegionWaveV2Circle(
-                    part.clipCircle, 0, part.maxRadius,
+                completed = await animateRegionWaveV2CanvasRadius(
+                    regionEl, state, 0, maxRadius,
                     REGION_WAVE.fillMs, easeOutCubic, epoch
                 );
-
-                // V38: commit the final canvas paint while the completed wave is
-                // still covering the region. Only after the backing canvas already
-                // contains the final colour do we remove the temporary wave layer.
-                // This prevents a one-frame flash of the neutral/highlighted region.
-                if (completed && isRegionWaveV2EpochCurrent(epoch)) {
-                    setRegionVisualFill(regionEl, newFill);
-                    if (MAP_RENDERER_V2_ENABLED) renderRegionStateV2Canvas();
-                }
             } finally {
-                removeRegionWaveV2Part(part);
+                if (completed && isRegionWaveV2EpochCurrent(epoch)) {
+                    // Commit the same fill that the animation used, then repaint in
+                    // the same Canvas call before dropping the transient state.
+                    setRegionVisualFill(regionEl, newFill);
+                }
+                clearRegionWaveV2CanvasAnimation(regionEl);
+                renderRegionStateV2Canvas();
             }
         }
 
         async function waveTransferRegionV2(regionEl, oldFill, newFill) {
             if (!regionEl || !oldFill || !newFill) return;
             clearRegionInteractiveHighlightV2(regionEl);
+
             const epoch = Number(window.__regionWaveV2Epoch || 0);
             const neutral = neutralRegionFill(regionEl);
-            const oldPart = makeRegionWaveV2Split(regionEl, neutral, oldFill, 0, epoch);
+            const { cx, cy, maxRadius } = regionWaveV2Geometry(regionEl);
+            const oldState = {
+                epoch,
+                mode: 'clear',
+                baseFill: neutral,
+                overlayFill: oldFill,
+                cx, cy,
+                radius: maxRadius,
+                maxRadius
+            };
 
-            if (!oldPart) {
-                if (isRegionWaveV2EpochCurrent(epoch)) {
+            setRegionWaveV2CanvasAnimation(regionEl, oldState);
+            renderRegionStateV2Canvas();
+            let cleared = false;
+            try {
+                cleared = await animateRegionWaveV2CanvasRadius(
+                    regionEl, oldState, maxRadius, 0,
+                    REGION_WAVE.clearMs, easeInCubic, epoch
+                );
+            } finally {
+                if (cleared && isRegionWaveV2EpochCurrent(epoch)) {
                     setRegionVisualFill(regionEl, neutral);
-                    if (MAP_RENDERER_V2_ENABLED) renderRegionStateV2Canvas();
                 }
-            } else {
-                oldPart.clipCircle.setAttribute('r', String(oldPart.maxRadius));
-                let cleared = false;
-                try {
-                    cleared = await animateRegionWaveV2Circle(
-                        oldPart.clipCircle, oldPart.maxRadius, 0,
-                        REGION_WAVE.clearMs, easeInCubic, epoch
-                    );
-                    // Same atomic handoff for battle colour removal: neutral canvas
-                    // is ready before the temporary old-colour overlay disappears.
-                    if (cleared && isRegionWaveV2EpochCurrent(epoch)) {
-                        setRegionVisualFill(regionEl, neutral);
-                        if (MAP_RENDERER_V2_ENABLED) renderRegionStateV2Canvas();
-                    }
-                } finally {
-                    removeRegionWaveV2Part(oldPart);
-                }
+                clearRegionWaveV2CanvasAnimation(regionEl);
+                renderRegionStateV2Canvas();
             }
 
             if (!isRegionWaveV2EpochCurrent(epoch)) return;
@@ -5662,6 +5717,59 @@ if (regionValues && typeof regionValues === 'object') {
             return true;
         }
 
+        function paintSolidRegionV2(ctx, regionEl, path, fill, bounds, scale, opacity, filter = 'none', composite = 'source-over') {
+            const ctm = regionEl.getScreenCTM?.();
+            if (!ctm) return;
+            ctx.save();
+            setCanvasV2Transform(ctx, ctm, bounds, scale);
+            ctx.globalAlpha = opacity;
+            ctx.filter = filter;
+            ctx.globalCompositeOperation = composite;
+            ctx.fillStyle = fill;
+            ctx.fill(path, 'evenodd');
+            ctx.restore();
+        }
+
+        function paintAnimatedRegionV2(ctx, mapSvg, regionEl, path, state, bounds, scale, opacity, filter) {
+            const baseFill = String(state?.baseFill || '');
+            const overlayFill = String(state?.overlayFill || '');
+            const ctm = regionEl.getScreenCTM?.();
+            if (!ctm) return false;
+
+            // 1) Paint the old/neutral state exactly like a normal static region.
+            ctx.save();
+            ctx.globalAlpha = opacity;
+            ctx.filter = filter;
+            if (baseFill && !baseFill.includes('url(')) {
+                setCanvasV2Transform(ctx, ctm, bounds, scale);
+                ctx.fillStyle = baseFill;
+                ctx.fill(path, 'evenodd');
+            } else {
+                paintNeutralTextureV2(ctx, mapSvg, regionEl, path, bounds, scale);
+            }
+            ctx.restore();
+
+            if (!overlayFill || state.radius <= 0) return true;
+
+            // 2) Replace (not alpha-blend with) the covered part with the incoming
+            // colour. `copy` is the key: the animated pixels become the exact same
+            // RGBA pixels as the final static Canvas fill, so no shade pop is
+            // possible at handoff.
+            ctx.save();
+            setCanvasV2Transform(ctx, ctm, bounds, scale);
+            ctx.clip(path, 'evenodd');
+            ctx.beginPath();
+            ctx.arc(state.cx, state.cy, Math.max(0, state.radius), 0, Math.PI * 2);
+            ctx.clip();
+            ctx.globalCompositeOperation = 'copy';
+            ctx.globalAlpha = opacity;
+            ctx.filter = filter;
+            ctx.fillStyle = overlayFill;
+            ctx.fill(path, 'evenodd');
+            ctx.restore();
+            return true;
+        }
+
         function renderRegionStateV2Canvas() {
             regionStateV2Raf = 0;
             if (!MAP_RENDERER_V2_ENABLED) return;
@@ -5721,19 +5829,28 @@ if (regionValues && typeof regionValues === 'object') {
                     const fill = regionFillV2Inline(regionEl);
                     const computedOpacity = parseFloat(getComputedStyle(regionEl).opacity);
                     const opacity = Number.isFinite(computedOpacity) ? computedOpacity : 0.7;
+                    const filter = regionVisualFilterV2(regionEl);
+                    const waveState = regionWaveV2CanvasAnimations.get(String(regionEl.id || ''));
 
-                    ctx.save();
-                    ctx.globalAlpha = opacity;
-                    ctx.filter = regionVisualFilterV2(regionEl);
-
-                    if (fill) {
-                        setCanvasV2Transform(ctx, ctm, bounds, backingScale);
-                        ctx.fillStyle = fill;
-                        ctx.fill(path, 'evenodd');
+                    if (waveState && isRegionWaveV2EpochCurrent(waveState.epoch)) {
+                        paintAnimatedRegionV2(
+                            ctx, mapSvg, regionEl, path, waveState,
+                            bounds, backingScale, opacity, filter
+                        );
                     } else {
-                        paintNeutralTextureV2(ctx, mapSvg, regionEl, path, bounds, backingScale);
+                        ctx.save();
+                        ctx.globalAlpha = opacity;
+                        ctx.filter = filter;
+
+                        if (fill) {
+                            setCanvasV2Transform(ctx, ctm, bounds, backingScale);
+                            ctx.fillStyle = fill;
+                            ctx.fill(path, 'evenodd');
+                        } else {
+                            paintNeutralTextureV2(ctx, mapSvg, regionEl, path, bounds, backingScale);
+                        }
+                        ctx.restore();
                     }
-                    ctx.restore();
                 } catch (err) {
                     console.debug('[map-v2] canvas fill path skipped:', regionEl.id, err?.message || err);
                 }
