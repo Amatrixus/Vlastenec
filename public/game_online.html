@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>VLASTENEC</title>
-  <!-- V51 MOBILE BATTLE UNLOCK HOTFIX -->
+  <!-- V52 MOBILE LIVE QUESTION GUARD -->
   <link rel="stylesheet" href="mainstyle.css?v=numeric-keypad-v2">
   <link rel="stylesheet" href="mobile-game.css?v=v50-mobile-question-scope-hotfix">
   <script src="auth-client.js"></script>
@@ -906,11 +906,14 @@ function scheduleTransientRehydration(snapshot, attempt = 0) {
   if (q && Number(q.remainingMs) > 0) {
     const seconds = Math.max(0.05, Number(q.remainingMs) / 1000);
     profileQuestionCategory = q.category || null;
-    profileQuestionCanAnswer = q.isParticipant !== false;
+    const snapshotCanAnswer = q.canAnswer !== undefined
+      ? q.canAnswer !== false
+      : q.isParticipant !== false;
+    profileQuestionCanAnswer = snapshotCanAnswer;
 
     if (q.kind === 'choice') {
       lastQuestionOptions = Array.isArray(q.options) ? [...q.options] : [];
-      showMultipleChoice(q.question, q.options || [], seconds, q.attacker, q.defender, q.attackerName, q.defenderName, !!q.canAnswer);
+      showMultipleChoice(q.question, q.options || [], seconds, q.attacker, q.defender, q.attackerName, q.defenderName, snapshotCanAnswer);
       if (q.answered) {
         myAnswer = Number.isInteger(Number(q.ownAnswer)) ? Number(q.ownAnswer) : '';
         document.querySelectorAll('.option').forEach((option, index) => {
@@ -923,7 +926,7 @@ function scheduleTransientRehydration(snapshot, attempt = 0) {
       }
     } else if (q.kind === 'numeric-two') {
       showNumericQuestionForTwo(q.question, seconds, q.attacker, q.defender, q.attackerName, q.defenderName);
-      if (!q.canAnswer || q.answered) {
+      if (!snapshotCanAnswer || q.answered) {
         const input = document.getElementById('numinput2');
         const submit = document.getElementById('numsubmit2');
         const keypad = document.getElementById('numkeypad2');
@@ -933,7 +936,7 @@ function scheduleTransientRehydration(snapshot, attempt = 0) {
       }
     } else if (q.kind === 'numeric-three') {
       showNumericQuestionForThree(q.question, seconds);
-      if (!q.canAnswer || q.answered) {
+      if (!snapshotCanAnswer || q.answered) {
         const input = document.getElementById('numinput3');
         const submit = document.getElementById('numsubmit3');
         const keypad = document.getElementById('numkeypad3');
@@ -1254,6 +1257,50 @@ socket.on("stateSync", ({ myNumber, snapshot }) => {
   // Lehký clock-sync aktivní otázky: neprovádíme kvůli němu celý repaint mapy.
   const clockSync = window.__questionClockSyncPending;
   const activeQ = snapshot?.activeQuestion;
+
+  // PHONE LIVE-QUESTION GUARD:
+  // A fresh socket question already owns the visible UI and its interaction state.
+  // Generic/post-tower stateSync responses are allowed to help only with the
+  // matching clock. They must NEVER fall through into full rehydration and call
+  // showMultipleChoice/showNumericQuestion again over the live question.
+  const livePhoneQuestion =
+    document.body?.classList.contains('vl-phone-game') &&
+    document.body.classList.contains('is-game-started') &&
+    !!window.__vlActiveQuestionClientTiming &&
+    ['multiple_choice_question', 'numeric_duel_question', 'numeric_three_question']
+      .includes(window.__battleUiLabel);
+
+  if (livePhoneQuestion) {
+    const liveTiming = window.__vlActiveQuestionClientTiming;
+    const activeSignature = activeQ
+      ? makeQuestionSyncSignature(activeQ.kind, activeQ.question)
+      : '';
+
+    if (clockSync && activeQ && activeSignature === clockSync.signature) {
+      const rttMs = Math.max(0, performance.now() - clockSync.sentAt);
+      window.__questionClockSyncPending = null;
+      syncVisibleQuestionClockFromSnapshot(activeQ, rttMs);
+      DBG('phone live question: stateSync used only for matching clock', {
+        kind: activeQ.kind,
+        remainingMs: activeQ.remainingMs,
+        rttMs
+      });
+      return;
+    }
+
+    // A stale response from post-tower sync (or from an older clock request)
+    // must not overwrite/unlock/lock the live question UI.
+    if (clockSync && activeSignature !== clockSync.signature) {
+      window.__questionClockSyncPending = null;
+    }
+
+    DBG('phone live question: generic/stale stateSync UI rehydration suppressed', {
+      liveSignature: liveTiming.signature,
+      snapshotSignature: activeSignature || null,
+      hasClockSync: !!clockSync
+    });
+    return;
+  }
   if (clockSync && activeQ) {
     const signature = makeQuestionSyncSignature(activeQ.kind, activeQ.question);
     if (signature === clockSync.signature) {
@@ -9557,10 +9604,11 @@ socket.on("destroyTower", ({ defender, remainingLives, uiToken, uiStage }) => {
     // jeho vykreslení i inline, protože některé mobilní prohlížeče při rychlé
     // výměně question-stage zpozdily/optimalizovaly překreslení samotného #qstrip.
     if (qstripEl) {
-        qstripEl.style.display = "block";
-        qstripEl.style.visibility = "visible";
-        qstripEl.style.opacity = "1";
-        qstripEl.style.backgroundColor = "rgb(39, 34, 34)";
+        qstripEl.style.setProperty("display", "block", "important");
+        qstripEl.style.setProperty("visibility", "visible", "important");
+        qstripEl.style.setProperty("opacity", "1", "important");
+        qstripEl.style.setProperty("background", "#000", "important");
+        qstripEl.style.setProperty("background-color", "#000", "important");
     }
 
     // Během animace věže nesmí spectator overlay zakrývat dění.
@@ -10028,8 +10076,16 @@ function ensureMobileTowerBand() {
         document.body.classList.contains("is-game-started");
     if (!isPhoneGame) return null;
 
-    const questionEl = document.getElementById("question");
-    if (!questionEl) return null;
+    const qstripEl = document.getElementById("qstrip");
+    if (!qstripEl) return null;
+
+    // Override all accumulated mobile CSS, including older !important rules.
+    qstripEl.style.setProperty("display", "block", "important");
+    qstripEl.style.setProperty("visibility", "visible", "important");
+    qstripEl.style.setProperty("opacity", "1", "important");
+    qstripEl.style.setProperty("background", "#000", "important");
+    qstripEl.style.setProperty("background-color", "#000", "important");
+    qstripEl.style.setProperty("isolation", "isolate", "important");
 
     let band = document.getElementById("vl_mobile_tower_band");
     if (!band) {
@@ -10037,25 +10093,24 @@ function ensureMobileTowerBand() {
         band.id = "vl_mobile_tower_band";
         band.setAttribute("aria-hidden", "true");
 
-        // Inline on purpose: the tower band must not depend on mobile CSS
-        // compositing/repaint quirks. It mirrors the mobile qstrip geometry.
         Object.assign(band.style, {
             position: "absolute",
-            left: "0",
-            top: "18%",
+            inset: "0",
             width: "100%",
-            height: "59%",
+            height: "100%",
             background: "#000",
             opacity: "1",
             visibility: "visible",
             pointerEvents: "none",
-            zIndex: "3"
+            zIndex: "0"
         });
 
-        questionEl.insertBefore(band, questionEl.firstChild);
+        // The tower SVG (#basevisualmini) is already z-index:10, so this is a
+        // genuine black backing layer directly underneath it.
+        qstripEl.insertBefore(band, qstripEl.firstChild);
     }
 
-    band.style.display = "block";
+    band.style.setProperty("display", "block", "important");
     return band;
 }
 
