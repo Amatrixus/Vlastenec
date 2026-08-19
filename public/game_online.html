@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>VLASTENEC</title>
-  <!-- V54 GLOBAL TOWER ANIMATION OPTIMIZATION -->
+  <!-- V55 DESTROYED BASE RING PERSISTENCE -->
   <link rel="stylesheet" href="mainstyle.css?v=numeric-keypad-v2">
   <link rel="stylesheet" href="mobile-game.css?v=v53-mobile-tower-question-strip">
 
@@ -823,11 +823,182 @@ function resetRegionVisualsForSnapshot() {
   }
 }
 
+
+window.__destroyedBaseRings = window.__destroyedBaseRings || {};
+
+function baseRegionIdForSeat(seat) {
+  return ({
+    1: player1CurrentBase,
+    2: player2CurrentBase,
+    3: player3CurrentBase
+  })[Number(seat)] || '';
+}
+
+function getBaseRingElement(seat) {
+  const baseEl = document.getElementById(`player${seat}basevisual`);
+  if (!baseEl) return null;
+
+  // P2/P3 already carry explicit ring ids in the source. P1 does not, so use
+  // the unique outer-ring path inside the final scaled group as fallback.
+  return document.getElementById(`base${seat}ring`) ||
+         baseEl.querySelector('g[transform*="scale"] path[fill-rule="nonzero"]');
+}
+
+function positionBaseVisualAtRegion(seat, regionId) {
+  const baseEl = document.getElementById(`player${seat}basevisual`);
+  const region = document.getElementById(regionId);
+  if (!baseEl || !region) return false;
+
+  const rect = region.getBoundingClientRect();
+  let centerX = rect.left + rect.width / 2 + window.scrollX;
+  let centerY = rect.top + rect.height / 2 + window.scrollY;
+
+  if (pinPositions?.[regionId]) {
+    centerX = rect.left + rect.width * pinPositions[regionId].x + window.scrollX;
+    centerY = rect.top + rect.height * pinPositions[regionId].y + window.scrollY;
+  }
+
+  baseEl.style.position = 'absolute';
+  baseEl.style.left = `${centerX}px`;
+  baseEl.style.top = `${centerY}px`;
+  baseEl.style.transform = 'translate(-50%, -50%)';
+  baseEl.style.display = 'block';
+  return true;
+}
+
+function renderDestroyedBaseRing(seat) {
+  const record = window.__destroyedBaseRings?.[Number(seat)];
+  if (!record?.regionId) return false;
+
+  const baseEl = document.getElementById(`player${seat}basevisual`);
+  if (!baseEl) return false;
+
+  const nameEl = document.getElementById(`player${seat}basename`);
+  if (nameEl) nameEl.style.display = 'none';
+
+  // Destroyed base = outer ring only.
+  ['left', 'right', 'main'].forEach(part => {
+    const tower = document.getElementById(`base${seat}${part}`);
+    if (tower) tower.style.display = 'none';
+  });
+
+  const ring = getBaseRingElement(seat);
+  if (ring) ring.style.display = '';
+
+  if (!positionBaseVisualAtRegion(seat, record.regionId)) return false;
+
+  const oldHandler = window.__vlastenecBaseResizeHandlers?.[seat];
+  if (oldHandler) window.removeEventListener('resize', oldHandler);
+
+  const resizeHandler = () => {
+    const active = window.__destroyedBaseRings?.[Number(seat)];
+    if (!active?.regionId) return;
+    positionBaseVisualAtRegion(seat, active.regionId);
+  };
+
+  window.__vlastenecBaseResizeHandlers = window.__vlastenecBaseResizeHandlers || {};
+  window.__vlastenecBaseResizeHandlers[seat] = resizeHandler;
+  window.addEventListener('resize', resizeHandler);
+
+  return true;
+}
+
+function preserveDestroyedBaseRing(seat, regionId) {
+  const numericSeat = Number(seat);
+  const id = String(regionId || '');
+  if (!numericSeat || !id || !document.getElementById(id)) return false;
+
+  window.__destroyedBaseRings[numericSeat] = {
+    seat: numericSeat,
+    regionId: id,
+    // The first non-defeated owner after base destruction is the automatic
+    // post-defeat transfer owner. The ring must survive that transfer.
+    transferOwner: null,
+    createdAt: performance.now()
+  };
+
+  return renderDestroyedBaseRing(numericSeat);
+}
+
+function removeDestroyedBaseRing(seat, reason = '') {
+  const numericSeat = Number(seat);
+  const record = window.__destroyedBaseRings?.[numericSeat];
+  if (!record) return false;
+
+  delete window.__destroyedBaseRings[numericSeat];
+
+  const oldHandler = window.__vlastenecBaseResizeHandlers?.[numericSeat];
+  if (oldHandler) {
+    window.removeEventListener('resize', oldHandler);
+    delete window.__vlastenecBaseResizeHandlers[numericSeat];
+  }
+
+  const baseEl = document.getElementById(`player${numericSeat}basevisual`);
+  if (baseEl) baseEl.style.display = 'none';
+
+  console.log(`⭕ Zničený kroužek základny P${numericSeat} odstraněn${reason ? `: ${reason}` : ''}.`);
+  return true;
+}
+
+function ownerOfRegionFromSnapshot(regionId, regions) {
+  const id = String(regionId || '');
+  if (!id) return 0;
+
+  for (let seat = 1; seat <= 3; seat++) {
+    const ids = regions?.[`Player${seat}regions`];
+    if (Array.isArray(ids) && ids.map(String).includes(id)) return seat;
+  }
+  return 0;
+}
+
+function reconcileDestroyedBaseRings(regions) {
+  const records = window.__destroyedBaseRings || {};
+
+  Object.keys(records).forEach(key => {
+    const seat = Number(key);
+    const record = records[seat];
+    if (!record?.regionId) return;
+
+    const owner = ownerOfRegionFromSnapshot(record.regionId, regions);
+
+    if (record.transferOwner == null) {
+      // Base defeat itself transfers the defeated player's regions. That first
+      // new owner becomes the baseline; the empty ring deliberately survives it.
+      if (owner > 0 && owner !== seat) {
+        record.transferOwner = owner;
+        console.log(`⭕ Zničený kroužek P${seat} zůstává po převodu pole na P${owner}.`);
+      }
+      renderDestroyedBaseRing(seat);
+      return;
+    }
+
+    // Only a later battle ownership change removes the old base ring.
+    if (owner > 0 && owner !== Number(record.transferOwner)) {
+      removeDestroyedBaseRing(
+        seat,
+        `pole ${record.regionId} změnilo vlastníka P${record.transferOwner} → P${owner}`
+      );
+      return;
+    }
+
+    renderDestroyedBaseRing(seat);
+  });
+}
+
 function hideBaseForSeat(seat) {
   const nameEl = document.getElementById(`player${seat}basename`);
-  const baseEl = document.getElementById(`player${seat}basevisual`);
   if (nameEl) nameEl.style.display = 'none';
+
+  // A destroyed base is intentionally NOT fully hidden: its empty gold ring
+  // remains on the old base region until that field is captured again later.
+  if (window.__destroyedBaseRings?.[Number(seat)]) {
+    renderDestroyedBaseRing(seat);
+    return;
+  }
+
+  const baseEl = document.getElementById(`player${seat}basevisual`);
   if (baseEl) baseEl.style.display = 'none';
+
   const oldHandler = window.__vlastenecBaseResizeHandlers?.[seat];
   if (oldHandler) {
     window.removeEventListener('resize', oldHandler);
@@ -862,8 +1033,18 @@ function renderBasesFromSnapshot(snapshot) {
     const valid = settled && !!base && owned.includes(base) && remainingLives > 0 && !!document.getElementById(base);
 
     if (!valid) {
-      hideBaseForSeat(seat);
+      if (window.__destroyedBaseRings?.[seat]) {
+        renderDestroyedBaseRing(seat);
+      } else {
+        hideBaseForSeat(seat);
+      }
       continue;
+    }
+
+    // A live base supersedes any stale destroyed-ring presentation from an
+    // earlier match state/reconnect.
+    if (window.__destroyedBaseRings?.[seat]) {
+      removeDestroyedBaseRing(seat, 'základna je znovu aktivní');
     }
 
     const fn = window[`settlePlayer${seat}`];
@@ -9447,8 +9628,16 @@ socket.on("playerLoses", ({defender}) => {
         createdAt: performance.now()
     };
 
-    hideBaseForSeat(defeatedSeat);
+    const defeatedBaseRegion = baseRegionIdForSeat(defeatedSeat);
+
+    // Hide towers/name, but preserve the empty outer base ring at the exact old
+    // base field. This is presentation only; ownership remains server-authoritative.
     applyBaseLivesVisual(defeatedSeat, 0);
+    if (!preserveDestroyedBaseRing(defeatedSeat, defeatedBaseRegion)) {
+      // Fallback only if the old base region is unavailable in DOM.
+      hideBaseForSeat(defeatedSeat);
+    }
+
     console.log("Hráč", defender, "prohrál.");
 });
 
@@ -9728,6 +9917,11 @@ async function enableConquestSelection(timeLeft = 10) {
                 Player3regions: [...(regions?.Player3regions || [])]
             };
             window.playerControlledRegions = playerControlledRegions;
+
+            // Keep a destroyed base ring through the automatic post-defeat
+            // ownership transfer; remove it only on a later ownership change.
+            reconcileDestroyedBaseRings(playerControlledRegions);
+
             window.regionValues = { ...(regionValues || {}) };
             try { window.regionValues && (regionValues = window.regionValues); } catch (_) {}
             if (defenseBonuses) window.defenseBonuses = { ...defenseBonuses };
