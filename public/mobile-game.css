@@ -1744,3 +1744,53 @@ html.vl-map-renderer-v2.vl-map-v2-canvas-ready #map .region.unclickable {
     z-index: 4 !important;
   }
 }
+
+
+/* ============================================================
+   VLASTENEC — PHONE TOWER QUESTION STRIP V53
+   During tower destruction keep ONLY the normal black question-text band.
+   Never blacken the broad #qstrip behind the answer rows.
+   ============================================================ */
+@media (orientation: landscape) and (max-height: 1100px) {
+  /* Cancel the V49 full-overlay gradient fallback. */
+  body.vl-phone-game.is-game-started #question.tower-destroying {
+    background: rgba(0,0,0,.40) !important;
+  }
+
+  /* Cancel the old artificial dark backing layer. */
+  body.vl-phone-game.is-game-started #question.tower-destroying::before {
+    display: none !important;
+    content: none !important;
+  }
+
+  /* #qstrip returns to its NORMAL mobile appearance and geometry.
+     It must never be forced to pure black by tower presentation code. */
+  body.vl-phone-game.is-game-started #question.tower-destroying #qstrip {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    background: rgb(39, 34, 34) !important;
+    background-color: rgb(39, 34, 34) !important;
+  }
+
+  /* This is the strip the user actually wants: the same black background that
+     normally sits directly behind question text. JS empties its text during tower FX. */
+  body.vl-phone-game.is-game-started #question.tower-destroying #qtext {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    background: #000 !important;
+    background-color: #000 !important;
+  }
+
+  /* Only answers / spectator action remain hidden during tower destruction. */
+  body.vl-phone-game.is-game-started #question.tower-destroying #optionrow1,
+  body.vl-phone-game.is-game-started #question.tower-destroying #optionrow2,
+  body.vl-phone-game.is-game-started #question.tower-destroying #abort {
+    display: none !important;
+  }
+
+  #vl_mobile_tower_band {
+    display: none !important;
+  }
+}

@@ -4,9 +4,9 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>VLASTENEC</title>
-  <!-- V52 MOBILE LIVE QUESTION GUARD -->
+  <!-- V53 MOBILE TOWER QUESTION STRIP -->
   <link rel="stylesheet" href="mainstyle.css?v=numeric-keypad-v2">
-  <link rel="stylesheet" href="mobile-game.css?v=v50-mobile-question-scope-hotfix">
+  <link rel="stylesheet" href="mobile-game.css?v=v53-mobile-tower-question-strip">
   <script src="auth-client.js"></script>
   <script src="profile-store.js"></script>
   <style id="vl-tablet-lobby-v4-inline">
@@ -9598,18 +9598,10 @@ socket.on("showBaseMini", ({ defender, lives }) => {
 socket.on("destroyTower", ({ defender, remainingLives, uiToken, uiStage }) => {
     const uiEpoch = beginBattleUiStage("destroy_tower");
     const baseMini = document.getElementById("basevisualmini");
-    const qstripEl = document.getElementById("qstrip");
 
-    // Černý pás je během ničení věže samostatný vizuální prvek. Vynutíme
-    // jeho vykreslení i inline, protože některé mobilní prohlížeče při rychlé
-    // výměně question-stage zpozdily/optimalizovaly překreslení samotného #qstrip.
-    if (qstripEl) {
-        qstripEl.style.setProperty("display", "block", "important");
-        qstripEl.style.setProperty("visibility", "visible", "important");
-        qstripEl.style.setProperty("opacity", "1", "important");
-        qstripEl.style.setProperty("background", "#000", "important");
-        qstripEl.style.setProperty("background-color", "#000", "important");
-    }
+    // V53: žádný extra černý pás přes odpovědi.
+    // Použijeme pouze normální černé pozadí samotného #qtext.
+    resetMobileTowerPresentation();
 
     // Během animace věže nesmí spectator overlay zakrývat dění.
     abortTemporarilyHidden = true;
@@ -9624,11 +9616,10 @@ socket.on("destroyTower", ({ defender, remainingLives, uiToken, uiStage }) => {
     stopQuestionCountdown();
     question.style.display = "block";
     question.classList.add("tower-destroying");
-    ensureMobileTowerBand();
     qplayers.style.display = "block";
 
-    // Černý #qstrip zůstává viditelný. Schováme pouze obsah MC (text + dvě
-    // řady odpovědí + abort), aby při boření zůstalo tmavé pozadí otázky.
+    // Při boření zůstane pouze běžný černý pruh #qtext, ale bez textu.
+    // Odpovědi a ostatní obsah jsou skryté.
     choice_question.style.display = "block";
     numerical_question_two.style.display = "none";
     numerical_question_three.style.display = "none";
@@ -9689,7 +9680,7 @@ socket.on("destroyTower", ({ defender, remainingLives, uiToken, uiStage }) => {
 
     guardedBattleUiTimeout(uiEpoch, () => {
         console.log("DESTROY TOWER - Zavírám okno");
-        removeMobileTowerBand();
+        resetMobileTowerPresentation();
         question.classList.remove("tower-destroying");
         question.style.display = "none";
         choice_question.style.display = "none";
@@ -10066,53 +10057,16 @@ async function enableConquestSelection(timeLeft = 10) {
 // je stále aktuální. Tím starý setTimeout nikdy neschová novější fázi.
 let __battleUiEpoch = 0;
 
-function removeMobileTowerBand() {
+function resetMobileTowerPresentation() {
     document.getElementById("vl_mobile_tower_band")?.remove();
-}
-
-function ensureMobileTowerBand() {
-    const isPhoneGame =
-        document.body?.classList.contains("vl-phone-game") &&
-        document.body.classList.contains("is-game-started");
-    if (!isPhoneGame) return null;
 
     const qstripEl = document.getElementById("qstrip");
-    if (!qstripEl) return null;
-
-    // Override all accumulated mobile CSS, including older !important rules.
-    qstripEl.style.setProperty("display", "block", "important");
-    qstripEl.style.setProperty("visibility", "visible", "important");
-    qstripEl.style.setProperty("opacity", "1", "important");
-    qstripEl.style.setProperty("background", "#000", "important");
-    qstripEl.style.setProperty("background-color", "#000", "important");
-    qstripEl.style.setProperty("isolation", "isolate", "important");
-
-    let band = document.getElementById("vl_mobile_tower_band");
-    if (!band) {
-        band = document.createElement("div");
-        band.id = "vl_mobile_tower_band";
-        band.setAttribute("aria-hidden", "true");
-
-        Object.assign(band.style, {
-            position: "absolute",
-            inset: "0",
-            width: "100%",
-            height: "100%",
-            background: "#000",
-            opacity: "1",
-            visibility: "visible",
-            pointerEvents: "none",
-            zIndex: "0"
-        });
-
-        // The tower SVG (#basevisualmini) is already z-index:10, so this is a
-        // genuine black backing layer directly underneath it.
-        qstripEl.insertBefore(band, qstripEl.firstChild);
+    if (qstripEl) {
+        ["display", "visibility", "opacity", "background", "background-color", "isolation", "z-index"]
+            .forEach(prop => qstripEl.style.removeProperty(prop));
     }
-
-    band.style.setProperty("display", "block", "important");
-    return band;
 }
+
 
 function beginBattleUiStage(label) {
     __battleUiEpoch += 1;
@@ -10123,7 +10077,7 @@ function beginBattleUiStage(label) {
     // animace věže. Tím nemůže mobilní CSS schovat novou otázku.
     const questionEl = document.getElementById("question");
     if (label !== "destroy_tower") {
-        removeMobileTowerBand();
+        resetMobileTowerPresentation();
         if (questionEl) questionEl.classList.remove("tower-destroying");
     }
 
