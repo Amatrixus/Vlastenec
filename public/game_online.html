@@ -4,6 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>VLASTENEC</title>
+  <!-- V51 MOBILE BATTLE UNLOCK HOTFIX -->
   <link rel="stylesheet" href="mainstyle.css?v=numeric-keypad-v2">
   <link rel="stylesheet" href="mobile-game.css?v=v50-mobile-question-scope-hotfix">
   <script src="auth-client.js"></script>
@@ -9575,6 +9576,7 @@ socket.on("destroyTower", ({ defender, remainingLives, uiToken, uiStage }) => {
     stopQuestionCountdown();
     question.style.display = "block";
     question.classList.add("tower-destroying");
+    ensureMobileTowerBand();
     qplayers.style.display = "block";
 
     // Černý #qstrip zůstává viditelný. Schováme pouze obsah MC (text + dvě
@@ -9639,6 +9641,7 @@ socket.on("destroyTower", ({ defender, remainingLives, uiToken, uiStage }) => {
 
     guardedBattleUiTimeout(uiEpoch, () => {
         console.log("DESTROY TOWER - Zavírám okno");
+        removeMobileTowerBand();
         question.classList.remove("tower-destroying");
         question.style.display = "none";
         choice_question.style.display = "none";
@@ -10015,6 +10018,47 @@ async function enableConquestSelection(timeLeft = 10) {
 // je stále aktuální. Tím starý setTimeout nikdy neschová novější fázi.
 let __battleUiEpoch = 0;
 
+function removeMobileTowerBand() {
+    document.getElementById("vl_mobile_tower_band")?.remove();
+}
+
+function ensureMobileTowerBand() {
+    const isPhoneGame =
+        document.body?.classList.contains("vl-phone-game") &&
+        document.body.classList.contains("is-game-started");
+    if (!isPhoneGame) return null;
+
+    const questionEl = document.getElementById("question");
+    if (!questionEl) return null;
+
+    let band = document.getElementById("vl_mobile_tower_band");
+    if (!band) {
+        band = document.createElement("div");
+        band.id = "vl_mobile_tower_band";
+        band.setAttribute("aria-hidden", "true");
+
+        // Inline on purpose: the tower band must not depend on mobile CSS
+        // compositing/repaint quirks. It mirrors the mobile qstrip geometry.
+        Object.assign(band.style, {
+            position: "absolute",
+            left: "0",
+            top: "18%",
+            width: "100%",
+            height: "59%",
+            background: "#000",
+            opacity: "1",
+            visibility: "visible",
+            pointerEvents: "none",
+            zIndex: "3"
+        });
+
+        questionEl.insertBefore(band, questionEl.firstChild);
+    }
+
+    band.style.display = "block";
+    return band;
+}
+
 function beginBattleUiStage(label) {
     __battleUiEpoch += 1;
     window.__battleUiEpoch = __battleUiEpoch;
@@ -10023,8 +10067,9 @@ function beginBattleUiStage(label) {
     // Jakmile dorazí jakákoli nová battle obrazovka, okamžitě zruš stav
     // animace věže. Tím nemůže mobilní CSS schovat novou otázku.
     const questionEl = document.getElementById("question");
-    if (questionEl && label !== "destroy_tower") {
-        questionEl.classList.remove("tower-destroying");
+    if (label !== "destroy_tower") {
+        removeMobileTowerBand();
+        if (questionEl) questionEl.classList.remove("tower-destroying");
     }
 
     stopQuestionCountdown();
@@ -10216,18 +10261,35 @@ function syncVisibleQuestionClockFromSnapshot(activeQuestion, rttMs = 0) {
     startCountdown(correctedRemainingMs / 1000);
     armAuthoritativeQuestionInteractionDeadline(activeQuestion.kind, correctedRemainingMs);
 
-    if (activeQuestion.kind === 'choice') {
-        if (activeQuestion.answered || activeQuestion.canAnswer === false) {
-            document.querySelectorAll('.option').forEach((option, index) => {
-                option.classList.add('unavailable_multiple_choice');
-                if (activeQuestion.answered && index === Number(activeQuestion.ownAnswer)) {
-                    option.classList.remove('unavailable_multiple_choice');
-                    option.classList.add('highlighted_choice');
-                }
-            });
+    // IMPORTANT:
+    // A stateSync requested immediately after a live question event is CLOCK-ONLY.
+    // The live socket event has already established whether this client can answer,
+    // and the local click/submit handler owns its answered state. A transition
+    // snapshot may briefly still carry answered/canAnswer from the previous battle
+    // question, so applying those flags here can incorrectly lock the new question.
+    //
+    // For a genuine rehydration/reconnect there is no matching fresh timing record,
+    // so the snapshot may still restore its interaction state as before.
+    if (!timingMatches) {
+        if (activeQuestion.kind === 'choice') {
+            if (activeQuestion.answered || activeQuestion.canAnswer === false) {
+                document.querySelectorAll('.option').forEach((option, index) => {
+                    option.classList.add('unavailable_multiple_choice');
+                    if (activeQuestion.answered && index === Number(activeQuestion.ownAnswer)) {
+                        option.classList.remove('unavailable_multiple_choice');
+                        option.classList.add('highlighted_choice');
+                    }
+                });
+            }
+        } else if (activeQuestion.answered || activeQuestion.canAnswer === false) {
+            hideNumericInputForKind(activeQuestion.kind);
         }
     } else if (activeQuestion.answered || activeQuestion.canAnswer === false) {
-        hideNumericInputForKind(activeQuestion.kind);
+        console.log('⏱️ Fresh-question clock sync: ignorován interaction flag snapshotu.', {
+            kind: activeQuestion.kind,
+            answered: !!activeQuestion.answered,
+            canAnswer: activeQuestion.canAnswer
+        });
     }
 
     console.log(`⏱️ Čas otázky srovnán: ${Math.ceil(correctedRemainingMs)} ms (server ${Math.ceil(serverRemaining)} ms, RTT ${Math.round(measuredRttMs)} ms${localRemainingMs === null ? '' : `, local ${Math.ceil(localRemainingMs)} ms`}).`);
