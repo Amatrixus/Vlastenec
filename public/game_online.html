@@ -4,9 +4,23 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>VLASTENEC</title>
-  <!-- V53 MOBILE TOWER QUESTION STRIP -->
+  <!-- V54 GLOBAL TOWER ANIMATION OPTIMIZATION -->
   <link rel="stylesheet" href="mainstyle.css?v=numeric-keypad-v2">
   <link rel="stylesheet" href="mobile-game.css?v=v53-mobile-tower-question-strip">
+
+  <style id="vl-tower-animation-v54">
+    /* The old transition animated top/left/height and forced layout every frame.
+       V54 movement is driven by Web Animations API transform instead. */
+    #basevisualmini {
+      transition: none !important;
+    }
+
+    .smoke-puff,
+    .spark,
+    .shockwave {
+      will-change: transform, opacity;
+    }
+  </style>
   <script src="auth-client.js"></script>
   <script src="profile-store.js"></script>
   <style id="vl-tablet-lobby-v4-inline">
@@ -6950,11 +6964,11 @@ function startCountdownTile(secondsAmount) {
 
 
 
-              function showShockwave(x, y, baseElement) {
+              function showShockwave(x, y, baseElement, measuredRect = null) {
                 const wave = document.createElement("div");
                 wave.className = "shockwave";
 
-                const rect = baseElement.getBoundingClientRect();
+                const rect = measuredRect || baseElement.getBoundingClientRect();
                 const size = Math.max(rect.width, rect.height);
 
                 wave.style.width = `${size}px`;
@@ -6978,50 +6992,56 @@ function startCountdownTile(secondsAmount) {
                         "rgba(60,60,60,0.6)"
                     ];
 
+                    const fragment = document.createDocumentFragment();
+                    const created = [];
+
                     for (let i = 0; i < count; i++) {
                         const puff = document.createElement("div");
                         puff.className = "smoke-puff";
 
-                        // Náhodný směr a délka stoupání
                         const angle = Math.random() * 2 * Math.PI;
                         const radius = 60 + Math.random() * 60;
                         const offsetX = Math.cos(angle) * radius;
-                        const offsetY = -Math.abs(Math.sin(angle) * radius); // nahoru
+                        const offsetY = -Math.abs(Math.sin(angle) * radius);
 
                         puff.style.left = `${x}px`;
                         puff.style.top = `${y}px`;
                         puff.style.setProperty("--x", `${offsetX}px`);
                         puff.style.setProperty("--y", `${offsetY}px`);
 
-                        // Náhodná velikost
                         const size = 20 + Math.random() * 40;
                         puff.style.width = `${size}px`;
                         puff.style.height = `${size}px`;
 
-                        // Náhodné zpoždění
                         puff.style.animationDelay = `${Math.random() * 0.4}s`;
 
-                        // Náhodná barva
                         const smokeColor = colors[Math.floor(Math.random() * colors.length)];
                         puff.style.setProperty("--smoke-color", smokeColor);
 
-                        document.body.appendChild(puff);
-                        setTimeout(() => puff.remove(), 2000);
-                    }
+                        fragment.appendChild(puff);
+                        created.push(puff);
                     }
 
+                    document.body.appendChild(fragment);
+
+                    // One cleanup task instead of one timer per particle.
+                    setTimeout(() => {
+                        created.forEach(puff => puff.remove());
+                    }, 2000);
+                }
 
 
 
 
                     function spawnSparks(x, y, count = 12) {
                         const colors = ["#fffacd", "#ffd700", "#ffb347", "#ffffff"];
+                        const fragment = document.createDocumentFragment();
+                        const created = [];
 
                         for (let i = 0; i < count; i++) {
                             const spark = document.createElement("div");
                             spark.className = "spark";
 
-                            // Náhodný směr
                             const angle = Math.random() * 2 * Math.PI;
                             const distance = 50 + Math.random() * 30;
                             const offsetX = Math.cos(angle) * distance;
@@ -7032,449 +7052,133 @@ function startCountdownTile(secondsAmount) {
                             spark.style.setProperty("--x", `${offsetX}px`);
                             spark.style.setProperty("--y", `${offsetY}px`);
 
-                            // Náhodná barva
                             spark.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
 
-                            // Náhodná velikost
                             const size = 2 + Math.random() * 2;
                             spark.style.width = `${size}px`;
                             spark.style.height = `${size}px`;
 
-                            document.body.appendChild(spark);
-                            setTimeout(() => spark.remove(), 900);
+                            fragment.appendChild(spark);
+                            created.push(spark);
                         }
-                        }
 
+                        document.body.appendChild(fragment);
 
-
-
-
-
-
-                
-
-
-                //function to show a multiple-choice question
-                async function multipleChoiceQuestion(participatingPlayers){
-
-                    async function getQuestionCount2() {
-                        try {
-                            let response = await fetch('multiple_choice_questions.json');
-                            let data = await response.json();
-                            return data.length;
-                        } catch (error) {
-                            console.error("Chyba při načítání otázek:", error);
-                            return 0;
-                        }
+                        setTimeout(() => {
+                            created.forEach(spark => spark.remove());
+                        }, 900);
                     }
 
 
-                    let myAnswer = "";
-                    let correct_answer = "";
-                    let questionCount = await getQuestionCount2();
-                    if (questionCount === 0) return;
 
-                    let question_id = Math.floor(Math.random() * questionCount);
-                    console.log("Vybrané ID otázky:", question_id);
 
 
 
-                    try {
-                            let response = await fetch('multiple_choice_questions.json');
-                            let data = await response.json();
-                            let selectedQuestion = data.find(q => q.id === question_id);
 
-                            if (selectedQuestion) {
 
-                                correct_answer = selectedQuestion.correct_answer;
-                                console.log(`Otázka: ${selectedQuestion.question}, Správná odpověď: ${correct_answer}`);
 
-                                
-                                question.style.display = "block";
-                                choice_question.style.display = "block";
-                                qplayers.style.display="none";
-                                optioncover1.style.display="none";
-                                optioncover2.style.display="none";
-                                optioncover3.style.display="none";
-                                optioncover4.style.display="none";
 
-                                if(participatingPlayers.length < 3){
-                                
-                                    qplayers.style.display="block";
-                                    qplayername1.innerHTML = duelNames[participatingPlayers[0]];
-                                    qplayername2.innerHTML = duelNames[participatingPlayers[1]];
-                                    qplayerone.style.backgroundImage = duelColors[participatingPlayers[0]];
-                                    qplayertwo.style.backgroundImage = duelColors[participatingPlayers[1]];
+                // ============================================================
+                // VLASTENEC — TOWER MOTION V54
+                // FLIP: layout changes only once; the visible movement itself is
+                // compositor-only transform animation on every platform.
+                // ============================================================
+                function cancelBaseMiniMotion(baseMini = document.getElementById("basevisualmini")) {
+                    if (!baseMini) return;
 
-                                }
+                    const running = baseMini.__vlTowerMotionAnimation;
+                    if (running) {
+                        try { running.cancel(); } catch (_) {}
+                        baseMini.__vlTowerMotionAnimation = null;
+                    }
 
-
-                                
-
-                                document.querySelectorAll('.option').forEach(option => {
-
-                                                            
-                                        option.classList.remove("unavailable_multiple_choice", "highlighted_choice");
-                                        option.style.background = "";
-                                        option.style.backgroundImage = "linear-gradient(   rgb(57, 54, 54), 5%, rgb(19, 18, 18), 95%,   rgb(57, 54, 54));";
-
-
-                                });
-
-
-
-
-                                qtext.innerHTML = selectedQuestion.question;
-                                option1.innerHTML = selectedQuestion.options[0];
-                                option2.innerHTML = selectedQuestion.options[1];
-                                option3.innerHTML = selectedQuestion.options[2];
-                                option4.innerHTML = selectedQuestion.options[3];
-
-                                //POKUD NEJSEM SOUČÁSTÍ TÉTO OTÁZKY, TAK NEMOHU KLIKAT
-                                if(!participatingPlayers.includes(myPlayerNumber)){
-                                        document.querySelectorAll('.option').forEach(option => {
-                                                                    
-                                                    option.classList.add("unavailable_multiple_choice");
-                                                    abort.style.display = "block";
-
-                                        });
-                                    }
-
-
-
-                                startCountdown(10);
-
-
-                                function submitMultipleChoice(selectedOption){
-
-                                    // Přehrání zvuku "send2.mp3"
-                                    let sendSound = new Audio("send2.mp3");
-                                    sendSound.play();
-
-                                    
-
-                                    myAnswer = selectedOption;
-                                    console.log("My answer: " + myAnswer);
-
-                                    
-
-
-                                }
-
-
-                                document.querySelectorAll('.option').forEach(option => {
-                                    const newOption = option.cloneNode(true);
-                                    option.parentNode.replaceChild(newOption, option);
-                                });
-
-
-
-
-                                document.querySelectorAll('.option').forEach(option => {
-                                                
-                                                
-                                                option.addEventListener('click', () => {
-
-
-                                                        document.querySelectorAll('.option').forEach(option => {
-
-                                                            
-                                                            option.classList.add("unavailable_multiple_choice");
-
-
-
-                                                         });
-
-                                                                                                            
-                                                        let clickedAnswer = option.innerHTML;
-                                                        submitMultipleChoice(clickedAnswer);
-                                                        option.classList.remove("unavailable_multiple_choice");
-                                                        option.classList.add("highlighted_choice");
-
-
-                                                        if(myPlayerNumber == 1){
-
-                                                            option.style.backgroundImage = "linear-gradient(rgb(13 0 76), 5%, rgb(58 0 232), 95%, rgb(13 0 76))"; 
-                                                            
-                                                        }
-
-                                                        if(myPlayerNumber == 2){
-
-                                                            option.style.backgroundImage = "linear-gradient(rgb(102 0 0), 5%, rgb(202 0 0), 95%, rgb(102, 0, 0))"; 
-                                                            
-                                                        }
-
-                                                        if(myPlayerNumber == 3){
-
-                                                            option.style.backgroundImage = "linear-gradient(rgb(57, 54, 54), 5%, rgb(176 176 176), 95%, rgb(57, 54, 54))"; 
-                                                            
-                                                        }
-                                                        
-
-
-                                                });
-
-
-                                });
-
-
-                                 // ✅ Po 10 sekundách zobrazíme odpovědi
-                                await new Promise(resolve => setTimeout(resolve, 11000));
-
-                                console.log("už");
-
-                                //Vyhodnocení výsledků
-
-                                document.querySelectorAll('.option').forEach(option => {
-
-                                            abort.style.display = "none";                 
-                                            option.classList.add("unavailable_multiple_choice");
-
-
-
-                                });
-
-
-                                            
-
-                                           
-                                            // 📌 AI hráči odpovídají náhodně
-                                            let answer1 = (myPlayerNumber === 1)
-                                                ? myAnswer
-                                                //Pokud jsou součástí participatingPlayers
-                                                : (participatingPlayers.includes(1) ? selectedQuestion.options[Math.floor(Math.random() * 4)] : null);
-
-                                            let answer2 = (myPlayerNumber === 2)
-                                                ? myAnswer
-                                                : (participatingPlayers.includes(2) ? selectedQuestion.options[Math.floor(Math.random() * 4)] : null);
-
-                                            let answer3 = (myPlayerNumber === 3)
-                                                ? myAnswer
-                                                : (participatingPlayers.includes(3) ? selectedQuestion.options[Math.floor(Math.random() * 4)] : null);
-
-
-
-                                            // ✅ Uložení odpovědi podle `myPlayerNumber`
-                                            if (myPlayerNumber === 1) {
-                                                answer1 = myAnswer;
-                                            } else if (myPlayerNumber === 2) {
-                                                answer2 = myAnswer;
-                                            } else if (myPlayerNumber === 3) {
-                                                answer3 = myAnswer;
-                                            }
-
-
-
-
-
-
-                                            // Výběr všech možností odpovědí
-                                            let options = document.querySelectorAll(".option");
-
-                                            // Objekt pro uchování výsledků
-                                            let selectedOptions = {
-                                                option1: [],
-                                                option2: [],
-                                                option3: [],
-                                                option4: []
-                                            };
-
-                                            // Procházíme všechny možnosti odpovědí a porovnáváme s hráčskými odpověďmi
-                                            options.forEach(option => {
-                                                let optionText = option.innerHTML.trim(); // Získáme text možnosti
-                                                let optionId = option.id; // ID možnosti (option1, option2, option3, option4)
-
-                                                // Porovnání odpovědi hráče 1
-                                                if (answer1 === optionText) {
-                                                    selectedOptions[optionId].push(1);
-                                                }
-
-                                                // Porovnání odpovědi hráče 2
-                                                if (answer2 === optionText) {
-                                                    selectedOptions[optionId].push(2);
-                                                }
-
-                                                // Porovnání odpovědi hráče 3
-                                                if (answer3 === optionText) {
-                                                    selectedOptions[optionId].push(3);
-                                                }
-                                            });
-
-                                            // Výpis výsledků do konzole
-                                            console.log(selectedOptions);
-                                            
-
-                                            
-                                            console.log(`📌 Odpovědi hráčů: Hráč 1: ${answer1}, Hráč 2: ${answer2}, Hráč 3: ${answer3}`);
-
-
-
-
-
-                                            function applyGradientsToOptions() {
-                                            // Definujeme gradienty pro hráče
-                                            const playerGradients = {
-                                                1: "linear-gradient(rgb(13 0 76), 5%, rgb(58 0 232), 95%, rgb(13 0 76))", // Modrý
-                                                2: "linear-gradient(rgb(102 0 0), 5%, rgb(202 0 0), 95%, rgb(102, 0, 0))", // Červený
-                                                3: "linear-gradient(rgb(57, 54, 54), 5%, rgb(176 176 176), 95%, rgb(57, 54, 54))" // Šedý
-                                            };
-
-                                            // Projdeme všechny odpovědi a nastavíme gradient
-                                            Object.keys(selectedOptions).forEach(optionId => {
-                                                let option = document.getElementById(optionId);
-                                                let players = selectedOptions[optionId]; // Kteří hráči vybrali tuto možnost
-
-                                                if (players.length === 1) {
-                                                    // ✅ Pokud odpověď vybral pouze jeden hráč → celý gradient
-                                                    option.style.background = playerGradients[players[0]];
-                                                } else if (players.length === 2) {
-                                                    // ✅ Pokud odpověď vybrali dva hráči → gradient rozdělený na poloviny
-                                                    option.style.background = `
-                                                        ${playerGradients[players[0]]}, 
-                                                        ${playerGradients[players[1]]}`;
-                                                    option.style.backgroundSize = "50% 100%";
-                                                    option.style.backgroundPosition = "left, right";
-                                                    option.style.backgroundRepeat = "no-repeat";
-                                                } else if (players.length === 3) {
-                                                    // ✅ Pokud odpověď vybrali všichni tři hráči → gradient rozdělený na třetiny
-                                                    option.style.background = `
-                                                        ${playerGradients[players[0]]}, 
-                                                        ${playerGradients[players[1]]}, 
-                                                        ${playerGradients[players[2]]}`;
-                                                    option.style.backgroundSize = "33.3% 100%";
-                                                    option.style.backgroundPosition = "left, center, right";
-                                                    option.style.backgroundRepeat = "no-repeat";
-                                                } else {
-                                                    // ✅ Pokud nikdo nevybral odpověď → reset na výchozí styl
-                                                    option.style.background = "";
-                                                }
-                                            });
-                                        }
-
-                                        // Zavolání funkce po přiřazení odpovědí hráčů
-                                        applyGradientsToOptions();
-
-
-
-
-
-                                         // ✅ Po 2 sekundách zobrazíme odpovědi
-                                        await new Promise(resolve => setTimeout(resolve, 2000));
-
-
-                                        // Funkce pro zvýraznění správné odpovědi
-                                        function highlightCorrectAnswer(correctAnswer) {
-                                            // Najdeme všechny možnosti odpovědí
-                                            let options = document.querySelectorAll(".option");
-
-                                            
-
-                                            options.forEach(option => {
-                                                if (option.innerHTML.trim() === correctAnswer) {
-                                                    // Získáme ID odpovídajícího optioncoveru (např. option1 → optioncover1)
-                                                    let coverId = "optioncover" + option.id.replace("option", "");
-                                                    let optionCover = document.getElementById(coverId);
-
-                                                    if (optionCover) {
-                                                        // ✅ Přidáme třídu multipleblinker
-                                                        optionCover.classList.add("multipleblinker");
-                                                        optionCover.style.display="inline-block";
-                                                    }
-                                                }
-                                            });
-                                        }
-
-                                        //Zavolání funkce pro zvýraznění správné odpovědi
-                                        highlightCorrectAnswer(correct_answer);
-
-
-                                            //Přehrát zvuk
-
-                                                if(myAnswer == correct_answer){
-
-
-                                                let successSound = new Audio("success.mp3");
-                                                    successSound.play();
-                                                }
-
-                                                else {
-
-                                                    let revealSound = new Audio("reveal.mp3");
-                                                    revealSound.play();
-
-                                                }
-
-
-
-
-
-
-                                                //Seznam úspěšných hadatelů
-                                                let correctPlayers = [];
-                                                if (answer1 === correct_answer) correctPlayers.push(1);
-                                                if (answer2 === correct_answer) correctPlayers.push(2);
-                                                if (answer3 === correct_answer) correctPlayers.push(3);
-
-                                                console.log("Správně odpověděli hráči:", correctPlayers);
-
-                                                
-
-
-
-
-
-                                                const channel = new BroadcastChannel("game_channel");
-
-                                                // Odeslání odpovědi jinému hráči
-                                                function sendAnswer(player, answer) {
-                                                    channel.postMessage({ player, answer });
-                                                }
-
-                                                // Přijetí odpovědi od jiného hráče
-                                                channel.onmessage = (event) => {
-                                                    console.log(`Hráč ${event.data.player} odpověděl: ${event.data.answer}`);
-                                                };
-
-                                                
-                                                    let player = myPlayerNumber;
-                                                    let answer = myAnswer;
-                                                    sendAnswer(player, answer);
-                                                
-                                                
-
-                                                
-                                                await new Promise(resolve => setTimeout(resolve, 3000));
-                                                
-
-                                                //Opětovné skrytí okna;
-                                                question.style.display = "none";
-                                                choice_question.style.display = "none";
-                                                qplayers.style.display="none";
-                                                optioncover1.style.display="none";
-                                                optioncover2.style.display="none";
-                                                optioncover3.style.display="none";
-                                                optioncover4.style.display="none";
-
-
-                                                // ✅ Vrátíme data o správných odpovědích
-                                                return Promise.resolve(correctPlayers);
-                                                
-
-                            }
-                        } catch (error) {
-                            console.error("Chyba při načítání otázky:", error);
-                        }   
-
-
-
+                    baseMini.style.transition = "none";
+                    baseMini.style.transform = "none";
+                    baseMini.style.removeProperty("transform-origin");
+                    baseMini.style.removeProperty("will-change");
+                    baseMini.style.removeProperty("backface-visibility");
                 }
 
+                function setBaseMiniLayoutImmediate(target, baseMini = document.getElementById("basevisualmini")) {
+                    if (!baseMini) return;
+                    cancelBaseMiniMotion(baseMini);
 
+                    if (target.top != null) baseMini.style.top = target.top;
+                    if (target.left != null) baseMini.style.left = target.left;
+                    if (target.height != null) baseMini.style.height = target.height;
+                }
 
+                function animateBaseMiniLayout(target, duration = 500, baseMini = document.getElementById("basevisualmini")) {
+                    if (!baseMini) return Promise.resolve();
 
+                    // Stop an older visual move without changing authoritative state.
+                    if (baseMini.__vlTowerMotionAnimation) {
+                        try { baseMini.__vlTowerMotionAnimation.cancel(); } catch (_) {}
+                        baseMini.__vlTowerMotionAnimation = null;
+                    }
 
+                    // Never let the legacy "transition: all" animate layout properties.
+                    baseMini.style.transition = "none";
 
+                    const first = baseMini.getBoundingClientRect();
 
+                    // Apply the final layout synchronously once.
+                    if (target.top != null) baseMini.style.top = target.top;
+                    if (target.left != null) baseMini.style.left = target.left;
+                    if (target.height != null) baseMini.style.height = target.height;
+
+                    const last = baseMini.getBoundingClientRect();
+
+                    const usable =
+                        first.width > 0 && first.height > 0 &&
+                        last.width > 0 && last.height > 0 &&
+                        typeof baseMini.animate === "function";
+
+                    if (!usable) {
+                        baseMini.style.transform = "none";
+                        return Promise.resolve();
+                    }
+
+                    // Invert the final layout back to the old screen geometry.
+                    const dx = first.left - last.left;
+                    const dy = first.top - last.top;
+                    const sx = first.width / last.width;
+                    const sy = first.height / last.height;
+
+                    const fromTransform =
+                        `translate3d(${dx}px, ${dy}px, 0) scale(${sx}, ${sy})`;
+
+                    baseMini.style.transform = "none";
+                    baseMini.style.transformOrigin = "0 0";
+                    baseMini.style.willChange = "transform";
+                    baseMini.style.backfaceVisibility = "hidden";
+
+                    const animation = baseMini.animate(
+                        [
+                            { transform: fromTransform },
+                            { transform: "translate3d(0, 0, 0) scale(1, 1)" }
+                        ],
+                        {
+                            duration: Math.max(1, Number(duration) || 500),
+                            easing: "linear",
+                            fill: "none"
+                        }
+                    );
+
+                    baseMini.__vlTowerMotionAnimation = animation;
+
+                    const finish = () => {
+                        if (baseMini.__vlTowerMotionAnimation !== animation) return;
+                        baseMini.__vlTowerMotionAnimation = null;
+                        baseMini.style.transform = "none";
+                        baseMini.style.removeProperty("transform-origin");
+                        baseMini.style.removeProperty("will-change");
+                        baseMini.style.removeProperty("backface-visibility");
+                    };
+
+                    animation.finished.then(finish, finish);
+                    return animation.finished.catch(() => {});
+                }
 
 
                 async function destroyTower(loserKey){
@@ -7484,9 +7188,11 @@ function startCountdownTile(secondsAmount) {
 
                     await delay(1000);
 
-                    document.getElementById("basevisualmini").style.top = "50%";
-                    document.getElementById("basevisualmini").style.left = "0%";
-                    document.getElementById("basevisualmini").style.height = "36%";
+                    animateBaseMiniLayout({
+                        top: "50%",
+                        left: "0%",
+                        height: "36%"
+                    }, 500);
 
 
                     await delay(3000);
@@ -7523,9 +7229,11 @@ function startCountdownTile(secondsAmount) {
    
                     
                     
-                    document.getElementById("basevisualmini").style.height = "12%";
-                    document.getElementById("basevisualmini").style.left = "26.5%";
-                    document.getElementById("basevisualmini").style.top = "2%";
+                    animateBaseMiniLayout({
+                        height: "12%",
+                        left: "26.5%",
+                        top: "2%"
+                    }, 500);
 
                     await delay(2000);
 
@@ -9577,9 +9285,11 @@ socket.on("showBaseMini", ({ defender, lives }) => {
 
     const baseMini = document.getElementById("basevisualmini");
     baseMini.style.display = "block";
-    baseMini.style.top = "2%";
-    baseMini.style.left = "26.5%";
-    baseMini.style.height = "12%";
+    setBaseMiniLayoutImmediate({
+        top: "2%",
+        left: "26.5%",
+        height: "12%"
+    }, baseMini);
 
     // ✅ Zobrazit věže podle počtu životů
     ["baseminileft","baseminiright","baseminimain"].forEach(id => {
@@ -9634,15 +9344,20 @@ socket.on("destroyTower", ({ defender, remainingLives, uiToken, uiStage }) => {
 
     // Miniaturu dáme na výchozí pozici.
     baseMini.style.display = "block";
-    baseMini.style.height = "12%";
-    baseMini.style.left = "26.5%";
-    baseMini.style.top = "2%";
+    setBaseMiniLayoutImmediate({
+        height: "12%",
+        left: "26.5%",
+        top: "2%"
+    }, baseMini);
 
     guardedBattleUiTimeout(uiEpoch, () => {
-        // Přesun do středu a zvětšení pro animaci.
-        baseMini.style.top = "50%";
-        baseMini.style.left = "0%";
-        baseMini.style.height = "36%";
+        // Přesun do středu a zvětšení: cílový layout se nastaví jednou,
+        // samotný viditelný pohyb běží pouze přes compositor transform.
+        animateBaseMiniLayout({
+            top: "50%",
+            left: "0%",
+            height: "36%"
+        }, 500, baseMini);
     }, 1000);
 
     guardedBattleUiTimeout(uiEpoch, () => {
@@ -9651,7 +9366,7 @@ socket.on("destroyTower", ({ defender, remainingLives, uiToken, uiStage }) => {
         const x = rect.left + rect.width / 2 + window.scrollX;
         const y = rect.top + rect.height / 2 + window.scrollY;
 
-        showShockwave(x, y, towerElement);
+        showShockwave(x, y, towerElement, rect);
         const phoneTowerFx = document.body?.classList.contains("vl-phone-game");
         spawnSmokePuffs(x, y, phoneTowerFx ? 8 : 20);
         spawnSparks(x, y, phoneTowerFx ? 12 : 30);
@@ -9673,9 +9388,11 @@ socket.on("destroyTower", ({ defender, remainingLives, uiToken, uiStage }) => {
     }, 4000);
 
     guardedBattleUiTimeout(uiEpoch, () => {
-        baseMini.style.height = "12%";
-        baseMini.style.left = "26.5%";
-        baseMini.style.top = "2%";
+        animateBaseMiniLayout({
+            height: "12%",
+            left: "26.5%",
+            top: "2%"
+        }, 500, baseMini);
     }, 5000);
 
     guardedBattleUiTimeout(uiEpoch, () => {
@@ -9707,6 +9424,7 @@ socket.on("destroyTower", ({ defender, remainingLives, uiToken, uiStage }) => {
 socket.on("hideBaseMini", () => {
     console.log("🏰 Skrývám mini základnu");
     const baseMini = document.getElementById("basevisualmini");
+    cancelBaseMiniMotion(baseMini);
     baseMini.style.display = "none";
 });
 
