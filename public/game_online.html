@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>VLASTENEC</title>
   <link rel="stylesheet" href="mainstyle.css?v=numeric-keypad-v2">
-  <link rel="stylesheet" href="mobile-game.css?v=v47-mobile-timing-hardening">
+  <link rel="stylesheet" href="mobile-game.css?v=v48-mobile-critical-render">
   <script src="auth-client.js"></script>
   <script src="profile-store.js"></script>
   <style id="vl-tablet-lobby-v4-inline">
@@ -177,6 +177,13 @@
       const leave = document.getElementById('leave');
       const icon = document.getElementById('soundtoggle');
       if (!leave || !icon) return;
+
+      // On phone, a visible question/result overlay is time-critical.
+      // Avoid a synchronous geometry/style read behind it.
+      if (
+        window.__vlMobileCriticalOverlayActive &&
+        document.body?.classList.contains('vl-phone-game')
+      ) return;
 
       const rect = leave.getBoundingClientRect();
       const css = getComputedStyle(leave);
@@ -5778,9 +5785,27 @@ if (regionValues && typeof regionValues === 'object') {
             return true;
         }
 
+        let regionStateV2DeferredForMobileCritical = false;
+
+        function mobileCriticalMapRenderBlockedV2() {
+            return !!(
+                window.__vlMobileCriticalOverlayActive &&
+                document.body?.classList.contains('vl-phone-game') &&
+                document.body.classList.contains('is-game-started')
+            );
+        }
+
         function renderRegionStateV2Canvas() {
             regionStateV2Raf = 0;
             if (!MAP_RENDERER_V2_ENABLED) return;
+
+            // The map is only background while a phone question/results overlay
+            // is open. Repainting it there competes with the time-critical UI.
+            if (mobileCriticalMapRenderBlockedV2()) {
+                regionStateV2DeferredForMobileCritical = true;
+                return;
+            }
+            regionStateV2DeferredForMobileCritical = false;
             const mapSvg = document.getElementById('map');
             const canvas = ensureRegionStateV2Canvas();
             if (!mapSvg || !canvas) return;
@@ -5869,9 +5894,22 @@ if (regionValues && typeof regionValues === 'object') {
         }
 
         function scheduleRegionStateV2Render() {
-            if (!MAP_RENDERER_V2_ENABLED || regionStateV2Raf) return;
+            if (!MAP_RENDERER_V2_ENABLED) return;
+            if (mobileCriticalMapRenderBlockedV2()) {
+                regionStateV2DeferredForMobileCritical = true;
+                return;
+            }
+            if (regionStateV2Raf) return;
             regionStateV2Raf = requestAnimationFrame(renderRegionStateV2Canvas);
         }
+
+        window.__vlFlushDeferredMapV2Render = () => {
+            if (!MAP_RENDERER_V2_ENABLED) return;
+            if (mobileCriticalMapRenderBlockedV2()) return;
+            if (!regionStateV2DeferredForMobileCritical && regionStateV2Raf) return;
+            regionStateV2DeferredForMobileCritical = false;
+            scheduleRegionStateV2Render();
+        };
 
         function installRegionStateV2Observer() {
             if (!MAP_RENDERER_V2_ENABLED || window.__regionStateV2Observer) return;
@@ -6146,10 +6184,26 @@ if (regionValues && typeof regionValues === 'object') {
                     const visibleSeconds = safeRemaining <= 0 ? 0 : Math.ceil(safeRemaining / 1000);
                     const remainingRatio = Math.max(0, Math.min(1, safeRemaining / safeDuration));
 
-                    countdownElement.textContent = String(visibleSeconds);
-                    circle.style.strokeDasharray = String(totalLength);
+                    const secondText = String(visibleSeconds);
+                    if (countdownElement.textContent !== secondText) {
+                        countdownElement.textContent = secondText;
+                    }
+
+                    const dashLength = String(totalLength);
+                    if (circle.style.strokeDasharray !== dashLength) {
+                        circle.style.strokeDasharray = dashLength;
+                    }
                     circle.style.strokeDashoffset = String(totalLength * (1 - remainingRatio));
                     return visibleSeconds;
+                }
+
+                function phoneCountdownPaintDue(state, now, visibleSecond, remainingMs) {
+                    const phone = document.body?.classList.contains('vl-phone-game') &&
+                                  document.body.classList.contains('is-game-started');
+                    if (!phone) return true;
+                    if (remainingMs <= 0) return true;
+                    if (visibleSecond !== state.lastVisibleSecond) return true;
+                    return (now - Number(state.lastPaintAt || 0)) >= 50;
                 }
 
                 function forceQuestionCountdownZero() {
@@ -6199,6 +6253,7 @@ if (regionValues && typeof regionValues === 'object') {
                         durationMs,
                         totalLength,
                         lastVisibleSecond: null,
+                        lastPaintAt: 0,
                         expired: false,
                         raf: null
                     };
@@ -6207,13 +6262,18 @@ if (regionValues && typeof regionValues === 'object') {
                     const draw = (now) => {
                         if (window.__questionCountdownState !== state) return;
                         const remainingMs = Math.max(0, state.deadline - now);
-                        const visibleSecond = renderGameCountdownFrame(
-                            countdownElement,
-                            circle,
-                            remainingMs,
-                            state.durationMs,
-                            state.totalLength
-                        );
+                        const visibleSecond = remainingMs <= 0 ? 0 : Math.ceil(remainingMs / 1000);
+
+                        if (phoneCountdownPaintDue(state, now, visibleSecond, remainingMs)) {
+                            renderGameCountdownFrame(
+                                countdownElement,
+                                circle,
+                                remainingMs,
+                                state.durationMs,
+                                state.totalLength
+                            );
+                            state.lastPaintAt = now;
+                        }
 
                         // Tick only when the displayed whole second changes.
                         if (visibleSecond > 0 && visibleSecond !== state.lastVisibleSecond) {
@@ -6313,6 +6373,7 @@ function startCountdownTile(secondsAmount) {
         durationMs,
         totalLength,
         lastVisibleSecond: null,
+        lastPaintAt: 0,
         expired: false,
         raf: null
     };
@@ -6321,13 +6382,18 @@ function startCountdownTile(secondsAmount) {
     const draw = (now) => {
         if (window.__tileCountdownState !== state) return;
         const remainingMs = Math.max(0, state.deadline - now);
-        const visibleSecond = renderGameCountdownFrame(
-            countdownElement,
-            circle,
-            remainingMs,
-            state.durationMs,
-            state.totalLength
-        );
+        const visibleSecond = remainingMs <= 0 ? 0 : Math.ceil(remainingMs / 1000);
+
+        if (phoneCountdownPaintDue(state, now, visibleSecond, remainingMs)) {
+            renderGameCountdownFrame(
+                countdownElement,
+                circle,
+                remainingMs,
+                state.durationMs,
+                state.totalLength
+            );
+            state.lastPaintAt = now;
+        }
 
         if (visibleSecond > 0 && visibleSecond !== state.lastVisibleSecond) {
             if (state.lastVisibleSecond !== null) playTickSound();
@@ -8087,22 +8153,26 @@ function startCountdownTile(secondsAmount) {
 
 
             // ✅ Funkce pro přepočet pozice špendlíků při změně velikosti okna
-                function updatePinPosition(pin, region) {
-                    let mapContainer = document.getElementById("mapContainer");
-                    let regionRect = region.getBoundingClientRect();
-                    let mapRect = mapContainer.getBoundingClientRect();
+                function updatePinPosition(pin, region, sharedMapRect = null) {
+                    const mapContainer = document.getElementById("mapContainer");
+                    if (!mapContainer || !pin || !region) return;
+
+                    const regionRect = region.getBoundingClientRect();
+                    const mapRect = sharedMapRect || mapContainer.getBoundingClientRect();
 
                     // ✅ Získání ručně definovaného těžiště, pokud existuje
-                    let regionId = region.id;
-                    let pinPos = pinPositions[regionId] || { x: 0.5, y: 0.5 }; // Defaultně střed
+                    const regionId = region.id;
+                    const pinPos = pinPositions[regionId] || { x: 0.5, y: 0.5 };
 
                     // ✅ Výpočet souřadnic pinu relativně k mapě
-                    let pinX = (regionRect.left - mapRect.left) + (regionRect.width * pinPos.x);
-                    let pinY = (regionRect.top - mapRect.top) + (regionRect.height * pinPos.y);
+                    const pinX = (regionRect.left - mapRect.left) + (regionRect.width * pinPos.x);
+                    const pinY = (regionRect.top - mapRect.top) + (regionRect.height * pinPos.y);
 
-                    console.log(`📍 Pin v regionu ${regionId}: X=${pinX}, Y=${pinY}`); // Debugging
+                    // Per-pin logging is surprisingly expensive on constrained phones.
+                    if (!document.body?.classList.contains("vl-phone-game")) {
+                        console.log(`📍 Pin v regionu ${regionId}: X=${pinX}, Y=${pinY}`);
+                    }
 
-                    // ✅ Nastavení absolutní pozice pinu
                     pin.style.position = "absolute";
                     pin.style.left = `${pinX}px`;
                     pin.style.top = `${pinY}px`;
@@ -8111,17 +8181,46 @@ function startCountdownTile(secondsAmount) {
 
                 // ✅ Funkce pro aktualizaci všech pinů při změně velikosti okna
                 function updateAllPins() {
+                    const isPhoneGame =
+                        document.body?.classList.contains("vl-phone-game") &&
+                        document.body.classList.contains("is-game-started");
+
+                    if (isPhoneGame && window.__vlMobileCriticalOverlayActive) {
+                        window.__vlMobilePinsNeedReflowAfterCritical = true;
+                        return;
+                    }
+
+                    const mapContainer = document.getElementById("mapContainer");
+                    if (!mapContainer) return;
+                    const mapRect = mapContainer.getBoundingClientRect();
+
                     document.querySelectorAll(".pin-marker").forEach(pin => {
-                        let regionId = pin.dataset.regionId;
-                        let region = document.getElementById(regionId);
-                        if (region) {
-                            updatePinPosition(pin, region);
-                        }
+                        const regionId = pin.dataset.regionId;
+                        const region = document.getElementById(regionId);
+                        if (region) updatePinPosition(pin, region, mapRect);
                     });
+                    window.__vlMobilePinsNeedReflowAfterCritical = false;
                 }
 
-                // ✅ Přidání event listeneru pro resize okna
-                window.addEventListener("resize", updateAllPins);
+                // Desktop keeps the original immediate resize behavior.
+                // Phone resize storms are collapsed to one animation frame.
+                let __vlPhonePinResizeRaf = 0;
+                window.addEventListener("resize", () => {
+                    const isPhoneGame =
+                        document.body?.classList.contains("vl-phone-game") &&
+                        document.body.classList.contains("is-game-started");
+
+                    if (!isPhoneGame) {
+                        updateAllPins();
+                        return;
+                    }
+
+                    if (__vlPhonePinResizeRaf) return;
+                    __vlPhonePinResizeRaf = requestAnimationFrame(() => {
+                        __vlPhonePinResizeRaf = 0;
+                        updateAllPins();
+                    });
+                }, { passive: true });
 
 
 
@@ -10076,7 +10175,24 @@ function syncVisibleQuestionClockFromSnapshot(activeQuestion, rttMs = 0) {
     const serverRemaining = Number(activeQuestion.remainingMs);
     if (!Number.isFinite(serverRemaining)) return false;
 
-    const correctedRemainingMs = Math.max(0, serverRemaining - Math.max(0, Number(rttMs) || 0) / 2);
+    const measuredRttMs = Math.max(0, Number(rttMs) || 0);
+    const isPhoneGame =
+        document.body?.classList.contains('vl-phone-game') &&
+        document.body.classList.contains('is-game-started');
+
+    // Normal RTT: symmetric half-RTT correction.
+    // Abnormally large phone RTT often contains local main-thread blockage
+    // after the response was already ready. In that case subtract almost all
+    // of the excess, while leaving 160 ms for outbound/server/network time.
+    let responseAgeCorrectionMs = measuredRttMs / 2;
+    if (isPhoneGame && measuredRttMs > 600) {
+        responseAgeCorrectionMs = Math.max(
+            responseAgeCorrectionMs,
+            measuredRttMs - 160
+        );
+    }
+
+    const correctedRemainingMs = Math.max(0, serverRemaining - responseAgeCorrectionMs);
     startCountdown(correctedRemainingMs / 1000);
     armAuthoritativeQuestionInteractionDeadline(activeQuestion.kind, correctedRemainingMs);
 
@@ -10094,7 +10210,7 @@ function syncVisibleQuestionClockFromSnapshot(activeQuestion, rttMs = 0) {
         hideNumericInputForKind(activeQuestion.kind);
     }
 
-    console.log(`⏱️ Čas otázky srovnán se serverem: ${Math.ceil(correctedRemainingMs)} ms (RTT ${Math.round(rttMs)} ms).`);
+    console.log(`⏱️ Čas otázky srovnán se serverem: ${Math.ceil(correctedRemainingMs)} ms (RTT ${Math.round(measuredRttMs)} ms, korekce ${Math.round(responseAgeCorrectionMs)} ms).`);
     return true;
 }
 
@@ -10174,14 +10290,22 @@ let lastQuestionOptions = [];
 
 
  socket.on("multipleChoiceQuestion", (data) => {
+    const receivedAtPerf = performance.now();
     const { question, options, time, remainingMs, attacker, defender, attackerName, defenderName, canAnswer, category } = data;
     profileQuestionCategory = category || null;
     profileQuestionCanAnswer = canAnswer !== false;
     const initialSeconds = Number.isFinite(Number(remainingMs)) && Number(remainingMs) >= 0
         ? Number(remainingMs) / 1000
         : Number(time);
-    showMultipleChoice(question, options, initialSeconds, attacker, defender, attackerName, defenderName, canAnswer);
+    const clientDeadlinePerf = receivedAtPerf + Math.max(0, Number(initialSeconds) || 0) * 1000;
+
+    // Launch the authoritative clock request before doing any DOM preparation.
     requestAuthoritativeQuestionClockSync('choice', question);
+    showMultipleChoice(
+        question, options, initialSeconds,
+        attacker, defender, attackerName, defenderName, canAnswer,
+        clientDeadlinePerf
+    );
 });
 
 // Přijme výsledky od serveru
@@ -10206,7 +10330,7 @@ function syncAbortVisibility() {
     abortEl.style.display = (abortShouldBeVisible && !abortTemporarilyHidden) ? "block" : "none";
 }
 
-function showMultipleChoice(qText, options, timeLimit, attacker, defender, attackerName, defenderName, canAnswer = true) {
+function showMultipleChoice(qText, options, timeLimit, attacker, defender, attackerName, defenderName, canAnswer = true, clientDeadlinePerf = null) {
     // Phone-only presentation barrier: finish any stale pin animation/reflow
     // immediately. The incoming server question always gets rendering priority.
     try { window.__vlMobilePrepareCriticalUi?.(); } catch (_) {}
@@ -10314,11 +10438,14 @@ function showMultipleChoice(qText, options, timeLimit, attacker, defender, attac
         });
     }
 
-    // Vynutíme layout až po připojení listenerů. Na telefonech tím zabráníme
-    // tomu, aby browser odložil první vykreslení celé MC obrazovky za animaci.
-    void question?.offsetHeight;
-    startCountdown(timeLimit);
-    armAuthoritativeQuestionInteractionDeadline('choice', Math.max(0, Number(timeLimit) || 0) * 1000);
+    // Do not force a synchronous layout here. On phone that can itself become
+    // the hitch. The local deadline was fixed at socket-callback entry, so DOM
+    // preparation time cannot accidentally give the client extra displayed time.
+    const mcRemainingMs = Number.isFinite(Number(clientDeadlinePerf))
+        ? Math.max(0, Number(clientDeadlinePerf) - performance.now())
+        : Math.max(0, Number(timeLimit) || 0) * 1000;
+    startCountdown(mcRemainingMs / 1000);
+    armAuthoritativeQuestionInteractionDeadline('choice', mcRemainingMs);
 }
 
 
@@ -10420,14 +10547,17 @@ let numericStartTime = 0;
 
 
 socket.on("numericQuestion", (data) => {
+    const receivedAtPerf = performance.now();
     const { question, time, remainingMs, category } = data;
     profileQuestionCategory = category || null;
     profileQuestionCanAnswer = true;
     const initialSeconds = Number.isFinite(Number(remainingMs)) && Number(remainingMs) >= 0
         ? Number(remainingMs) / 1000
         : Number(time);
-    showNumericQuestionForThree(question, initialSeconds);
+    const clientDeadlinePerf = receivedAtPerf + Math.max(0, Number(initialSeconds) || 0) * 1000;
+
     requestAuthoritativeQuestionClockSync('numeric-three', question);
+    showNumericQuestionForThree(question, initialSeconds, clientDeadlinePerf);
 });
 
 
@@ -10440,14 +10570,21 @@ socket.on("numericQuestionResults", (data) => {
 
 
 socket.on("numericQuestionForTwo", (data) => {
+    const receivedAtPerf = performance.now();
     const { question, time, remainingMs, attacker, defender, attackerName, defenderName, category } = data;
     profileQuestionCategory = category || null;
     profileQuestionCanAnswer = [attacker, defender].includes(myPlayerNumber);
     const initialSeconds = Number.isFinite(Number(remainingMs)) && Number(remainingMs) >= 0
         ? Number(remainingMs) / 1000
         : Number(time);
-    showNumericQuestionForTwo(question, initialSeconds, attacker, defender, attackerName, defenderName);
+    const clientDeadlinePerf = receivedAtPerf + Math.max(0, Number(initialSeconds) || 0) * 1000;
+
     requestAuthoritativeQuestionClockSync('numeric-two', question);
+    showNumericQuestionForTwo(
+        question, initialSeconds,
+        attacker, defender, attackerName, defenderName,
+        clientDeadlinePerf
+    );
 });
 
 
@@ -10718,7 +10855,7 @@ if (document.readyState === "loading") {
 }
 
 
-function showNumericQuestionForTwo(questionText, timeLimit, attacker, defender, attackerName, defenderName) {
+function showNumericQuestionForTwo(questionText, timeLimit, attacker, defender, attackerName, defenderName, clientDeadlinePerf = null) {
     // Phone-only presentation barrier: finish any stale pin animation/reflow
     // immediately. The incoming server question always gets rendering priority.
     try { window.__vlMobilePrepareCriticalUi?.(); } catch (_) {}
@@ -10835,15 +10972,15 @@ function showNumericQuestionForTwo(questionText, timeLimit, attacker, defender, 
         }
     };
 
-    // Make the visible numeric stage participate in layout before the
-    // deadline renderer begins. StateSync still corrects to authoritative time.
-    void question?.offsetHeight;
+    const numericTwoRemainingMs = Number.isFinite(Number(clientDeadlinePerf))
+        ? Math.max(0, Number(clientDeadlinePerf) - performance.now())
+        : Math.max(0, Number(timeLimit) || 0) * 1000;
 
-    // ✅ Spusť odpočet (použij stejnou funkci startCountdown)
-    startCountdown(timeLimit);
+    // ✅ Spusť odpočet. No synchronous layout flush: first paint gets priority.
+    startCountdown(numericTwoRemainingMs / 1000);
 
     // Input i klikatelnost končí ve stejném deadline jako vizuální countdown.
-    armAuthoritativeQuestionInteractionDeadline('numeric-two', Math.max(0, Number(timeLimit) || 0) * 1000);
+    armAuthoritativeQuestionInteractionDeadline('numeric-two', numericTwoRemainingMs);
 }
 
 
@@ -10858,7 +10995,7 @@ function showNumericQuestionForTwo(questionText, timeLimit, attacker, defender, 
 
 
 
-function showNumericQuestionForThree(questionText, timeLimit) {
+function showNumericQuestionForThree(questionText, timeLimit, clientDeadlinePerf = null) {
     // Phone-only presentation barrier: finish any stale pin animation/reflow
     // immediately. The incoming server question always gets rendering priority.
     try { window.__vlMobilePrepareCriticalUi?.(); } catch (_) {}
@@ -10946,14 +11083,15 @@ function showNumericQuestionForThree(questionText, timeLimit) {
         }
     };
 
-    // Same first-layout safeguard as MC / numeric duel.
-    void question?.offsetHeight;
+    const numericThreeRemainingMs = Number.isFinite(Number(clientDeadlinePerf))
+        ? Math.max(0, Number(clientDeadlinePerf) - performance.now())
+        : Math.max(0, Number(timeLimit) || 0) * 1000;
 
-    // ✅ Spusť odpočet (máš vlastní funkci startCountdown)
-    startCountdown(timeLimit);
+    // ✅ Spusť odpočet bez nuceného layout flush.
+    startCountdown(numericThreeRemainingMs / 1000);
 
     // Totéž pro otázku všech tří hráčů: lokální vstup končí ve stejném deadline.
-    armAuthoritativeQuestionInteractionDeadline('numeric-three', Math.max(0, Number(timeLimit) || 0) * 1000);
+    armAuthoritativeQuestionInteractionDeadline('numeric-three', numericThreeRemainingMs);
 }
 
 
@@ -11794,7 +11932,7 @@ function showNumericResultsForThree(correctAnswer, answers, uiToken, uiStage = "
         updateFullscreenButton();
     })();
     </script>
-    <script src="mobile-game.js?v=v47-mobile-timing-hardening"></script>
+    <script src="mobile-game.js?v=v48-mobile-critical-render"></script>
 </body>
 
 

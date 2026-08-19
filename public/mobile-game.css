@@ -1705,3 +1705,14 @@ html.vl-map-renderer-v2.vl-map-v2-canvas-ready #map .region.unclickable {
     -webkit-backdrop-filter: none !important;
   }
 }
+
+
+/* ============================================================
+   VLASTENEC — PHONE CRITICAL UI V48
+   Existing question/result animations remain visually unchanged.
+   ============================================================ */
+@media (orientation: landscape) and (max-height: 1100px) {
+  body.vl-phone-game.is-game-started #question .game-clock-progress {
+    will-change: auto !important;
+  }
+}

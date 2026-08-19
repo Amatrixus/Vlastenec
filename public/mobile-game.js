@@ -125,6 +125,15 @@
 
   let pinReflowRaf = 0;
   let pinReflowSettleTimer = 0;
+  let pinReflowDeferredForCritical = false;
+
+  function phoneCriticalOverlayActive() {
+    return !!(
+      window.__vlMobileCriticalOverlayActive &&
+      document.body?.classList.contains('vl-phone-game') &&
+      document.body.classList.contains('is-game-started')
+    );
+  }
 
   function cancelQueuedPinReflow() {
     if (pinReflowRaf) {
@@ -138,6 +147,13 @@
   }
 
   function queuePinReflow() {
+    // Never remeasure the hidden map behind a time-critical question/results UI.
+    if (phoneCriticalOverlayActive()) {
+      pinReflowDeferredForCritical = true;
+      window.__vlMobilePinsNeedReflowAfterCritical = true;
+      return;
+    }
+
     // visualViewport.resize may fire many times while Chrome animates its bars.
     // Coalesce all of them into one frame + one final settled correction.
     if (!pinReflowRaf) {
@@ -156,9 +172,53 @@
 
   window.__vlMobilePrepareCriticalUi = () => {
     if (!document.body?.classList.contains('vl-phone-game')) return;
+    // Set immediately, before the question function starts touching DOM.
+    window.__vlMobileCriticalOverlayActive = true;
     cancelQueuedPinReflow();
+    pinReflowDeferredForCritical = true;
     try { window.__vlMobileFlushPinReveals?.(); } catch (_) {}
   };
+
+  function syncCriticalOverlayState() {
+    const question = document.getElementById('question');
+    const phoneActive =
+      document.body?.classList.contains('vl-phone-game') &&
+      document.body.classList.contains('is-game-started');
+
+    // The game itself uses inline display:block/none for this overlay.
+    const actuallyVisible =
+      !!question &&
+      !!question.style.display &&
+      question.style.display !== 'none';
+
+    const next = phoneActive && actuallyVisible;
+    const previous = !!window.__vlMobileCriticalOverlayActive;
+    window.__vlMobileCriticalOverlayActive = next;
+
+    if (previous && !next) {
+      // One final correction after the overlay disappears is enough.
+      if (pinReflowDeferredForCritical || window.__vlMobilePinsNeedReflowAfterCritical) {
+        pinReflowDeferredForCritical = false;
+        queuePinReflow();
+      }
+      try { window.__vlFlushDeferredMapV2Render?.(); } catch (_) {}
+      try { window.VlastenecSound?.sync?.(); } catch (_) {}
+    }
+  }
+
+  function installCriticalOverlayObserver() {
+    const question = document.getElementById('question');
+    if (!question || question.dataset.vlCriticalObserver === '1') return;
+    question.dataset.vlCriticalObserver = '1';
+
+    const observer = new MutationObserver(syncCriticalOverlayState);
+    observer.observe(question, {
+      attributes: true,
+      attributeFilter: ['style', 'class']
+    });
+    window.__vlMobileCriticalOverlayObserver = observer;
+    syncCriticalOverlayState();
+  }
 
   function syncMode() {
     if (!document.body) return;
@@ -178,8 +238,9 @@
       });
     }
     wasGameActive = active;
+    syncCriticalOverlayState();
 
-    if (phone) {
+    if (phone && !phoneCriticalOverlayActive()) {
       try { window.VlastenecSound?.sync?.(); } catch (_) {}
     }
     syncFullscreenButton();
@@ -188,6 +249,7 @@
   function init() {
     buildUi();
     syncMode();
+    installCriticalOverlayObserver();
 
     // Observe only the body class used by the already-existing game client.
     // No socket listeners, no lobby listeners, no room logic, no monkeypatching.
