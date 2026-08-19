@@ -1,0 +1,2162 @@
+[
+  {
+    "id": 338,
+    "category": "vedy",
+    "question": "Která část buňky obsahuje většinu genetické informace u eukaryot?",
+    "options": [
+      "Jádro",
+      "Ribozom",
+      "Lysozom",
+      "Buněčná stěna"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 339,
+    "category": "vedy",
+    "question": "Jaký chemický prvek má značku Fe?",
+    "options": [
+      "Fluor",
+      "Železo",
+      "Francium",
+      "Fosfor"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 340,
+    "category": "vedy",
+    "question": "Která planeta Sluneční soustavy je nejblíže Slunci?",
+    "options": [
+      "Venuše",
+      "Země",
+      "Merkur",
+      "Mars"
+    ],
+    "correct": 2
+  },
+  {
+    "id": 341,
+    "category": "vedy",
+    "question": "Jak se nazývá proces, při kterém rostliny využívají světlo k tvorbě organických látek?",
+    "options": [
+      "Fermentace",
+      "Fotosyntéza",
+      "Transpirace",
+      "Osmóza"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 342,
+    "category": "vedy",
+    "question": "Kolik chromozomů má běžná lidská tělní buňka?",
+    "options": [
+      "23",
+      "44",
+      "46",
+      "48"
+    ],
+    "correct": 2
+  },
+  {
+    "id": 343,
+    "category": "vedy",
+    "question": "Který plyn tvoří největší část zemské atmosféry?",
+    "options": [
+      "Kyslík",
+      "Dusík",
+      "Oxid uhličitý",
+      "Argon"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 344,
+    "category": "vedy",
+    "question": "Jak se nazývá nejmenší částice chemického prvku, která si zachovává jeho vlastnosti?",
+    "options": [
+      "Molekula",
+      "Atom",
+      "Proton",
+      "Ion"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 345,
+    "category": "vedy",
+    "question": "Který orgán lidského těla produkuje inzulin?",
+    "options": [
+      "Játra",
+      "Slinivka břišní",
+      "Ledviny",
+      "Slezina"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 346,
+    "category": "vedy",
+    "question": "Jaká síla udržuje planety na oběžných drahách kolem Slunce?",
+    "options": [
+      "Magnetická",
+      "Třecí",
+      "Gravitační",
+      "Elektrostatická"
+    ],
+    "correct": 2
+  },
+  {
+    "id": 347,
+    "category": "vedy",
+    "question": "Jaké pH má za běžných podmínek neutrální čistá voda přibližně při 25 °C?",
+    "options": [
+      "5",
+      "7",
+      "9",
+      "12"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 348,
+    "category": "vedy",
+    "question": "Který savec je schopný aktivního letu?",
+    "options": [
+      "Létající veverka",
+      "Netopýr",
+      "Vakoveverka",
+      "Lemur"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 349,
+    "category": "vedy",
+    "question": "Jak se nazývá přeměna kapaliny na plyn probíhající z povrchu kapaliny?",
+    "options": [
+      "Kondenzace",
+      "Tání",
+      "Vypařování",
+      "Sublimace"
+    ],
+    "correct": 2
+  },
+  {
+    "id": 350,
+    "category": "vedy",
+    "question": "Která krevní skupina v systému AB0 nemá na červených krvinkách antigen A ani B?",
+    "options": [
+      "A",
+      "B",
+      "AB",
+      "0"
+    ],
+    "correct": 3
+  },
+  {
+    "id": 351,
+    "category": "vedy",
+    "question": "Který minerál má podle Mohsovy stupnice tvrdosti hodnotu 10?",
+    "options": [
+      "Křemen",
+      "Topaz",
+      "Korund",
+      "Diamant"
+    ],
+    "correct": 3
+  },
+  {
+    "id": 352,
+    "category": "vedy",
+    "question": "Jak se nazývá jednotka elektrického odporu?",
+    "options": [
+      "Volt",
+      "Ampér",
+      "Ohm",
+      "Watt"
+    ],
+    "correct": 2
+  },
+  {
+    "id": 353,
+    "category": "vedy",
+    "question": "Která část rostliny obvykle přijímá z půdy vodu a minerální látky?",
+    "options": [
+      "List",
+      "Květ",
+      "Kořen",
+      "Plod"
+    ],
+    "correct": 2
+  },
+  {
+    "id": 354,
+    "category": "vedy",
+    "question": "Jak se nazývá základní jednotka dědičnosti?",
+    "options": [
+      "Gen",
+      "Enzym",
+      "Neuron",
+      "Hormon"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 355,
+    "category": "vedy",
+    "question": "Který typ záření má v elektromagnetickém spektru kratší vlnovou délku než viditelné světlo?",
+    "options": [
+      "Infračervené",
+      "Mikrovlnné",
+      "Ultrafialové",
+      "Rádiové"
+    ],
+    "correct": 2
+  },
+  {
+    "id": 356,
+    "category": "vedy",
+    "question": "Která vrstva Země je převážně kapalná?",
+    "options": [
+      "Vnitřní jádro",
+      "Vnější jádro",
+      "Spodní plášť",
+      "Zemská kůra"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 357,
+    "category": "vedy",
+    "question": "Jak se nazývá věda zabývající se dědičností a proměnlivostí organismů?",
+    "options": [
+      "Ekologie",
+      "Genetika",
+      "Etologie",
+      "Taxonomie"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 358,
+    "category": "literatura",
+    "question": "Kdo napsal román „Pán prstenů“?",
+    "options": [
+      "C. S. Lewis",
+      "J. R. R. Tolkien",
+      "George R. R. Martin",
+      "Terry Pratchett"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 359,
+    "category": "literatura",
+    "question": "Kdo je autorem románu „Cizinec“?",
+    "options": [
+      "Albert Camus",
+      "Jean-Paul Sartre",
+      "André Malraux",
+      "Émile Zola"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 360,
+    "category": "literatura",
+    "question": "Kdo napsal román „Lolita“?",
+    "options": [
+      "Vladimir Nabokov",
+      "Michail Bulgakov",
+      "Boris Pasternak",
+      "Ivan Bunin"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 361,
+    "category": "literatura",
+    "question": "Kdo je autorem románu „Farma zvířat“?",
+    "options": [
+      "Aldous Huxley",
+      "George Orwell",
+      "Ray Bradbury",
+      "Anthony Burgess"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 362,
+    "category": "literatura",
+    "question": "Kdo napsal román „Hrabě Monte Cristo“?",
+    "options": [
+      "Victor Hugo",
+      "Alexandre Dumas starší",
+      "Stendhal",
+      "Honoré de Balzac"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 363,
+    "category": "literatura",
+    "question": "Kdo je autorem knihy „Alenka v říši divů“?",
+    "options": [
+      "Lewis Carroll",
+      "J. M. Barrie",
+      "Oscar Wilde",
+      "Rudyard Kipling"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 364,
+    "category": "literatura",
+    "question": "Kdo napsal román „Robinson Crusoe“?",
+    "options": [
+      "Daniel Defoe",
+      "Jonathan Swift",
+      "Henry Fielding",
+      "Samuel Richardson"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 365,
+    "category": "literatura",
+    "question": "Kdo je autorem románu „Gulliverovy cesty“?",
+    "options": [
+      "Daniel Defoe",
+      "Jonathan Swift",
+      "Laurence Sterne",
+      "John Bunyan"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 366,
+    "category": "literatura",
+    "question": "Kdo napsal drama „Revizor“?",
+    "options": [
+      "Nikolaj Gogol",
+      "Anton Čechov",
+      "Ivan Turgeněv",
+      "Maxim Gorkij"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 367,
+    "category": "literatura",
+    "question": "Kdo je autorem románu „Doktor Živago“?",
+    "options": [
+      "Boris Pasternak",
+      "Alexandr Solženicyn",
+      "Vladimir Nabokov",
+      "Michail Šolochov"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 368,
+    "category": "literatura",
+    "question": "Kdo napsal knihu „Malé ženy“?",
+    "options": [
+      "Louisa May Alcottová",
+      "Edith Whartonová",
+      "Harriet Beecher Stoweová",
+      "Pearl S. Bucková"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 369,
+    "category": "literatura",
+    "question": "Kdo je autorem románu „Mechanický pomeranč“?",
+    "options": [
+      "Anthony Burgess",
+      "William Golding",
+      "George Orwell",
+      "Kingsley Amis"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 370,
+    "category": "literatura",
+    "question": "Kdo napsal román „Kdo se bojí Virginie Woolfové?“?",
+    "options": [
+      "Arthur Miller",
+      "Edward Albee",
+      "Tennessee Williams",
+      "Eugene O’Neill"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 371,
+    "category": "literatura",
+    "question": "Kdo je autorem českého románu „Žert“?",
+    "options": [
+      "Milan Kundera",
+      "Bohumil Hrabal",
+      "Josef Škvorecký",
+      "Ladislav Fuks"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 372,
+    "category": "literatura",
+    "question": "Kdo napsal novelu „Ostře sledované vlaky“?",
+    "options": [
+      "Bohumil Hrabal",
+      "Arnošt Lustig",
+      "Vladislav Vančura",
+      "Ota Pavel"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 373,
+    "category": "literatura",
+    "question": "Jak se nazývá slovo opačného významu ke slovu jinému?",
+    "options": [
+      "Synonymum",
+      "Antonymum",
+      "Homonymum",
+      "Archaismus"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 374,
+    "category": "literatura",
+    "question": "Jak se nazývá ustálené spojení slov s obrazným významem?",
+    "options": [
+      "Idiom",
+      "Infinitiv",
+      "Paronymum",
+      "Přívlastek"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 375,
+    "category": "literatura",
+    "question": "Který slovní druh je slovo „rychle“ ve větě „Běží rychle“?",
+    "options": [
+      "Přídavné jméno",
+      "Příslovce",
+      "Částice",
+      "Předložka"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 376,
+    "category": "literatura",
+    "question": "Jak se nazývá věta, která obsahuje pouze jeden přísudek?",
+    "options": [
+      "Věta jednoduchá",
+      "Souvětí",
+      "Věta vedlejší",
+      "Větný ekvivalent"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 377,
+    "category": "literatura",
+    "question": "Který český pád odpovídá otázkám „o kom? o čem?“?",
+    "options": [
+      "3. pád",
+      "4. pád",
+      "6. pád",
+      "7. pád"
+    ],
+    "correct": 2
+  },
+  {
+    "id": 378,
+    "category": "technologie",
+    "question": "Co znamená zkratka CPU?",
+    "options": [
+      "Central Processing Unit",
+      "Computer Personal Utility",
+      "Core Program Unit",
+      "Central Power User"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 379,
+    "category": "technologie",
+    "question": "Která součást počítače slouží především k dočasnému ukládání právě používaných dat a programů?",
+    "options": [
+      "SSD",
+      "RAM",
+      "Zdroj",
+      "Síťová karta"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 380,
+    "category": "technologie",
+    "question": "Který protokol se běžně používá pro zabezpečený přenos webových stránek?",
+    "options": [
+      "FTP",
+      "HTTP",
+      "HTTPS",
+      "SMTP"
+    ],
+    "correct": 2
+  },
+  {
+    "id": 381,
+    "category": "technologie",
+    "question": "Co je hlavní funkcí operačního systému?",
+    "options": [
+      "Jen zobrazovat webové stránky",
+      "Spravovat hardware a poskytovat prostředí aplikacím",
+      "Pouze chránit počítač před viry",
+      "Jen ukládat soubory"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 382,
+    "category": "technologie",
+    "question": "Která z těchto jednotek vyjadřuje frekvenci procesoru?",
+    "options": [
+      "Hertz",
+      "Byte",
+      "Volt",
+      "Pixel"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 383,
+    "category": "technologie",
+    "question": "Co znamená zkratka URL?",
+    "options": [
+      "Universal Resource Line",
+      "Uniform Resource Locator",
+      "User Routing Link",
+      "Unified Remote Location"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 384,
+    "category": "technologie",
+    "question": "K čemu slouží DNS?",
+    "options": [
+      "Převádí doménová jména na IP adresy",
+      "Šifruje pevný disk",
+      "Řídí grafickou kartu",
+      "Komprimuje fotografie"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 385,
+    "category": "technologie",
+    "question": "Který typ úložiště neobsahuje pohyblivé mechanické plotny?",
+    "options": [
+      "HDD",
+      "SSD",
+      "Disketa",
+      "Magnetická páska"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 386,
+    "category": "technologie",
+    "question": "Co je dvoufázové ověření (2FA)?",
+    "options": [
+      "Dva antiviry současně",
+      "Přihlášení pomocí dvou různých ověřovacích faktorů",
+      "Dvě hesla napsaná za sebou",
+      "Dvě uživatelská jména"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 387,
+    "category": "technologie",
+    "question": "Který jazyk je standardně používán ke strukturování obsahu webové stránky?",
+    "options": [
+      "HTML",
+      "SQL",
+      "Python",
+      "C++"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 388,
+    "category": "technologie",
+    "question": "K čemu se na webu používá CSS?",
+    "options": [
+      "Ke stylování vzhledu stránky",
+      "K ukládání databází",
+      "K šifrování hesel",
+      "K přenosu e-mailu"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 389,
+    "category": "technologie",
+    "question": "Co je IP adresa?",
+    "options": [
+      "Identifikátor zařízení v síti používající internetový protokol",
+      "Typ počítačového viru",
+      "Formát obrázku",
+      "Výrobní číslo procesoru"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 390,
+    "category": "technologie",
+    "question": "Který z těchto formátů je běžně používán pro bezeztrátové rastrové obrázky s průhledností?",
+    "options": [
+      "JPEG",
+      "PNG",
+      "MP3",
+      "AVI"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 391,
+    "category": "technologie",
+    "question": "Co je phishing?",
+    "options": [
+      "Metoda chlazení procesoru",
+      "Podvodné získávání citlivých údajů vydáváním se za důvěryhodný subjekt",
+      "Záloha dat na disk",
+      "Zrychlování internetu"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 392,
+    "category": "technologie",
+    "question": "Co označuje pojem open source?",
+    "options": [
+      "Software, jehož zdrojový kód je dostupný podle příslušné licence",
+      "Software bez grafického rozhraní",
+      "Software určený jen pro servery",
+      "Každý software zdarma"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 393,
+    "category": "technologie",
+    "question": "Která technologie se používá pro bezdrátové připojení zařízení na krátkou vzdálenost například ke sluchátkům?",
+    "options": [
+      "Bluetooth",
+      "Ethernet",
+      "HDMI",
+      "SATA"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 394,
+    "category": "technologie",
+    "question": "Co je databáze?",
+    "options": [
+      "Organizovaná kolekce dat",
+      "Typ monitoru",
+      "Síťový kabel",
+      "Programovací procesor"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 395,
+    "category": "technologie",
+    "question": "Který konektor se dnes běžně používá pro digitální přenos obrazu a zvuku do televizoru nebo monitoru?",
+    "options": [
+      "PS/2",
+      "HDMI",
+      "RJ-11",
+      "VGA pouze analogově"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 396,
+    "category": "technologie",
+    "question": "Co je cloudové úložiště?",
+    "options": [
+      "Úložiště dat dostupné přes síť na vzdálených serverech",
+      "Paměť přímo v procesoru",
+      "Složka Koš ve Windows",
+      "Disk bez souborového systému"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 397,
+    "category": "technologie",
+    "question": "K čemu slouží firewall?",
+    "options": [
+      "Pomáhá filtrovat síťový provoz podle pravidel",
+      "Zvyšuje rozlišení monitoru",
+      "Čistí klávesnici",
+      "Zrychluje mechanický disk"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 398,
+    "category": "geografie",
+    "question": "Jaké je hlavní město Portugalska?",
+    "options": [
+      "Porto",
+      "Lisabon",
+      "Coimbra",
+      "Braga"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 399,
+    "category": "geografie",
+    "question": "Která země má největší rozlohu na světě?",
+    "options": [
+      "Kanada",
+      "Čína",
+      "Rusko",
+      "USA"
+    ],
+    "correct": 2
+  },
+  {
+    "id": 400,
+    "category": "geografie",
+    "question": "Která řeka protéká Budapeští?",
+    "options": [
+      "Rýn",
+      "Dunaj",
+      "Visla",
+      "Sáva"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 401,
+    "category": "geografie",
+    "question": "Ve kterém státě se nachází Machu Picchu?",
+    "options": [
+      "Bolívie",
+      "Peru",
+      "Chile",
+      "Ekvádor"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 402,
+    "category": "geografie",
+    "question": "Které pohoří tvoří významnou část hranice mezi Francií a Španělskem?",
+    "options": [
+      "Alpy",
+      "Karpaty",
+      "Pyreneje",
+      "Apeniny"
+    ],
+    "correct": 2
+  },
+  {
+    "id": 403,
+    "category": "geografie",
+    "question": "Jaké je hlavní město Japonska?",
+    "options": [
+      "Kjóto",
+      "Ósaka",
+      "Tokio",
+      "Nagoja"
+    ],
+    "correct": 2
+  },
+  {
+    "id": 404,
+    "category": "geografie",
+    "question": "Který evropský stát má tvar připomínající botu?",
+    "options": [
+      "Řecko",
+      "Itálie",
+      "Chorvatsko",
+      "Portugalsko"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 405,
+    "category": "geografie",
+    "question": "Jak se jmenuje největší ostrov na světě, pokud Austrálii považujeme za kontinent?",
+    "options": [
+      "Nová Guinea",
+      "Borneo",
+      "Grónsko",
+      "Madagaskar"
+    ],
+    "correct": 2
+  },
+  {
+    "id": 406,
+    "category": "geografie",
+    "question": "Který oceán leží mezi Afrikou, Asií a Austrálií?",
+    "options": [
+      "Atlantský",
+      "Indický",
+      "Tichý",
+      "Severní ledový"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 407,
+    "category": "geografie",
+    "question": "Jaké je hlavní město Norska?",
+    "options": [
+      "Bergen",
+      "Oslo",
+      "Trondheim",
+      "Stavanger"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 408,
+    "category": "geografie",
+    "question": "Která země leží na Pyrenejském poloostrově spolu se Španělskem?",
+    "options": [
+      "Itálie",
+      "Portugalsko",
+      "Belgie",
+      "Rakousko"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 409,
+    "category": "geografie",
+    "question": "Která poušť se rozkládá na území Mongolska a Číny?",
+    "options": [
+      "Kalahari",
+      "Atacama",
+      "Gobi",
+      "Namib"
+    ],
+    "correct": 2
+  },
+  {
+    "id": 410,
+    "category": "geografie",
+    "question": "Která řeka protéká Londýnem?",
+    "options": [
+      "Temže",
+      "Seina",
+      "Rýn",
+      "Loira"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 411,
+    "category": "geografie",
+    "question": "Jaké je hlavní město Argentiny?",
+    "options": [
+      "Montevideo",
+      "Buenos Aires",
+      "Córdoba",
+      "Santiago"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 412,
+    "category": "geografie",
+    "question": "Který stát sousedí s Českou republikou na severovýchodě?",
+    "options": [
+      "Maďarsko",
+      "Polsko",
+      "Slovinsko",
+      "Švýcarsko"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 413,
+    "category": "geografie",
+    "question": "Jaké je hlavní město Chorvatska?",
+    "options": [
+      "Split",
+      "Dubrovník",
+      "Záhřeb",
+      "Rijeka"
+    ],
+    "correct": 2
+  },
+  {
+    "id": 414,
+    "category": "geografie",
+    "question": "Na kterém kontinentu leží řeka Amazonka?",
+    "options": [
+      "Afrika",
+      "Jižní Amerika",
+      "Asie",
+      "Severní Amerika"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 415,
+    "category": "geografie",
+    "question": "Které moře omývá východní pobřeží Itálie?",
+    "options": [
+      "Jaderské",
+      "Baltské",
+      "Černé",
+      "Severní"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 416,
+    "category": "geografie",
+    "question": "Jaké je hlavní město Irska?",
+    "options": [
+      "Cork",
+      "Galway",
+      "Dublin",
+      "Limerick"
+    ],
+    "correct": 2
+  },
+  {
+    "id": 417,
+    "category": "geografie",
+    "question": "Ve kterém pohoří se nachází Mont Blanc?",
+    "options": [
+      "Pyreneje",
+      "Alpy",
+      "Karpaty",
+      "Skandinávské pohoří"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 418,
+    "category": "historie",
+    "question": "Ve kterém roce začala druhá světová válka v Evropě napadením Polska?",
+    "options": [
+      "1918",
+      "1933",
+      "1939",
+      "1941"
+    ],
+    "correct": 2
+  },
+  {
+    "id": 419,
+    "category": "historie",
+    "question": "Kdo byl prvním římským císařem?",
+    "options": [
+      "Julius Caesar",
+      "Augustus",
+      "Nero",
+      "Traianus"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 420,
+    "category": "historie",
+    "question": "Která civilizace vybudovala Machu Picchu?",
+    "options": [
+      "Mayové",
+      "Aztékové",
+      "Inkové",
+      "Olmékové"
+    ],
+    "correct": 2
+  },
+  {
+    "id": 421,
+    "category": "historie",
+    "question": "V kterém roce dorazil Kryštof Kolumbus do Ameriky?",
+    "options": [
+      "1453",
+      "1492",
+      "1517",
+      "1588"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 422,
+    "category": "historie",
+    "question": "Který český panovník byl nazýván „Otec vlasti“?",
+    "options": [
+      "Přemysl Otakar II.",
+      "Karel IV.",
+      "Václav IV.",
+      "Jiří z Poděbrad"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 423,
+    "category": "historie",
+    "question": "Která bitva roku 1805 je spojena s Napoleonovým vítězstvím u Slavkova?",
+    "options": [
+      "Bitva tří císařů",
+      "Bitva u Waterloo",
+      "Bitva u Lipska",
+      "Bitva u Trafalgaru"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 424,
+    "category": "historie",
+    "question": "Kdy vzniklo samostatné Československo?",
+    "options": [
+      "1914",
+      "1918",
+      "1920",
+      "1938"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 425,
+    "category": "historie",
+    "question": "Která událost v roce 1989 vedla v Československu k pádu komunistického režimu?",
+    "options": [
+      "Pražské jaro",
+      "Sametová revoluce",
+      "Únorový převrat",
+      "Mnichovská dohoda"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 426,
+    "category": "historie",
+    "question": "Který vojevůdce byl poražen v bitvě u Waterloo roku 1815?",
+    "options": [
+      "Alexandr Veliký",
+      "Napoleon Bonaparte",
+      "Julius Caesar",
+      "Otto von Bismarck"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 427,
+    "category": "historie",
+    "question": "Která říše měla hlavní město Konstantinopol?",
+    "options": [
+      "Byzantská říše",
+      "Mongolská říše",
+      "Franská říše",
+      "Aztécká říše"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 428,
+    "category": "historie",
+    "question": "Kdo byl upálen v Kostnici roku 1415?",
+    "options": [
+      "Jan Žižka",
+      "Jan Hus",
+      "Jeroným Pražský",
+      "Petr Chelčický"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 429,
+    "category": "historie",
+    "question": "Jak se nazývalo období kulturního a intelektuálního rozkvětu navazujícího na antiku, které začalo v Itálii?",
+    "options": [
+      "Romantismus",
+      "Renesance",
+      "Baroko",
+      "Klasicismus"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 430,
+    "category": "historie",
+    "question": "Která revoluce začala ve Francii roku 1789?",
+    "options": [
+      "Průmyslová revoluce",
+      "Velká francouzská revoluce",
+      "Říjnová revoluce",
+      "Slavná revoluce"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 431,
+    "category": "historie",
+    "question": "Která zeď se stala symbolem rozdělení Evropy během studené války?",
+    "options": [
+      "Hadriánův val",
+      "Berlínská zeď",
+      "Velká čínská zeď",
+      "Zeď nářků"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 432,
+    "category": "historie",
+    "question": "Kdo byl prvním prezidentem Československa?",
+    "options": [
+      "Edvard Beneš",
+      "Tomáš Garrigue Masaryk",
+      "Emil Hácha",
+      "Klement Gottwald"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 433,
+    "category": "historie",
+    "question": "Který panovník vydal Zlatou bulu sicilskou pro Přemysla Otakara I.?",
+    "options": [
+      "Fridrich II.",
+      "Karel Veliký",
+      "Rudolf II.",
+      "Zikmund Lucemburský"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 434,
+    "category": "historie",
+    "question": "Která válka probíhala v Evropě v letech 1618–1648?",
+    "options": [
+      "Stoletá válka",
+      "Třicetiletá válka",
+      "Sedmiletá válka",
+      "Krymská válka"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 435,
+    "category": "historie",
+    "question": "Který národ vytvořil ve starověku městské státy Athény a Sparta?",
+    "options": [
+      "Řekové",
+      "Římané",
+      "Féničané",
+      "Peršané"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 436,
+    "category": "historie",
+    "question": "Jak se nazývá mír, který roku 1648 ukončil třicetiletou válku?",
+    "options": [
+      "Vestfálský mír",
+      "Versailleský mír",
+      "Brestlitevský mír",
+      "Augsburský mír"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 437,
+    "category": "historie",
+    "question": "Které město bylo zničeno erupcí Vesuvu roku 79?",
+    "options": [
+      "Pompeje",
+      "Sparta",
+      "Kartágo",
+      "Efez"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 438,
+    "category": "kultura",
+    "question": "Kdo namaloval „Poslední večeři“?",
+    "options": [
+      "Leonardo da Vinci",
+      "Michelangelo",
+      "Raffael",
+      "Caravaggio"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 439,
+    "category": "kultura",
+    "question": "Kdo složil operu „Nabucco“?",
+    "options": [
+      "Giacomo Puccini",
+      "Giuseppe Verdi",
+      "Richard Wagner",
+      "Georges Bizet"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 440,
+    "category": "kultura",
+    "question": "Kdo je autorem obrazu „Dívka s perlou“?",
+    "options": [
+      "Rembrandt",
+      "Johannes Vermeer",
+      "Peter Paul Rubens",
+      "Frans Hals"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 441,
+    "category": "kultura",
+    "question": "Kdo složil balet „Louskáček“?",
+    "options": [
+      "Petr Iljič Čajkovskij",
+      "Igor Stravinskij",
+      "Sergej Prokofjev",
+      "Maurice Ravel"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 442,
+    "category": "kultura",
+    "question": "Který architekt navrhl vilu Tugendhat v Brně?",
+    "options": [
+      "Le Corbusier",
+      "Ludwig Mies van der Rohe",
+      "Frank Lloyd Wright",
+      "Walter Gropius"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 443,
+    "category": "kultura",
+    "question": "Ve kterém městě se nachází galerie Uffizi?",
+    "options": [
+      "Benátky",
+      "Florencie",
+      "Řím",
+      "Milán"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 444,
+    "category": "kultura",
+    "question": "Kdo namaloval obraz „Zrození Venuše“?",
+    "options": [
+      "Sandro Botticelli",
+      "Tizian",
+      "Raffael",
+      "Giotto"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 445,
+    "category": "kultura",
+    "question": "Kdo složil operu „Prodaná nevěsta“?",
+    "options": [
+      "Antonín Dvořák",
+      "Bedřich Smetana",
+      "Leoš Janáček",
+      "Bohuslav Martinů"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 446,
+    "category": "kultura",
+    "question": "Který režisér natočil film „Psycho“ z roku 1960?",
+    "options": [
+      "Alfred Hitchcock",
+      "Stanley Kubrick",
+      "Billy Wilder",
+      "Orson Welles"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 447,
+    "category": "kultura",
+    "question": "Kdo ztvárnil hlavní roli ve filmu „Taxikář“?",
+    "options": [
+      "Al Pacino",
+      "Robert De Niro",
+      "Dustin Hoffman",
+      "Jack Nicholson"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 448,
+    "category": "kultura",
+    "question": "Který film režíroval Miloš Forman?",
+    "options": [
+      "Amadeus",
+      "Pelíšky",
+      "Kolja",
+      "Ostře sledované vlaky"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 449,
+    "category": "kultura",
+    "question": "Kdo složil hudbu k filmové trilogii „Pán prstenů“?",
+    "options": [
+      "Howard Shore",
+      "John Williams",
+      "Hans Zimmer",
+      "James Horner"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 450,
+    "category": "kultura",
+    "question": "Která skupina nahrála album „Rumours“?",
+    "options": [
+      "Fleetwood Mac",
+      "Eagles",
+      "The Doors",
+      "Dire Straits"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 451,
+    "category": "kultura",
+    "question": "Kdo nazpíval hit „Purple Rain“?",
+    "options": [
+      "Prince",
+      "David Bowie",
+      "George Michael",
+      "Stevie Wonder"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 452,
+    "category": "kultura",
+    "question": "Která česká zpěvačka nazpívala píseň „Lásko má, já stůňu“ ve filmu Noc na Karlštejně?",
+    "options": [
+      "Hana Zagorová",
+      "Helena Vondráčková",
+      "Marta Kubišová",
+      "Marie Rottrová"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 453,
+    "category": "kultura",
+    "question": "Kdo je autorem sochy „Myslitel“?",
+    "options": [
+      "Auguste Rodin",
+      "Donatello",
+      "Gian Lorenzo Bernini",
+      "Henry Moore"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 454,
+    "category": "kultura",
+    "question": "Jak se nazývá umělecký směr spojený se jmény Claude Monet a Pierre-Auguste Renoir?",
+    "options": [
+      "Kubismus",
+      "Impresionismus",
+      "Surrealismus",
+      "Futurismus"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 455,
+    "category": "kultura",
+    "question": "Která kapela nahrála píseň „Enjoy the Silence“?",
+    "options": [
+      "Depeche Mode",
+      "U2",
+      "The Cure",
+      "New Order"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 456,
+    "category": "kultura",
+    "question": "Kdo režíroval film „Sedm“ (Se7en) z roku 1995?",
+    "options": [
+      "David Fincher",
+      "Christopher Nolan",
+      "Michael Mann",
+      "Brian De Palma"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 457,
+    "category": "kultura",
+    "question": "Kdo složil „Rapsodii v modrém“ (Rhapsody in Blue)?",
+    "options": [
+      "George Gershwin",
+      "Leonard Bernstein",
+      "Aaron Copland",
+      "Duke Ellington"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 458,
+    "category": "sport",
+    "question": "Kolik hráčů jednoho týmu je současně na hřišti ve fotbale na začátku utkání?",
+    "options": [
+      "9",
+      "10",
+      "11",
+      "12"
+    ],
+    "correct": 2
+  },
+  {
+    "id": 459,
+    "category": "sport",
+    "question": "Kolik bodů má standardně vítězný set v tenise?",
+    "options": [
+      "Nemá pevný počet bodů",
+      "21",
+      "25",
+      "30"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 460,
+    "category": "sport",
+    "question": "Jak se nazývá nejprestižnější etapový cyklistický závod ve Francii?",
+    "options": [
+      "Giro d’Italia",
+      "Tour de France",
+      "Vuelta a España",
+      "Paříž–Roubaix"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 461,
+    "category": "sport",
+    "question": "Ve kterém sportu se používá puk?",
+    "options": [
+      "Pozemní hokej",
+      "Lední hokej",
+      "Lakros",
+      "Curling"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 462,
+    "category": "sport",
+    "question": "Kolik hráčů jednoho týmu je současně na hřišti v basketbalu?",
+    "options": [
+      "4",
+      "5",
+      "6",
+      "7"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 463,
+    "category": "sport",
+    "question": "Který grandslamový tenisový turnaj se hraje na trávě?",
+    "options": [
+      "Roland Garros",
+      "US Open",
+      "Australian Open",
+      "Wimbledon"
+    ],
+    "correct": 3
+  },
+  {
+    "id": 464,
+    "category": "sport",
+    "question": "Jak dlouhý je maraton přibližně?",
+    "options": [
+      "21,1 km",
+      "30 km",
+      "42,195 km",
+      "50 km"
+    ],
+    "correct": 2
+  },
+  {
+    "id": 465,
+    "category": "sport",
+    "question": "Ve kterém sportu se uděluje Stanley Cup?",
+    "options": [
+      "Basketbal",
+      "Lední hokej",
+      "Baseball",
+      "Americký fotbal"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 466,
+    "category": "sport",
+    "question": "Kolik kruhů je na olympijském symbolu?",
+    "options": [
+      "4",
+      "5",
+      "6",
+      "7"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 467,
+    "category": "sport",
+    "question": "Ve kterém sportu se používají pojmy birdie, eagle a bogey?",
+    "options": [
+      "Golf",
+      "Kriket",
+      "Baseball",
+      "Ragby"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 468,
+    "category": "sport",
+    "question": "Který sport je spojen s turnajem Super Bowl?",
+    "options": [
+      "Baseball",
+      "Americký fotbal",
+      "Basketbal",
+      "Lední hokej"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 469,
+    "category": "sport",
+    "question": "Kolik hráčů jednoho týmu je současně na palubovce ve volejbalu?",
+    "options": [
+      "5",
+      "6",
+      "7",
+      "8"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 470,
+    "category": "sport",
+    "question": "Jak se nazývá disciplína, která kombinuje běh na lyžích a střelbu?",
+    "options": [
+      "Biatlon",
+      "Severská kombinace",
+      "Skeleton",
+      "Skialpinismus"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 471,
+    "category": "sport",
+    "question": "Který český atlet získal na OH 1952 v Helsinkách tři zlaté medaile ve vytrvalostních bězích?",
+    "options": [
+      "Roman Šebrle",
+      "Emil Zátopek",
+      "Jan Železný",
+      "Josef Odložil"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 472,
+    "category": "sport",
+    "question": "Která země vyhrála první mistrovství světa ve fotbale v roce 1930?",
+    "options": [
+      "Brazílie",
+      "Uruguay",
+      "Argentina",
+      "Itálie"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 473,
+    "category": "sport",
+    "question": "Jak se jmenuje tenisový úder hraný nad hlavou prudce dolů?",
+    "options": [
+      "Lob",
+      "Volej",
+      "Smeč",
+      "Slice"
+    ],
+    "correct": 2
+  },
+  {
+    "id": 474,
+    "category": "sport",
+    "question": "Ve kterém sportu závodí piloti v seriálu Formule 1?",
+    "options": [
+      "Motocyklové závody",
+      "Automobilové závody",
+      "Letecké závody",
+      "Vodní sporty"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 475,
+    "category": "sport",
+    "question": "Který sport používá náčiní zvané bradla, kruhy a hrazda?",
+    "options": [
+      "Sportovní gymnastika",
+      "Šerm",
+      "Moderní pětiboj",
+      "Vzpírání"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 476,
+    "category": "sport",
+    "question": "Kolik bodů je v basketbalu za úspěšný trestný hod?",
+    "options": [
+      "1",
+      "2",
+      "3",
+      "4"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 477,
+    "category": "sport",
+    "question": "Který zimní sport se hraje s kameny a košťaty na ledě?",
+    "options": [
+      "Curling",
+      "Bandy",
+      "Skeleton",
+      "Short track"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 478,
+    "category": "osobnosti",
+    "question": "Kdo formuloval teorii relativity?",
+    "options": [
+      "Isaac Newton",
+      "Albert Einstein",
+      "Niels Bohr",
+      "Max Planck"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 479,
+    "category": "osobnosti",
+    "question": "Kdo objevil penicilin?",
+    "options": [
+      "Louis Pasteur",
+      "Alexander Fleming",
+      "Robert Koch",
+      "Edward Jenner"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 480,
+    "category": "osobnosti",
+    "question": "Kdo jako první člověk vstoupil na povrch Měsíce?",
+    "options": [
+      "Jurij Gagarin",
+      "Buzz Aldrin",
+      "Neil Armstrong",
+      "John Glenn"
+    ],
+    "correct": 2
+  },
+  {
+    "id": 481,
+    "category": "osobnosti",
+    "question": "Která vědkyně získala Nobelovu cenu za fyziku i chemii?",
+    "options": [
+      "Marie Curie-Skłodowská",
+      "Rosalind Franklinová",
+      "Lise Meitnerová",
+      "Jane Goodallová"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 482,
+    "category": "osobnosti",
+    "question": "Kdo je spojován s formulací evoluční teorie přírodním výběrem?",
+    "options": [
+      "Gregor Mendel",
+      "Charles Darwin",
+      "Carl Linné",
+      "James Watson"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 483,
+    "category": "osobnosti",
+    "question": "Kdo založil psychoanalýzu?",
+    "options": [
+      "Carl Gustav Jung",
+      "Sigmund Freud",
+      "Ivan Pavlov",
+      "Alfred Adler"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 484,
+    "category": "osobnosti",
+    "question": "Který český vědec je známý zákony dědičnosti objevenými při pokusech s hrachem?",
+    "options": [
+      "Jan Evangelista Purkyně",
+      "Gregor Mendel",
+      "Otto Wichterle",
+      "Jaroslav Heyrovský"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 485,
+    "category": "osobnosti",
+    "question": "Kdo vynalezl kontaktní čočky z měkkého hydrogelu?",
+    "options": [
+      "Otto Wichterle",
+      "Prokop Diviš",
+      "František Křižík",
+      "Václav Laurin"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 486,
+    "category": "osobnosti",
+    "question": "Který český chemik získal Nobelovu cenu za objev polarografie?",
+    "options": [
+      "Jaroslav Heyrovský",
+      "Antonín Holý",
+      "Otto Wichterle",
+      "Emil Votoček"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 487,
+    "category": "osobnosti",
+    "question": "Kdo byl prvním člověkem ve vesmíru?",
+    "options": [
+      "Neil Armstrong",
+      "Jurij Gagarin",
+      "Alan Shepard",
+      "Valentina Těreškovová"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 488,
+    "category": "osobnosti",
+    "question": "Která žena byla první člověk ženského pohlaví ve vesmíru?",
+    "options": [
+      "Sally Rideová",
+      "Valentina Těreškovová",
+      "Světlana Savická",
+      "Mae Jemisonová"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 489,
+    "category": "osobnosti",
+    "question": "Kdo sestavil periodickou tabulku prvků v podobě založené na periodickém zákonu?",
+    "options": [
+      "Dmitrij Mendělejev",
+      "Ernest Rutherford",
+      "Michael Faraday",
+      "Antoine Lavoisier"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 490,
+    "category": "osobnosti",
+    "question": "Kdo je spojován s objevem zákonů pohybu a univerzální gravitace?",
+    "options": [
+      "Galileo Galilei",
+      "Isaac Newton",
+      "Johannes Kepler",
+      "René Descartes"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 491,
+    "category": "osobnosti",
+    "question": "Který český cestovatel procestoval Afriku s Miroslavem Zikmundem?",
+    "options": [
+      "Jiří Hanzelka",
+      "Emil Holub",
+      "Alois Musil",
+      "Enrique Stanko Vráz"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 492,
+    "category": "osobnosti",
+    "question": "Kdo byl autorem teorie heliocentrického uspořádání známé z díla „O obězích nebeských sfér“?",
+    "options": [
+      "Mikuláš Koperník",
+      "Tycho Brahe",
+      "Johannes Kepler",
+      "Galileo Galilei"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 493,
+    "category": "osobnosti",
+    "question": "Který mořeplavec vedl výpravu, jejíž lodě jako první obepluly svět?",
+    "options": [
+      "Kryštof Kolumbus",
+      "Ferdinand Magellan",
+      "James Cook",
+      "Vasco da Gama"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 494,
+    "category": "osobnosti",
+    "question": "Kdo založil společnost Microsoft společně s Paulem Allenem?",
+    "options": [
+      "Steve Jobs",
+      "Bill Gates",
+      "Larry Page",
+      "Jeff Bezos"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 495,
+    "category": "osobnosti",
+    "question": "Kdo spoluzaložil společnost Apple se Stevem Wozniakem a Ronaldem Waynem?",
+    "options": [
+      "Steve Jobs",
+      "Bill Gates",
+      "Michael Dell",
+      "Larry Ellison"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 496,
+    "category": "osobnosti",
+    "question": "Který český dramatik a disident se stal po roce 1989 prezidentem Československa?",
+    "options": [
+      "Václav Havel",
+      "Alexander Dubček",
+      "Ludvík Vaculík",
+      "Pavel Tigrid"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 497,
+    "category": "osobnosti",
+    "question": "Kdo napsal teorii elektromagnetického pole shrnutou v rovnicích nesoucích jeho jméno?",
+    "options": [
+      "James Clerk Maxwell",
+      "Michael Faraday",
+      "Heinrich Hertz",
+      "André-Marie Ampère"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 498,
+    "category": "politika",
+    "question": "Jak se nazývá princip rozdělení státní moci na zákonodárnou, výkonnou a soudní?",
+    "options": [
+      "Dělba moci",
+      "Centralizace",
+      "Federalizace",
+      "Subsidiarita"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 499,
+    "category": "politika",
+    "question": "Který myslitel je často spojován s moderní teorií dělby moci?",
+    "options": [
+      "Montesquieu",
+      "Thomas More",
+      "Adam Smith",
+      "Jean-Baptiste Colbert"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 500,
+    "category": "politika",
+    "question": "Kolik komor má Parlament České republiky?",
+    "options": [
+      "1",
+      "2",
+      "3",
+      "4"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 501,
+    "category": "politika",
+    "question": "Jak se jmenuje dolní komora Parlamentu České republiky?",
+    "options": [
+      "Senát",
+      "Poslanecká sněmovna",
+      "Státní rada",
+      "Národní shromáždění"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 502,
+    "category": "politika",
+    "question": "Jak se jmenuje horní komora Parlamentu České republiky?",
+    "options": [
+      "Senát",
+      "Poslanecká sněmovna",
+      "Rada republiky",
+      "Sněm"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 503,
+    "category": "politika",
+    "question": "Co je referendum?",
+    "options": [
+      "Přímé hlasování občanů o určité otázce",
+      "Schůze vlády",
+      "Volba předsedy parlamentu",
+      "Soudní přezkum zákona"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 504,
+    "category": "politika",
+    "question": "Co znamená volební právo?",
+    "options": [
+      "Právo účastnit se voleb podle stanovených pravidel",
+      "Právo automaticky získat mandát",
+      "Právo zrušit parlament",
+      "Právo řídit politickou stranu"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 505,
+    "category": "politika",
+    "question": "Co je politická koalice?",
+    "options": [
+      "Spojení více politických subjektů za společným cílem",
+      "Zákaz politických stran",
+      "Jedna strana bez opozice",
+      "Soudní orgán"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 506,
+    "category": "politika",
+    "question": "Jak se obecně nazývají politické síly, které nejsou součástí vlády a vystupují proti její politice?",
+    "options": [
+      "Koalice",
+      "Opozice",
+      "Diplomacie",
+      "Byrokracie"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 507,
+    "category": "politika",
+    "question": "Kde sídlí Organizace spojených národů?",
+    "options": [
+      "Ženeva",
+      "New York",
+      "Brusel",
+      "Haag"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 508,
+    "category": "politika",
+    "question": "Kolik stálých členů má Rada bezpečnosti OSN?",
+    "options": [
+      "3",
+      "5",
+      "7",
+      "10"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 509,
+    "category": "politika",
+    "question": "Ve kterém roce vznikla Organizace spojených národů?",
+    "options": [
+      "1919",
+      "1945",
+      "1949",
+      "1957"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 510,
+    "category": "politika",
+    "question": "Ve kterém roce byla založena Severoatlantická aliance (NATO)?",
+    "options": [
+      "1945",
+      "1947",
+      "1949",
+      "1955"
+    ],
+    "correct": 2
+  },
+  {
+    "id": 511,
+    "category": "politika",
+    "question": "Jak se nazývá možnost hlavy státu odmítnout nebo vrátit přijatý zákon podle ústavních pravidel?",
+    "options": [
+      "Amnestie",
+      "Veto",
+      "Interpelace",
+      "Imunita"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 512,
+    "category": "politika",
+    "question": "Z jakých dvou komor se skládá Kongres Spojených států?",
+    "options": [
+      "Senát a Sněmovna reprezentantů",
+      "Senát a vláda",
+      "Sněmovna lordů a Sněmovna reprezentantů",
+      "Kongres a Nejvyšší soud"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 513,
+    "category": "politika",
+    "question": "Jaký typ státního uspořádání má Německo?",
+    "options": [
+      "Federace",
+      "Konfederace bez ústavy",
+      "Absolutní monarchie",
+      "Městský stát"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 514,
+    "category": "politika",
+    "question": "Jak se nazývá základní zákon státu, který upravuje organizaci veřejné moci a základní pravidla státu?",
+    "options": [
+      "Ústava",
+      "Vyhláška",
+      "Rozpočet",
+      "Petice"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 515,
+    "category": "politika",
+    "question": "Který dokument z roku 1215 omezil moc anglického krále a bývá spojován s vývojem ústavnosti?",
+    "options": [
+      "Magna Carta",
+      "Zlatá bula sicilská",
+      "Deklarace nezávislosti",
+      "Edikt nantský"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 516,
+    "category": "politika",
+    "question": "Jak se jmenuje výkonný orgán Evropské unie, který mimo jiné navrhuje evropské právní předpisy?",
+    "options": [
+      "Evropská komise",
+      "Evropská centrální banka",
+      "Evropský soud pro lidská práva",
+      "Rada Evropy"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 517,
+    "category": "politika",
+    "question": "Která skladba slouží jako hymna Evropské unie?",
+    "options": [
+      "Óda na radost",
+      "Marseillaisa",
+      "Modrá Dunaj",
+      "Radetzkého pochod"
+    ],
+    "correct": 0
+  }
+]
