@@ -1593,3 +1593,74 @@ html.vl-map-renderer-v2.vl-map-v2-canvas-ready #map .region.unclickable {
     gap: 4.5% !important;
   }
 }
+
+
+/* ============================================================
+   VLASTENEC — TABLET NUMERIC / TOWER POLISH V46
+   Presentation only. No answer ownership, winner or battle logic changes.
+   ============================================================ */
+@media (min-width: 700px) and (max-width: 1400px) {
+
+  /* The generic tablet typography rule uses display:flex for centering.
+     Respect the game's explicit hidden state so the previous/default correct
+     answer can never peek from the right edge before reveal. */
+  body.vl-tablet-device.is-game-started #numerical_correct[style*="display: none"] {
+    display: none !important;
+  }
+
+  /* The two-player numeric result is always:
+       attacker | correct answer | defender
+     HTML/JS already supply that semantic order; this only fixes geometry. */
+  body.vl-tablet-device.is-game-started #num2answerarea[style*="display: block"] {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) minmax(0, .82fr) minmax(0, 1fr) !important;
+    column-gap: 3.5% !important;
+    align-items: start !important;
+    justify-items: stretch !important;
+    padding: 0 5% !important;
+    box-sizing: border-box !important;
+  }
+
+  body.vl-tablet-device.is-game-started #num2answerarea #num2answerbox1 {
+    grid-column: 1 !important;
+  }
+
+  body.vl-tablet-device.is-game-started #num2answerarea #numerical_correct2 {
+    grid-column: 2 !important;
+  }
+
+  body.vl-tablet-device.is-game-started #num2answerarea #num2answerbox2 {
+    grid-column: 3 !important;
+  }
+
+  body.vl-tablet-device.is-game-started #num2answerarea .num2answerbox,
+  body.vl-tablet-device.is-game-started #num2answerarea #numerical_correct2 {
+    position: relative !important;
+    left: auto !important;
+    right: auto !important;
+    top: 10% !important;
+    width: 100% !important;
+    max-width: none !important;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Tower destruction: preserve only the dark question strip and tower scene.
+     Answer content must not survive because tablet .option uses display:flex
+     !important during normal questions. */
+  body.vl-tablet-device.is-game-started #question.tower-destroying #qstrip {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    background-color: rgb(39, 34, 34) !important;
+  }
+
+  body.vl-tablet-device.is-game-started #question.tower-destroying #optionrow1,
+  body.vl-tablet-device.is-game-started #question.tower-destroying #optionrow2,
+  body.vl-tablet-device.is-game-started #question.tower-destroying #abort,
+  body.vl-tablet-device.is-game-started #question.tower-destroying #numerical_question_two,
+  body.vl-tablet-device.is-game-started #question.tower-destroying #numerical_question_three {
+    display: none !important;
+  }
+}
