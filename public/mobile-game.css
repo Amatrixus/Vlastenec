@@ -1716,3 +1716,31 @@ html.vl-map-renderer-v2.vl-map-v2-canvas-ready #map .region.unclickable {
     will-change: auto !important;
   }
 }
+
+
+/* ============================================================
+   VLASTENEC — PHONE TOWER BAND HARDENING V49
+   Paint the band into the question overlay itself as a final fallback.
+   ============================================================ */
+@media (orientation: landscape) and (max-height: 1100px) {
+  body.vl-phone-game.is-game-started #question.tower-destroying {
+    background:
+      linear-gradient(
+        to bottom,
+        rgba(0,0,0,.40) 0%,
+        rgba(0,0,0,.40) 18%,
+        rgb(39,34,34) 18%,
+        rgb(39,34,34) 77%,
+        rgba(0,0,0,.40) 77%,
+        rgba(0,0,0,.40) 100%
+      ) !important;
+  }
+
+  body.vl-phone-game.is-game-started #question.tower-destroying #qstrip {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    background: rgb(39,34,34) !important;
+    z-index: 4 !important;
+  }
+}

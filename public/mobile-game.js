@@ -177,6 +177,7 @@
     cancelQueuedPinReflow();
     pinReflowDeferredForCritical = true;
     try { window.__vlMobileFlushPinReveals?.(); } catch (_) {}
+    document.querySelectorAll('.shockwave, .smoke-puff, .spark').forEach(el => el.remove());
   };
 
   function syncCriticalOverlayState() {

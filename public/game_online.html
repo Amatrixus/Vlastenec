@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>VLASTENEC</title>
   <link rel="stylesheet" href="mainstyle.css?v=numeric-keypad-v2">
-  <link rel="stylesheet" href="mobile-game.css?v=v48-mobile-critical-render">
+  <link rel="stylesheet" href="mobile-game.css?v=v49-mobile-question-clock-fix">
   <script src="auth-client.js"></script>
   <script src="profile-store.js"></script>
   <style id="vl-tablet-lobby-v4-inline">
@@ -1258,10 +1258,9 @@ socket.on("stateSync", ({ myNumber, snapshot }) => {
     if (signature === clockSync.signature) {
       const rttMs = Math.max(0, performance.now() - clockSync.sentAt);
       window.__questionClockSyncPending = null;
-      if (syncVisibleQuestionClockFromSnapshot(activeQ, rttMs)) {
-        DBG('stateSync used only for authoritative question clock', { kind: activeQ.kind, remainingMs: activeQ.remainingMs, rttMs });
-        return;
-      }
+      syncVisibleQuestionClockFromSnapshot(activeQ, rttMs);
+      DBG('stateSync consumed as authoritative question clock', { kind: activeQ.kind, remainingMs: activeQ.remainingMs, rttMs });
+      return;
     }
   }
 
@@ -9612,8 +9611,9 @@ socket.on("destroyTower", ({ defender, remainingLives, uiToken, uiStage }) => {
         const y = rect.top + rect.height / 2 + window.scrollY;
 
         showShockwave(x, y, towerElement);
-        spawnSmokePuffs(x, y, 20);
-        spawnSparks(x, y, 30);
+        const phoneTowerFx = document.body?.classList.contains("vl-phone-game");
+        spawnSmokePuffs(x, y, phoneTowerFx ? 8 : 20);
+        spawnSparks(x, y, phoneTowerFx ? 12 : 30);
         new Audio("smallrock.mp3").play();
 
         if (remainingLives === 2) {
@@ -10098,7 +10098,7 @@ window.__questionClockSyncPending = null;
 function questionKindUiLabel(kind) {
     return ({
         'choice': 'multiple_choice_question',
-        'numeric-two': 'numeric_two_question',
+        'numeric-two': 'numeric_duel_question',
         'numeric-three': 'numeric_three_question'
     })[kind] || '';
 }
@@ -10172,27 +10172,47 @@ function syncVisibleQuestionClockFromSnapshot(activeQuestion, rttMs = 0) {
     const serverText = String(activeQuestion.question || '').trim();
     if (serverText && currentText && serverText !== currentText) return false;
 
-    const serverRemaining = Number(activeQuestion.remainingMs);
-    if (!Number.isFinite(serverRemaining)) return false;
-
-    const measuredRttMs = Math.max(0, Number(rttMs) || 0);
-    const isPhoneGame =
-        document.body?.classList.contains('vl-phone-game') &&
-        document.body.classList.contains('is-game-started');
-
-    // Normal RTT: symmetric half-RTT correction.
-    // Abnormally large phone RTT often contains local main-thread blockage
-    // after the response was already ready. In that case subtract almost all
-    // of the excess, while leaving 160 ms for outbound/server/network time.
-    let responseAgeCorrectionMs = measuredRttMs / 2;
-    if (isPhoneGame && measuredRttMs > 600) {
-        responseAgeCorrectionMs = Math.max(
-            responseAgeCorrectionMs,
-            measuredRttMs - 160
-        );
+    const rawRemaining = activeQuestion.remainingMs;
+    if (rawRemaining === null || rawRemaining === undefined || rawRemaining === '') {
+        console.log('⏱️ Clock-sync ignorován: snapshot nemá použitelné remainingMs.');
+        return true;
     }
 
-    const correctedRemainingMs = Math.max(0, serverRemaining - responseAgeCorrectionMs);
+    const serverRemaining = Number(rawRemaining);
+    if (!Number.isFinite(serverRemaining)) return true;
+
+    const measuredRttMs = Math.max(0, Number(rttMs) || 0);
+    const responseAgeCorrectionMs = measuredRttMs / 2;
+    const serverCorrectedMs = Math.max(0, serverRemaining - responseAgeCorrectionMs);
+
+    const timing = window.__vlActiveQuestionClientTiming;
+    const expectedSignature = makeQuestionSyncSignature(activeQuestion.kind, activeQuestion.question);
+    const timingMatches = !!timing && timing.signature === expectedSignature;
+
+    const now = performance.now();
+    const localRemainingMs = timingMatches
+        ? Math.max(0, Number(timing.deadlinePerf) - now)
+        : null;
+    const questionAgeMs = timingMatches
+        ? Math.max(0, now - Number(timing.receivedAtPerf || now))
+        : null;
+
+    // A stale/coincident zero snapshot must not kill a freshly shown question.
+    if (
+        timingMatches &&
+        serverCorrectedMs <= 0 &&
+        localRemainingMs > 1000 &&
+        questionAgeMs < 1800
+    ) {
+        console.log(`⏱️ Ignoruji podezřelý nulový snapshot čerstvé otázky; lokálně zbývá ${Math.ceil(localRemainingMs)} ms.`);
+        return true;
+    }
+
+    // Sync may shorten to server truth, but never extend beyond elapsed local time.
+    const correctedRemainingMs = localRemainingMs === null
+        ? serverCorrectedMs
+        : Math.max(0, Math.min(localRemainingMs, serverCorrectedMs));
+
     startCountdown(correctedRemainingMs / 1000);
     armAuthoritativeQuestionInteractionDeadline(activeQuestion.kind, correctedRemainingMs);
 
@@ -10210,7 +10230,7 @@ function syncVisibleQuestionClockFromSnapshot(activeQuestion, rttMs = 0) {
         hideNumericInputForKind(activeQuestion.kind);
     }
 
-    console.log(`⏱️ Čas otázky srovnán se serverem: ${Math.ceil(correctedRemainingMs)} ms (RTT ${Math.round(measuredRttMs)} ms, korekce ${Math.round(responseAgeCorrectionMs)} ms).`);
+    console.log(`⏱️ Čas otázky srovnán: ${Math.ceil(correctedRemainingMs)} ms (server ${Math.ceil(serverRemaining)} ms, RTT ${Math.round(measuredRttMs)} ms${localRemainingMs === null ? '' : `, local ${Math.ceil(localRemainingMs)} ms`}).`);
     return true;
 }
 
@@ -10226,6 +10246,60 @@ function requestAuthoritativeQuestionClockSync(kind, questionText) {
     setTimeout(() => {
         if (window.__questionClockSyncPending === pending) {
             window.__questionClockSyncPending = null;
+
+window.__vlActiveQuestionClientTiming = null;
+
+function freshQuestionInitialMs(timeSeconds, remainingMsRaw) {
+    const fullMs = Math.max(0, Number(timeSeconds) || 0) * 1000;
+
+    // Number(null) === 0 and Number("") === 0. For a freshly emitted question
+    // those are not usable remaining-time values.
+    const hasExplicitRemaining =
+        remainingMsRaw !== null &&
+        remainingMsRaw !== undefined &&
+        remainingMsRaw !== "" &&
+        Number.isFinite(Number(remainingMsRaw));
+
+    const remainingMs = hasExplicitRemaining
+        ? Math.max(0, Number(remainingMsRaw))
+        : NaN;
+
+    // A brand-new question with positive `time` but zero/tiny remainingMs is a
+    // transition/snapshot race. Start from `time`; stateSync will trim it.
+    if (Number.isFinite(remainingMs) && remainingMs > 250) return remainingMs;
+    if (fullMs > 0) return fullMs;
+    return Number.isFinite(remainingMs) ? remainingMs : 0;
+}
+
+function rememberFreshQuestionClientTiming(kind, questionText, initialMs, receivedAtPerf) {
+    const received = Number(receivedAtPerf) || performance.now();
+    const timing = {
+        kind,
+        signature: makeQuestionSyncSignature(kind, questionText),
+        receivedAtPerf: received,
+        deadlinePerf: received + Math.max(0, Number(initialMs) || 0),
+        initialMs: Math.max(0, Number(initialMs) || 0)
+    };
+    window.__vlActiveQuestionClientTiming = timing;
+    return timing;
+}
+
+function clearFreshQuestionClientTiming() {
+    window.__vlActiveQuestionClientTiming = null;
+}
+
+function scheduleAuthoritativeQuestionClockSync(kind, questionText) {
+    const run = () => requestAuthoritativeQuestionClockSync(kind, questionText);
+    const isPhoneGame =
+        document.body?.classList.contains('vl-phone-game') &&
+        document.body.classList.contains('is-game-started');
+
+    // Let the phone paint the new question once before a clock stateSync can
+    // compete for the main thread.
+    if (isPhoneGame) requestAnimationFrame(run);
+    else run();
+}
+
         }
     }, 1800);
 }
@@ -10235,7 +10309,7 @@ document.addEventListener('visibilitychange', () => {
     const label = window.__battleUiLabel;
     const kind = ({
         'multiple_choice_question': 'choice',
-        'numeric_two_question': 'numeric-two',
+        'numeric_duel_question': 'numeric-two',
         'numeric_three_question': 'numeric-three'
     })[label];
     if (!kind) return;
@@ -10294,22 +10368,22 @@ let lastQuestionOptions = [];
     const { question, options, time, remainingMs, attacker, defender, attackerName, defenderName, canAnswer, category } = data;
     profileQuestionCategory = category || null;
     profileQuestionCanAnswer = canAnswer !== false;
-    const initialSeconds = Number.isFinite(Number(remainingMs)) && Number(remainingMs) >= 0
-        ? Number(remainingMs) / 1000
-        : Number(time);
-    const clientDeadlinePerf = receivedAtPerf + Math.max(0, Number(initialSeconds) || 0) * 1000;
 
-    // Launch the authoritative clock request before doing any DOM preparation.
-    requestAuthoritativeQuestionClockSync('choice', question);
+    const initialMs = freshQuestionInitialMs(time, remainingMs);
+    const initialSeconds = initialMs / 1000;
+    const timing = rememberFreshQuestionClientTiming('choice', question, initialMs, receivedAtPerf);
+
     showMultipleChoice(
         question, options, initialSeconds,
         attacker, defender, attackerName, defenderName, canAnswer,
-        clientDeadlinePerf
+        timing.deadlinePerf
     );
+    scheduleAuthoritativeQuestionClockSync('choice', question);
 });
 
 // Přijme výsledky od serveru
 socket.on("multipleChoiceResults", (data) => {
+    clearFreshQuestionClientTiming();
     stopQuestionCountdown();
     const { correctAnswer, answersByPlayer, uiToken, uiStage } = data;
     profileRecordQuestion(myAnswer !== "" && myAnswer === correctAnswer);
@@ -10551,17 +10625,18 @@ socket.on("numericQuestion", (data) => {
     const { question, time, remainingMs, category } = data;
     profileQuestionCategory = category || null;
     profileQuestionCanAnswer = true;
-    const initialSeconds = Number.isFinite(Number(remainingMs)) && Number(remainingMs) >= 0
-        ? Number(remainingMs) / 1000
-        : Number(time);
-    const clientDeadlinePerf = receivedAtPerf + Math.max(0, Number(initialSeconds) || 0) * 1000;
 
-    requestAuthoritativeQuestionClockSync('numeric-three', question);
-    showNumericQuestionForThree(question, initialSeconds, clientDeadlinePerf);
+    const initialMs = freshQuestionInitialMs(time, remainingMs);
+    const initialSeconds = initialMs / 1000;
+    const timing = rememberFreshQuestionClientTiming('numeric-three', question, initialMs, receivedAtPerf);
+
+    showNumericQuestionForThree(question, initialSeconds, timing.deadlinePerf);
+    scheduleAuthoritativeQuestionClockSync('numeric-three', question);
 });
 
 
 socket.on("numericQuestionResults", (data) => {
+    clearFreshQuestionClientTiming();
     const { correctAnswer, answers, uiToken, uiStage } = data;
     profileRecordQuestion(Array.isArray(answers) && answers[0]?.player === myPlayerNumber);
     showNumericResultsForThree(correctAnswer, answers, uiToken, uiStage);
@@ -10574,21 +10649,22 @@ socket.on("numericQuestionForTwo", (data) => {
     const { question, time, remainingMs, attacker, defender, attackerName, defenderName, category } = data;
     profileQuestionCategory = category || null;
     profileQuestionCanAnswer = [attacker, defender].includes(myPlayerNumber);
-    const initialSeconds = Number.isFinite(Number(remainingMs)) && Number(remainingMs) >= 0
-        ? Number(remainingMs) / 1000
-        : Number(time);
-    const clientDeadlinePerf = receivedAtPerf + Math.max(0, Number(initialSeconds) || 0) * 1000;
 
-    requestAuthoritativeQuestionClockSync('numeric-two', question);
+    const initialMs = freshQuestionInitialMs(time, remainingMs);
+    const initialSeconds = initialMs / 1000;
+    const timing = rememberFreshQuestionClientTiming('numeric-two', question, initialMs, receivedAtPerf);
+
     showNumericQuestionForTwo(
         question, initialSeconds,
         attacker, defender, attackerName, defenderName,
-        clientDeadlinePerf
+        timing.deadlinePerf
     );
+    scheduleAuthoritativeQuestionClockSync('numeric-two', question);
 });
 
 
 socket.on("numericQuestionResultsForTwo", ({ correctAnswer, answers, attacker, defender, uiToken, uiStage }) => {
+    clearFreshQuestionClientTiming();
     if ([attacker, defender].includes(myPlayerNumber)) {
       profileRecordQuestion(Array.isArray(answers) && answers[0]?.player === myPlayerNumber);
     }
@@ -11932,7 +12008,7 @@ function showNumericResultsForThree(correctAnswer, answers, uiToken, uiStage = "
         updateFullscreenButton();
     })();
     </script>
-    <script src="mobile-game.js?v=v48-mobile-critical-render"></script>
+    <script src="mobile-game.js?v=v49-mobile-question-clock-fix"></script>
 </body>
 
 
