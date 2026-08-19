@@ -101,7 +101,6 @@
     /* Presentation only: never create/move/merge claim pins here. Keep any pin
        produced by the original game renderer above the resized mobile map. */
     z-index: 96 !important;
-    opacity: 1 !important;
     visibility: visible !important;
     pointer-events: none !important;
   }
@@ -1662,5 +1661,47 @@ html.vl-map-renderer-v2.vl-map-v2-canvas-ready #map .region.unclickable {
   body.vl-tablet-device.is-game-started #question.tower-destroying #numerical_question_two,
   body.vl-tablet-device.is-game-started #question.tower-destroying #numerical_question_three {
     display: none !important;
+  }
+}
+
+
+/* ============================================================
+   VLASTENEC — PHONE TIMING / RENDERING HARDENING V47
+   Mobile-only presentation performance. Server/game logic unchanged.
+   ============================================================ */
+@media (orientation: landscape) and (max-height: 1100px) {
+  /* Keep sequential pin feedback, but bound the visual backlog. Three phone
+     pins now finish in well under a second instead of potentially >1.5 s. */
+  body.vl-phone-game.is-game-started .pin-marker.slide-in {
+    animation-duration: 180ms !important;
+    animation-timing-function: ease-out !important;
+  }
+
+  body.vl-phone-game.is-game-started .pin-marker.vl-mobile-pin-pending {
+    opacity: 0 !important;
+  }
+
+  body.vl-phone-game.is-game-started .pin-marker.vl-mobile-pin-final {
+    opacity: 1 !important;
+    transform: translate(-50%, -50%) !important;
+  }
+
+  /* Full-screen backdrop blur is disproportionately expensive on phone GPUs
+     because it has to sample the live map/canvas below before the question
+     can be presented. The question keeps the same dark panels, only the blur
+     sampling itself is removed. */
+  body.vl-phone-game.is-game-started #question,
+  body.vl-phone-game.is-game-started #numquestion,
+  body.vl-phone-game.is-game-started #qstrip,
+  body.vl-phone-game.is-game-started #qplayers {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  /* Closed/off-screen chat must not reserve a blur-compositing layer while
+     gameplay is trying to paint a time-critical question. */
+  body.vl-phone-game.is-game-started #game_chat_drawer:not(.open) {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
   }
 }

@@ -123,9 +123,42 @@
     }
   }
 
-  function queuePinReflow() {
-    [0, 80, 220, 500].forEach(ms => setTimeout(refreshExistingPinPositions, ms));
+  let pinReflowRaf = 0;
+  let pinReflowSettleTimer = 0;
+
+  function cancelQueuedPinReflow() {
+    if (pinReflowRaf) {
+      cancelAnimationFrame(pinReflowRaf);
+      pinReflowRaf = 0;
+    }
+    if (pinReflowSettleTimer) {
+      clearTimeout(pinReflowSettleTimer);
+      pinReflowSettleTimer = 0;
+    }
   }
+
+  function queuePinReflow() {
+    // visualViewport.resize may fire many times while Chrome animates its bars.
+    // Coalesce all of them into one frame + one final settled correction.
+    if (!pinReflowRaf) {
+      pinReflowRaf = requestAnimationFrame(() => {
+        pinReflowRaf = 0;
+        refreshExistingPinPositions();
+      });
+    }
+
+    if (pinReflowSettleTimer) clearTimeout(pinReflowSettleTimer);
+    pinReflowSettleTimer = setTimeout(() => {
+      pinReflowSettleTimer = 0;
+      refreshExistingPinPositions();
+    }, 180);
+  }
+
+  window.__vlMobilePrepareCriticalUi = () => {
+    if (!document.body?.classList.contains('vl-phone-game')) return;
+    cancelQueuedPinReflow();
+    try { window.__vlMobileFlushPinReveals?.(); } catch (_) {}
+  };
 
   function syncMode() {
     if (!document.body) return;
@@ -161,12 +194,22 @@
     const observer = new MutationObserver(syncMode);
     observer.observe(document.body, { attributes: true, attributeFilter: ['class'] });
 
-    window.addEventListener('resize', () => { syncMode(); queuePinReflow(); }, { passive: true });
+    let viewportSyncRaf = 0;
+    const scheduleViewportSync = () => {
+      if (viewportSyncRaf) return;
+      viewportSyncRaf = requestAnimationFrame(() => {
+        viewportSyncRaf = 0;
+        syncMode();
+        queuePinReflow();
+      });
+    };
+
+    window.addEventListener('resize', scheduleViewportSync, { passive: true });
     window.addEventListener('orientationchange', () => {
-      setTimeout(() => { syncMode(); queuePinReflow(); }, 80);
-      setTimeout(() => { syncMode(); queuePinReflow(); }, 300);
+      setTimeout(scheduleViewportSync, 80);
+      setTimeout(scheduleViewportSync, 300);
     }, { passive: true });
-    window.visualViewport?.addEventListener('resize', () => { syncMode(); queuePinReflow(); }, { passive: true });
+    window.visualViewport?.addEventListener('resize', scheduleViewportSync, { passive: true });
   }
 
   if (document.readyState === 'loading') {

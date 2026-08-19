@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>VLASTENEC</title>
   <link rel="stylesheet" href="mainstyle.css?v=numeric-keypad-v2">
-  <link rel="stylesheet" href="mobile-game.css?v=v46-tablet-numeric-results">
+  <link rel="stylesheet" href="mobile-game.css?v=v47-mobile-timing-hardening">
   <script src="auth-client.js"></script>
   <script src="profile-store.js"></script>
   <style id="vl-tablet-lobby-v4-inline">
@@ -30,6 +30,14 @@
     // layout viewport hidden partly behind the browser toolbars.
     (() => {
       const syncVisibleViewport = () => {
+        // This helper exists for the tablet lobby. During active phone gameplay,
+        // visualViewport can fire repeatedly while Chromium adjusts browser UI.
+        // Rewriting root CSS variables there only creates needless style/layout work.
+        if (
+          document.body?.classList.contains('vl-phone-game') &&
+          document.body.classList.contains('is-game-started')
+        ) return;
+
         const vv = window.visualViewport;
         const h = vv?.height || window.innerHeight;
         const w = vv?.width  || window.innerWidth;
@@ -7984,32 +7992,90 @@ function startCountdownTile(secondsAmount) {
                                     ) && document.body?.classList.contains("is-game-started");
 
                 if (isPhoneGame) {
-                    window.__vlMobilePinRevealChain = window.__vlMobilePinRevealChain || Promise.resolve();
+                    // Mobile presentation queue: keep the visible one-by-one order,
+                    // but never allow presentation to lag seconds behind server state.
+                    const state = window.__vlMobilePinRevealState || (
+                        window.__vlMobilePinRevealState = {
+                            queue: [],
+                            current: null,
+                            running: false,
+                            epoch: 0
+                        }
+                    );
 
-                    const revealThisPin = () => new Promise(resolve => {
-                        if (!pin.isConnected) { resolve(); return; }
+                    const finalizePin = (targetPin) => {
+                        if (!targetPin?.isConnected) return;
+                        targetPin.classList.remove("vl-mobile-pin-pending");
+                        targetPin.classList.add("vl-mobile-pin-final");
+                        targetPin.style.animation = "none";
+                        targetPin.style.opacity = "1";
+                        targetPin.style.transform = "translate(-50%, -50%)";
+                    };
+
+                    const finishCurrent = (item) => {
+                        if (state.current !== item) return;
+                        if (item.fallbackTimer) clearTimeout(item.fallbackTimer);
+                        finalizePin(item.pin);
+                        state.current = null;
+                        state.running = false;
+                        pumpMobilePinQueue();
+                    };
+
+                    const pumpMobilePinQueue = () => {
+                        if (state.running) return;
+
+                        let item = state.queue.shift();
+                        while (item && (!item.pin?.isConnected || item.epoch !== state.epoch)) {
+                            finalizePin(item.pin);
+                            item = state.queue.shift();
+                        }
+                        if (!item) return;
+
+                        state.running = true;
+                        state.current = item;
 
                         requestAnimationFrame(() => {
-                            if (!pin.isConnected) { resolve(); return; }
+                            if (state.current !== item || item.epoch !== state.epoch || !item.pin?.isConnected) {
+                                finishCurrent(item);
+                                return;
+                            }
 
-                            let settled = false;
-                            const finish = () => {
-                                if (settled) return;
-                                settled = true;
-                                resolve();
-                            };
+                            item.pin.classList.remove("vl-mobile-pin-pending", "vl-mobile-pin-final");
+                            item.pin.style.removeProperty("animation");
+                            item.pin.style.removeProperty("opacity");
+                            item.pin.classList.add("slide-in");
 
-                            pin.addEventListener("animationend", finish, { once: true });
-                            pin.classList.add("slide-in");
-                            // Pojistka pro případ, že animationend mobilní browser nedoručí.
-                            setTimeout(finish, 700);
+                            const onEnd = () => finishCurrent(item);
+                            item.pin.addEventListener("animationend", onEnd, { once: true });
+                            // Phone animation is shortened in mobile CSS; this is only a safety net.
+                            item.fallbackTimer = setTimeout(onEnd, 320);
                         });
-                    });
+                    };
 
-                    window.__vlMobilePinRevealChain = window.__vlMobilePinRevealChain.then(
-                        revealThisPin,
-                        revealThisPin
-                    );
+                    // Expose a presentation-only emergency flush. Critical UI such as
+                    // a question calls this so an old pin animation can never compete
+                    // with or visually trail the new server stage.
+                    window.__vlMobileFlushPinReveals = () => {
+                        state.epoch += 1;
+
+                        if (state.current) {
+                            if (state.current.fallbackTimer) clearTimeout(state.current.fallbackTimer);
+                            finalizePin(state.current.pin);
+                        }
+
+                        state.queue.forEach(item => {
+                            if (item.fallbackTimer) clearTimeout(item.fallbackTimer);
+                            finalizePin(item.pin);
+                        });
+
+                        state.queue.length = 0;
+                        state.current = null;
+                        state.running = false;
+                    };
+
+                    pin.classList.add("vl-mobile-pin-pending");
+                    state.queue.push({ pin, epoch: state.epoch, fallbackTimer: null });
+                    pumpMobilePinQueue();
                 } else {
                     setTimeout(() => {
                         pin.classList.add("slide-in");
@@ -10141,6 +10207,9 @@ function syncAbortVisibility() {
 }
 
 function showMultipleChoice(qText, options, timeLimit, attacker, defender, attackerName, defenderName, canAnswer = true) {
+    // Phone-only presentation barrier: finish any stale pin animation/reflow
+    // immediately. The incoming server question always gets rendering priority.
+    try { window.__vlMobilePrepareCriticalUi?.(); } catch (_) {}
     beginBattleUiStage("multiple_choice_question");
     clearPendingMultipleChoiceResultTimers();
     myAnswer = "";
@@ -10650,6 +10719,9 @@ if (document.readyState === "loading") {
 
 
 function showNumericQuestionForTwo(questionText, timeLimit, attacker, defender, attackerName, defenderName) {
+    // Phone-only presentation barrier: finish any stale pin animation/reflow
+    // immediately. The incoming server question always gets rendering priority.
+    try { window.__vlMobilePrepareCriticalUi?.(); } catch (_) {}
     beginBattleUiStage("numeric_duel_question");
     clearPendingMultipleChoiceResultTimers();
     myNumericAnswerTwo = 0;
@@ -10763,6 +10835,10 @@ function showNumericQuestionForTwo(questionText, timeLimit, attacker, defender, 
         }
     };
 
+    // Make the visible numeric stage participate in layout before the
+    // deadline renderer begins. StateSync still corrects to authoritative time.
+    void question?.offsetHeight;
+
     // ✅ Spusť odpočet (použij stejnou funkci startCountdown)
     startCountdown(timeLimit);
 
@@ -10783,6 +10859,9 @@ function showNumericQuestionForTwo(questionText, timeLimit, attacker, defender, 
 
 
 function showNumericQuestionForThree(questionText, timeLimit) {
+    // Phone-only presentation barrier: finish any stale pin animation/reflow
+    // immediately. The incoming server question always gets rendering priority.
+    try { window.__vlMobilePrepareCriticalUi?.(); } catch (_) {}
     beginBattleUiStage("numeric_three_question");
     clearPendingMultipleChoiceResultTimers();
     myNumericAnswer = 0;
@@ -10866,6 +10945,9 @@ function showNumericQuestionForThree(questionText, timeLimit) {
             submitNumericAnswer();
         }
     };
+
+    // Same first-layout safeguard as MC / numeric duel.
+    void question?.offsetHeight;
 
     // ✅ Spusť odpočet (máš vlastní funkci startCountdown)
     startCountdown(timeLimit);
@@ -11712,7 +11794,7 @@ function showNumericResultsForThree(correctAnswer, answers, uiToken, uiStage = "
         updateFullscreenButton();
     })();
     </script>
-    <script src="mobile-game.js?v=mobile-game-safe-v4-rollback-v24"></script>
+    <script src="mobile-game.js?v=v47-mobile-timing-hardening"></script>
 </body>
 
 
