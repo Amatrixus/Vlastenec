@@ -6257,6 +6257,23 @@ if (regionValues && typeof regionValues === 'object') {
             });
         }
 
+        // Zvuk přebarvení běžného herního pole. Záměrně se nepouští z
+        // colorizeBaseRegion(), takže úvodní barvení základen zůstává bez woosh.
+        // Krátký debounce zabrání vrstvení stejného zvuku, pokud server jedním
+        // updateRegions přebarví více regionů současně.
+        let __lastRegionWooshAt = 0;
+        function playRegionColorWoosh() {
+            const now = performance.now();
+            if (now - __lastRegionWooshAt < 120) return;
+            __lastRegionWooshAt = now;
+
+            try {
+                const woosh = new Audio("woosh.mp3");
+                const playPromise = woosh.play();
+                if (playPromise && typeof playPromise.catch === "function") playPromise.catch(() => {});
+            } catch (_) {}
+        }
+
         function animateRegionOwnershipChanges(previousState, nextState, phase) {
             const oldOwners = regionOwnerMap(previousState);
             const newOwners = regionOwnerMap(nextState);
@@ -6276,7 +6293,10 @@ if (regionValues && typeof regionValues === 'object') {
                 if (!oldOwner && newOwner && (phase === 'expansion' || phase === 'conquest')) {
                     console.log(`🌊 Region wave fill: ${id} → P${newOwner} (${phase})`);
                     animatedIds.add(id);
-                    jobs.push(queueRegionWave(id, () => waveFillRegion(regionEl, newFill)));
+                    jobs.push(queueRegionWave(id, () => {
+                        playRegionColorWoosh();
+                        return waveFillRegion(regionEl, newFill);
+                    }));
                     return;
                 }
 
@@ -6285,7 +6305,10 @@ if (regionValues && typeof regionValues === 'object') {
                 if (oldOwner && newOwner && oldOwner !== newOwner && phase === 'battle') {
                     console.log(`🌊 Region wave transfer: ${id} P${oldOwner} → P${newOwner} (${phase})`);
                     animatedIds.add(id);
-                    jobs.push(queueRegionWave(id, () => waveTransferRegion(regionEl, oldFill, newFill)));
+                    jobs.push(queueRegionWave(id, () => {
+                        playRegionColorWoosh();
+                        return waveTransferRegion(regionEl, oldFill, newFill);
+                    }));
                     return;
                 }
 
