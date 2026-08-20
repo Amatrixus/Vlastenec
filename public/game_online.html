@@ -1453,19 +1453,23 @@ socket.on("stateSync", ({ myNumber, snapshot }) => {
   const clockSync = window.__questionClockSyncPending;
   const activeQ = snapshot?.activeQuestion;
 
-  // PHONE LIVE-QUESTION GUARD:
+  // LIVE-QUESTION GUARD (all devices):
   // A fresh socket question already owns the visible UI and its interaction state.
   // Generic/post-tower stateSync responses are allowed to help only with the
   // matching clock. They must NEVER fall through into full rehydration and call
   // showMultipleChoice/showNumericQuestion again over the live question.
-  const livePhoneQuestion =
-    document.body?.classList.contains('vl-phone-game') &&
-    document.body.classList.contains('is-game-started') &&
+  //
+  // This used to be phone-only. On desktop a post-tower stateSync could be sent
+  // just before the next MC arrived, then return afterwards with a transition
+  // snapshot and rehydrate the fresh MC as non-answerable. A genuine reconnect
+  // still falls through normally because it has no fresh client timing record.
+  const liveFreshQuestion =
+    document.body?.classList.contains('is-game-started') &&
     !!window.__vlActiveQuestionClientTiming &&
     ['multiple_choice_question', 'numeric_duel_question', 'numeric_three_question']
       .includes(window.__battleUiLabel);
 
-  if (livePhoneQuestion) {
+  if (liveFreshQuestion) {
     const liveTiming = window.__vlActiveQuestionClientTiming;
     const activeSignature = activeQ
       ? makeQuestionSyncSignature(activeQ.kind, activeQ.question)
@@ -1475,7 +1479,7 @@ socket.on("stateSync", ({ myNumber, snapshot }) => {
       const rttMs = Math.max(0, performance.now() - clockSync.sentAt);
       window.__questionClockSyncPending = null;
       syncVisibleQuestionClockFromSnapshot(activeQ, rttMs);
-      DBG('phone live question: stateSync used only for matching clock', {
+      DBG('live question: stateSync used only for matching clock', {
         kind: activeQ.kind,
         remainingMs: activeQ.remainingMs,
         rttMs
@@ -1489,7 +1493,7 @@ socket.on("stateSync", ({ myNumber, snapshot }) => {
       window.__questionClockSyncPending = null;
     }
 
-    DBG('phone live question: generic/stale stateSync UI rehydration suppressed', {
+    DBG('live question: generic/stale stateSync UI rehydration suppressed', {
       liveSignature: liveTiming.signature,
       snapshotSignature: activeSignature || null,
       hasClockSync: !!clockSync
