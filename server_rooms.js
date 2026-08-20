@@ -34,6 +34,14 @@ app.use(express.static('public')); // servíruje index.html a další soubory
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: "*" } }); // (později si omezíš)
 
+// Přibližná online přítomnost: počítáme právě připojené Socket.IO klienty.
+// Jeden člověk s více otevřenými kartami se může započítat vícekrát,
+// ale pro portal je to stabilní a okamžitý údaj bez zásahu do herní logiky.
+const portalOnlineSockets = new Set();
+function broadcastPortalOnlineCount() {
+  io.emit('portal:onlineCount', { count: portalOnlineSockets.size });
+}
+
 
 
 const PORT = process.env.PORT || 3000;
@@ -3379,6 +3387,9 @@ setInterval(() => {
 
 io.on('connection', socket => {
 
+  portalOnlineSockets.add(socket.id);
+  broadcastPortalOnlineCount();
+
   socket.data = socket.data || {};
   socket.data.accountPromise = sessionUser(socket.request, { touch:false })
     .then(user => {
@@ -3904,6 +3915,9 @@ socket.on("joinRoom", ({ room, settings }) => {
 
 
 socket.on("disconnect", async () => {
+  portalOnlineSockets.delete(socket.id);
+  broadcastPortalOnlineCount();
+
   // Odpojený klient nesmí držet právě běžící UI bariéru až do fallback timeoutu.
   dropSocketFromBattleUiWaiters(socket.id);
   dropSocketFromBaseAnimationWaiters(socket.id);
