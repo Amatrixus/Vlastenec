@@ -1396,13 +1396,25 @@ function delay(ms) {
 // OTÁZKY
 
 
-const questionsPath = path.join(__dirname, 'general_multiple_choice.json');
-const questions = JSON.parse(fs.readFileSync(questionsPath, 'utf8'));
+const questionFiles = [
+  'general_multiple_choice.json',
+  'general_multiple_choice2.json',
+  'general_multiple_choice3.json'
+];
+const questions = questionFiles.flatMap(fileName =>
+  JSON.parse(fs.readFileSync(path.join(__dirname, fileName), 'utf8'))
+);
 
 
 // --- Numeric Qs (CJS) ---
-const numericQuestionsPath = path.join(__dirname, 'general_numeric_questions.json');
-const numericQuestions = JSON.parse(fs.readFileSync(numericQuestionsPath, 'utf8'));
+const numericQuestionFiles = [
+  'general_numeric_questions.json',
+  'general_numeric_questions2.json',
+  'general_numeric_questions3.json'
+];
+const numericQuestions = numericQuestionFiles.flatMap(fileName =>
+  JSON.parse(fs.readFileSync(path.join(__dirname, fileName), 'utf8'))
+);
 
 
 module.exports = { questions }; // pokud exportuješ dál

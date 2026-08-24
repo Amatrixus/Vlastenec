@@ -1,0 +1,1082 @@
+[
+  {
+    "id": 568,
+    "category": "vedy",
+    "question": "Jaké protonové číslo má sodík?",
+    "answer": 11
+  },
+  {
+    "id": 569,
+    "category": "vedy",
+    "question": "Jaké protonové číslo má měď?",
+    "answer": 29
+  },
+  {
+    "id": 570,
+    "category": "vedy",
+    "question": "Jaké protonové číslo má stříbro?",
+    "answer": 47
+  },
+  {
+    "id": 571,
+    "category": "vedy",
+    "question": "Jaké protonové číslo má zlato?",
+    "answer": 79
+  },
+  {
+    "id": 572,
+    "category": "vedy",
+    "question": "Jaké protonové číslo má chlor?",
+    "answer": 17
+  },
+  {
+    "id": 573,
+    "category": "vedy",
+    "question": "Kolik period má periodická tabulka prvků?",
+    "answer": 7
+  },
+  {
+    "id": 574,
+    "category": "vedy",
+    "question": "Kolik skupin má moderní periodická tabulka prvků?",
+    "answer": 18
+  },
+  {
+    "id": 575,
+    "category": "vedy",
+    "question": "Kolik chemických prvků je v současné periodické tabulce oficiálně pojmenováno?",
+    "answer": 118
+  },
+  {
+    "id": 576,
+    "category": "vedy",
+    "question": "Kolik základních interakcí se rozlišuje ve standardním fyzikálním popisu přírody?",
+    "answer": 4
+  },
+  {
+    "id": 577,
+    "category": "vedy",
+    "question": "Kolik různých vůní kvarků rozlišuje standardní model částicové fyziky?",
+    "answer": 6
+  },
+  {
+    "id": 578,
+    "category": "vedy",
+    "question": "Kolik chlopní má lidské srdce?",
+    "answer": 4
+  },
+  {
+    "id": 579,
+    "category": "vedy",
+    "question": "Kolik laloků má pravá lidská plíce?",
+    "answer": 3
+  },
+  {
+    "id": 580,
+    "category": "vedy",
+    "question": "Kolik laloků má levá lidská plíce?",
+    "answer": 2
+  },
+  {
+    "id": 581,
+    "category": "vedy",
+    "question": "Kolik párů hlavových nervů má člověk?",
+    "answer": 12
+  },
+  {
+    "id": 582,
+    "category": "vedy",
+    "question": "Kolik kůstek se nachází ve středním uchu jednoho lidského ucha?",
+    "answer": 3
+  },
+  {
+    "id": 583,
+    "category": "vedy",
+    "question": "Kolik stálých zubů má běžný dospělý chrup bez zubů moudrosti?",
+    "answer": 28
+  },
+  {
+    "id": 584,
+    "category": "vedy",
+    "question": "Kolik základních jednotek obsahuje soustava SI?",
+    "answer": 7
+  },
+  {
+    "id": 585,
+    "category": "vedy",
+    "question": "Kolik vazeb obvykle vytváří atom uhlíku v organických sloučeninách?",
+    "answer": 4
+  },
+  {
+    "id": 586,
+    "category": "vedy",
+    "question": "Kolik maximálně elektronů může obsahovat první elektronová slupka atomu?",
+    "answer": 2
+  },
+  {
+    "id": 587,
+    "category": "vedy",
+    "question": "Kolik maximálně elektronů může obsahovat druhá elektronová slupka atomu?",
+    "answer": 8
+  },
+  {
+    "id": 588,
+    "category": "literatura",
+    "question": "V kterém roce vyšel první díl románu „Don Quijote“?",
+    "answer": 1605
+  },
+  {
+    "id": 589,
+    "category": "literatura",
+    "question": "V kterém roce byl poprvé vydán román „Frankenstein“?",
+    "answer": 1818
+  },
+  {
+    "id": 590,
+    "category": "literatura",
+    "question": "V kterém roce byl poprvé vydán román „Pýcha a předsudek“?",
+    "answer": 1813
+  },
+  {
+    "id": 591,
+    "category": "literatura",
+    "question": "V kterém roce byl poprvé vydán román „Zločin a trest“?",
+    "answer": 1866
+  },
+  {
+    "id": 592,
+    "category": "literatura",
+    "question": "V kterém roce vyšlo knižní vydání románu „Válka a mír“ v úplné podobě?",
+    "answer": 1869
+  },
+  {
+    "id": 593,
+    "category": "literatura",
+    "question": "V kterém roce byl poprvé vydán román „Krásný nový svět“?",
+    "answer": 1932
+  },
+  {
+    "id": 594,
+    "category": "literatura",
+    "question": "V kterém roce byl poprvé vydán román „Farma zvířat“?",
+    "answer": 1945
+  },
+  {
+    "id": 595,
+    "category": "literatura",
+    "question": "V kterém roce byl poprvé vydán román „451 stupňů Fahrenheita“?",
+    "answer": 1953
+  },
+  {
+    "id": 596,
+    "category": "literatura",
+    "question": "V kterém roce byl poprvé vydán román „Hlava XXII“?",
+    "answer": 1961
+  },
+  {
+    "id": 597,
+    "category": "literatura",
+    "question": "V kterém roce byl poprvé vydán román „Hobit“?",
+    "answer": 1937
+  },
+  {
+    "id": 598,
+    "category": "literatura",
+    "question": "V kterém roce byl poprvé vydán román „Pán much“?",
+    "answer": 1954
+  },
+  {
+    "id": 599,
+    "category": "literatura",
+    "question": "V kterém roce byl poprvé vydán román „Jméno růže“?",
+    "answer": 1980
+  },
+  {
+    "id": 600,
+    "category": "literatura",
+    "question": "V kterém roce vyšel poprvé Máchův „Máj“?",
+    "answer": 1836
+  },
+  {
+    "id": 601,
+    "category": "literatura",
+    "question": "V kterém roce začala knižně vycházet „Babička“ Boženy Němcové?",
+    "answer": 1855
+  },
+  {
+    "id": 602,
+    "category": "literatura",
+    "question": "V kterém roce vyšla první knižní verze Erbenovy „Kytice“?",
+    "answer": 1853
+  },
+  {
+    "id": 603,
+    "category": "literatura",
+    "question": "V kterém roce měla premiéru Čapkova hra „R.U.R.“?",
+    "answer": 1921
+  },
+  {
+    "id": 604,
+    "category": "literatura",
+    "question": "V kterém roce začal knižně vycházet Haškův „Osudy dobrého vojáka Švejka za světové války“?",
+    "answer": 1921
+  },
+  {
+    "id": 605,
+    "category": "literatura",
+    "question": "V kterém roce vyšel poprvé román „Saturnin“ Zdeňka Jirotky?",
+    "answer": 1942
+  },
+  {
+    "id": 606,
+    "category": "literatura",
+    "question": "Kolik písmen má slovo „čtenář“?",
+    "answer": 6
+  },
+  {
+    "id": 607,
+    "category": "literatura",
+    "question": "Kolik slabik má slovo „knihovna“?",
+    "answer": 3
+  },
+  {
+    "id": 608,
+    "category": "technologie",
+    "question": "Jaké číslo portu standardně používá DNS?",
+    "answer": 53
+  },
+  {
+    "id": 609,
+    "category": "technologie",
+    "question": "Jaké číslo portu standardně používá SMTP pro nešifrovaný přenos mezi servery?",
+    "answer": 25
+  },
+  {
+    "id": 610,
+    "category": "technologie",
+    "question": "Jaké číslo portu standardně používá FTP pro řídicí spojení?",
+    "answer": 21
+  },
+  {
+    "id": 611,
+    "category": "technologie",
+    "question": "Jaké číslo portu standardně používá protokol RDP?",
+    "answer": 3389
+  },
+  {
+    "id": 612,
+    "category": "technologie",
+    "question": "Kolik bitů má standardní MAC adresa Ethernetu?",
+    "answer": 48
+  },
+  {
+    "id": 613,
+    "category": "technologie",
+    "question": "Kolik bitů má pole čísla portu v protokolech TCP a UDP?",
+    "answer": 16
+  },
+  {
+    "id": 614,
+    "category": "technologie",
+    "question": "Kolik barevných kanálů tvoří základní model RGB?",
+    "answer": 3
+  },
+  {
+    "id": 615,
+    "category": "technologie",
+    "question": "Kolik různých číslic používá dvojková soustava?",
+    "answer": 2
+  },
+  {
+    "id": 616,
+    "category": "technologie",
+    "question": "V kterém roce byl uveden první osobní počítač IBM PC model 5150?",
+    "answer": 1981
+  },
+  {
+    "id": 617,
+    "category": "technologie",
+    "question": "V kterém roce byl uveden původní Macintosh společnosti Apple?",
+    "answer": 1984
+  },
+  {
+    "id": 618,
+    "category": "technologie",
+    "question": "V kterém roce byla vydána první verze Androidu pro komerční telefony?",
+    "answer": 2008
+  },
+  {
+    "id": 619,
+    "category": "technologie",
+    "question": "V kterém roce byl představen první iPad?",
+    "answer": 2010
+  },
+  {
+    "id": 620,
+    "category": "technologie",
+    "question": "V kterém roce byla vydána první veřejná verze programovacího jazyka Python?",
+    "answer": 1991
+  },
+  {
+    "id": 621,
+    "category": "technologie",
+    "question": "V kterém roce byl poprvé veřejně vydán programovací jazyk Java?",
+    "answer": 1995
+  },
+  {
+    "id": 622,
+    "category": "technologie",
+    "question": "V kterém roce vytvořil Linus Torvalds systém správy verzí Git?",
+    "answer": 2005
+  },
+  {
+    "id": 623,
+    "category": "technologie",
+    "question": "V kterém roce byla spuštěna Wikipedie?",
+    "answer": 2001
+  },
+  {
+    "id": 624,
+    "category": "technologie",
+    "question": "V kterém roce byla založena společnost Google?",
+    "answer": 1998
+  },
+  {
+    "id": 625,
+    "category": "technologie",
+    "question": "V kterém roce vznikla služba YouTube?",
+    "answer": 2005
+  },
+  {
+    "id": 626,
+    "category": "technologie",
+    "question": "V kterém roce byla zveřejněna první verze standardu IEEE 802.11 pro bezdrátové sítě?",
+    "answer": 1997
+  },
+  {
+    "id": 627,
+    "category": "technologie",
+    "question": "Kolik kontaktů má standardní konektor USB typu A ve verzi USB 2.0?",
+    "answer": 4
+  },
+  {
+    "id": 628,
+    "category": "geografie",
+    "question": "Kolik vojvodství má Polsko?",
+    "answer": 16
+  },
+  {
+    "id": 629,
+    "category": "geografie",
+    "question": "Kolik samosprávných krajů má Slovensko?",
+    "answer": 8
+  },
+  {
+    "id": 630,
+    "category": "geografie",
+    "question": "Kolik spolkových zemí má Rakousko?",
+    "answer": 9
+  },
+  {
+    "id": 631,
+    "category": "geografie",
+    "question": "Kolik prefektur má Japonsko?",
+    "answer": 47
+  },
+  {
+    "id": 632,
+    "category": "geografie",
+    "question": "Kolik provincií má Turecko?",
+    "answer": 81
+  },
+  {
+    "id": 633,
+    "category": "geografie",
+    "question": "Kolik autonomních společenství má Španělsko?",
+    "answer": 17
+  },
+  {
+    "id": 634,
+    "category": "geografie",
+    "question": "Kolik regionů má Itálie?",
+    "answer": 20
+  },
+  {
+    "id": 635,
+    "category": "geografie",
+    "question": "Kolik hlavních ostrovů se tradičně uvádí u Japonska?",
+    "answer": 4
+  },
+  {
+    "id": 636,
+    "category": "geografie",
+    "question": "Kolik Velkých jezer leží na hranici či území USA a Kanady?",
+    "answer": 5
+  },
+  {
+    "id": 637,
+    "category": "geografie",
+    "question": "Kolika státy protéká nebo tvoří hranici řeka Dunaj?",
+    "answer": 10
+  },
+  {
+    "id": 638,
+    "category": "geografie",
+    "question": "Kolik zemí přímo sousedí s Polskem?",
+    "answer": 7
+  },
+  {
+    "id": 639,
+    "category": "geografie",
+    "question": "Kolik zemí přímo sousedí s Maďarskem?",
+    "answer": 7
+  },
+  {
+    "id": 640,
+    "category": "geografie",
+    "question": "Kolik zemí přímo sousedí se Švýcarskem?",
+    "answer": 5
+  },
+  {
+    "id": 641,
+    "category": "geografie",
+    "question": "Kolik zemí má přímou pozemní hranici s Portugalskem?",
+    "answer": 1
+  },
+  {
+    "id": 642,
+    "category": "geografie",
+    "question": "Kolik zemí přímo sousedí s Itálií?",
+    "answer": 6
+  },
+  {
+    "id": 643,
+    "category": "geografie",
+    "question": "Kolik krajů má Norsko od reformy účinné v roce 2024?",
+    "answer": 15
+  },
+  {
+    "id": 644,
+    "category": "geografie",
+    "question": "Kolik okresů má Slovensko?",
+    "answer": 79
+  },
+  {
+    "id": 645,
+    "category": "geografie",
+    "question": "Kolik ostrovních států tvoří hlavní souostroví Nového Zélandu podle státního uspořádání?",
+    "answer": 1
+  },
+  {
+    "id": 646,
+    "category": "geografie",
+    "question": "Kolik oficiálních časových pásem používá pevninská Čína?",
+    "answer": 1
+  },
+  {
+    "id": 647,
+    "category": "geografie",
+    "question": "Kolik zemí tvoří Spojené království?",
+    "answer": 4
+  },
+  {
+    "id": 648,
+    "category": "historie",
+    "question": "Kolik let před naším letopočtem proběhla bitva u Marathónu?",
+    "answer": 490
+  },
+  {
+    "id": 649,
+    "category": "historie",
+    "question": "Kolik let před naším letopočtem proběhla bitva u Thermopyl?",
+    "answer": 480
+  },
+  {
+    "id": 650,
+    "category": "historie",
+    "question": "Kolik let před naším letopočtem byl zavražděn Julius Caesar?",
+    "answer": 44
+  },
+  {
+    "id": 651,
+    "category": "historie",
+    "question": "V kterém roce byl Karel Veliký korunován císařem?",
+    "answer": 800
+  },
+  {
+    "id": 652,
+    "category": "historie",
+    "question": "V kterém roce přišli Konstantin a Metoděj na Velkou Moravu?",
+    "answer": 863
+  },
+  {
+    "id": 653,
+    "category": "historie",
+    "question": "V kterém roce proběhla bitva u Hastingsu?",
+    "answer": 1066
+  },
+  {
+    "id": 654,
+    "category": "historie",
+    "question": "V kterém roce byla založena Univerzita Karlova?",
+    "answer": 1348
+  },
+  {
+    "id": 655,
+    "category": "historie",
+    "question": "V kterém roce proběhla bitva na Bílé hoře?",
+    "answer": 1620
+  },
+  {
+    "id": 656,
+    "category": "historie",
+    "question": "V kterém roce proběhla poprava českých stavovských vůdců na Staroměstském náměstí?",
+    "answer": 1621
+  },
+  {
+    "id": 657,
+    "category": "historie",
+    "question": "Kolik českých stavovských vůdců bylo popraveno na Staroměstském náměstí v roce 1621?",
+    "answer": 27
+  },
+  {
+    "id": 658,
+    "category": "historie",
+    "question": "V kterém roce byla přijata Deklarace nezávislosti Spojených států?",
+    "answer": 1776
+  },
+  {
+    "id": 659,
+    "category": "historie",
+    "question": "V kterém roce byl Napoleon Bonaparte korunován francouzským císařem?",
+    "answer": 1804
+  },
+  {
+    "id": 660,
+    "category": "historie",
+    "question": "V kterém roce začala revoluční vlna známá jako „jaro národů“?",
+    "answer": 1848
+  },
+  {
+    "id": 661,
+    "category": "historie",
+    "question": "V kterém roce vzniklo sjednocené Italské království?",
+    "answer": 1861
+  },
+  {
+    "id": 662,
+    "category": "historie",
+    "question": "V kterém roce vzniklo Německé císařství?",
+    "answer": 1871
+  },
+  {
+    "id": 663,
+    "category": "historie",
+    "question": "V kterém roce proběhla bolševická Říjnová revoluce v Rusku podle gregoriánského kalendáře?",
+    "answer": 1917
+  },
+  {
+    "id": 664,
+    "category": "historie",
+    "question": "V kterém roce proběhlo spojenecké vylodění v Normandii?",
+    "answer": 1944
+  },
+  {
+    "id": 665,
+    "category": "historie",
+    "question": "V kterém roce začala korejská válka?",
+    "answer": 1950
+  },
+  {
+    "id": 666,
+    "category": "historie",
+    "question": "V kterém roce vznikla Varšavská smlouva?",
+    "answer": 1955
+  },
+  {
+    "id": 667,
+    "category": "historie",
+    "question": "V kterém roce proběhla kubánská raketová krize?",
+    "answer": 1962
+  },
+  {
+    "id": 668,
+    "category": "kultura",
+    "question": "V kterém roce měl premiéru film „Občan Kane“?",
+    "answer": 1941
+  },
+  {
+    "id": 669,
+    "category": "kultura",
+    "question": "V kterém roce měl premiéru film „Casablanca“?",
+    "answer": 1942
+  },
+  {
+    "id": 670,
+    "category": "kultura",
+    "question": "V kterém roce měl premiéru Hitchcockův film „Psycho“?",
+    "answer": 1960
+  },
+  {
+    "id": 671,
+    "category": "kultura",
+    "question": "V kterém roce měl premiéru film „2001: Vesmírná odysea“?",
+    "answer": 1968
+  },
+  {
+    "id": 672,
+    "category": "kultura",
+    "question": "V kterém roce měl premiéru film „Kmotr II“?",
+    "answer": 1974
+  },
+  {
+    "id": 673,
+    "category": "kultura",
+    "question": "V kterém roce měl premiéru film „Star Wars: Impérium vrací úder“?",
+    "answer": 1980
+  },
+  {
+    "id": 674,
+    "category": "kultura",
+    "question": "V kterém roce měl premiéru film „Návrat do budoucnosti“?",
+    "answer": 1985
+  },
+  {
+    "id": 675,
+    "category": "kultura",
+    "question": "V kterém roce měl premiéru první celovečerní film „Toy Story“?",
+    "answer": 1995
+  },
+  {
+    "id": 676,
+    "category": "kultura",
+    "question": "V kterém roce měl japonskou premiéru film „Cesta do fantazie“?",
+    "answer": 2001
+  },
+  {
+    "id": 677,
+    "category": "kultura",
+    "question": "V kterém roce vyšlo album „Sgt. Pepper’s Lonely Hearts Club Band“?",
+    "answer": 1967
+  },
+  {
+    "id": 678,
+    "category": "kultura",
+    "question": "V kterém roce vyšlo album „Thriller“ Michaela Jacksona?",
+    "answer": 1982
+  },
+  {
+    "id": 679,
+    "category": "kultura",
+    "question": "V kterém roce vyšlo album „Purple Rain“ Prince?",
+    "answer": 1984
+  },
+  {
+    "id": 680,
+    "category": "kultura",
+    "question": "V kterém roce bylo otevřeno muzeum Louvre jako veřejné muzeum?",
+    "answer": 1793
+  },
+  {
+    "id": 681,
+    "category": "kultura",
+    "question": "V kterém roce bylo založeno Museum of Modern Art v New Yorku?",
+    "answer": 1929
+  },
+  {
+    "id": 682,
+    "category": "kultura",
+    "question": "V kterém roce byla dokončena vila Tugendhat v Brně?",
+    "answer": 1930
+  },
+  {
+    "id": 683,
+    "category": "kultura",
+    "question": "V kterém roce se narodil Antonín Dvořák?",
+    "answer": 1841
+  },
+  {
+    "id": 684,
+    "category": "kultura",
+    "question": "V kterém roce se narodil Bedřich Smetana?",
+    "answer": 1824
+  },
+  {
+    "id": 685,
+    "category": "kultura",
+    "question": "V kterém roce se narodil Alfons Mucha?",
+    "answer": 1860
+  },
+  {
+    "id": 686,
+    "category": "kultura",
+    "question": "Kolik dějství má Verdiho opera „Aida“?",
+    "answer": 4
+  },
+  {
+    "id": 687,
+    "category": "kultura",
+    "question": "Kolik vět má Dvořákova Symfonie č. 9 „Z Nového světa“?",
+    "answer": 4
+  },
+  {
+    "id": 688,
+    "category": "sport",
+    "question": "Kolik hráčů jednoho týmu je současně na hřišti ve futsalu včetně brankáře?",
+    "answer": 5
+  },
+  {
+    "id": 689,
+    "category": "sport",
+    "question": "Kolik hráčů jednoho týmu je současně ve vodě ve vodním pólu včetně brankáře?",
+    "answer": 7
+  },
+  {
+    "id": 690,
+    "category": "sport",
+    "question": "Kolik hráčů jednoho týmu nastupuje na hřišti v pozemním hokeji?",
+    "answer": 11
+  },
+  {
+    "id": 691,
+    "category": "sport",
+    "question": "Kolik hráčů má jeden tým na hřišti v ragby sevens?",
+    "answer": 7
+  },
+  {
+    "id": 692,
+    "category": "sport",
+    "question": "Kolik hráčů má jeden tým na hřišti v kriketu?",
+    "answer": 11
+  },
+  {
+    "id": 693,
+    "category": "sport",
+    "question": "Kolik minut trvá jedna čtvrtina basketbalového utkání podle pravidel FIBA?",
+    "answer": 10
+  },
+  {
+    "id": 694,
+    "category": "sport",
+    "question": "Kolik minut trvá jedna čtvrtina zápasu NBA?",
+    "answer": 12
+  },
+  {
+    "id": 695,
+    "category": "sport",
+    "question": "Kolik minut trvá jeden poločas standardního fotbalového utkání bez nastavení?",
+    "answer": 45
+  },
+  {
+    "id": 696,
+    "category": "sport",
+    "question": "Kolik minut čistého času trvá jedna třetina v ledním hokeji?",
+    "answer": 20
+  },
+  {
+    "id": 697,
+    "category": "sport",
+    "question": "Kolik setů musí tým vyhrát k vítězství v běžném volejbalovém zápase hraném na tři vítězné sety?",
+    "answer": 3
+  },
+  {
+    "id": 698,
+    "category": "sport",
+    "question": "Kolik bodů je běžně potřeba k vítězství v badmintonovém setu bez prodloužení?",
+    "answer": 21
+  },
+  {
+    "id": 699,
+    "category": "sport",
+    "question": "Kolik setů musí hráčka vyhrát k vítězství v běžném grandslamovém tenisovém zápase žen?",
+    "answer": 2
+  },
+  {
+    "id": 700,
+    "category": "sport",
+    "question": "Kolik minut trvá jeden poločas standardního házenkářského utkání dospělých?",
+    "answer": 30
+  },
+  {
+    "id": 701,
+    "category": "sport",
+    "question": "Kolik metrů měří olympijský plavecký bazén?",
+    "answer": 50
+  },
+  {
+    "id": 702,
+    "category": "sport",
+    "question": "Z kolika metrů se ve fotbale kope pokutový kop?",
+    "answer": 11
+  },
+  {
+    "id": 703,
+    "category": "sport",
+    "question": "Kolik centimetrů nad podlahou je horní okraj basketbalového koše podle standardní výšky 3,05 metru?",
+    "answer": 305
+  },
+  {
+    "id": 704,
+    "category": "sport",
+    "question": "Kolik centimetrů měří vnitřní šířka fotbalové branky podle standardního rozměru 7,32 metru?",
+    "answer": 732
+  },
+  {
+    "id": 705,
+    "category": "sport",
+    "question": "Kolik směn má standardní baseballový zápas, pokud není potřeba prodloužení?",
+    "answer": 9
+  },
+  {
+    "id": 706,
+    "category": "sport",
+    "question": "Kolik směn má standardní softballový zápas, pokud není potřeba prodloužení?",
+    "answer": 7
+  },
+  {
+    "id": 707,
+    "category": "sport",
+    "question": "Kolik bodů získává vítěz hlavního závodu Formule 1 za první místo podle standardního bodování zavedeného od roku 2010?",
+    "answer": 25
+  },
+  {
+    "id": 708,
+    "category": "osobnosti",
+    "question": "V kterém roce zemřel Isaac Newton?",
+    "answer": 1727
+  },
+  {
+    "id": 709,
+    "category": "osobnosti",
+    "question": "V kterém roce zemřel Galileo Galilei?",
+    "answer": 1642
+  },
+  {
+    "id": 710,
+    "category": "osobnosti",
+    "question": "V kterém roce se narodil Mikuláš Koperník?",
+    "answer": 1473
+  },
+  {
+    "id": 711,
+    "category": "osobnosti",
+    "question": "V kterém roce zemřel Mikuláš Koperník?",
+    "answer": 1543
+  },
+  {
+    "id": 712,
+    "category": "osobnosti",
+    "question": "V kterém roce zemřel Ludwig van Beethoven?",
+    "answer": 1827
+  },
+  {
+    "id": 713,
+    "category": "osobnosti",
+    "question": "V kterém roce zemřela Marie Curie-Skłodowská?",
+    "answer": 1934
+  },
+  {
+    "id": 714,
+    "category": "osobnosti",
+    "question": "V kterém roce se narodila Ada Lovelace?",
+    "answer": 1815
+  },
+  {
+    "id": 715,
+    "category": "osobnosti",
+    "question": "V kterém roce se narodil Alan Turing?",
+    "answer": 1912
+  },
+  {
+    "id": 716,
+    "category": "osobnosti",
+    "question": "V kterém roce zemřel Alan Turing?",
+    "answer": 1954
+  },
+  {
+    "id": 717,
+    "category": "osobnosti",
+    "question": "V kterém roce se narodil Stephen Hawking?",
+    "answer": 1942
+  },
+  {
+    "id": 718,
+    "category": "osobnosti",
+    "question": "V kterém roce zemřel Stephen Hawking?",
+    "answer": 2018
+  },
+  {
+    "id": 719,
+    "category": "osobnosti",
+    "question": "V kterém roce se narodil Neil Armstrong?",
+    "answer": 1930
+  },
+  {
+    "id": 720,
+    "category": "osobnosti",
+    "question": "V kterém roce zemřel Neil Armstrong?",
+    "answer": 2012
+  },
+  {
+    "id": 721,
+    "category": "osobnosti",
+    "question": "V kterém roce se narodil Jurij Gagarin?",
+    "answer": 1934
+  },
+  {
+    "id": 722,
+    "category": "osobnosti",
+    "question": "V kterém roce zemřel Jurij Gagarin?",
+    "answer": 1968
+  },
+  {
+    "id": 723,
+    "category": "osobnosti",
+    "question": "V kterém roce se narodil Louis Pasteur?",
+    "answer": 1822
+  },
+  {
+    "id": 724,
+    "category": "osobnosti",
+    "question": "V kterém roce se narodil Alexander Fleming?",
+    "answer": 1881
+  },
+  {
+    "id": 725,
+    "category": "osobnosti",
+    "question": "V kterém roce získal Albert Einstein Nobelovu cenu za fyziku?",
+    "answer": 1921
+  },
+  {
+    "id": 726,
+    "category": "osobnosti",
+    "question": "V kterém roce získala Marie Curie-Skłodowská svou první Nobelovu cenu?",
+    "answer": 1903
+  },
+  {
+    "id": 727,
+    "category": "osobnosti",
+    "question": "V kterém roce se narodil Charles Babbage?",
+    "answer": 1791
+  },
+  {
+    "id": 728,
+    "category": "politika",
+    "question": "Kolik členů má Rada bezpečnosti OSN celkem?",
+    "answer": 15
+  },
+  {
+    "id": 729,
+    "category": "politika",
+    "question": "Kolik původních členských států měla Organizace spojených národů při svém vzniku?",
+    "answer": 51
+  },
+  {
+    "id": 730,
+    "category": "politika",
+    "question": "Kolik států bylo zakládajícími členy NATO v roce 1949?",
+    "answer": 12
+  },
+  {
+    "id": 731,
+    "category": "politika",
+    "question": "V kterém roce byla založena Rada Evropy?",
+    "answer": 1949
+  },
+  {
+    "id": 732,
+    "category": "politika",
+    "question": "V kterém roce byla podepsána Evropská úmluva o lidských právech?",
+    "answer": 1950
+  },
+  {
+    "id": 733,
+    "category": "politika",
+    "question": "V kterém roce se konaly první přímé volby do Evropského parlamentu?",
+    "answer": 1979
+  },
+  {
+    "id": 734,
+    "category": "politika",
+    "question": "V kterém roce byla podepsána Schengenská dohoda?",
+    "answer": 1985
+  },
+  {
+    "id": 735,
+    "category": "politika",
+    "question": "V kterém roce se začala Schengenská dohoda prakticky uplatňovat mezi prvními státy?",
+    "answer": 1995
+  },
+  {
+    "id": 736,
+    "category": "politika",
+    "question": "V kterém roce byla podepsána Maastrichtská smlouva?",
+    "answer": 1992
+  },
+  {
+    "id": 737,
+    "category": "politika",
+    "question": "V kterém roce byla podepsána Lisabonská smlouva?",
+    "answer": 2007
+  },
+  {
+    "id": 738,
+    "category": "politika",
+    "question": "V kterém roce vstoupila Lisabonská smlouva v platnost?",
+    "answer": 2009
+  },
+  {
+    "id": 739,
+    "category": "politika",
+    "question": "V kterém roce byla přijata Ústava České republiky?",
+    "answer": 1992
+  },
+  {
+    "id": 740,
+    "category": "politika",
+    "question": "Na kolik let je v České republice volen prezident republiky?",
+    "answer": 5
+  },
+  {
+    "id": 741,
+    "category": "politika",
+    "question": "Na kolik let jsou jmenováni soudci Ústavního soudu České republiky?",
+    "answer": 10
+  },
+  {
+    "id": 742,
+    "category": "politika",
+    "question": "Kolik soudců má podle české ústavy Ústavní soud?",
+    "answer": 15
+  },
+  {
+    "id": 743,
+    "category": "politika",
+    "question": "Od kolika let může být občan České republiky zvolen poslancem?",
+    "answer": 21
+  },
+  {
+    "id": 744,
+    "category": "politika",
+    "question": "Od kolika let může být občan České republiky zvolen senátorem?",
+    "answer": 40
+  },
+  {
+    "id": 745,
+    "category": "politika",
+    "question": "Od kolika let může občan České republiky volit ve volbách do Poslanecké sněmovny?",
+    "answer": 18
+  },
+  {
+    "id": 746,
+    "category": "politika",
+    "question": "Kolik dodatků má Ústava Spojených států amerických?",
+    "answer": 27
+  },
+  {
+    "id": 747,
+    "category": "politika",
+    "question": "Kolik dodatků tvoří americkou Listinu práv známou jako Bill of Rights?",
+    "answer": 10
+  }
+]
