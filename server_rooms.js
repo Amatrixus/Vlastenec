@@ -136,6 +136,71 @@ function pickRandom(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
+// Otázky se v rámci jedné místnosti losují jako zamíchaný balíček:
+// dokud se nevyčerpá aktuální pool, žádná stejná položka se nevylosuje znovu.
+// Po vyčerpání se pool znovu zamíchá. Pokud má pool více než jednu otázku,
+// pojistka zároveň zabrání okamžitému zopakování poslední otázky na hraně cyklu.
+const questionBagObjectIds = new WeakMap();
+let nextQuestionBagObjectId = 1;
+
+function questionBagObjectId(question) {
+  if (!question || (typeof question !== 'object' && typeof question !== 'function')) return 0;
+  if (!questionBagObjectIds.has(question)) {
+    questionBagObjectIds.set(question, nextQuestionBagObjectId++);
+  }
+  return questionBagObjectIds.get(question);
+}
+
+function questionPoolSignature(pool) {
+  return pool
+    .map(questionBagObjectId)
+    .sort((a, b) => a - b)
+    .join(',');
+}
+
+function shuffleQuestionPool(pool) {
+  const shuffled = [...pool];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+}
+
+function drawQuestionFromBag(room, pool, bagKey) {
+  if (!room || !Array.isArray(pool) || pool.length === 0) return undefined;
+
+  room.questionBags = room.questionBags || {};
+  const signature = questionPoolSignature(pool);
+  let bag = room.questionBags[bagKey];
+
+  if (!bag || bag.signature !== signature || !Array.isArray(bag.remaining) || bag.remaining.length === 0) {
+    const lastQuestion = bag?.lastQuestion || null;
+    const remaining = shuffleQuestionPool(pool);
+
+    // drawQuestionFromBag odebírá z konce pole. Na novém cyklu tedy
+    // zajistíme, aby poslední položka nebyla totožná s právě použitou otázkou.
+    if (lastQuestion && remaining.length > 1 && remaining[remaining.length - 1] === lastQuestion) {
+      const swapIndex = remaining.findIndex(question => question !== lastQuestion);
+      if (swapIndex >= 0) {
+        [remaining[swapIndex], remaining[remaining.length - 1]] =
+          [remaining[remaining.length - 1], remaining[swapIndex]];
+      }
+    }
+
+    bag = {
+      signature,
+      remaining,
+      lastQuestion
+    };
+    room.questionBags[bagKey] = bag;
+  }
+
+  const question = bag.remaining.pop();
+  bag.lastQuestion = question;
+  return question;
+}
+
 
 
 
@@ -333,6 +398,7 @@ function makeEmptyRoom(roomId, mode = 'random') {
     profileWriteChain: Promise.resolve(),
     profileQuestionWins: { 1: 0, 2: 0, 3: 0 },
     profileTerritoriesGained: { 1: 0, 2: 0, 3: 0 },
+    questionBags: {},        // per-room shuffle bag pro MC a numerické otázky
 
 
      // 🔽 NOVÉ:
@@ -1430,7 +1496,7 @@ function runMultipleChoice(roomId, participatingPlayers = [1, 2, 3]) {
     if (!room) return resolve([]);
 
     const pool = filterQuestionsByRoomCategories(questions, room);
-    const question = pickRandom(pool);
+    const question = drawQuestionFromBag(room, pool, 'choice');
     const questionEventBase = `q-${randomUUID()}`;
     console.log(`🧠 MC otázka z kategorie: ${question.category}`);
 
@@ -1570,7 +1636,7 @@ function runNumericQuestionForTwo(roomId, [player1, player2]) {
     if (!room) return resolve(null);
 
     const npool = filterQuestionsByRoomCategories(numericQuestions, room);
-    const nq = pickRandom(npool);
+    const nq = drawQuestionFromBag(room, npool, 'numeric');
     const questionEventBase = `q-${randomUUID()}`;
     console.log(`🔢 Numeric otázka z kategorie: ${nq.category}`);
 
@@ -1710,7 +1776,7 @@ function runNumericQuestionForThree(roomId) {
     if (!room) return resolve(null);
 
     const npool = filterQuestionsByRoomCategories(numericQuestions, room);
-    const nq = pickRandom(npool);
+    const nq = drawQuestionFromBag(room, npool, 'numeric');
     const questionEventBase = `q-${randomUUID()}`;
     console.log(`🔢 Numeric (3p) otázka z kategorie: ${nq.category}`);
 
