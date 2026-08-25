@@ -18,12 +18,12 @@
   </script>
   <link rel="stylesheet" href="mobile-web.css?v=mobile-web-v1" />
 
-  <style id="inquizitor-intro-play-v1">
+  <style id="inquizitor-intro-play-v2">
     /* Inquizitor intro CTA — ceremonial, restrained, and deliberately not a pill button. */
     #intro-play.intro-play {
       position: relative;
       isolation: isolate;
-      width: 206px;
+      width: 100%;
       min-height: 58px;
       padding: 0 24px;
       overflow: hidden;
@@ -119,9 +119,14 @@
       color: #17100b;
     }
 
+    /* Match the full width of the three-step strip above. */
+    .intro-actions {
+      width: 100%;
+    }
+
     @media (max-width: 620px) {
       #intro-play.intro-play {
-        width: 184px;
+        width: 100%;
         min-height: 52px;
         font-size: 10px;
       }
