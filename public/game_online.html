@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <title>TRIUMVICTOR</title>
+  <title>INQUIZITOR</title>
   <!-- V55 DESTROYED BASE RING PERSISTENCE -->
   <link rel="stylesheet" href="mainstyle.css?v=numeric-keypad-v2">
   <link rel="stylesheet" href="mobile-game.css?v=v53-mobile-tower-question-strip">
@@ -74,7 +74,7 @@
   </script>
 
   <style>
-    /* === TRIUMVICTOR: globální přepínač zvuku ve hře === */
+    /* === INQUIZITOR: globální přepínač zvuku ve hře === */
     #soundtoggle {
       position: fixed;
       display: none;
@@ -618,19 +618,19 @@
 
     // --- Jediná inicializace socketu ---
     const socket = io({ autoConnect: false });
-    console.log('🧪 TRIUMVICTOR CLIENT: league-matchmaking-v1');
-    console.log('🧪 TRIUMVICTOR FIX: endgame-names-v1');
-    console.log('🧪 TRIUMVICTOR CLIENT: endgame-stats-ui-v1');
-    console.log('🧪 TRIUMVICTOR FIX: in-game-sound-toggle-v1');
-    console.log('🧪 TRIUMVICTOR FIX: authoritative-refresh-v1');
-    console.log('🧪 TRIUMVICTOR FIX: responsive-game-clocks-v2-original-look');
-    console.log('🧪 TRIUMVICTOR FIX: countdown-zero-responsive-fonts-v1');
-    console.log('🧪 TRIUMVICTOR FIX: tablet-lobby-fit-v3-chrome');
-    console.log('🧪 TRIUMVICTOR FIX: tablet-lobby-fit-v4-chrome');
-    console.log('🧪 TRIUMVICTOR FIX: base-score-on-settle-v1');
-    console.log('🧪 TRIUMVICTOR FIX: start-sequence-sync-v1');
-    console.log('🧪 TRIUMVICTOR FIX: start-sequence-stale-snapshot-v1');
-    console.log('🧪 TRIUMVICTOR FIX: mobile-game-ui-v5-css-file');
+    console.log('🧪 INQUIZITOR CLIENT: league-matchmaking-v1');
+    console.log('🧪 INQUIZITOR FIX: endgame-names-v1');
+    console.log('🧪 INQUIZITOR CLIENT: endgame-stats-ui-v1');
+    console.log('🧪 INQUIZITOR FIX: in-game-sound-toggle-v1');
+    console.log('🧪 INQUIZITOR FIX: authoritative-refresh-v1');
+    console.log('🧪 INQUIZITOR FIX: responsive-game-clocks-v2-original-look');
+    console.log('🧪 INQUIZITOR FIX: countdown-zero-responsive-fonts-v1');
+    console.log('🧪 INQUIZITOR FIX: tablet-lobby-fit-v3-chrome');
+    console.log('🧪 INQUIZITOR FIX: tablet-lobby-fit-v4-chrome');
+    console.log('🧪 INQUIZITOR FIX: base-score-on-settle-v1');
+    console.log('🧪 INQUIZITOR FIX: start-sequence-sync-v1');
+    console.log('🧪 INQUIZITOR FIX: start-sequence-stale-snapshot-v1');
+    console.log('🧪 INQUIZITOR FIX: mobile-game-ui-v5-css-file');
 
     // --- Profil hráče: lokální statistiky od této verze ---
     const profileStore = window.VlastenecProfileStore || null;
@@ -2675,7 +2675,7 @@ if (regionValues && typeof regionValues === 'object') {
         <section id="random_hub" class="random-hub" aria-label="Náhodní soupeři">
           <header class="random-hub-head">
             <div class="random-hub-brand">
-              <img src="logo.svg" alt="Triumvictor" class="lobby-logo">
+              <img src="logo.svg" alt="Inquizitor" class="lobby-logo">
               <div>
                 <div class="lobby-eyebrow">NÁHODNÍ SOUPEŘI</div>
                 <h1>Jak chcete hrát?</h1>
@@ -2731,7 +2731,7 @@ if (regionValues && typeof regionValues === 'object') {
         <div id="lobby_window" class="lobby-shell lobby-shell-v2">
           <header class="lobby-head lobby-head-v2">
             <div class="lobby-brand-block">
-              <img src="logo.svg" alt="Triumvictor" class="lobby-logo">
+              <img src="logo.svg" alt="Inquizitor" class="lobby-logo">
               <div>
                 <div id="lobby_mode_eyebrow" class="lobby-eyebrow">HRA S PŘÁTELI</div>
                 <div id="lobby_mode_title" class="lobby-title">Připravte bojiště</div>
@@ -3058,7 +3058,7 @@ if (regionValues && typeof regionValues === 'object') {
               y="308.05264"
               id="tspan2314"><tspan
                 style="font-family:'Copperplate Gothic Light';-inkscape-font-specification:'Copperplate Gothic Light, '"
-                id="tspan2312">TRIUMVICTOR</tspan></tspan></text>
+                id="tspan2312">INQUIZITOR</tspan></tspan></text>
        </g>
      </svg>
 
@@ -4442,7 +4442,7 @@ if (regionValues && typeof regionValues === 'object') {
           const url = buildFriendsInviteUrl();
           if (navigator.share) {
             try {
-              await navigator.share({ title: 'Triumvictor – hra s přáteli', text: 'Připoj se do mé místnosti v Triumvictoru.', url });
+              await navigator.share({ title: 'Inquizitor – hra s přáteli', text: 'Připoj se do mé místnosti ve hře Inquizitor.', url });
               return;
             } catch (err) {
               if (err?.name === 'AbortError') return;
@@ -4957,7 +4957,7 @@ if (regionValues && typeof regionValues === 'object') {
         function appendVictoryShareOptions(resultBox, winningEntry) {
             if (!resultBox || !winningEntry) return;
             const score = Number(winningEntry.score) || 0;
-            const shareText = `Právě jsem vyhrál v Triumvictoru se ${score} body. Kdo mě vyzve? 🏆`;
+            const shareText = `Právě jsem vyhrál ve hře Inquizitor se ${score} body. Kdo mě vyzve? 🏆`;
             const shareUrl = new URL('homepage.html', window.location.href).href;
             const fullText = `${shareText} ${shareUrl}`;
 
@@ -4985,8 +4985,8 @@ if (regionValues && typeof regionValues === 'object') {
             };
 
             makeButton('Facebook', 'facebook', () => {
-                const url = 'https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(shareUrl) + '&hashtag=' + encodeURIComponent('#Triumvictor') + '&quote=' + encodeURIComponent(shareText);
-                window.open(url, 'triumvictor-facebook-share', 'width=720,height=680,resizable=yes,scrollbars=yes');
+                const url = 'https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(shareUrl) + '&hashtag=' + encodeURIComponent('#Inquizitor') + '&quote=' + encodeURIComponent(shareText);
+                window.open(url, 'inquizitor-facebook-share', 'width=720,height=680,resizable=yes,scrollbars=yes');
                 copyVictoryShareText(shareText).then(copied => {
                     hint.textContent = copied ? 'Text výsledku je zkopírovaný – na Facebooku ho můžeš vložit.' : 'Facebook je otevřený. Přidej k odkazu svůj vítězný výsledek.';
                     hint.classList.add('visible');
@@ -5004,7 +5004,7 @@ if (regionValues && typeof regionValues === 'object') {
             makeButton('Další…', 'native', async () => {
                 if (navigator.share) {
                     try {
-                        await navigator.share({ title: 'Triumvictor – vítězství', text: shareText, url: shareUrl });
+                        await navigator.share({ title: 'Inquizitor – vítězství', text: shareText, url: shareUrl });
                         return;
                     } catch (err) {
                         if (err?.name === 'AbortError') return;
@@ -5630,7 +5630,7 @@ if (regionValues && typeof regionValues === 'object') {
         }
 
         // ============================================================
-        // TRIUMVICTOR — MAP RENDERER V2.4 / V41 (default; ?mapv2=0 forces legacy)
+        // INQUIZITOR — MAP RENDERER V2.4 / V41 (default; ?mapv2=0 forces legacy)
         //
         // Rendering only. Server/game/selection state is untouched.
         //
@@ -6450,7 +6450,7 @@ if (regionValues && typeof regionValues === 'object') {
             return Promise.allSettled(jobs);
         }
 
-        console.log('🧪 TRIUMVICTOR FIX: region-color-wave-v5-exact-color-numeric-flow');
+        console.log('🧪 INQUIZITOR FIX: region-color-wave-v5-exact-color-numeric-flow');
 
         // Colorize bases
         // Úvodní základny používají stejnou vlnu jako pozdější rozšiřování.
@@ -7413,7 +7413,7 @@ function startCountdownTile(secondsAmount) {
 
 
                 // ============================================================
-                // TRIUMVICTOR — TOWER MOTION V54
+                // INQUIZITOR — TOWER MOTION V54
                 // FLIP: layout changes only once; the visible movement itself is
                 // compositor-only transform animation on every platform.
                 // ============================================================
@@ -10759,7 +10759,7 @@ function showMultipleChoiceResults(correctIndex, answersByPlayer, options, uiTok
 
 
 
-console.log("🧪 TRIUMVICTOR FIX: battle-ui-sequencer-v1");
+console.log("🧪 INQUIZITOR FIX: battle-ui-sequencer-v1");
 
 let myNumericAnswer = 0;
 let numericStartTime = 0;
@@ -12080,9 +12080,9 @@ function showNumericResultsForThree(correctAnswer, answers, uiToken, uiStage = "
         </script>
 
 
-	<script>console.log("🧪 TRIUMVICTOR FIX: numeric-timeout-input-v1");</script>
-    <script>console.log('🧪 TRIUMVICTOR FIX: chat-turn-stick-v1');</script>
-    <script>console.log('🧪 TRIUMVICTOR FIX: tablet-smaller-map-v24');</script>
+	<script>console.log("🧪 INQUIZITOR FIX: numeric-timeout-input-v1");</script>
+    <script>console.log('🧪 INQUIZITOR FIX: chat-turn-stick-v1');</script>
+    <script>console.log('🧪 INQUIZITOR FIX: tablet-smaller-map-v24');</script>
     <script>
     (() => {
         // Tablet keeps the normal desktop gameplay. This class is ONLY a device
