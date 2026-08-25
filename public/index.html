@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#1a100b" />
-  <title>VLASTENEC</title>
+  <title>INQUIZITOR</title>
   <link rel="stylesheet" href="home.css" />
   <script>
     (() => {
@@ -17,6 +17,125 @@
     })();
   </script>
   <link rel="stylesheet" href="mobile-web.css?v=mobile-web-v1" />
+
+  <style id="inquizitor-intro-play-v1">
+    /* Inquizitor intro CTA — ceremonial, restrained, and deliberately not a pill button. */
+    #intro-play.intro-play {
+      position: relative;
+      isolation: isolate;
+      width: 206px;
+      min-height: 58px;
+      padding: 0 24px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 148, 31, .72);
+      border-radius: 2px;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.025), rgba(0,0,0,.12)),
+        rgba(20, 13, 9, .64);
+      color: rgba(255,255,255,.96);
+      box-shadow:
+        inset 0 0 0 1px rgba(255,148,31,.035),
+        0 12px 30px rgba(0,0,0,.16);
+      font: inherit;
+      font-size: 11px;
+      font-weight: 850;
+      line-height: 1;
+      letter-spacing: .26em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transform: translateZ(0);
+      transition:
+        border-color .22s ease,
+        box-shadow .22s ease,
+        color .22s ease,
+        transform .22s ease;
+    }
+
+    #intro-play.intro-play::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      background: #ff941f;
+      transform: scaleX(0);
+      transform-origin: left center;
+      transition: transform .30s cubic-bezier(.2,.75,.25,1);
+    }
+
+    #intro-play.intro-play::after {
+      content: "";
+      position: absolute;
+      left: 18px;
+      right: 18px;
+      bottom: 7px;
+      height: 1px;
+      z-index: 1;
+      background: linear-gradient(90deg, transparent, rgba(255,148,31,.5), transparent);
+      opacity: .58;
+      transition: opacity .22s ease, background .22s ease;
+    }
+
+    #intro-play.intro-play > span {
+      position: relative;
+      z-index: 2;
+      display: inline-block;
+      /* Visually center tracked text despite the final letter-spacing. */
+      margin-left: .26em;
+      transition: transform .22s ease;
+    }
+
+    #intro-play.intro-play:hover {
+      border-color: #ff941f;
+      color: #17100b;
+      box-shadow:
+        0 0 0 1px rgba(255,148,31,.08),
+        0 14px 34px rgba(0,0,0,.22),
+        0 0 22px rgba(255,148,31,.09);
+      transform: translateY(-1px);
+    }
+
+    #intro-play.intro-play:hover::before,
+    #intro-play.intro-play:focus-visible::before {
+      transform: scaleX(1);
+    }
+
+    #intro-play.intro-play:hover::after,
+    #intro-play.intro-play:focus-visible::after {
+      opacity: .22;
+      background: linear-gradient(90deg, transparent, rgba(23,16,11,.65), transparent);
+    }
+
+    #intro-play.intro-play:hover > span {
+      transform: translateX(2px);
+    }
+
+    #intro-play.intro-play:active {
+      transform: translateY(0);
+    }
+
+    #intro-play.intro-play:focus-visible {
+      outline: 2px solid rgba(255,148,31,.48);
+      outline-offset: 4px;
+      color: #17100b;
+    }
+
+    @media (max-width: 620px) {
+      #intro-play.intro-play {
+        width: 184px;
+        min-height: 52px;
+        font-size: 10px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      #intro-play.intro-play,
+      #intro-play.intro-play::before,
+      #intro-play.intro-play::after,
+      #intro-play.intro-play > span {
+        transition: none;
+      }
+    }
+  </style>
 </head>
 <body>
   <div class="intro-backdrop" aria-hidden="true">
@@ -32,7 +151,7 @@
         <div class="intro-copy">
           <div class="intro-kicker">OVLÁDNI ČESKO</div>
 
-          <img class="intro-logo" src="logo.svg" alt="Vlastenec" id="intro-title" />
+          <img class="intro-logo" src="logo.svg" alt="Inquizitor" id="intro-title" />
 
           <h1>Území se nezískává silou.<br><span>Získává se znalostmi.</span></h1>
 
@@ -57,7 +176,7 @@
           </div>
 
           <div class="intro-actions">
-            <button id="intro-play" class="intro-play" type="button">HRÁT</button>
+            <button id="intro-play" class="intro-play" type="button"><span>HRÁT</span></button>
           </div>
         </div>
 
