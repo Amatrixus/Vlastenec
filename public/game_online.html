@@ -289,6 +289,123 @@
   </script>
 
 
+  <style id="inq-desktop-question-fit-v1">
+    /* Desktop safeguard for unusually long question text.
+       The legacy stylesheet uses line-height:300%, which is fine for a single
+       line but wastes most of the fixed question strip once the text wraps. */
+    @media (min-width: 900px) and (hover: hover) and (pointer: fine) {
+      #qtext,
+      #numerical_qtext,
+      #numerical_qtext2 {
+        box-sizing: border-box !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        padding-left: clamp(28px, 4vw, 72px) !important;
+        padding-right: clamp(28px, 4vw, 72px) !important;
+        line-height: 1.2 !important;
+        white-space: normal !important;
+        overflow-wrap: anywhere;
+        word-break: normal;
+        text-wrap: balance;
+        overflow: hidden;
+      }
+    }
+  </style>
+
+  <script id="inq-desktop-question-fit-script-v1">
+  (() => {
+    const IDS = ['qtext', 'numerical_qtext', 'numerical_qtext2'];
+    const desktopQuestionLayout = window.matchMedia('(min-width: 900px) and (hover: hover) and (pointer: fine)');
+    const scheduled = new WeakMap();
+
+    function fits(el) {
+      return el.scrollHeight <= el.clientHeight + 1 && el.scrollWidth <= el.clientWidth + 1;
+    }
+
+    function fitQuestionText(el) {
+      if (!el) return;
+
+      // Mobile/tablet layouts already have their own typography rules.
+      if (!desktopQuestionLayout.matches) {
+        el.style.removeProperty('font-size');
+        return;
+      }
+
+      const text = (el.textContent || '').trim();
+      if (!text || el.clientWidth < 80 || el.clientHeight < 40) {
+        el.style.removeProperty('font-size');
+        return;
+      }
+
+      // Always retry from the normal desktop size; shrink only if it actually overflows.
+      el.style.removeProperty('font-size');
+      let size = parseFloat(getComputedStyle(el).fontSize) || 40;
+      const minimum = Math.max(18, Math.round(size * 0.58));
+
+      while (size > minimum && !fits(el)) {
+        size = Math.max(minimum, size - 1);
+        el.style.fontSize = `${size}px`;
+      }
+    }
+
+    function scheduleFit(el) {
+      if (!el) return;
+      const previous = scheduled.get(el);
+      if (previous) cancelAnimationFrame(previous);
+      const frame = requestAnimationFrame(() => {
+        scheduled.delete(el);
+        // One extra frame lets display/width transitions settle first.
+        requestAnimationFrame(() => fitQuestionText(el));
+      });
+      scheduled.set(el, frame);
+    }
+
+    function fitAll() {
+      IDS.forEach(id => scheduleFit(document.getElementById(id)));
+    }
+
+    function init() {
+      const elements = IDS.map(id => document.getElementById(id)).filter(Boolean);
+      if (!elements.length) return;
+
+      const textObserver = new MutationObserver(mutations => {
+        const touched = new Set();
+        for (const mutation of mutations) {
+          const target = mutation.target.nodeType === Node.TEXT_NODE ? mutation.target.parentElement : mutation.target;
+          const box = target?.closest?.('#qtext, #numerical_qtext, #numerical_qtext2');
+          if (box) touched.add(box);
+        }
+        touched.forEach(scheduleFit);
+      });
+
+      elements.forEach(el => textObserver.observe(el, {
+        subtree: true,
+        childList: true,
+        characterData: true
+      }));
+
+      if ('ResizeObserver' in window) {
+        const resizeObserver = new ResizeObserver(entries => {
+          entries.forEach(entry => scheduleFit(entry.target));
+        });
+        elements.forEach(el => resizeObserver.observe(el));
+      }
+
+      window.addEventListener('resize', fitAll, { passive: true });
+      desktopQuestionLayout.addEventListener?.('change', fitAll);
+      document.fonts?.ready?.then(fitAll).catch(() => {});
+      fitAll();
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', init, { once: true });
+    } else {
+      init();
+    }
+  })();
+  </script>
+
   <style id="vl-endgame-mobile-share-v63">
     .endgame-victory-share { margin-top:14px; padding:13px 14px; display:grid; grid-template-columns:minmax(0,1fr) minmax(250px,auto); gap:12px; align-items:center; box-sizing:border-box; background:linear-gradient(100deg,rgba(255,148,31,.12),rgba(255,255,255,.025)); border:1px solid rgba(255,148,31,.26); border-radius:12px; }
     .endgame-share-copy{min-width:0}.endgame-share-copy strong{display:block;color:#fff;font-size:.8125rem;line-height:1.25;font-weight:850}.endgame-share-copy span{display:block;margin-top:3px;color:rgba(255,255,255,.44);font-size:.5625rem;line-height:1.4}
