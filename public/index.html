@@ -18,12 +18,12 @@
   </script>
   <link rel="stylesheet" href="mobile-web.css?v=mobile-web-v1" />
 
-  <style id="inquizitor-intro-play-v2">
+  <style id="inquizitor-intro-play-v3">
     /* Inquizitor intro CTA — ceremonial, restrained, and deliberately not a pill button. */
     #intro-play.intro-play {
       position: relative;
       isolation: isolate;
-      width: 100%;
+      width: calc(100% / 3);
       min-height: 58px;
       padding: 0 24px;
       overflow: hidden;
@@ -119,9 +119,11 @@
       color: #17100b;
     }
 
-    /* Match the full width of the three-step strip above. */
+    /* Keep the CTA in the third column, directly under “Ovládni mapu”. */
     .intro-actions {
       width: 100%;
+      display: flex;
+      justify-content: flex-end;
     }
 
     @media (max-width: 620px) {
