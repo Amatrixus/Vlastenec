@@ -1,0 +1,169 @@
+/* =========================================================
+   INQUIZITOR — portal branding test v1
+   Uses the standalone emblem for compact identity and the
+   custom wordmark for the name. Deliberately restrained:
+   branding lives mainly in the header, not all over the UI.
+   ========================================================= */
+
+.portal-brand.inquizitor-lockup,
+.league-brand.inquizitor-lockup {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  text-decoration: none;
+}
+
+.portal-brand.inquizitor-lockup .iq-symbol,
+.league-brand.inquizitor-lockup .iq-symbol {
+  width: 34px !important;
+  height: 34px !important;
+  max-width: 34px !important;
+  max-height: 34px !important;
+  flex: 0 0 34px;
+  object-fit: contain;
+  filter: none !important;
+  opacity: .96;
+  transform: translateZ(0);
+  transition: transform .2s ease, opacity .2s ease;
+}
+
+.portal-brand.inquizitor-lockup .iq-wordmark,
+.league-brand.inquizitor-lockup .iq-wordmark {
+  width: 154px !important;
+  height: auto !important;
+  max-width: 154px !important;
+  max-height: 42px !important;
+  flex: 0 1 auto;
+  object-fit: contain;
+  object-position: left center;
+  filter: none !important;
+  opacity: .98;
+}
+
+.portal-brand.inquizitor-lockup:hover .iq-symbol,
+.league-brand.inquizitor-lockup:hover .iq-symbol {
+  transform: translateY(-1px);
+  opacity: 1;
+}
+
+.portal-brand.inquizitor-lockup .portal-brand-divider {
+  margin-left: 2px;
+}
+
+/* League gets a short mode badge instead of repeating the full name. */
+.league-brand.inquizitor-lockup .iq-league-label {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 0 8px;
+  border: 1px solid rgba(255, 148, 31, .22);
+  border-radius: 2px;
+  background: rgba(255, 148, 31, .055);
+  color: rgba(255, 183, 105, .78);
+  font-size: 9px;
+  font-weight: 850;
+  letter-spacing: .18em;
+  line-height: 1;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* Intro: the wordmark is meant to be seen large enough for its sharp details. */
+.intro-logo.iq-intro-wordmark {
+  width: min(520px, 100%) !important;
+  height: auto !important;
+  max-height: 150px !important;
+  object-fit: contain;
+  object-position: left center;
+  filter: none !important;
+}
+
+.intro-kicker.iq-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.intro-kicker.iq-kicker .iq-kicker-symbol {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  opacity: .82;
+  filter: none;
+}
+
+@media (max-width: 1050px) {
+  .portal-brand.inquizitor-lockup .iq-symbol {
+    width: 31px !important;
+    height: 31px !important;
+    max-width: 31px !important;
+    max-height: 31px !important;
+    flex-basis: 31px;
+  }
+
+  .portal-brand.inquizitor-lockup .iq-wordmark {
+    width: 142px !important;
+    max-width: 142px !important;
+  }
+}
+
+@media (max-width: 700px) {
+  .portal-brand.inquizitor-lockup,
+  .league-brand.inquizitor-lockup {
+    gap: 8px;
+  }
+
+  .portal-brand.inquizitor-lockup .iq-symbol,
+  .league-brand.inquizitor-lockup .iq-symbol {
+    width: 28px !important;
+    height: 28px !important;
+    max-width: 28px !important;
+    max-height: 28px !important;
+    flex-basis: 28px;
+  }
+
+  .portal-brand.inquizitor-lockup .iq-wordmark,
+  .league-brand.inquizitor-lockup .iq-wordmark {
+    width: 124px !important;
+    max-width: 124px !important;
+    max-height: 36px !important;
+  }
+
+  .league-brand.inquizitor-lockup .iq-league-label {
+    min-height: 21px;
+    padding: 0 6px;
+    font-size: 8px;
+  }
+
+  .intro-logo.iq-intro-wordmark {
+    width: min(390px, 100%) !important;
+  }
+
+  .intro-kicker.iq-kicker .iq-kicker-symbol {
+    width: 21px;
+    height: 21px;
+  }
+}
+
+@media (max-width: 430px) {
+  .portal-brand.inquizitor-lockup .iq-symbol {
+    width: 25px !important;
+    height: 25px !important;
+    max-width: 25px !important;
+    max-height: 25px !important;
+    flex-basis: 25px;
+  }
+
+  .portal-brand.inquizitor-lockup .iq-wordmark {
+    width: 108px !important;
+    max-width: 108px !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .portal-brand.inquizitor-lockup .iq-symbol,
+  .league-brand.inquizitor-lockup .iq-symbol {
+    transition: none;
+  }
+}
