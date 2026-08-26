@@ -431,6 +431,63 @@
     @media (max-width:700px) and (max-height:590px){#endgame_results .scoreline{min-height:72px!important;padding:5px 3px!important}.endgame-victory-share{padding:5px 7px}.endgame-share-copy span{display:none}.endgame-share-button{min-height:28px}}
   </style>
 
+
+  <style id="inquizitor-lobby-brand-v1">
+    /* New Inquizitor lockup is used only in pre-game lobby headers. */
+    .inquizitor-lobby-home {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      flex: 0 0 auto;
+      min-width: 0;
+      padding: 2px 3px 2px 1px;
+      border-radius: 7px;
+      text-decoration: none;
+      opacity: .96;
+      transition: opacity .18s ease, transform .18s ease;
+    }
+    .inquizitor-lobby-home:hover {
+      opacity: 1;
+      transform: translateY(-1px);
+    }
+    .inquizitor-lobby-home:focus-visible {
+      outline: 1px solid rgba(255,148,31,.72);
+      outline-offset: 5px;
+    }
+    .inquizitor-lobby-mark {
+      display: block;
+      width: 31px;
+      height: 31px;
+      flex: 0 0 auto;
+      object-fit: contain;
+    }
+    .inquizitor-lobby-wordmark {
+      display: block;
+      width: 132px;
+      height: auto;
+      max-height: 34px;
+      flex: 0 0 auto;
+      object-fit: contain;
+    }
+
+    @media (min-width: 700px) and (max-width: 1400px) {
+      .lobby-head-v2 .inquizitor-lobby-home { gap: 7px; }
+      .lobby-head-v2 .inquizitor-lobby-mark { width: 25px; height: 25px; }
+      .lobby-head-v2 .inquizitor-lobby-wordmark { width: 104px; max-height: 27px; }
+    }
+
+    @media (max-width: 900px) {
+      .random-hub-brand .inquizitor-lobby-home { gap: 7px; }
+      .random-hub-brand .inquizitor-lobby-mark { width: 25px; height: 25px; }
+      .random-hub-brand .inquizitor-lobby-wordmark { width: 102px; max-height: 27px; }
+    }
+
+    @media (max-width: 560px) {
+      .inquizitor-lobby-home { gap: 6px; }
+      .inquizitor-lobby-mark { width: 22px !important; height: 22px !important; }
+      .inquizitor-lobby-wordmark { width: 88px !important; max-height: 23px !important; }
+    }
+  </style>
 </head>
 <body>
 
@@ -2792,7 +2849,10 @@ if (regionValues && typeof regionValues === 'object') {
         <section id="random_hub" class="random-hub" aria-label="Náhodní soupeři">
           <header class="random-hub-head">
             <div class="random-hub-brand">
-              <img src="logo.svg" alt="Inquizitor" class="lobby-logo">
+              <a class="inquizitor-lobby-home" href="homepage.html" aria-label="Inquizitor — hlavní stránka">
+                <img src="inquizitor.svg" alt="" class="inquizitor-lobby-mark">
+                <img src="inquizitor2.svg" alt="" class="inquizitor-lobby-wordmark">
+              </a>
               <div>
                 <div class="lobby-eyebrow">NÁHODNÍ SOUPEŘI</div>
                 <h1>Jak chcete hrát?</h1>
@@ -2848,7 +2908,10 @@ if (regionValues && typeof regionValues === 'object') {
         <div id="lobby_window" class="lobby-shell lobby-shell-v2">
           <header class="lobby-head lobby-head-v2">
             <div class="lobby-brand-block">
-              <img src="logo.svg" alt="Inquizitor" class="lobby-logo">
+              <a class="inquizitor-lobby-home" href="homepage.html" aria-label="Inquizitor — hlavní stránka">
+                <img src="inquizitor.svg" alt="" class="inquizitor-lobby-mark">
+                <img src="inquizitor2.svg" alt="" class="inquizitor-lobby-wordmark">
+              </a>
               <div>
                 <div id="lobby_mode_eyebrow" class="lobby-eyebrow">HRA S PŘÁTELI</div>
                 <div id="lobby_mode_title" class="lobby-title">Připravte bojiště</div>
