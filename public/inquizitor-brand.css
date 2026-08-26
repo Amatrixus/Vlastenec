@@ -1,5 +1,5 @@
 /* =========================================================
-   INQUIZITOR — portal branding test v1
+   INQUIZITOR — portal branding test v2
    Uses the standalone emblem for compact identity and the
    custom wordmark for the name. Deliberately restrained:
    branding lives mainly in the header, not all over the UI.
@@ -69,28 +69,33 @@
   white-space: nowrap;
 }
 
-/* Intro: the wordmark is meant to be seen large enough for its sharp details. */
+/* Intro: compact emblem + main wordmark form one calm lockup. */
+.iq-intro-lockup {
+  display: flex;
+  align-items: center;
+  gap: clamp(14px, 1.5vw, 22px);
+  width: min(610px, 100%);
+}
+
+.iq-intro-lockup .iq-intro-symbol {
+  width: clamp(58px, 5.4vw, 82px);
+  height: clamp(58px, 5.4vw, 82px);
+  flex: 0 0 auto;
+  object-fit: contain;
+  filter: none;
+  opacity: .94;
+}
+
 .intro-logo.iq-intro-wordmark {
-  width: min(520px, 100%) !important;
+  width: min(500px, 100%) !important;
   height: auto !important;
   max-height: 150px !important;
+  min-width: 0;
+  flex: 1 1 auto;
   object-fit: contain;
   object-position: left center;
   filter: none !important;
-}
-
-.intro-kicker.iq-kicker {
-  display: inline-flex;
-  align-items: center;
-  gap: 9px;
-}
-
-.intro-kicker.iq-kicker .iq-kicker-symbol {
-  width: 24px;
-  height: 24px;
-  object-fit: contain;
-  opacity: .82;
-  filter: none;
+  margin: 0 !important;
 }
 
 @media (max-width: 1050px) {
@@ -136,13 +141,18 @@
     font-size: 8px;
   }
 
-  .intro-logo.iq-intro-wordmark {
-    width: min(390px, 100%) !important;
+  .iq-intro-lockup {
+    gap: 12px;
+    width: 100%;
   }
 
-  .intro-kicker.iq-kicker .iq-kicker-symbol {
-    width: 21px;
-    height: 21px;
+  .iq-intro-lockup .iq-intro-symbol {
+    width: 54px;
+    height: 54px;
+  }
+
+  .intro-logo.iq-intro-wordmark {
+    width: min(390px, 100%) !important;
   }
 }
 
