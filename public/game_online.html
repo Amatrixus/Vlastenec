@@ -1393,16 +1393,50 @@ function applyAuthoritativeSnapshotState(snapshot) {
 }
 
 function renderPendingPinsFromSnapshot(snapshot) {
-  document.querySelectorAll('.pin-marker').forEach(pin => pin.remove());
   const pins = snapshot?.pendingPins || {};
   if (typeof addPinToRegion !== 'function') return;
-  Object.entries(pins).forEach(([seatRaw, regionId]) => {
+
+  const expected = new Map();
+  Object.entries(pins).forEach(([seatRaw, regionIdRaw]) => {
     const seat = Number(seatRaw);
-    const region = document.getElementById(String(regionId || ''));
-    if (region && [1,2,3].includes(seat)) {
-      try { addPinToRegion(region, seat); } catch (e) { DBG('rehydrate pin error', e); }
+    const regionId = String(regionIdRaw || '');
+    if ([1,2,3].includes(seat) && regionId) {
+      expected.set(`${seat}:${regionId}`, { seat, regionId });
     }
   });
+
+  const kept = new Set();
+
+  document.querySelectorAll('.pin-marker').forEach(pin => {
+    const seat = Number(pin.dataset.playerNumber || 0);
+    const regionId = String(pin.dataset.regionId || '');
+    const key = `${seat}:${regionId}`;
+
+    if (!expected.has(key) || kept.has(key)) {
+      pin.remove();
+      return;
+    }
+
+    kept.add(key);
+
+    const region = document.getElementById(regionId);
+    if (region && typeof updatePinPosition === 'function') {
+      try { updatePinPosition(pin, region); } catch (_) {}
+    }
+
+    pin.style.opacity = "1";
+  });
+
+  for (const [key, item] of expected.entries()) {
+    if (kept.has(key)) continue;
+    const region = document.getElementById(item.regionId);
+    if (!region) continue;
+    try {
+      addPinToRegion(region, item.seat, false);
+    } catch (e) {
+      DBG('rehydrate pin error', e);
+    }
+  }
 }
 
 function scheduleAuthoritativeVisualRender(snapshot, attempt = 0) {
@@ -8290,7 +8324,7 @@ function startCountdownTile(secondsAmount) {
 
               
              // ✅ Funkce pro přidání pin.svg mimo SVG na stejnou pozici jako region
-             function addPinToRegion(region, playernumber) {
+             function addPinToRegion(region, playernumber, animate = true) {
                 // ✅ Pokud je `region` string, převedeme ho na DOM element
                 if (typeof region === "string") {
                     region = document.getElementById(region);
@@ -8318,12 +8352,22 @@ function startCountdownTile(secondsAmount) {
 
                 pin.classList.add("pin-marker");
                 pin.dataset.regionId = region.id;
+                pin.dataset.playerNumber = String(playernumber);
 
                 // ✅ Nastavení správného umístění pinu
                 updatePinPosition(pin, region);
 
                 // ✅ Přidání pinu do hlavního kontejneru
                 mapContainer.appendChild(pin);
+
+                // Self-healing/stateSync pouze obnovuje autoritativní vizuální stav.
+                // Takto doplněný pin už znovu neanimujeme.
+                if (!animate) {
+                    pin.style.opacity = "1";
+                    pin.style.animation = "none";
+                    pin.style.transform = "translate(-50%, -50%)";
+                    return pin;
+                }
 
                 // ✅ Vizuální odhalení pinu. Herní pořadí ani claim logiku neměníme.
                 // Na telefonu mohou mobilní prohlížeče při vytížení sloučit více timerů
