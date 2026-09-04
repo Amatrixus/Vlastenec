@@ -8,7 +8,9 @@ const http = require('http');
 const { Server } = require('socket.io');
 const path = require('path');
 const fs = require('fs');
-const { randomUUID } = require('crypto');
+const { randomUUID, timingSafeEqual } = require('crypto');
+const os = require('os');
+const { monitorEventLoopDelay } = require('perf_hooks');
 const db = require('./db');
 const { mountAuthRoutes, sessionUser } = require('./auth');
 const { mountProfileRoutes, recordAuthoritativeQuestion, recordAuthoritativeMatch } = require('./player-profile');
@@ -24,22 +26,259 @@ const {
 
 const app = express();
 app.set('trust proxy', 1);
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PROVOZNÍ DIAGNOSTIKA / CAPACITY MONITORING
+// ─────────────────────────────────────────────────────────────────────────────
+// Nezasahuje do herní logiky. Sbírá jen agregované technické metriky, abychom
+// při hromadném testu poznali, zda je úzké hrdlo síť, Node event loop, CPU/RAM,
+// HTTP špička nebo Socket.IO transport (WebSocket vs. polling).
+const serverDiagnostics = {
+  startedAt: Date.now(),
+  socketConnectionsTotal: 0,
+  socketDisconnectsTotal: 0,
+  socketConnectionErrorsTotal: 0,
+  socketUpgradesTotal: 0,
+  socketInitialTransports: { websocket: 0, polling: 0, other: 0 },
+  socketDisconnectReasons: {},
+  peakConnectedSockets: 0,
+  httpRequestsTotal: 0,
+  processCpuPct: 0,
+  eventLoop: { meanMs: 0, p95Ms: 0, p99Ms: 0, maxMs: 0 }
+};
+
+// 60 jednosekundových bucketů = poslední minuta provozu bez nekonečného logu.
+const activityBuckets = {
+  http: Array(60).fill(0),
+  socketEvents: Array(60).fill(0),
+  index: 0
+};
+setInterval(() => {
+  activityBuckets.index = (activityBuckets.index + 1) % activityBuckets.http.length;
+  activityBuckets.http[activityBuckets.index] = 0;
+  activityBuckets.socketEvents[activityBuckets.index] = 0;
+}, 1000).unref?.();
+
+// CPU Node procesu za poslední vzorek (100 % ≈ jedno plně vytížené CPU jádro).
+let lastCpuUsage = process.cpuUsage();
+let lastCpuAt = process.hrtime.bigint();
+setInterval(() => {
+  const now = process.hrtime.bigint();
+  const diff = process.cpuUsage(lastCpuUsage);
+  const elapsedMicros = Number(now - lastCpuAt) / 1000;
+  if (elapsedMicros > 0) {
+    serverDiagnostics.processCpuPct = ((diff.user + diff.system) / elapsedMicros) * 100;
+  }
+  lastCpuUsage = process.cpuUsage();
+  lastCpuAt = now;
+}, 2000).unref?.();
+
+// Event-loop lag je pro realtime hru důležitější než samotné CPU.
+const eventLoopHistogram = monitorEventLoopDelay({ resolution: 20 });
+eventLoopHistogram.enable();
+const nsToMs = value => Number.isFinite(Number(value)) ? Number(value) / 1e6 : 0;
+setInterval(() => {
+  serverDiagnostics.eventLoop = {
+    meanMs: nsToMs(eventLoopHistogram.mean),
+    p95Ms: nsToMs(eventLoopHistogram.percentile(95)),
+    p99Ms: nsToMs(eventLoopHistogram.percentile(99)),
+    maxMs: nsToMs(eventLoopHistogram.max)
+  };
+  eventLoopHistogram.reset();
+}, 5000).unref?.();
+
+app.use((req, res, next) => {
+  serverDiagnostics.httpRequestsTotal += 1;
+  activityBuckets.http[activityBuckets.index] += 1;
+  next();
+});
+
 app.use(express.json({ limit: '64kb' }));
 mountAuthRoutes(app);
 mountProfileRoutes(app);
 mountLeagueRoutes(app);
 mountLeaderboardRoutes(app);
-app.use(express.static('public')); // servíruje index.html a další soubory
+
+function safeStatusTokenMatches(supplied) {
+  const configured = String(process.env.SERVER_STATUS_TOKEN || '');
+  const candidate = String(supplied || '');
+  if (!configured || !candidate) return false;
+  const a = Buffer.from(configured);
+  const b = Buffer.from(candidate);
+  return a.length === b.length && timingSafeEqual(a, b);
+}
+
+function buildServerStatusSnapshot() {
+  const socketList = [...io.sockets.sockets.values()];
+  const liveTransports = { websocket: 0, polling: 0, other: 0 };
+  for (const socket of socketList) {
+    const name = socket.conn?.transport?.name || 'other';
+    if (name === 'websocket' || name === 'polling') liveTransports[name] += 1;
+    else liveTransports.other += 1;
+  }
+
+  const allRooms = Object.values(rooms || {}).filter(Boolean);
+  const liveRooms = allRooms.filter(room => room.__closed !== true);
+  const activeGames = liveRooms.filter(room => room.hasStarted && room.phase !== 'end');
+  const lobbyRooms = liveRooms.filter(room => !room.hasStarted);
+  const botControlledSeats = liveRooms.reduce((sum, room) =>
+    sum + [1,2,3].filter(seat => room.seatControllers?.[seat] === 'bot').length, 0);
+
+  const mem = process.memoryUsage();
+  const httpLastMinute = activityBuckets.http.reduce((a, b) => a + b, 0);
+  const socketEventsLastMinute = activityBuckets.socketEvents.reduce((a, b) => a + b, 0);
+
+  return {
+    now: new Date().toISOString(),
+    uptimeSec: Math.round((Date.now() - serverDiagnostics.startedAt) / 1000),
+    sockets: {
+      connected: socketList.length,
+      peakConnected: serverDiagnostics.peakConnectedSockets,
+      connectionsTotal: serverDiagnostics.socketConnectionsTotal,
+      disconnectsTotal: serverDiagnostics.socketDisconnectsTotal,
+      connectionErrorsTotal: serverDiagnostics.socketConnectionErrorsTotal,
+      upgradesTotal: serverDiagnostics.socketUpgradesTotal,
+      liveTransports,
+      initialTransports: { ...serverDiagnostics.socketInitialTransports },
+      disconnectReasons: { ...serverDiagnostics.socketDisconnectReasons },
+      eventsLastMinute: socketEventsLastMinute,
+      eventsPerSecAvg: Number((socketEventsLastMinute / 60).toFixed(2))
+    },
+    rooms: {
+      total: liveRooms.length,
+      activeGames: activeGames.length,
+      lobbies: lobbyRooms.length,
+      botControlledSeats
+    },
+    http: {
+      requestsTotal: serverDiagnostics.httpRequestsTotal,
+      requestsLastMinute: httpLastMinute,
+      requestsPerSecAvg: Number((httpLastMinute / 60).toFixed(2)),
+      peakRequestsInOneSecLastMinute: Math.max(...activityBuckets.http)
+    },
+    node: {
+      pid: process.pid,
+      version: process.version,
+      cpuPct: Number(serverDiagnostics.processCpuPct.toFixed(1)),
+      rssMb: Number((mem.rss / 1024 / 1024).toFixed(1)),
+      heapUsedMb: Number((mem.heapUsed / 1024 / 1024).toFixed(1)),
+      heapTotalMb: Number((mem.heapTotal / 1024 / 1024).toFixed(1)),
+      eventLoop: {
+        meanMs: Number(serverDiagnostics.eventLoop.meanMs.toFixed(1)),
+        p95Ms: Number(serverDiagnostics.eventLoop.p95Ms.toFixed(1)),
+        p99Ms: Number(serverDiagnostics.eventLoop.p99Ms.toFixed(1)),
+        maxMs: Number(serverDiagnostics.eventLoop.maxMs.toFixed(1))
+      }
+    },
+    host: {
+      hostname: os.hostname(),
+      cpus: os.cpus()?.length || null,
+      loadAvg1m: Number((os.loadavg?.()[0] || 0).toFixed(2)),
+      totalMemMb: Number((os.totalmem() / 1024 / 1024).toFixed(0)),
+      freeMemMb: Number((os.freemem() / 1024 / 1024).toFixed(0))
+    }
+  };
+}
+
+app.get('/api/server-status', (req, res) => {
+  const supplied = req.get('x-server-status-token');
+  if (!safeStatusTokenMatches(supplied)) {
+    return res.status(401).json({ error: 'unauthorized' });
+  }
+  res.setHeader('Cache-Control', 'no-store');
+  res.json(buildServerStatusSnapshot());
+});
+
+
+// Bezpečný úklid místností vytvořených přiloženým load testerem.
+app.post('/api/server-status/cleanup-load-test', (req, res) => {
+  const supplied = req.get('x-server-status-token');
+  if (!safeStatusTokenMatches(supplied)) {
+    return res.status(401).json({ error: 'unauthorized' });
+  }
+  let removed = 0;
+  for (const [roomId, room] of Object.entries(rooms || {})) {
+    const hostName = String(room?.players?.[0]?.name || '');
+    if (room?.mode === 'bots' && /^Load_\d{3,}$/.test(hostName)) {
+      if (cleanupRoom(roomId, 'load-test-cleanup')) removed += 1;
+    }
+  }
+  res.setHeader('Cache-Control', 'no-store');
+  res.json({ ok: true, removed });
+});
+
+// Jednoduchý neveřejný dashboard. Token se neposílá v URL; zadá se do formuláře
+// a drží se jen v sessionStorage aktuálního panelu prohlížeče.
+app.get('/server-status', (req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
+  res.type('html').send(`<!doctype html>
+<html lang="cs"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>INQUIZITOR – Server status</title>
+<style>
+body{font-family:system-ui,sans-serif;background:#101318;color:#eef2f7;margin:0;padding:24px}main{max-width:1100px;margin:auto}
+header{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:20px}input,button{font:inherit;padding:10px 12px;border-radius:8px;border:1px solid #475160;background:#171c24;color:#fff}button{cursor:pointer}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px}.card{background:#171c24;border:1px solid #2a3442;border-radius:12px;padding:16px}.big{font-size:30px;font-weight:700}.muted{color:#9eabb9;font-size:13px}.ok{color:#71d991}.warn{color:#ffd166}.bad{color:#ff7b7b}pre{white-space:pre-wrap;overflow:auto;background:#0c0f14;padding:14px;border-radius:10px}
+</style></head><body><main><h1>INQUIZITOR – server status</h1>
+<header><input id="token" type="password" placeholder="SERVER_STATUS_TOKEN" autocomplete="off"><button id="save">Připojit</button><span id="state" class="muted">nezapojeno</span></header>
+<div id="cards" class="grid"></div><h2>Detail</h2><pre id="raw">Zadej diagnostický token.</pre>
+<script>
+const tokenEl=document.getElementById('token'),state=document.getElementById('state'),cards=document.getElementById('cards'),raw=document.getElementById('raw');
+tokenEl.value=sessionStorage.getItem('serverStatusToken')||'';
+document.getElementById('save').onclick=()=>{sessionStorage.setItem('serverStatusToken',tokenEl.value);refresh();};
+function cls(v,warn,bad){return v>=bad?'bad':v>=warn?'warn':'ok'}
+function card(label,value,sub='',c=''){return '<div class="card"><div class="muted">'+label+'</div><div class="big '+c+'">'+value+'</div><div class="muted">'+sub+'</div></div>'}
+async function refresh(){const token=tokenEl.value||sessionStorage.getItem('serverStatusToken')||'';if(!token)return;
+try{const r=await fetch('/api/server-status',{headers:{'X-Server-Status-Token':token},cache:'no-store'});if(!r.ok)throw new Error('HTTP '+r.status);const d=await r.json();state.textContent='živě • '+new Date(d.now).toLocaleTimeString();state.className='ok';
+const poll=d.sockets.liveTransports.polling,conn=d.sockets.connected,lag=d.node.eventLoop.p95Ms,cpu=d.node.cpuPct;
+cards.innerHTML=card('Online sockety',conn,'peak '+d.sockets.peakConnected)+card('Aktivní hry',d.rooms.activeGames,'lobby '+d.rooms.lobbies)+card('WebSocket',d.sockets.liveTransports.websocket,'polling '+poll,poll? 'warn':'ok')+card('Node CPU',cpu+' %','100 % ≈ 1 CPU jádro',cls(cpu,65,90))+card('Event-loop p95',lag+' ms','realtime zdravé ideálně < 50 ms',cls(lag,50,150))+card('RAM (RSS)',d.node.rssMb+' MB','heap '+d.node.heapUsedMb+' MB')+card('HTTP / min',d.http.requestsLastMinute,'peak '+d.http.peakRequestsInOneSecLastMinute+' req/s')+card('Reconnect/disconnect',d.sockets.disconnectsTotal,'conn. errors '+d.sockets.connectionErrorsTotal,d.sockets.connectionErrorsTotal?'warn':'');
+raw.textContent=JSON.stringify(d,null,2);
+}catch(e){state.textContent='chyba: '+e.message;state.className='bad';}}
+setInterval(refresh,2000);if(tokenEl.value)refresh();
+</script></main></body></html>`);
+});
+
+// Cache statických assetů zmenší opakované hromadné načítání po F5. HTML se
+// vždy revaliduje, aby deploy nové verze hry nezůstal viset ve staré cache.
+app.use(express.static('public', {
+  etag: true,
+  lastModified: true,
+  setHeaders(res, filePath) {
+    if (/\.html?$/i.test(filePath)) res.setHeader('Cache-Control', 'no-cache');
+    else res.setHeader('Cache-Control', 'public, max-age=3600');
+  }
+}));
 
 const server = http.createServer(app);
-const io = new Server(server, { cors: { origin: "*" } }); // (později si omezíš)
+const io = new Server(server, {
+  cors: { origin: '*' },
+  transports: ['websocket', 'polling'],
+  allowUpgrades: true,
+  pingInterval: 25000,
+  pingTimeout: 20000,
+  // Realtime herní eventy jsou malé; komprese WebSocket rámců by při špičce
+  // zbytečně spotřebovávala CPU. Socket.IO ji má standardně vypnutou, zde explicitně.
+  perMessageDeflate: false
+});
+
+io.engine.on('connection_error', (err) => {
+  serverDiagnostics.socketConnectionErrorsTotal += 1;
+  console.warn('⚠️ Socket.IO connection_error:', err?.code, err?.message);
+});
 
 // Přibližná online přítomnost: počítáme právě připojené Socket.IO klienty.
 // Jeden člověk s více otevřenými kartami se může započítat vícekrát,
 // ale pro portal je to stabilní a okamžitý údaj bez zásahu do herní logiky.
 const portalOnlineSockets = new Set();
+let portalOnlineBroadcastTimer = null;
 function broadcastPortalOnlineCount() {
-  io.emit('portal:onlineCount', { count: portalOnlineSockets.size });
+  // Při příchodu celé třídy najednou nevysílej N globálních broadcastů za sebou.
+  // Sloučíme změny do jednoho updatu po krátkém okně; herní logiky se to netýká.
+  if (portalOnlineBroadcastTimer) return;
+  portalOnlineBroadcastTimer = setTimeout(() => {
+    portalOnlineBroadcastTimer = null;
+    io.emit('portal:onlineCount', { count: portalOnlineSockets.size });
+  }, 150);
+  portalOnlineBroadcastTimer.unref?.();
 }
 
 
@@ -918,6 +1157,69 @@ function isRoomAlive(roomId) {
   const room = rooms[roomId];
   return !!room && room.__closed !== true;
 }
+
+
+// Dokončené místnosti nesmí zůstávat v RAM navždy. Hráčům necháme dostatečný
+// čas na výsledkovou obrazovku / refresh a pak room bezpečně odstraníme.
+const FINISHED_ROOM_RETENTION_MS = 30 * 60 * 1000;
+const EMPTY_LOBBY_RETENTION_MS = 30 * 60 * 1000;
+
+function cleanupRoom(roomId, reason = 'cleanup') {
+  const room = rooms[roomId];
+  if (!room) return false;
+
+  markRoomClosed(roomId);
+  if (room.cleanupTimer) clearTimeout(room.cleanupTimer);
+  if (room.choiceQuestionTimer) clearTimeout(room.choiceQuestionTimer);
+  if (room.numericQuestionTimer) clearTimeout(room.numericQuestionTimer);
+  if (room.leagueJoinTimer) clearTimeout(room.leagueJoinTimer);
+  if (room.reconnectHolds instanceof Map) {
+    for (const timer of room.reconnectHolds.values()) clearTimeout(timer);
+    room.reconnectHolds.clear();
+  }
+  if (room.leagueDisconnectedTimers instanceof Map) {
+    for (const timer of room.leagueDisconnectedTimers.values()) clearTimeout(timer);
+    room.leagueDisconnectedTimers.clear();
+  }
+  if (room.leagueMatchId) leagueMatchRooms.delete(room.leagueMatchId);
+
+  delete rooms[roomId];
+  console.log(`🧹 ${roomId}: room odstraněna (${reason}).`);
+  return true;
+}
+
+function scheduleFinishedRoomCleanup(roomId, delayMs = FINISHED_ROOM_RETENTION_MS) {
+  const room = rooms[roomId];
+  if (!room) return;
+  if (room.cleanupTimer) clearTimeout(room.cleanupTimer);
+  room.finishedAt = room.finishedAt || Date.now();
+  room.cleanupTimer = setTimeout(() => {
+    const current = rooms[roomId];
+    if (!current || !current.__gameFinished) return;
+    cleanupRoom(roomId, 'finished-retention-expired');
+  }, delayMs);
+  room.cleanupTimer.unref?.();
+}
+
+// Pojistka proti zapomenutým lobby (např. zavřený tab před startem).
+setInterval(() => {
+  const now = Date.now();
+  let publicRandomChanged = false;
+  for (const [roomId, room] of Object.entries(rooms)) {
+    if (!room) continue;
+    if (room.__gameFinished && room.finishedAt && now - room.finishedAt >= FINISHED_ROOM_RETENTION_MS) {
+      if (cleanupRoom(roomId, 'finished-housekeeping')) publicRandomChanged = true;
+      continue;
+    }
+    if (!room.hasStarted && now - Number(room.createdAt || now) >= EMPTY_LOBBY_RETENTION_MS) {
+      const hasConnectedHuman = (room.players || []).some(p => p?.id && io.sockets.sockets.has(p.id));
+      if (!hasConnectedHuman) {
+        if (cleanupRoom(roomId, 'empty-lobby-timeout')) publicRandomChanged = true;
+      }
+    }
+  }
+  if (publicRandomChanged) broadcastPublicRandomRooms();
+}, 5 * 60 * 1000).unref?.();
 
 // Volitelné: místo běžného delay použijeme cancellable delay
 async function delayAlive(roomId, ms) {
@@ -3457,6 +3759,9 @@ async function finishRoomGame(roomId, ordered) {
   io.to(roomId).emit('gameOver', { message:'Hra skončila!', finalScores:ordered, matchStats:buildEndgameMatchStats(room, ordered) });
   if (leagueResult) io.to(roomId).emit('league:rating:result', leagueResult);
   if (profileSummary?.normalRating) io.to(roomId).emit('normal:rating:result', profileSummary.normalRating);
+
+  // Výsledky zůstávají dostupné 30 minut, potom room uvolní RAM.
+  scheduleFinishedRoomCleanup(roomId);
 }
 
 setInterval(() => {
@@ -3466,6 +3771,25 @@ setInterval(() => {
 
 
 io.on('connection', socket => {
+
+  serverDiagnostics.socketConnectionsTotal += 1;
+  const initialTransport = socket.conn?.transport?.name || 'other';
+  if (initialTransport === 'websocket' || initialTransport === 'polling') {
+    serverDiagnostics.socketInitialTransports[initialTransport] += 1;
+  } else {
+    serverDiagnostics.socketInitialTransports.other += 1;
+  }
+  serverDiagnostics.peakConnectedSockets = Math.max(
+    serverDiagnostics.peakConnectedSockets,
+    io.sockets.sockets.size
+  );
+  socket.onAny(() => {
+    activityBuckets.socketEvents[activityBuckets.index] += 1;
+  });
+  socket.conn?.on?.('upgrade', (transport) => {
+    serverDiagnostics.socketUpgradesTotal += 1;
+    console.log(`🔌 ${socket.id}: transport upgrade → ${transport?.name || 'unknown'}`);
+  });
 
   portalOnlineSockets.add(socket.id);
   broadcastPortalOnlineCount();
@@ -3994,7 +4318,12 @@ socket.on("joinRoom", ({ room, settings }) => {
 
 
 
-socket.on("disconnect", async () => {
+socket.on("disconnect", async (reason) => {
+  serverDiagnostics.socketDisconnectsTotal += 1;
+  const disconnectReason = String(reason || 'unknown');
+  serverDiagnostics.socketDisconnectReasons[disconnectReason] =
+    (serverDiagnostics.socketDisconnectReasons[disconnectReason] || 0) + 1;
+
   portalOnlineSockets.delete(socket.id);
   broadcastPortalOnlineCount();
 
