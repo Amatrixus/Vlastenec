@@ -1465,7 +1465,8 @@ function delay(ms) {
 const questionFiles = [
   'general_multiple_choice.json',
   'general_multiple_choice2.json',
-  'general_multiple_choice3.json'
+  'general_multiple_choice3.json',
+  'technology_multiple_choice.json'
 ];
 const questions = questionFiles.flatMap(fileName =>
   JSON.parse(fs.readFileSync(path.join(__dirname, fileName), 'utf8'))
@@ -1476,7 +1477,8 @@ const questions = questionFiles.flatMap(fileName =>
 const numericQuestionFiles = [
   'general_numeric_questions.json',
   'general_numeric_questions2.json',
-  'general_numeric_questions3.json'
+  'general_numeric_questions3.json',
+  'technology_numeric_questions.json'
 ];
 const numericQuestions = numericQuestionFiles.flatMap(fileName =>
   JSON.parse(fs.readFileSync(path.join(__dirname, fileName), 'utf8'))
