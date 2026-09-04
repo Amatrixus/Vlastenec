@@ -253,8 +253,11 @@ const io = new Server(server, {
   cors: { origin: '*' },
   transports: ['websocket', 'polling'],
   allowUpgrades: true,
-  pingInterval: 25000,
-  pingTimeout: 20000,
+  // Školní Wi-Fi / slabší PC mohou na desítky sekund zablokovat hlavní thread
+  // nebo zpozdit heartbeat. Raději držíme spojení déle, než abychom hráče
+  // zbytečně odpojili uprostřed hry.
+  pingInterval: 20000,
+  pingTimeout: 45000,
   // Realtime herní eventy jsou malé; komprese WebSocket rámců by při špičce
   // zbytečně spotřebovávala CPU. Socket.IO ji má standardně vypnutou, zde explicitně.
   perMessageDeflate: false
@@ -599,8 +602,51 @@ function buildRoomSnapshot(room, roomId, forSeat = null) {
 
 
 
+// === SELF-HEAL: pravidelná autoritativní rehydratace rozehrané hry ===
+// Jednorázové Socket.IO eventy (startExpansionRound, playerTurn, otázka...) jsou
+// rychlé a vhodné pro běžný průběh. Ve školní síti ale nechceme, aby jediný
+// opožděný/ztracený event nechal klienta navždy ve staré fázi. Proto server
+// během aktivní hry periodicky pošle každému připojenému hráči úplný snapshot.
+// Klient už stateSync umí bezpečně aplikovat při F5/reconnectu, takže tím pouze
+// znovu používáme existující autoritativní cestu bez změny herních pravidel.
+const SELF_HEAL_SYNC_INTERVAL_MS = 2500;
 
+function pushAuthoritativeStateSync(roomId, reason = 'self-heal') {
+  const room = rooms[roomId];
+  if (!room || room.__closed || !room.hasStarted || room.__gameFinished) return 0;
 
+  let sent = 0;
+  for (let seat = 1; seat <= MAX_PLAYERS_PER_ROOM; seat++) {
+    const rec = room.players?.[seat - 1];
+    if (!rec?.id) continue;
+    const target = io.sockets.sockets.get(rec.id);
+    if (!target?.connected) continue;
+
+    target.emit('stateSync', {
+      myNumber: seat,
+      snapshot: buildRoomSnapshot(room, roomId, seat),
+      syncReason: reason,
+      serverNow: Date.now()
+    });
+    sent += 1;
+  }
+  return sent;
+}
+
+// Settling má vlastní startovní animační bariéru; tam periodický snapshot
+// neposíláme, aby jí zbytečně nekonkuroval. Od první fáze rozšiřování dál už
+// je důležitější schopnost samoopravy než kosmetická přesnost animací.
+setInterval(() => {
+  for (const [roomId, room] of Object.entries(rooms)) {
+    if (!room || room.__closed || !room.hasStarted || room.__gameFinished) continue;
+    if (!['expansion', 'conquest', 'battle'].includes(room.phase)) continue;
+    // Během výsledkových/čistě animačních mezer není co zachraňovat a zbytečný
+    // snapshot by mohl kosmetické UI znovu překreslit. Periodicky synchronizujeme
+    // hlavně okamžiky, kdy hráč může ztraceným eventem přijít o tah nebo otázku.
+    if (!room.activeTurn && !room.activeQuestion) continue;
+    pushAuthoritativeStateSync(roomId, 'periodic');
+  }
+}, SELF_HEAL_SYNC_INTERVAL_MS).unref?.();
 
 
 // nahoru k ostatním helperům
@@ -1897,6 +1943,10 @@ function runMultipleChoice(roomId, participatingPlayers = [1, 2, 3]) {
       });
     });
 
+    // Autoritativní kopie otázky jde hned za jednorázovým eventem. Pokud klient
+    // event přes horší síť mine, stateSync ji umí znovu vykreslit se správným časem.
+    pushAuthoritativeStateSync(roomId, 'choice-question-start');
+
     // BOT odpovědi – přirozenější reakční doba. Jakmile odpoví poslední účastník,
     // stejná cesta jako u numerických otázek otázku okamžitě vyhodnotí.
     try {
@@ -2047,6 +2097,7 @@ function runNumericQuestionForTwo(roomId, [player1, player2]) {
       defenderName: displayName(room, player2, true),
       category: nq.category || null
     });
+    pushAuthoritativeStateSync(roomId, 'numeric-duel-start');
 
     try {
       participants.forEach((seat) => {
@@ -2174,6 +2225,7 @@ function runNumericQuestionForThree(roomId) {
       time:15,
       category:nq.category || null
     });
+    pushAuthoritativeStateSync(roomId, 'numeric-three-start');
 
     try {
       participants.forEach((seat) => {
@@ -2387,6 +2439,9 @@ async function runExpansionPhase(roomId) {
       round,
       order: room.expansionPlan[round - 1]
     });
+    // Funkční pojistka: i když se jednorázový event na klientovi ztratí,
+    // tentýž stav přijde okamžitě také autoritativní cestou stateSync.
+    pushAuthoritativeStateSync(roomId, 'expansion-round-start');
 
     console.log(`🔵 Kolo ${round} začíná – pořadí:`, room.expansionPlan[round - 1]);
 
@@ -2527,6 +2582,7 @@ async function runConquestPhase(roomId) {
       if (playerSocketId) {
         io.to(playerSocketId).emit("availableRegions", { regions: available, timeLeft: 10, round, kind: 'conquest' });
       }
+      pushAuthoritativeStateSync(roomId, 'conquest-turn-start');
 
       console.log("📊 Dostupná pole pro hráče", winner, ":", available);
       console.log("📌 Regions:", room.regions);
@@ -2709,7 +2765,7 @@ async function runBattleClaiming(roomId, attacker) {
   if (attackerSocketId) {
     io.to(attackerSocketId).emit("battleAvailableRegions", { regions: availableEnemyRegions, timeLeft: 10 });
   }
-
+  pushAuthoritativeStateSync(roomId, 'battle-turn-start');
 
 
 
@@ -3144,6 +3200,7 @@ async function runPlayerTurns(roomId, round, order) {
           kind: 'expansion'
         });
       }
+      pushAuthoritativeStateSync(roomId, 'expansion-turn-start');
 
     console.log(`🎯 Hráč ${player} je na tahu (kolo ${round})`);
 
