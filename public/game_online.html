@@ -791,7 +791,14 @@
     const settings = { name: myName, mode: gameMode, cats: catIds, catNames };
 
     // --- Jediná inicializace socketu ---
-    const socket = io({ autoConnect: false });
+    
+const socket = io({
+  autoConnect: false,
+  transports: ['polling', 'websocket'],
+  upgrade: true,
+  rememberUpgrade: true
+});
+
     console.log('🧪 INQUIZITOR CLIENT: league-matchmaking-v1');
     console.log('🧪 INQUIZITOR FIX: endgame-names-v1');
     console.log('🧪 INQUIZITOR CLIENT: endgame-stats-ui-v1');
