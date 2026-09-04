@@ -1,0 +1,2162 @@
+[
+  {
+    "id": 898,
+    "category": "technologie",
+    "question": "Která součást procesoru provádí aritmetické a logické operace?",
+    "options": [
+      "ALU",
+      "Řadič",
+      "Registr",
+      "Cache"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 899,
+    "category": "technologie",
+    "question": "Která paměť v počítači po vypnutí běžně ztratí svůj obsah?",
+    "options": [
+      "SSD",
+      "RAM",
+      "ROM",
+      "Flash"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 900,
+    "category": "technologie",
+    "question": "Jak se nazývá velmi rychlá paměť přímo uvnitř procesoru určená pro právě používané hodnoty?",
+    "options": [
+      "Cache",
+      "Buffer",
+      "Registr",
+      "Firmware"
+    ],
+    "correct": 2
+  },
+  {
+    "id": 901,
+    "category": "technologie",
+    "question": "Která komponenta zajišťuje fyzické propojení procesoru, pamětí a rozšiřujících karet?",
+    "options": [
+      "Napájecí zdroj",
+      "Grafický adaptér",
+      "Síťový adaptér",
+      "Základní deska"
+    ],
+    "correct": 3
+  },
+  {
+    "id": 902,
+    "category": "technologie",
+    "question": "Který typ paměti je určen především k dlouhodobému uchování firmwaru?",
+    "options": [
+      "ROM",
+      "RAM",
+      "Cache",
+      "VRAM"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 903,
+    "category": "technologie",
+    "question": "K čemu slouží chladič procesoru?",
+    "options": [
+      "Zvyšuje napětí",
+      "Odvádí teplo",
+      "Ukládá data",
+      "Řídí ventilátory"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 904,
+    "category": "technologie",
+    "question": "Která součást notebooku převádí elektrickou energii baterie na napětí potřebná komponentami?",
+    "options": [
+      "Procesorové obvody",
+      "Grafické obvody",
+      "Napájecí obvody",
+      "Síťové obvody"
+    ],
+    "correct": 2
+  },
+  {
+    "id": 905,
+    "category": "technologie",
+    "question": "Jak se nazývá patice na základní desce určená pro procesor?",
+    "options": [
+      "Slot",
+      "Port",
+      "Header",
+      "Socket"
+    ],
+    "correct": 3
+  },
+  {
+    "id": 906,
+    "category": "technologie",
+    "question": "Která paměť je určena především pro data zpracovávaná grafickým procesorem?",
+    "options": [
+      "VRAM",
+      "SRAM",
+      "EEPROM",
+      "NVRAM"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 907,
+    "category": "technologie",
+    "question": "Která technologie úložiště používá paměťové buňky místo rotujících ploten?",
+    "options": [
+      "HDD",
+      "SSD",
+      "Blu-ray",
+      "Magnetická páska"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 908,
+    "category": "technologie",
+    "question": "Který typ úložiště používá rotující magnetické plotny?",
+    "options": [
+      "SSD",
+      "Flash disk",
+      "HDD",
+      "Optický disk"
+    ],
+    "correct": 2
+  },
+  {
+    "id": 909,
+    "category": "technologie",
+    "question": "Jak se nazývá rozhraní používané pro připojení grafických karet k základní desce?",
+    "options": [
+      "SATA Express",
+      "USB Type-A",
+      "DisplayPort",
+      "PCI Express"
+    ],
+    "correct": 3
+  },
+  {
+    "id": 910,
+    "category": "technologie",
+    "question": "Která součást počítače převádí digitální obrazová data na výstup pro monitor?",
+    "options": [
+      "Grafická karta",
+      "Zvuková karta",
+      "Síťová karta",
+      "Řadič úložiště"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 911,
+    "category": "technologie",
+    "question": "Který konektor se běžně používá pro moderní monitory s digitálním obrazem a podporou vysokých obnovovacích frekvencí?",
+    "options": [
+      "Thunderbolt",
+      "DisplayPort",
+      "HDMI rozhraní",
+      "USB-C video"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 912,
+    "category": "technologie",
+    "question": "Která jednotka se používá k vyjádření taktovací frekvence procesoru?",
+    "options": [
+      "Joule",
+      "Pascal",
+      "Hertz",
+      "Ampér"
+    ],
+    "correct": 2
+  },
+  {
+    "id": 913,
+    "category": "technologie",
+    "question": "Jak se nazývá proces, při němž procesor dočasně zvyšuje svou frekvenci podle zátěže a teploty?",
+    "options": [
+      "Overclocking",
+      "Undervolting",
+      "Throttling",
+      "Boost"
+    ],
+    "correct": 3
+  },
+  {
+    "id": 914,
+    "category": "technologie",
+    "question": "Která součást počítače poskytuje ostatním komponentám elektrickou energii?",
+    "options": [
+      "Napájecí zdroj",
+      "Základní deska",
+      "Procesor",
+      "Ventilátor"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 915,
+    "category": "technologie",
+    "question": "Jak se nazývá standardní rozšiřující modul operační paměti pro stolní počítače?",
+    "options": [
+      "SO-DIMM",
+      "DIMM",
+      "M.2",
+      "PCIe"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 916,
+    "category": "technologie",
+    "question": "Který formát modulu RAM se běžně používá v noteboocích?",
+    "options": [
+      "Micro-DIMM",
+      "Mini-DIMM",
+      "SO-DIMM",
+      "DIMM ECC"
+    ],
+    "correct": 2
+  },
+  {
+    "id": 917,
+    "category": "technologie",
+    "question": "Která součást počítače obsahuje instrukce startovacího firmwaru před načtením operačního systému?",
+    "options": [
+      "Boot sektor",
+      "Swap soubor",
+      "Ovladač",
+      "UEFI"
+    ],
+    "correct": 3
+  },
+  {
+    "id": 918,
+    "category": "technologie",
+    "question": "Které zařízení propojuje více zařízení v jedné ethernetové síti a předává rámce podle MAC adres?",
+    "options": [
+      "Switch",
+      "Router",
+      "Modem",
+      "Repeater"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 919,
+    "category": "technologie",
+    "question": "Které zařízení propojuje různé IP sítě a rozhoduje o směrování paketů?",
+    "options": [
+      "Switch",
+      "Router",
+      "Bridge",
+      "Access point"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 920,
+    "category": "technologie",
+    "question": "Jak se nazývá jedinečný hardwarový identifikátor síťového rozhraní používaný v Ethernetu?",
+    "options": [
+      "IPv6 adresa",
+      "DNS adresa",
+      "MAC adresa",
+      "IP adresa"
+    ],
+    "correct": 2
+  },
+  {
+    "id": 921,
+    "category": "technologie",
+    "question": "Který protokol zajišťuje spolehlivý přenos dat s potvrzováním doručení?",
+    "options": [
+      "UDP",
+      "ARP",
+      "ICMP",
+      "TCP"
+    ],
+    "correct": 3
+  },
+  {
+    "id": 922,
+    "category": "technologie",
+    "question": "Který transportní protokol obvykle upřednostňuje rychlost před potvrzováním doručení?",
+    "options": [
+      "UDP",
+      "TCP",
+      "TLS",
+      "HTTP"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 923,
+    "category": "technologie",
+    "question": "K čemu se používá protokol ARP v síti IPv4?",
+    "options": [
+      "Přidělení IP adresy",
+      "Zjištění MAC adresy",
+      "Překlad domény",
+      "Šifrování spojení"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 924,
+    "category": "technologie",
+    "question": "Který protokol se používá pro diagnostické zprávy typu ping?",
+    "options": [
+      "SMTP",
+      "DHCP",
+      "ICMP",
+      "SNMP"
+    ],
+    "correct": 2
+  },
+  {
+    "id": 925,
+    "category": "technologie",
+    "question": "Jak se nazývá název bezdrátové sítě, který vidí uživatelé při výběru Wi-Fi?",
+    "options": [
+      "BSSID",
+      "VLAN",
+      "DHCP",
+      "SSID"
+    ],
+    "correct": 3
+  },
+  {
+    "id": 926,
+    "category": "technologie",
+    "question": "Které pásmo Wi-Fi mívá větší dosah přes překážky, ale nižší kapacitu než 5 GHz?",
+    "options": [
+      "2,4 GHz",
+      "5 GHz pásmo",
+      "6 GHz pásmo",
+      "60 GHz pásmo"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 927,
+    "category": "technologie",
+    "question": "Jak se nazývá zařízení, které poskytuje bezdrátovým klientům přístup do místní sítě?",
+    "options": [
+      "Patch panel",
+      "Access point",
+      "Firewall",
+      "Proxy server"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 928,
+    "category": "technologie",
+    "question": "Který protokol automaticky synchronizuje čas počítačů v síti?",
+    "options": [
+      "FTP",
+      "SSH",
+      "NTP",
+      "SIP"
+    ],
+    "correct": 2
+  },
+  {
+    "id": 929,
+    "category": "technologie",
+    "question": "Co označuje zkratka LAN?",
+    "options": [
+      "Veřejná síť",
+      "Mobilní síť",
+      "Satelitní síť",
+      "Místní síť"
+    ],
+    "correct": 3
+  },
+  {
+    "id": 930,
+    "category": "technologie",
+    "question": "Co označuje zkratka WAN?",
+    "options": [
+      "Rozlehlá síť",
+      "Domácí síť",
+      "Bezdrátová síť",
+      "Virtuální síť"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 931,
+    "category": "technologie",
+    "question": "Jak se nazývá logické oddělení zařízení do samostatných sítí na jednom fyzickém switchi?",
+    "options": [
+      "VXLAN",
+      "VLAN",
+      "WLAN",
+      "VPN tunel"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 932,
+    "category": "technologie",
+    "question": "K čemu slouží NAT v domácím routeru?",
+    "options": [
+      "Zvyšuje rychlost Wi-Fi",
+      "Překládá názvy domén",
+      "Překládá síťové adresy",
+      "Šifruje hesla"
+    ],
+    "correct": 2
+  },
+  {
+    "id": 933,
+    "category": "technologie",
+    "question": "Jak se nazývá technologie vytvářející šifrovaný tunel přes veřejnou síť?",
+    "options": [
+      "VLAN",
+      "VoIP",
+      "WLAN",
+      "VPN"
+    ],
+    "correct": 3
+  },
+  {
+    "id": 934,
+    "category": "technologie",
+    "question": "Která metrika vyjadřuje množství dat přenesených za jednotku času?",
+    "options": [
+      "Propustnost",
+      "Doba odezvy",
+      "Kolísání latence",
+      "Síla signálu"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 935,
+    "category": "technologie",
+    "question": "Jak se nazývá kolísání zpoždění paketů v síti?",
+    "options": [
+      "Latence",
+      "Jitter",
+      "Útlum",
+      "Propustnost"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 936,
+    "category": "technologie",
+    "question": "Který kabel se běžně používá pro ethernetové připojení v kancelářích a domácnostech?",
+    "options": [
+      "Koaxiální kabel",
+      "Optický patchcord",
+      "Kroucená dvojlinka",
+      "Telefonní dvojlinka"
+    ],
+    "correct": 2
+  },
+  {
+    "id": 937,
+    "category": "technologie",
+    "question": "Které médium přenáší data pomocí světelných impulzů?",
+    "options": [
+      "Koaxiální kabel",
+      "Kroucený pár",
+      "Měděná sběrnice",
+      "Optické vlákno"
+    ],
+    "correct": 3
+  },
+  {
+    "id": 938,
+    "category": "technologie",
+    "question": "Jak se nazývá podvodná zpráva, která se snaží vylákat heslo nebo jiné citlivé údaje?",
+    "options": [
+      "Phishing",
+      "Spoofing",
+      "Sniffing",
+      "Doxxing"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 939,
+    "category": "technologie",
+    "question": "Jak se nazývá škodlivý program, který tajně zaznamenává stisky kláves?",
+    "options": [
+      "Ransomware",
+      "Keylogger",
+      "Bootkit",
+      "Rootkit"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 940,
+    "category": "technologie",
+    "question": "Jak se nazývá síť napadených zařízení vzdáleně ovládaných útočníkem?",
+    "options": [
+      "Intranet",
+      "Sandbox",
+      "Botnet",
+      "Cluster"
+    ],
+    "correct": 2
+  },
+  {
+    "id": 941,
+    "category": "technologie",
+    "question": "K čemu slouží správce hesel?",
+    "options": [
+      "Blokuje reklamy",
+      "Šifruje celý internet",
+      "Zrychluje přihlášení",
+      "Ukládá hesla bezpečně"
+    ],
+    "correct": 3
+  },
+  {
+    "id": 942,
+    "category": "technologie",
+    "question": "Které heslo je obecně nejodolnější proti hádání?",
+    "options": [
+      "Dlouhá unikátní fráze",
+      "Krátké náhodné heslo",
+      "Dlouhé opakované heslo",
+      "Jméno s několika čísly"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 943,
+    "category": "technologie",
+    "question": "Jak se nazývá ověřovací faktor založený na otisku prstu nebo obličeji?",
+    "options": [
+      "Tokenizace",
+      "Biometrie",
+      "Hashování",
+      "Virtualizace"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 944,
+    "category": "technologie",
+    "question": "K čemu slouží bezpečnostní aktualizace softwaru?",
+    "options": [
+      "Přidává nové tapety",
+      "Mění vzhled systému",
+      "Opravuje zranitelnosti",
+      "Zvyšuje výkon grafiky GPU"
+    ],
+    "correct": 2
+  },
+  {
+    "id": 945,
+    "category": "technologie",
+    "question": "Jak se nazývá chyba nebo slabina, kterou lze zneužít k narušení systému?",
+    "options": [
+      "Protokol",
+      "Certifikát",
+      "Kontrolní součet",
+      "Zranitelnost"
+    ],
+    "correct": 3
+  },
+  {
+    "id": 946,
+    "category": "technologie",
+    "question": "Který princip říká, že uživatel má mít jen oprávnění nezbytná pro svou práci?",
+    "options": [
+      "Nejmenší oprávnění",
+      "Otevřený přístup",
+      "Plná důvěra",
+      "Sdílené vlastnictví"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 947,
+    "category": "technologie",
+    "question": "Jak se nazývá kryptografická hodnota používaná k ověření integrity souboru?",
+    "options": [
+      "Cookie",
+      "Hash",
+      "Token",
+      "Session"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 948,
+    "category": "technologie",
+    "question": "Jak se nazývá náhodná hodnota přidávaná k heslu před hashováním?",
+    "options": [
+      "Nonce",
+      "Token",
+      "Salt",
+      "Seed"
+    ],
+    "correct": 2
+  },
+  {
+    "id": 949,
+    "category": "technologie",
+    "question": "Který typ šifrování používá stejný tajný klíč pro šifrování i dešifrování?",
+    "options": [
+      "Asymetrické šifrování",
+      "Hashovací funkce",
+      "Digitální podpis",
+      "Symetrické šifrování"
+    ],
+    "correct": 3
+  },
+  {
+    "id": 950,
+    "category": "technologie",
+    "question": "Který typ kryptografie používá veřejný a soukromý klíč?",
+    "options": [
+      "Asymetrická kryptografie",
+      "Klasická symetrická kryptografie",
+      "Hybridní kryptografie",
+      "Kvantová kryptografie"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 951,
+    "category": "technologie",
+    "question": "K čemu slouží digitální podpis?",
+    "options": [
+      "Skrývá obsah před čtením",
+      "Ověřuje původ a integritu",
+      "Komprimuje obsah zprávy",
+      "Převádí zprávu do archivu"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 952,
+    "category": "technologie",
+    "question": "Jak se nazývá útok, který zahltí službu velkým množstvím požadavků z mnoha zařízení?",
+    "options": [
+      "Phishing",
+      "SQL injection",
+      "DDoS",
+      "Brute force"
+    ],
+    "correct": 2
+  },
+  {
+    "id": 953,
+    "category": "technologie",
+    "question": "Jak se nazývá technika ukrytí informace uvnitř jiného souboru, například obrázku?",
+    "options": [
+      "Digitální podpis",
+      "Kryptografie",
+      "Komprese dat",
+      "Steganografie"
+    ],
+    "correct": 3
+  },
+  {
+    "id": 954,
+    "category": "technologie",
+    "question": "Který nástroj omezuje síťovou komunikaci podle nastavených pravidel?",
+    "options": [
+      "Firewall",
+      "Compiler",
+      "Hypervisor",
+      "Bootloader"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 955,
+    "category": "technologie",
+    "question": "Co je bezpečnější při připojení k veřejné Wi-Fi?",
+    "options": [
+      "Vypnout heslo",
+      "Použít VPN",
+      "Sdílet soubory",
+      "Použít HTTP"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 956,
+    "category": "technologie",
+    "question": "Jak se nazývá útok využívající škodlivé SQL příkazy vložené do vstupu aplikace?",
+    "options": [
+      "Cross-site scripting",
+      "DNS poisoning",
+      "SQL injection",
+      "Packet sniffing"
+    ],
+    "correct": 2
+  },
+  {
+    "id": 957,
+    "category": "technologie",
+    "question": "Jak se nazývá útok, při němž škodlivý skript běží v prohlížeči oběti v kontextu webu?",
+    "options": [
+      "Cross-site request forgery",
+      "Session hijacking",
+      "SQL injection",
+      "Cross-site scripting"
+    ],
+    "correct": 3
+  },
+  {
+    "id": 958,
+    "category": "technologie",
+    "question": "Který jazyk se používá ke strukturování obsahu webové stránky?",
+    "options": [
+      "HTML",
+      "CSS",
+      "SQL",
+      "Bash"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 959,
+    "category": "technologie",
+    "question": "Který jazyk se používá hlavně pro vizuální styl webových stránek?",
+    "options": [
+      "HTML",
+      "CSS",
+      "SQL",
+      "Markdown"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 960,
+    "category": "technologie",
+    "question": "Který jazyk se běžně používá pro interaktivní chování webových stránek v prohlížeči?",
+    "options": [
+      "TypeScript",
+      "CoffeeScript",
+      "JavaScript",
+      "WebAssembly"
+    ],
+    "correct": 2
+  },
+  {
+    "id": 961,
+    "category": "technologie",
+    "question": "Jak se nazývá část URL, která určuje protokol, například https?",
+    "options": [
+      "Doména",
+      "Cesta",
+      "Fragment",
+      "Schéma"
+    ],
+    "correct": 3
+  },
+  {
+    "id": 962,
+    "category": "technologie",
+    "question": "Jak se nazývá část internetové adresy jako example.com?",
+    "options": [
+      "Doména",
+      "Protokol",
+      "Port",
+      "Fragment"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 963,
+    "category": "technologie",
+    "question": "Který stavový kód HTTP znamená, že požadovaný zdroj nebyl nalezen?",
+    "options": [
+      "200",
+      "404",
+      "301",
+      "500"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 964,
+    "category": "technologie",
+    "question": "Který stavový kód HTTP znamená úspěšné zpracování požadavku?",
+    "options": [
+      "201",
+      "302",
+      "200",
+      "404"
+    ],
+    "correct": 2
+  },
+  {
+    "id": 965,
+    "category": "technologie",
+    "question": "Který stavový kód HTTP označuje trvalé přesměrování?",
+    "options": [
+      "200",
+      "404",
+      "503",
+      "301"
+    ],
+    "correct": 3
+  },
+  {
+    "id": 966,
+    "category": "technologie",
+    "question": "Který stavový kód HTTP označuje vnitřní chybu serveru?",
+    "options": [
+      "500",
+      "400",
+      "401",
+      "403"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 967,
+    "category": "technologie",
+    "question": "Jak se nazývá program běžící na serveru, který přijímá HTTP požadavky a vrací webový obsah?",
+    "options": [
+      "Webový prohlížeč",
+      "Webový server",
+      "Textový editor",
+      "DNS klient"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 968,
+    "category": "technologie",
+    "question": "Jak se nazývá program používaný uživatelem k zobrazování webových stránek?",
+    "options": [
+      "Webový server",
+      "Proxy server",
+      "Webový prohlížeč",
+      "Databázový server"
+    ],
+    "correct": 2
+  },
+  {
+    "id": 969,
+    "category": "technologie",
+    "question": "K čemu slouží soubor robots.txt na webu?",
+    "options": [
+      "Ukládá uživatelská hesla",
+      "Styly stránek",
+      "Spouští databázi",
+      "Dává pokyny robotům"
+    ],
+    "correct": 3
+  },
+  {
+    "id": 970,
+    "category": "technologie",
+    "question": "Co je CDN?",
+    "options": [
+      "Síť pro distribuci obsahu",
+      "Databáze certifikátů",
+      "Typ programovacího jazyka",
+      "Síť pro správu hesel"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 971,
+    "category": "technologie",
+    "question": "Jak se nazývá rozhraní, přes které spolu komunikují softwarové aplikace?",
+    "options": [
+      "IDE",
+      "API",
+      "GUI",
+      "CLI"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 972,
+    "category": "technologie",
+    "question": "Který formát se často používá k přenosu dat mezi webovým klientem a API?",
+    "options": [
+      "YAML",
+      "MessagePack",
+      "JSON",
+      "XML"
+    ],
+    "correct": 2
+  },
+  {
+    "id": 973,
+    "category": "technologie",
+    "question": "Jak se nazývá technika, při níž se stránka přizpůsobuje šířce různých zařízení?",
+    "options": [
+      "Adaptivní webdesign",
+      "Statický webdesign",
+      "Fixní layout stránky",
+      "Responzivní design"
+    ],
+    "correct": 3
+  },
+  {
+    "id": 974,
+    "category": "technologie",
+    "question": "K čemu slouží cache prohlížeče?",
+    "options": [
+      "Urychluje opakované načítání",
+      "Ukládá historii prohlížení",
+      "Spravuje přihlášené účty",
+      "Kontroluje platnost certifikátů"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 975,
+    "category": "technologie",
+    "question": "Jak se nazývá relace mezi klientem a serverem, která uchovává stav uživatele během návštěvy?",
+    "options": [
+      "WebSocket",
+      "Session",
+      "LocalStorage",
+      "Service worker"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 976,
+    "category": "technologie",
+    "question": "Která technologie dovoluje webové aplikaci aktualizovat obsah bez načtení celé stránky?",
+    "options": [
+      "RAID",
+      "BIOS",
+      "AJAX",
+      "SMTP"
+    ],
+    "correct": 2
+  },
+  {
+    "id": 977,
+    "category": "technologie",
+    "question": "Jak se nazývá soubor obsahující malé množství dat uložené webem v prohlížeči?",
+    "options": [
+      "Widget",
+      "Applet",
+      "Daemon",
+      "Cookie"
+    ],
+    "correct": 3
+  },
+  {
+    "id": 978,
+    "category": "technologie",
+    "question": "Jak se nazývá proměnná, jejíž hodnota se během programu nemá měnit?",
+    "options": [
+      "Konstanta",
+      "Globální proměnná",
+      "Parametr",
+      "Literál"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 979,
+    "category": "technologie",
+    "question": "Který řídicí prvek opakuje část programu?",
+    "options": [
+      "Podmínka",
+      "Cyklus",
+      "Funkce",
+      "Proměnná"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 980,
+    "category": "technologie",
+    "question": "Který příkazový princip vybírá jednu větev podle splnění podmínky?",
+    "options": [
+      "Cyklus",
+      "Import",
+      "Podmínka",
+      "Komentář"
+    ],
+    "correct": 2
+  },
+  {
+    "id": 981,
+    "category": "technologie",
+    "question": "Jak se nazývá pojmenovaný blok kódu, který lze opakovaně volat?",
+    "options": [
+      "Proměnná",
+      "Výjimka",
+      "Komentář",
+      "Funkce"
+    ],
+    "correct": 3
+  },
+  {
+    "id": 982,
+    "category": "technologie",
+    "question": "Jak se nazývá hodnota předaná funkci při jejím zavolání?",
+    "options": [
+      "Argument",
+      "Deklarace",
+      "Iterátor",
+      "Kompilace"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 983,
+    "category": "technologie",
+    "question": "Jak se nazývá chyba v syntaxi zdrojového kódu?",
+    "options": [
+      "Kompilační chyba kódu",
+      "Syntaktická chyba",
+      "Logická chyba",
+      "Běhová chyba"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 984,
+    "category": "technologie",
+    "question": "Jak se nazývá chyba, při níž program běží, ale dává nesprávný výsledek?",
+    "options": [
+      "Syntaktická chyba",
+      "Přenosová chyba",
+      "Logická chyba",
+      "Kompilační chyba"
+    ],
+    "correct": 2
+  },
+  {
+    "id": 985,
+    "category": "technologie",
+    "question": "Jak se nazývá proces převodu zdrojového kódu do jiné spustitelné podoby?",
+    "options": [
+      "Ladění",
+      "Profilování",
+      "Refaktoring",
+      "Kompilace"
+    ],
+    "correct": 3
+  },
+  {
+    "id": 986,
+    "category": "technologie",
+    "question": "Jak se nazývá program, který vykonává zdrojový kód postupně bez klasického předběžného překladu?",
+    "options": [
+      "Interpret",
+      "Kompilátor",
+      "Transpiler",
+      "Assembler"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 987,
+    "category": "technologie",
+    "question": "Jak se nazývá prostředí, které spojuje editor, spuštění a ladicí nástroje?",
+    "options": [
+      "API",
+      "IDE",
+      "SDK",
+      "CLI"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 988,
+    "category": "technologie",
+    "question": "Která datová struktura odebírá prvky ve stejném pořadí, v jakém byly vloženy?",
+    "options": [
+      "Zásobník",
+      "Strom",
+      "Fronta",
+      "Množina"
+    ],
+    "correct": 2
+  },
+  {
+    "id": 989,
+    "category": "technologie",
+    "question": "Jak se nazývá struktura tvořená uzly propojenými hierarchicky od kořene?",
+    "options": [
+      "Fronta",
+      "Pole",
+      "Zásobník",
+      "Strom"
+    ],
+    "correct": 3
+  },
+  {
+    "id": 990,
+    "category": "technologie",
+    "question": "Který algoritmus opakovaně půlí setříděný interval hledání?",
+    "options": [
+      "Binární vyhledávání",
+      "Lineární vyhledávání",
+      "Bubble sort",
+      "Depth-first search"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 991,
+    "category": "technologie",
+    "question": "Jak se nazývá algoritmus, který prochází položky jednu po druhé, dokud nenajde hledanou?",
+    "options": [
+      "Hloubkové prohledávání",
+      "Lineární vyhledávání",
+      "Šířkové prohledávání",
+      "Binární vyhledávání"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 992,
+    "category": "technologie",
+    "question": "Jak se nazývá technika, kdy funkce volá sama sebe?",
+    "options": [
+      "Iterace",
+      "Kompilace",
+      "Rekurze",
+      "Serializace"
+    ],
+    "correct": 2
+  },
+  {
+    "id": 993,
+    "category": "technologie",
+    "question": "Jak se nazývá vlastnost programu skrývající vnitřní implementaci objektu za veřejným rozhraním?",
+    "options": [
+      "Dědičnost",
+      "Polymorfismus",
+      "Rekurze",
+      "Zapouzdření"
+    ],
+    "correct": 3
+  },
+  {
+    "id": 994,
+    "category": "technologie",
+    "question": "Jak se nazývá mechanismus, kdy nová třída přebírá vlastnosti jiné třídy?",
+    "options": [
+      "Dědičnost",
+      "Zapouzdření",
+      "Serializace",
+      "Kompozice"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 995,
+    "category": "technologie",
+    "question": "Jak se nazývá schopnost stejného rozhraní pracovat s různými typy objektů?",
+    "options": [
+      "Kompozice objektů",
+      "Polymorfismus",
+      "Zapouzdření",
+      "Dědičnost"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 996,
+    "category": "technologie",
+    "question": "K čemu slouží komentář ve zdrojovém kódu?",
+    "options": [
+      "Zrychluje program",
+      "Šifruje data",
+      "Vysvětluje kód",
+      "Rezervuje paměť"
+    ],
+    "correct": 2
+  },
+  {
+    "id": 997,
+    "category": "technologie",
+    "question": "Jak se nazývá proces změny struktury kódu bez změny jeho vnějšího chování?",
+    "options": [
+      "Kompilace",
+      "Virtualizace",
+      "Serializace",
+      "Refaktoring"
+    ],
+    "correct": 3
+  },
+  {
+    "id": 998,
+    "category": "technologie",
+    "question": "Která část operačního systému spravuje procesy, paměť a hardware?",
+    "options": [
+      "Jádro",
+      "Shell",
+      "Desktop",
+      "Editor"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 999,
+    "category": "technologie",
+    "question": "Jak se nazývá běžící instance programu?",
+    "options": [
+      "Soubor",
+      "Proces",
+      "Ovladač",
+      "Služba"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 1000,
+    "category": "technologie",
+    "question": "Jak se nazývá menší vykonávaná jednotka uvnitř procesu?",
+    "options": [
+      "Proces",
+      "Korutina",
+      "Vlákno",
+      "Podproces"
+    ],
+    "correct": 2
+  },
+  {
+    "id": 1001,
+    "category": "technologie",
+    "question": "Jak se nazývá software umožňující operačnímu systému komunikovat s konkrétním hardwarem?",
+    "options": [
+      "Překladač",
+      "Editor",
+      "Archivátor",
+      "Ovladač"
+    ],
+    "correct": 3
+  },
+  {
+    "id": 1002,
+    "category": "technologie",
+    "question": "Jak se nazývá rozhraní operačního systému ovládané textovými příkazy?",
+    "options": [
+      "Příkazová řádka",
+      "Grafické rozhraní",
+      "Správce souborů",
+      "Ovládací panel"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 1003,
+    "category": "technologie",
+    "question": "Jak se nazývá grafické uživatelské rozhraní se symboly, okny a nabídkami?",
+    "options": [
+      "CLI",
+      "GUI",
+      "API",
+      "BIOS"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 1004,
+    "category": "technologie",
+    "question": "K čemu slouží virtuální paměť?",
+    "options": [
+      "Zvyšuje rychlost procesoru",
+      "Přesouvá data mezi disky",
+      "Rozšiřuje dostupnou paměť",
+      "Šifruje obsah paměti"
+    ],
+    "correct": 2
+  },
+  {
+    "id": 1005,
+    "category": "technologie",
+    "question": "Jak se nazývá souborový prostor na disku používaný jako náhrada části RAM?",
+    "options": [
+      "Cache",
+      "Log",
+      "Temp",
+      "Swap"
+    ],
+    "correct": 3
+  },
+  {
+    "id": 1006,
+    "category": "technologie",
+    "question": "Jak se nazývá proces spuštění počítače a načtení operačního systému?",
+    "options": [
+      "Bootování",
+      "Formátování",
+      "Kompilace",
+      "Indexování"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 1007,
+    "category": "technologie",
+    "question": "Jak se nazývá program, který vybírá a spouští operační systém při startu počítače?",
+    "options": [
+      "Debugger",
+      "Bootloader",
+      "Hypervisor",
+      "Shell"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 1008,
+    "category": "technologie",
+    "question": "Jak se nazývá software, který umožňuje provoz více virtuálních strojů na jednom počítači?",
+    "options": [
+      "Bootloader",
+      "Compiler",
+      "Hypervisor",
+      "Scheduler"
+    ],
+    "correct": 2
+  },
+  {
+    "id": 1009,
+    "category": "technologie",
+    "question": "Který souborový systém se běžně používá ve Windows pro systémové disky?",
+    "options": [
+      "ext4",
+      "APFS",
+      "HFS+",
+      "NTFS"
+    ],
+    "correct": 3
+  },
+  {
+    "id": 1010,
+    "category": "technologie",
+    "question": "Který souborový systém je běžný v linuxových distribucích?",
+    "options": [
+      "ext4",
+      "NTFS",
+      "APFS",
+      "ReFS"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 1011,
+    "category": "technologie",
+    "question": "Který souborový systém používá macOS na moderních počítačích?",
+    "options": [
+      "NTFS",
+      "APFS",
+      "ext4",
+      "FAT16"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 1012,
+    "category": "technologie",
+    "question": "Jak se nazývá proces přípravy úložiště vytvořením souborového systému?",
+    "options": [
+      "Defragmentace",
+      "Komprese",
+      "Formátování",
+      "Indexace"
+    ],
+    "correct": 2
+  },
+  {
+    "id": 1013,
+    "category": "technologie",
+    "question": "Jak se nazývá služba operačního systému běžící na pozadí bez přímého ovládání uživatelem?",
+    "options": [
+      "Widget",
+      "Applet",
+      "Makro",
+      "Daemon"
+    ],
+    "correct": 3
+  },
+  {
+    "id": 1014,
+    "category": "technologie",
+    "question": "K čemu slouží plánovač procesů operačního systému?",
+    "options": [
+      "Přiděluje čas procesoru",
+      "Přiděluje prostor na disku",
+      "Spravuje síťové adresy",
+      "Řídí přístup k souborům"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 1015,
+    "category": "technologie",
+    "question": "Jak se nazývá mechanismus oddělující oprávnění běžného uživatele od správce systému?",
+    "options": [
+      "Správa oken",
+      "Řízení přístupu",
+      "Správa fontů",
+      "Správa schránky"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 1016,
+    "category": "technologie",
+    "question": "Jak se nazývá izolovaný balíček aplikace sdílející jádro hostitelského systému?",
+    "options": [
+      "Virtuální stroj",
+      "Oddíl disku",
+      "Kontejner",
+      "Procesorové jádro"
+    ],
+    "correct": 2
+  },
+  {
+    "id": 1017,
+    "category": "technologie",
+    "question": "Jak se nazývá centrální katalog softwarových balíčků používaný mnoha linuxovými distribucemi?",
+    "options": [
+      "Registr",
+      "Boot sektor",
+      "Schránka",
+      "Repozitář"
+    ],
+    "correct": 3
+  },
+  {
+    "id": 1018,
+    "category": "technologie",
+    "question": "Jak se nazývá databáze organizující data do tabulek s řádky a sloupci?",
+    "options": [
+      "Relační databáze",
+      "Grafová databáze",
+      "Dokumentová databáze",
+      "Objektové úložiště"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 1019,
+    "category": "technologie",
+    "question": "Jak se nazývá sloupec nebo kombinace sloupců jednoznačně určující řádek tabulky?",
+    "options": [
+      "Sekundární index",
+      "Primární klíč",
+      "Unikátní hodnota",
+      "Cizí klíč"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 1020,
+    "category": "technologie",
+    "question": "Jak se nazývá sloupec odkazující na primární klíč jiné tabulky?",
+    "options": [
+      "Primární klíč",
+      "Index",
+      "Cizí klíč",
+      "Trigger"
+    ],
+    "correct": 2
+  },
+  {
+    "id": 1021,
+    "category": "technologie",
+    "question": "Který SQL příkaz se používá pro čtení dat z tabulky?",
+    "options": [
+      "INSERT",
+      "UPDATE",
+      "DELETE",
+      "SELECT"
+    ],
+    "correct": 3
+  },
+  {
+    "id": 1022,
+    "category": "technologie",
+    "question": "Který SQL příkaz přidává nový řádek do tabulky?",
+    "options": [
+      "INSERT",
+      "SELECT",
+      "UPDATE",
+      "DROP"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 1023,
+    "category": "technologie",
+    "question": "Který SQL příkaz mění existující hodnoty v řádcích?",
+    "options": [
+      "SELECT",
+      "UPDATE",
+      "INSERT",
+      "CREATE"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 1024,
+    "category": "technologie",
+    "question": "Který SQL příkaz odstraňuje řádky z tabulky?",
+    "options": [
+      "SELECT",
+      "INSERT",
+      "DELETE",
+      "ALTER"
+    ],
+    "correct": 2
+  },
+  {
+    "id": 1025,
+    "category": "technologie",
+    "question": "Který SQL příkaz vytváří novou tabulku?",
+    "options": [
+      "SELECT",
+      "DROP",
+      "JOIN",
+      "CREATE"
+    ],
+    "correct": 3
+  },
+  {
+    "id": 1026,
+    "category": "technologie",
+    "question": "Jak se nazývá databázová operace spojující řádky z více tabulek podle souvisejících hodnot?",
+    "options": [
+      "JOIN",
+      "GROUP",
+      "ORDER",
+      "LIMIT"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 1027,
+    "category": "technologie",
+    "question": "Jak se nazývá struktura urychlující vyhledávání v databázové tabulce?",
+    "options": [
+      "Trigger",
+      "Index",
+      "View",
+      "Schema"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 1028,
+    "category": "technologie",
+    "question": "Jak se nazývá uložený databázový dotaz, který se chová jako virtuální tabulka?",
+    "options": [
+      "Index",
+      "Trigger",
+      "View",
+      "Cursor"
+    ],
+    "correct": 2
+  },
+  {
+    "id": 1029,
+    "category": "technologie",
+    "question": "Jak se nazývá sada pravidel popisující strukturu databáze?",
+    "options": [
+      "Relace",
+      "Dotaz",
+      "Transakce",
+      "Schéma"
+    ],
+    "correct": 3
+  },
+  {
+    "id": 1030,
+    "category": "technologie",
+    "question": "Jak se nazývá skupina databázových operací provedená jako jeden logický celek?",
+    "options": [
+      "Transakce",
+      "Replikace",
+      "Procedura",
+      "Migrace"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 1031,
+    "category": "technologie",
+    "question": "Která vlastnost transakce znamená, že se provede celá, nebo vůbec?",
+    "options": [
+      "Izolace",
+      "Atomicita",
+      "Trvalost",
+      "Konzistence"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 1032,
+    "category": "technologie",
+    "question": "Jak se nazývá proces odstranění zbytečné duplicity dat v relační databázi?",
+    "options": [
+      "Serializace",
+      "Replikace",
+      "Normalizace",
+      "Komprese"
+    ],
+    "correct": 2
+  },
+  {
+    "id": 1033,
+    "category": "technologie",
+    "question": "Jak se nazývá kopírování dat mezi více databázovými servery?",
+    "options": [
+      "Normalizace",
+      "Indexování",
+      "Migrace",
+      "Replikace"
+    ],
+    "correct": 3
+  },
+  {
+    "id": 1034,
+    "category": "technologie",
+    "question": "Který typ databáze ukládá data typicky jako dokumenty podobné JSON?",
+    "options": [
+      "Dokumentová databáze",
+      "Hierarchická databáze",
+      "Sloupcová databáze",
+      "Relační databáze"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 1035,
+    "category": "technologie",
+    "question": "Který typ databáze modeluje data jako uzly a vztahy?",
+    "options": [
+      "Dokumentová databáze",
+      "Grafová databáze",
+      "Relační databáze",
+      "Sloupcová databáze"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 1036,
+    "category": "technologie",
+    "question": "Jak se nazývá převod datové struktury do formátu vhodného k uložení nebo přenosu?",
+    "options": [
+      "Normalizace",
+      "Indexace",
+      "Serializace",
+      "Kompilace"
+    ],
+    "correct": 2
+  },
+  {
+    "id": 1037,
+    "category": "technologie",
+    "question": "Jak se nazývá kopie databáze určená pro obnovení po havárii?",
+    "options": [
+      "Cache",
+      "Index",
+      "Schema",
+      "Záloha"
+    ],
+    "correct": 3
+  },
+  {
+    "id": 1038,
+    "category": "technologie",
+    "question": "Který grafický formát je založen na vektorových tvarech místo pixelů?",
+    "options": [
+      "SVG",
+      "JPEG",
+      "PNG",
+      "BMP"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 1039,
+    "category": "technologie",
+    "question": "Který formát obrázku používá běžně ztrátovou kompresi vhodnou pro fotografie?",
+    "options": [
+      "PNG",
+      "JPEG",
+      "GIF",
+      "TIFF"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 1040,
+    "category": "technologie",
+    "question": "Který formát obrázku podporuje průhlednost a bezeztrátovou kompresi?",
+    "options": [
+      "JPEG",
+      "BMP",
+      "PNG",
+      "PPM"
+    ],
+    "correct": 2
+  },
+  {
+    "id": 1041,
+    "category": "technologie",
+    "question": "Který formát obrázku je známý podporou jednoduchých animací?",
+    "options": [
+      "JPEG",
+      "TIFF",
+      "RAW",
+      "GIF"
+    ],
+    "correct": 3
+  },
+  {
+    "id": 1042,
+    "category": "technologie",
+    "question": "Jak se nazývá nejmenší obrazový bod rastrového obrázku?",
+    "options": [
+      "Pixel",
+      "Vektor",
+      "Vrstva",
+      "Kanál"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 1043,
+    "category": "technologie",
+    "question": "Jak se nazývá počet pixelů tvořících šířku a výšku obrazu?",
+    "options": [
+      "Bitrate",
+      "Rozlišení",
+      "Frekvence",
+      "Dynamika"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 1044,
+    "category": "technologie",
+    "question": "Který barevný model se používá především pro obrazovky?",
+    "options": [
+      "CMYK",
+      "Pantone",
+      "RGB",
+      "Grayscale"
+    ],
+    "correct": 2
+  },
+  {
+    "id": 1045,
+    "category": "technologie",
+    "question": "Který barevný model se běžně používá při barevném tisku?",
+    "options": [
+      "RGBW",
+      "HSLA",
+      "YUV",
+      "CMYK"
+    ],
+    "correct": 3
+  },
+  {
+    "id": 1046,
+    "category": "technologie",
+    "question": "Jak se nazývá průhlednost obrazové vrstvy?",
+    "options": [
+      "Alfa kanál",
+      "Barevný profil",
+      "Maska jasu",
+      "Histogram"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 1047,
+    "category": "technologie",
+    "question": "Jak se nazývá technika odstranění části obrazu mimo zvolenou oblast?",
+    "options": [
+      "Retuš",
+      "Ořez",
+      "Interpolace",
+      "Vektorizace"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 1048,
+    "category": "technologie",
+    "question": "Jak se nazývá převod vektorové grafiky na pixely?",
+    "options": [
+      "Vektorizace",
+      "Komprese",
+      "Rasterizace",
+      "Normalizace"
+    ],
+    "correct": 2
+  },
+  {
+    "id": 1049,
+    "category": "technologie",
+    "question": "Jak se nazývá převod rastrového obrazu na vektorové tvary?",
+    "options": [
+      "Rasterizace",
+      "Renderování",
+      "Dekomprese",
+      "Vektorizace"
+    ],
+    "correct": 3
+  },
+  {
+    "id": 1050,
+    "category": "technologie",
+    "question": "Který zvukový formát společnosti Apple podporuje bezeztrátovou kompresi?",
+    "options": [
+      "ALAC",
+      "AAC",
+      "AIFF",
+      "MP3"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 1051,
+    "category": "technologie",
+    "question": "Jak se nazývá počet vzorků zvuku zaznamenaných za sekundu?",
+    "options": [
+      "Obnovovací frekvence",
+      "Vzorkovací frekvence",
+      "Snímková frekvence",
+      "Bitová hloubka"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 1052,
+    "category": "technologie",
+    "question": "Jak se nazývá počet bitů použitých pro uložení jednoho zvukového vzorku?",
+    "options": [
+      "Vzorkovací frekvence",
+      "Datový tok",
+      "Bitová hloubka",
+      "Kompresní poměr"
+    ],
+    "correct": 2
+  },
+  {
+    "id": 1053,
+    "category": "technologie",
+    "question": "Jak se nazývá počet snímků videa zobrazených za sekundu?",
+    "options": [
+      "Vzorkovací frekvence",
+      "Bitová hloubka",
+      "Barevný gamut",
+      "Snímková frekvence"
+    ],
+    "correct": 3
+  },
+  {
+    "id": 1054,
+    "category": "technologie",
+    "question": "Jak se nazývá proces vytváření výsledného obrazu z 3D scény?",
+    "options": [
+      "Renderování",
+      "Rasterizace",
+      "Vektorizace",
+      "Normalizace"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 1055,
+    "category": "technologie",
+    "question": "K čemu slouží kodek při práci s videem nebo zvukem?",
+    "options": [
+      "Převádí síťové adresy zařízení",
+      "Kóduje a dekóduje data",
+      "Řídí výstup grafické karty",
+      "Ukládá hesla do systému"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 1056,
+    "category": "technologie",
+    "question": "Jak se nazývá datový tok multimediálního souboru za jednotku času?",
+    "options": [
+      "Framerate",
+      "Rozlišení",
+      "Bitrate",
+      "Kontrast"
+    ],
+    "correct": 2
+  },
+  {
+    "id": 1057,
+    "category": "technologie",
+    "question": "Jak se nazývá barevný rozsah, který je zařízení schopno zobrazit nebo zaznamenat?",
+    "options": [
+      "Dynamický rozsah",
+      "Bitová hloubka",
+      "Barevný kanál",
+      "Barevný gamut"
+    ],
+    "correct": 3
+  },
+  {
+    "id": 1058,
+    "category": "technologie",
+    "question": "Která číselná soustava používá pouze číslice 0 a 1?",
+    "options": [
+      "Dvojková",
+      "Desítková",
+      "Šestnáctková",
+      "Osmičková"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 1059,
+    "category": "technologie",
+    "question": "Která číselná soustava používá šestnáct symbolů od 0 do F?",
+    "options": [
+      "Dvaatřicítková",
+      "Šestnáctková",
+      "Dvanáctková",
+      "Desítková"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 1060,
+    "category": "technologie",
+    "question": "Jak se nazývá nejmenší jednotka digitální informace?",
+    "options": [
+      "Byte",
+      "Nibble",
+      "Bit",
+      "Word"
+    ],
+    "correct": 2
+  },
+  {
+    "id": 1061,
+    "category": "technologie",
+    "question": "Jak se nazývá skupina osmi bitů?",
+    "options": [
+      "Nibble",
+      "Word",
+      "Block",
+      "Byte"
+    ],
+    "correct": 3
+  },
+  {
+    "id": 1062,
+    "category": "technologie",
+    "question": "Co vyjadřuje pojem algoritmus?",
+    "options": [
+      "Postup řešení úlohy",
+      "Popis datového formátu",
+      "Typ síťového protokolu",
+      "Model procesorové architektury"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 1063,
+    "category": "technologie",
+    "question": "Jak se nazývá grafické znázornění kroků algoritmu pomocí standardních symbolů?",
+    "options": [
+      "Sekvenční diagram",
+      "Vývojový diagram",
+      "Entitní diagram",
+      "Síťový diagram"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 1064,
+    "category": "technologie",
+    "question": "Jak se nazývá simulace skutečného systému pomocí zjednodušeného popisu?",
+    "options": [
+      "Protokol",
+      "Firmware",
+      "Model",
+      "Driver"
+    ],
+    "correct": 2
+  },
+  {
+    "id": 1065,
+    "category": "technologie",
+    "question": "Který pojem označuje schopnost systému pokračovat v provozu i při poruše části komponent?",
+    "options": [
+      "Dynamická škálovatelnost systému",
+      "Zpětná kompatibilita systému",
+      "Vysoká dostupnost služby",
+      "Odolnost proti chybám"
+    ],
+    "correct": 3
+  },
+  {
+    "id": 1066,
+    "category": "technologie",
+    "question": "Jak se nazývá schopnost novějšího systému pracovat se staršími formáty nebo zařízeními?",
+    "options": [
+      "Zpětná kompatibilita",
+      "Dopředná kompatibilita",
+      "Redundance",
+      "Virtualizace"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 1067,
+    "category": "technologie",
+    "question": "Jak se nazývá záměrné vytváření více kopií důležitých komponent kvůli spolehlivosti?",
+    "options": [
+      "Komprese",
+      "Redundance",
+      "Indexace",
+      "Serializace"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 1068,
+    "category": "technologie",
+    "question": "Jak se nazývá automatická kontrola, zda se data během přenosu nezměnila?",
+    "options": [
+      "Digitální podpis",
+      "Paritní kontrola",
+      "Kontrolní součet",
+      "Kontrolní bod"
+    ],
+    "correct": 2
+  },
+  {
+    "id": 1069,
+    "category": "technologie",
+    "question": "Jak se nazývá soubor pravidel určující formát a průběh komunikace mezi zařízeními?",
+    "options": [
+      "Algoritmus",
+      "Databáze",
+      "Compiler",
+      "Protokol"
+    ],
+    "correct": 3
+  },
+  {
+    "id": 1070,
+    "category": "technologie",
+    "question": "Jak se nazývá přesně definovaný způsob uložení dat v souboru?",
+    "options": [
+      "Formát souboru",
+      "Síťový protokol",
+      "Ovladač zařízení",
+      "Procesorová sada"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 1071,
+    "category": "technologie",
+    "question": "Který pojem označuje software, jehož zdrojový kód je dostupný podle otevřené licence?",
+    "options": [
+      "Public domain",
+      "Open source",
+      "Closed source",
+      "Proprietary"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 1072,
+    "category": "technologie",
+    "question": "Jak se nazývá software, který lze používat zdarma, ale jeho zdrojový kód nemusí být otevřený?",
+    "options": [
+      "Open source",
+      "Shareware",
+      "Freeware",
+      "Public domain"
+    ],
+    "correct": 2
+  },
+  {
+    "id": 1073,
+    "category": "technologie",
+    "question": "Jak se nazývá software poskytovaný k vyzkoušení s omezením času nebo funkcí?",
+    "options": [
+      "Freeware",
+      "Open source",
+      "Firmware",
+      "Shareware"
+    ],
+    "correct": 3
+  },
+  {
+    "id": 1074,
+    "category": "technologie",
+    "question": "Jak se nazývá programové vybavení zabudované přímo v zařízení?",
+    "options": [
+      "Firmware",
+      "Middleware",
+      "Freeware",
+      "Shareware"
+    ],
+    "correct": 0
+  },
+  {
+    "id": 1075,
+    "category": "technologie",
+    "question": "Jak se nazývá vrstva softwaru, která propojuje aplikace s jinými službami nebo systémy?",
+    "options": [
+      "Firmware",
+      "Middleware",
+      "Bootloader",
+      "Compiler"
+    ],
+    "correct": 1
+  },
+  {
+    "id": 1076,
+    "category": "technologie",
+    "question": "Jak se nazývá rozhraní tvořené textovými příkazy místo grafických prvků?",
+    "options": [
+      "GUI",
+      "API",
+      "CLI",
+      "IDE"
+    ],
+    "correct": 2
+  },
+  {
+    "id": 1077,
+    "category": "technologie",
+    "question": "Jak se nazývá sada nástrojů a knihoven určená vývojářům pro tvorbu aplikací?",
+    "options": [
+      "API",
+      "IDE",
+      "GUI",
+      "SDK"
+    ],
+    "correct": 3
+  }
+]

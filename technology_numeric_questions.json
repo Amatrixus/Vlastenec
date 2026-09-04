@@ -1,0 +1,1082 @@
+[
+  {
+    "id": 928,
+    "category": "technologie",
+    "question": "Jakou hodnotu má dvojkové číslo 10001 v desítkové soustavě?",
+    "answer": 17
+  },
+  {
+    "id": 929,
+    "category": "technologie",
+    "question": "Jakou hodnotu má dvojkové číslo 10010 v desítkové soustavě?",
+    "answer": 18
+  },
+  {
+    "id": 930,
+    "category": "technologie",
+    "question": "Jakou hodnotu má dvojkové číslo 10011 v desítkové soustavě?",
+    "answer": 19
+  },
+  {
+    "id": 931,
+    "category": "technologie",
+    "question": "Jakou hodnotu má dvojkové číslo 10100 v desítkové soustavě?",
+    "answer": 20
+  },
+  {
+    "id": 932,
+    "category": "technologie",
+    "question": "Jakou hodnotu má dvojkové číslo 10101 v desítkové soustavě?",
+    "answer": 21
+  },
+  {
+    "id": 933,
+    "category": "technologie",
+    "question": "Jakou hodnotu má dvojkové číslo 10110 v desítkové soustavě?",
+    "answer": 22
+  },
+  {
+    "id": 934,
+    "category": "technologie",
+    "question": "Jakou hodnotu má dvojkové číslo 10111 v desítkové soustavě?",
+    "answer": 23
+  },
+  {
+    "id": 935,
+    "category": "technologie",
+    "question": "Jakou hodnotu má dvojkové číslo 11000 v desítkové soustavě?",
+    "answer": 24
+  },
+  {
+    "id": 936,
+    "category": "technologie",
+    "question": "Jakou hodnotu má dvojkové číslo 11001 v desítkové soustavě?",
+    "answer": 25
+  },
+  {
+    "id": 937,
+    "category": "technologie",
+    "question": "Jakou hodnotu má dvojkové číslo 11010 v desítkové soustavě?",
+    "answer": 26
+  },
+  {
+    "id": 938,
+    "category": "technologie",
+    "question": "Jakou hodnotu má dvojkové číslo 11011 v desítkové soustavě?",
+    "answer": 27
+  },
+  {
+    "id": 939,
+    "category": "technologie",
+    "question": "Jakou hodnotu má dvojkové číslo 11100 v desítkové soustavě?",
+    "answer": 28
+  },
+  {
+    "id": 940,
+    "category": "technologie",
+    "question": "Jakou hodnotu má dvojkové číslo 11101 v desítkové soustavě?",
+    "answer": 29
+  },
+  {
+    "id": 941,
+    "category": "technologie",
+    "question": "Jakou hodnotu má dvojkové číslo 11110 v desítkové soustavě?",
+    "answer": 30
+  },
+  {
+    "id": 942,
+    "category": "technologie",
+    "question": "Jakou hodnotu má dvojkové číslo 11111 v desítkové soustavě?",
+    "answer": 31
+  },
+  {
+    "id": 943,
+    "category": "technologie",
+    "question": "Jakou hodnotu má dvojkové číslo 100000 v desítkové soustavě?",
+    "answer": 32
+  },
+  {
+    "id": 944,
+    "category": "technologie",
+    "question": "Jakou hodnotu má dvojkové číslo 100001 v desítkové soustavě?",
+    "answer": 33
+  },
+  {
+    "id": 945,
+    "category": "technologie",
+    "question": "Jakou hodnotu má dvojkové číslo 100010 v desítkové soustavě?",
+    "answer": 34
+  },
+  {
+    "id": 946,
+    "category": "technologie",
+    "question": "Jakou hodnotu má dvojkové číslo 100011 v desítkové soustavě?",
+    "answer": 35
+  },
+  {
+    "id": 947,
+    "category": "technologie",
+    "question": "Jakou hodnotu má dvojkové číslo 100100 v desítkové soustavě?",
+    "answer": 36
+  },
+  {
+    "id": 948,
+    "category": "technologie",
+    "question": "Jakou hodnotu má dvojkové číslo 100101 v desítkové soustavě?",
+    "answer": 37
+  },
+  {
+    "id": 949,
+    "category": "technologie",
+    "question": "Jakou hodnotu má dvojkové číslo 100110 v desítkové soustavě?",
+    "answer": 38
+  },
+  {
+    "id": 950,
+    "category": "technologie",
+    "question": "Jakou hodnotu má dvojkové číslo 100111 v desítkové soustavě?",
+    "answer": 39
+  },
+  {
+    "id": 951,
+    "category": "technologie",
+    "question": "Jakou hodnotu má dvojkové číslo 101000 v desítkové soustavě?",
+    "answer": 40
+  },
+  {
+    "id": 952,
+    "category": "technologie",
+    "question": "Jakou hodnotu má dvojkové číslo 101001 v desítkové soustavě?",
+    "answer": 41
+  },
+  {
+    "id": 953,
+    "category": "technologie",
+    "question": "Jakou hodnotu má dvojkové číslo 101010 v desítkové soustavě?",
+    "answer": 42
+  },
+  {
+    "id": 954,
+    "category": "technologie",
+    "question": "Jakou hodnotu má dvojkové číslo 101011 v desítkové soustavě?",
+    "answer": 43
+  },
+  {
+    "id": 955,
+    "category": "technologie",
+    "question": "Jakou hodnotu má dvojkové číslo 101100 v desítkové soustavě?",
+    "answer": 44
+  },
+  {
+    "id": 956,
+    "category": "technologie",
+    "question": "Jakou hodnotu má dvojkové číslo 101101 v desítkové soustavě?",
+    "answer": 45
+  },
+  {
+    "id": 957,
+    "category": "technologie",
+    "question": "Jakou hodnotu má dvojkové číslo 101110 v desítkové soustavě?",
+    "answer": 46
+  },
+  {
+    "id": 958,
+    "category": "technologie",
+    "question": "Jakou hodnotu má hexadecimální číslo 10 v desítkové soustavě?",
+    "answer": 16
+  },
+  {
+    "id": 959,
+    "category": "technologie",
+    "question": "Jakou hodnotu má hexadecimální číslo 11 v desítkové soustavě?",
+    "answer": 17
+  },
+  {
+    "id": 960,
+    "category": "technologie",
+    "question": "Jakou hodnotu má hexadecimální číslo 12 v desítkové soustavě?",
+    "answer": 18
+  },
+  {
+    "id": 961,
+    "category": "technologie",
+    "question": "Jakou hodnotu má hexadecimální číslo 13 v desítkové soustavě?",
+    "answer": 19
+  },
+  {
+    "id": 962,
+    "category": "technologie",
+    "question": "Jakou hodnotu má hexadecimální číslo 14 v desítkové soustavě?",
+    "answer": 20
+  },
+  {
+    "id": 963,
+    "category": "technologie",
+    "question": "Jakou hodnotu má hexadecimální číslo 15 v desítkové soustavě?",
+    "answer": 21
+  },
+  {
+    "id": 964,
+    "category": "technologie",
+    "question": "Jakou hodnotu má hexadecimální číslo 16 v desítkové soustavě?",
+    "answer": 22
+  },
+  {
+    "id": 965,
+    "category": "technologie",
+    "question": "Jakou hodnotu má hexadecimální číslo 17 v desítkové soustavě?",
+    "answer": 23
+  },
+  {
+    "id": 966,
+    "category": "technologie",
+    "question": "Jakou hodnotu má hexadecimální číslo 18 v desítkové soustavě?",
+    "answer": 24
+  },
+  {
+    "id": 967,
+    "category": "technologie",
+    "question": "Jakou hodnotu má hexadecimální číslo 19 v desítkové soustavě?",
+    "answer": 25
+  },
+  {
+    "id": 968,
+    "category": "technologie",
+    "question": "Jakou hodnotu má hexadecimální číslo 1A v desítkové soustavě?",
+    "answer": 26
+  },
+  {
+    "id": 969,
+    "category": "technologie",
+    "question": "Jakou hodnotu má hexadecimální číslo 1B v desítkové soustavě?",
+    "answer": 27
+  },
+  {
+    "id": 970,
+    "category": "technologie",
+    "question": "Jakou hodnotu má hexadecimální číslo 1C v desítkové soustavě?",
+    "answer": 28
+  },
+  {
+    "id": 971,
+    "category": "technologie",
+    "question": "Jakou hodnotu má hexadecimální číslo 1D v desítkové soustavě?",
+    "answer": 29
+  },
+  {
+    "id": 972,
+    "category": "technologie",
+    "question": "Jakou hodnotu má hexadecimální číslo 1E v desítkové soustavě?",
+    "answer": 30
+  },
+  {
+    "id": 973,
+    "category": "technologie",
+    "question": "Jakou hodnotu má hexadecimální číslo 1F v desítkové soustavě?",
+    "answer": 31
+  },
+  {
+    "id": 974,
+    "category": "technologie",
+    "question": "Jakou hodnotu má hexadecimální číslo 20 v desítkové soustavě?",
+    "answer": 32
+  },
+  {
+    "id": 975,
+    "category": "technologie",
+    "question": "Jakou hodnotu má hexadecimální číslo 21 v desítkové soustavě?",
+    "answer": 33
+  },
+  {
+    "id": 976,
+    "category": "technologie",
+    "question": "Jakou hodnotu má hexadecimální číslo 22 v desítkové soustavě?",
+    "answer": 34
+  },
+  {
+    "id": 977,
+    "category": "technologie",
+    "question": "Jakou hodnotu má hexadecimální číslo 23 v desítkové soustavě?",
+    "answer": 35
+  },
+  {
+    "id": 978,
+    "category": "technologie",
+    "question": "Kolik různých hodnot lze vyjádřit pomocí 5 bitů?",
+    "answer": 32
+  },
+  {
+    "id": 979,
+    "category": "technologie",
+    "question": "Kolik různých hodnot lze vyjádřit pomocí 6 bitů?",
+    "answer": 64
+  },
+  {
+    "id": 980,
+    "category": "technologie",
+    "question": "Kolik různých hodnot lze vyjádřit pomocí 7 bitů?",
+    "answer": 128
+  },
+  {
+    "id": 981,
+    "category": "technologie",
+    "question": "Kolik různých hodnot lze vyjádřit pomocí 8 bitů?",
+    "answer": 256
+  },
+  {
+    "id": 982,
+    "category": "technologie",
+    "question": "Kolik různých hodnot lze vyjádřit pomocí 9 bitů?",
+    "answer": 512
+  },
+  {
+    "id": 983,
+    "category": "technologie",
+    "question": "Kolik různých hodnot lze vyjádřit pomocí 10 bitů?",
+    "answer": 1024
+  },
+  {
+    "id": 984,
+    "category": "technologie",
+    "question": "Kolik různých hodnot lze vyjádřit pomocí 11 bitů?",
+    "answer": 2048
+  },
+  {
+    "id": 985,
+    "category": "technologie",
+    "question": "Kolik různých hodnot lze vyjádřit pomocí 12 bitů?",
+    "answer": 4096
+  },
+  {
+    "id": 986,
+    "category": "technologie",
+    "question": "Kolik různých hodnot lze vyjádřit pomocí 13 bitů?",
+    "answer": 8192
+  },
+  {
+    "id": 987,
+    "category": "technologie",
+    "question": "Kolik různých hodnot lze vyjádřit pomocí 14 bitů?",
+    "answer": 16384
+  },
+  {
+    "id": 988,
+    "category": "technologie",
+    "question": "Jaké číslo portu standardně používá služba FTP data?",
+    "answer": 20
+  },
+  {
+    "id": 989,
+    "category": "technologie",
+    "question": "Jaké číslo portu standardně používá služba FTP řízení?",
+    "answer": 21
+  },
+  {
+    "id": 990,
+    "category": "technologie",
+    "question": "Jaké číslo portu standardně používá služba Telnet?",
+    "answer": 23
+  },
+  {
+    "id": 991,
+    "category": "technologie",
+    "question": "Jaké číslo portu standardně používá služba SMTP?",
+    "answer": 25
+  },
+  {
+    "id": 992,
+    "category": "technologie",
+    "question": "Jaké číslo portu standardně používá služba DNS?",
+    "answer": 53
+  },
+  {
+    "id": 993,
+    "category": "technologie",
+    "question": "Jaké číslo portu standardně používá služba DHCP server?",
+    "answer": 67
+  },
+  {
+    "id": 994,
+    "category": "technologie",
+    "question": "Jaké číslo portu standardně používá služba DHCP klient?",
+    "answer": 68
+  },
+  {
+    "id": 995,
+    "category": "technologie",
+    "question": "Jaké číslo portu standardně používá služba TFTP?",
+    "answer": 69
+  },
+  {
+    "id": 996,
+    "category": "technologie",
+    "question": "Jaké číslo portu standardně používá služba HTTP?",
+    "answer": 80
+  },
+  {
+    "id": 997,
+    "category": "technologie",
+    "question": "Jaké číslo portu standardně používá služba Kerberos?",
+    "answer": 88
+  },
+  {
+    "id": 998,
+    "category": "technologie",
+    "question": "Jaké číslo portu standardně používá služba POP3?",
+    "answer": 110
+  },
+  {
+    "id": 999,
+    "category": "technologie",
+    "question": "Jaké číslo portu standardně používá služba NTP?",
+    "answer": 123
+  },
+  {
+    "id": 1000,
+    "category": "technologie",
+    "question": "Jaké číslo portu standardně používá služba IMAP?",
+    "answer": 143
+  },
+  {
+    "id": 1001,
+    "category": "technologie",
+    "question": "Jaké číslo portu standardně používá služba SNMP?",
+    "answer": 161
+  },
+  {
+    "id": 1002,
+    "category": "technologie",
+    "question": "Jaké číslo portu standardně používá služba SNMP trap?",
+    "answer": 162
+  },
+  {
+    "id": 1003,
+    "category": "technologie",
+    "question": "Jaké číslo portu standardně používá služba BGP?",
+    "answer": 179
+  },
+  {
+    "id": 1004,
+    "category": "technologie",
+    "question": "Jaké číslo portu standardně používá služba LDAP?",
+    "answer": 389
+  },
+  {
+    "id": 1005,
+    "category": "technologie",
+    "question": "Jaké číslo portu standardně používá služba HTTPS?",
+    "answer": 443
+  },
+  {
+    "id": 1006,
+    "category": "technologie",
+    "question": "Jaké číslo portu standardně používá služba SMB?",
+    "answer": 445
+  },
+  {
+    "id": 1007,
+    "category": "technologie",
+    "question": "Jaké číslo portu standardně používá služba Syslog?",
+    "answer": 514
+  },
+  {
+    "id": 1008,
+    "category": "technologie",
+    "question": "Jaké číslo portu standardně používá služba LDAPS?",
+    "answer": 636
+  },
+  {
+    "id": 1009,
+    "category": "technologie",
+    "question": "Jaké číslo portu standardně používá služba IMAPS?",
+    "answer": 993
+  },
+  {
+    "id": 1010,
+    "category": "technologie",
+    "question": "Jaké číslo portu standardně používá služba POP3S?",
+    "answer": 995
+  },
+  {
+    "id": 1011,
+    "category": "technologie",
+    "question": "Jaké číslo portu standardně používá služba MySQL?",
+    "answer": 3306
+  },
+  {
+    "id": 1012,
+    "category": "technologie",
+    "question": "Jaké číslo portu standardně používá služba PostgreSQL?",
+    "answer": 5432
+  },
+  {
+    "id": 1013,
+    "category": "technologie",
+    "question": "Jaký číselný stavový kód HTTP odpovídá stavu „OK“?",
+    "answer": 200
+  },
+  {
+    "id": 1014,
+    "category": "technologie",
+    "question": "Jaký číselný stavový kód HTTP odpovídá stavu „Created“?",
+    "answer": 201
+  },
+  {
+    "id": 1015,
+    "category": "technologie",
+    "question": "Jaký číselný stavový kód HTTP odpovídá stavu „Accepted“?",
+    "answer": 202
+  },
+  {
+    "id": 1016,
+    "category": "technologie",
+    "question": "Jaký číselný stavový kód HTTP odpovídá stavu „No Content“?",
+    "answer": 204
+  },
+  {
+    "id": 1017,
+    "category": "technologie",
+    "question": "Jaký číselný stavový kód HTTP odpovídá stavu „Moved Permanently“?",
+    "answer": 301
+  },
+  {
+    "id": 1018,
+    "category": "technologie",
+    "question": "Jaký číselný stavový kód HTTP odpovídá stavu „Found“?",
+    "answer": 302
+  },
+  {
+    "id": 1019,
+    "category": "technologie",
+    "question": "Jaký číselný stavový kód HTTP odpovídá stavu „Not Modified“?",
+    "answer": 304
+  },
+  {
+    "id": 1020,
+    "category": "technologie",
+    "question": "Jaký číselný stavový kód HTTP odpovídá stavu „Bad Request“?",
+    "answer": 400
+  },
+  {
+    "id": 1021,
+    "category": "technologie",
+    "question": "Jaký číselný stavový kód HTTP odpovídá stavu „Unauthorized“?",
+    "answer": 401
+  },
+  {
+    "id": 1022,
+    "category": "technologie",
+    "question": "Jaký číselný stavový kód HTTP odpovídá stavu „Forbidden“?",
+    "answer": 403
+  },
+  {
+    "id": 1023,
+    "category": "technologie",
+    "question": "Jaký číselný stavový kód HTTP odpovídá stavu „Not Found“?",
+    "answer": 404
+  },
+  {
+    "id": 1024,
+    "category": "technologie",
+    "question": "Jaký číselný stavový kód HTTP odpovídá stavu „Method Not Allowed“?",
+    "answer": 405
+  },
+  {
+    "id": 1025,
+    "category": "technologie",
+    "question": "Jaký číselný stavový kód HTTP odpovídá stavu „Request Timeout“?",
+    "answer": 408
+  },
+  {
+    "id": 1026,
+    "category": "technologie",
+    "question": "Jaký číselný stavový kód HTTP odpovídá stavu „Conflict“?",
+    "answer": 409
+  },
+  {
+    "id": 1027,
+    "category": "technologie",
+    "question": "Jaký číselný stavový kód HTTP odpovídá stavu „Gone“?",
+    "answer": 410
+  },
+  {
+    "id": 1028,
+    "category": "technologie",
+    "question": "Jaký číselný stavový kód HTTP odpovídá stavu „Payload Too Large“?",
+    "answer": 413
+  },
+  {
+    "id": 1029,
+    "category": "technologie",
+    "question": "Jaký číselný stavový kód HTTP odpovídá stavu „Too Many Requests“?",
+    "answer": 429
+  },
+  {
+    "id": 1030,
+    "category": "technologie",
+    "question": "Jaký číselný stavový kód HTTP odpovídá stavu „Internal Server Error“?",
+    "answer": 500
+  },
+  {
+    "id": 1031,
+    "category": "technologie",
+    "question": "Jaký číselný stavový kód HTTP odpovídá stavu „Bad Gateway“?",
+    "answer": 502
+  },
+  {
+    "id": 1032,
+    "category": "technologie",
+    "question": "Jaký číselný stavový kód HTTP odpovídá stavu „Service Unavailable“?",
+    "answer": 503
+  },
+  {
+    "id": 1033,
+    "category": "technologie",
+    "question": "Kolik bitů má jeden bajt?",
+    "answer": 8
+  },
+  {
+    "id": 1034,
+    "category": "technologie",
+    "question": "Kolik bajtů má 16 bitů?",
+    "answer": 2
+  },
+  {
+    "id": 1035,
+    "category": "technologie",
+    "question": "Kolik bajtů má 32 bitů?",
+    "answer": 4
+  },
+  {
+    "id": 1036,
+    "category": "technologie",
+    "question": "Kolik bajtů má 64 bitů?",
+    "answer": 8
+  },
+  {
+    "id": 1037,
+    "category": "technologie",
+    "question": "Kolik bajtů má 128 bitů?",
+    "answer": 16
+  },
+  {
+    "id": 1038,
+    "category": "technologie",
+    "question": "Kolik bajtů má 256 bitů?",
+    "answer": 32
+  },
+  {
+    "id": 1039,
+    "category": "technologie",
+    "question": "Kolik bajtů obsahuje jeden KiB?",
+    "answer": 1024
+  },
+  {
+    "id": 1040,
+    "category": "technologie",
+    "question": "Kolik KiB obsahuje jeden MiB?",
+    "answer": 1024
+  },
+  {
+    "id": 1041,
+    "category": "technologie",
+    "question": "Kolik MiB obsahuje jeden GiB?",
+    "answer": 1024
+  },
+  {
+    "id": 1042,
+    "category": "technologie",
+    "question": "Kolik GiB obsahuje jeden TiB?",
+    "answer": 1024
+  },
+  {
+    "id": 1043,
+    "category": "technologie",
+    "question": "Kolik bajtů obsahuje jeden MiB?",
+    "answer": 1048576
+  },
+  {
+    "id": 1044,
+    "category": "technologie",
+    "question": "Kolik bajtů má tradiční diskový sektor o velikosti 512 B?",
+    "answer": 512
+  },
+  {
+    "id": 1045,
+    "category": "technologie",
+    "question": "Kolik bajtů má sektor Advanced Format označovaný jako 4K?",
+    "answer": 4096
+  },
+  {
+    "id": 1046,
+    "category": "technologie",
+    "question": "Kolik bitů má IPv4 adresa?",
+    "answer": 32
+  },
+  {
+    "id": 1047,
+    "category": "technologie",
+    "question": "Kolik bitů má IPv6 adresa?",
+    "answer": 128
+  },
+  {
+    "id": 1048,
+    "category": "technologie",
+    "question": "Kolik bajtů má IPv4 adresa?",
+    "answer": 4
+  },
+  {
+    "id": 1049,
+    "category": "technologie",
+    "question": "Kolik bajtů má IPv6 adresa?",
+    "answer": 16
+  },
+  {
+    "id": 1050,
+    "category": "technologie",
+    "question": "Kolik bitů má běžná MAC adresa?",
+    "answer": 48
+  },
+  {
+    "id": 1051,
+    "category": "technologie",
+    "question": "Kolik bajtů má běžná MAC adresa?",
+    "answer": 6
+  },
+  {
+    "id": 1052,
+    "category": "technologie",
+    "question": "Kolik bitů má číslo TCP portu?",
+    "answer": 16
+  },
+  {
+    "id": 1053,
+    "category": "technologie",
+    "question": "Kolik bitů má SHA-1 hash?",
+    "answer": 160
+  },
+  {
+    "id": 1054,
+    "category": "technologie",
+    "question": "Kolik bitů má SHA-256 hash?",
+    "answer": 256
+  },
+  {
+    "id": 1055,
+    "category": "technologie",
+    "question": "Kolik bitů má SHA-512 hash?",
+    "answer": 512
+  },
+  {
+    "id": 1056,
+    "category": "technologie",
+    "question": "Kolik bitů má MD5 hash?",
+    "answer": 128
+  },
+  {
+    "id": 1057,
+    "category": "technologie",
+    "question": "Kolik bitů má standardní UUID?",
+    "answer": 128
+  },
+  {
+    "id": 1058,
+    "category": "technologie",
+    "question": "Kolik pixelů má na šířku rozlišení Full HD?",
+    "answer": 1920
+  },
+  {
+    "id": 1059,
+    "category": "technologie",
+    "question": "Kolik pixelů má na výšku rozlišení Full HD?",
+    "answer": 1080
+  },
+  {
+    "id": 1060,
+    "category": "technologie",
+    "question": "Kolik pixelů má na šířku rozlišení 4K UHD?",
+    "answer": 3840
+  },
+  {
+    "id": 1061,
+    "category": "technologie",
+    "question": "Kolik pixelů má na výšku rozlišení 4K UHD?",
+    "answer": 2160
+  },
+  {
+    "id": 1062,
+    "category": "technologie",
+    "question": "Kolik pixelů má na šířku rozlišení 8K UHD?",
+    "answer": 7680
+  },
+  {
+    "id": 1063,
+    "category": "technologie",
+    "question": "Kolik pixelů má na výšku rozlišení 8K UHD?",
+    "answer": 4320
+  },
+  {
+    "id": 1064,
+    "category": "technologie",
+    "question": "Kolik barevných kanálů má model RGB?",
+    "answer": 3
+  },
+  {
+    "id": 1065,
+    "category": "technologie",
+    "question": "Kolik barevných kanálů má model CMYK?",
+    "answer": 4
+  },
+  {
+    "id": 1066,
+    "category": "technologie",
+    "question": "Kolik bitů na pixel používá běžný 24bitový RGB obraz?",
+    "answer": 24
+  },
+  {
+    "id": 1067,
+    "category": "technologie",
+    "question": "Kolik bitů připadá na jeden kanál v běžném 24bitovém RGB obrazu?",
+    "answer": 8
+  },
+  {
+    "id": 1068,
+    "category": "technologie",
+    "question": "Kolik možných hodnot má jeden 8bitový barevný kanál?",
+    "answer": 256
+  },
+  {
+    "id": 1069,
+    "category": "technologie",
+    "question": "Kolik barev lze teoreticky vyjádřit 24bitovým RGB?",
+    "answer": 16777216
+  },
+  {
+    "id": 1070,
+    "category": "technologie",
+    "question": "Kolik zvukových kanálů má mono?",
+    "answer": 1
+  },
+  {
+    "id": 1071,
+    "category": "technologie",
+    "question": "Kolik zvukových kanálů má stereo?",
+    "answer": 2
+  },
+  {
+    "id": 1072,
+    "category": "technologie",
+    "question": "Kolik vzorků za sekundu odpovídá 44,1 kHz?",
+    "answer": 44100
+  },
+  {
+    "id": 1073,
+    "category": "technologie",
+    "question": "Kolik bitů má jeden vzorek standardního audio CD?",
+    "answer": 16
+  },
+  {
+    "id": 1074,
+    "category": "technologie",
+    "question": "Kolik snímků za sekundu znamená 24 fps?",
+    "answer": 24
+  },
+  {
+    "id": 1075,
+    "category": "technologie",
+    "question": "Kolik snímků za sekundu znamená 30 fps?",
+    "answer": 30
+  },
+  {
+    "id": 1076,
+    "category": "technologie",
+    "question": "Kolik snímků za sekundu znamená 60 fps?",
+    "answer": 60
+  },
+  {
+    "id": 1077,
+    "category": "technologie",
+    "question": "Kolik snímků za sekundu znamená 120 fps?",
+    "answer": 120
+  },
+  {
+    "id": 1078,
+    "category": "technologie",
+    "question": "Kolik kontaktů má konektor USB 2.0 typu A?",
+    "answer": 4
+  },
+  {
+    "id": 1079,
+    "category": "technologie",
+    "question": "Kolik kontaktů má konektor USB 3.0 typu A?",
+    "answer": 9
+  },
+  {
+    "id": 1080,
+    "category": "technologie",
+    "question": "Kolik pinů má HDMI konektor typu A?",
+    "answer": 19
+  },
+  {
+    "id": 1081,
+    "category": "technologie",
+    "question": "Kolik pinů má standardní DisplayPort konektor?",
+    "answer": 20
+  },
+  {
+    "id": 1082,
+    "category": "technologie",
+    "question": "Kolik pinů má VGA konektor DE-15?",
+    "answer": 15
+  },
+  {
+    "id": 1083,
+    "category": "technologie",
+    "question": "Kolik pinů má datový SATA konektor?",
+    "answer": 7
+  },
+  {
+    "id": 1084,
+    "category": "technologie",
+    "question": "Kolik pinů má napájecí SATA konektor?",
+    "answer": 15
+  },
+  {
+    "id": 1085,
+    "category": "technologie",
+    "question": "Kolik pinů má hlavní ATX napájecí konektor moderní základní desky?",
+    "answer": 24
+  },
+  {
+    "id": 1086,
+    "category": "technologie",
+    "question": "Kolik pinů má plný EPS12V konektor pro napájení procesoru?",
+    "answer": 8
+  },
+  {
+    "id": 1087,
+    "category": "technologie",
+    "question": "Kolik kontaktů má ethernetový konektor 8P8C?",
+    "answer": 8
+  },
+  {
+    "id": 1088,
+    "category": "technologie",
+    "question": "Kolik linek má slot PCI Express x1?",
+    "answer": 1
+  },
+  {
+    "id": 1089,
+    "category": "technologie",
+    "question": "Kolik linek má slot PCI Express x4?",
+    "answer": 4
+  },
+  {
+    "id": 1090,
+    "category": "technologie",
+    "question": "Kolik linek má slot PCI Express x8?",
+    "answer": 8
+  },
+  {
+    "id": 1091,
+    "category": "technologie",
+    "question": "Kolik linek má slot PCI Express x16?",
+    "answer": 16
+  },
+  {
+    "id": 1092,
+    "category": "technologie",
+    "question": "Kolik kontaktů má DDR3 DIMM modul pro stolní počítače?",
+    "answer": 240
+  },
+  {
+    "id": 1093,
+    "category": "technologie",
+    "question": "Kolik kontaktů má DDR4 DIMM modul pro stolní počítače?",
+    "answer": 288
+  },
+  {
+    "id": 1094,
+    "category": "technologie",
+    "question": "Kolik kontaktů má DDR3 SO-DIMM modul pro notebooky?",
+    "answer": 204
+  },
+  {
+    "id": 1095,
+    "category": "technologie",
+    "question": "Kolik kontaktů má DDR4 SO-DIMM modul pro notebooky?",
+    "answer": 260
+  },
+  {
+    "id": 1096,
+    "category": "technologie",
+    "question": "Kolik vodičů obsahuje ethernetový kabel se čtyřmi kroucenými páry?",
+    "answer": 8
+  },
+  {
+    "id": 1097,
+    "category": "technologie",
+    "question": "Kolik párů vodičů obsahuje běžný ethernetový kabel se čtyřmi páry?",
+    "answer": 4
+  },
+  {
+    "id": 1098,
+    "category": "technologie",
+    "question": "V kterém roce byl uveden, vydán nebo založen projekt či produkt „první IBM PC“?",
+    "answer": 1981
+  },
+  {
+    "id": 1099,
+    "category": "technologie",
+    "question": "V kterém roce byl uveden, vydán nebo založen projekt či produkt „Commodore 64“?",
+    "answer": 1982
+  },
+  {
+    "id": 1100,
+    "category": "technologie",
+    "question": "V kterém roce byl uveden, vydán nebo založen projekt či produkt „původní Apple Macintosh“?",
+    "answer": 1984
+  },
+  {
+    "id": 1101,
+    "category": "technologie",
+    "question": "V kterém roce byl uveden, vydán nebo založen projekt či produkt „Windows 1.0“?",
+    "answer": 1985
+  },
+  {
+    "id": 1102,
+    "category": "technologie",
+    "question": "V kterém roce byl uveden, vydán nebo založen projekt či produkt „World Wide Web návrh Tima Berners-Leeho“?",
+    "answer": 1989
+  },
+  {
+    "id": 1103,
+    "category": "technologie",
+    "question": "V kterém roce byl uveden, vydán nebo založen projekt či produkt „první veřejný Linux kernel“?",
+    "answer": 1991
+  },
+  {
+    "id": 1104,
+    "category": "technologie",
+    "question": "V kterém roce byl uveden, vydán nebo založen projekt či produkt „Windows 3.1“?",
+    "answer": 1992
+  },
+  {
+    "id": 1105,
+    "category": "technologie",
+    "question": "V kterém roce byl uveden, vydán nebo založen projekt či produkt „Amazon“?",
+    "answer": 1994
+  },
+  {
+    "id": 1106,
+    "category": "technologie",
+    "question": "V kterém roce byl uveden, vydán nebo založen projekt či produkt „Java“?",
+    "answer": 1995
+  },
+  {
+    "id": 1107,
+    "category": "technologie",
+    "question": "V kterém roce byl uveden, vydán nebo založen projekt či produkt „JavaScript“?",
+    "answer": 1995
+  }
+]
